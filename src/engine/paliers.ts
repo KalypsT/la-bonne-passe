@@ -2,6 +2,7 @@
 // Voir « Montée en puissance » dans les spécifications.
 
 import { REPUTATION_PALIER_2 } from '../content/balance';
+import { accueillirSegments } from './clientele';
 import type { EtatJeu, Systemes } from './etat';
 import { planifierVisitesScenarisees } from './recrutement';
 
@@ -10,7 +11,7 @@ export type EvenementPalier = { type: 'palier'; numero: number };
 /** Systèmes ouverts par chaque palier. */
 export const SYSTEMES_PAR_PALIER: Record<number, (keyof Systemes)[]> = {
   1: ['recrutement', 'renovation', 'planning', 'reserve'],
-  2: ['affaires', 'groupes'],
+  2: ['affaires', 'groupes', 'clientele'],
 };
 
 /** Condition pour atteindre chaque palier, vérifiée à chaque fermeture. Le palier 3 viendra en v0.5. */
@@ -22,6 +23,8 @@ const DECLENCHEURS: Record<number, (etat: EtatJeu) => boolean> = {
 /** Monte d'un palier : ouvre ses systèmes et prépare sa carte d'annonce. */
 export function accorderPalier(etat: EtatJeu, numero: number): void {
   etat.palier = numero;
+  // Les nouveaux segments partent de la réputation acquise : la moyenne ne chute pas.
+  if (numero === 2) accueillirSegments(etat, ['affaires', 'groupe']);
   for (const systeme of SYSTEMES_PAR_PALIER[numero] ?? []) etat.systemes[systeme] = true;
   // Le recrutement ouvre avec les trois premiers candidats, attendus dans la semaine.
   if (numero === 1) planifierVisitesScenarisees(etat);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TRESORERIE_INITIALE } from '../content/balance';
+import { trouverNouveaute } from '../content/nouveautes';
 import { creerEtatInitial, VERSION_ETAT } from '../engine/etat';
 import { tick } from '../engine/tick';
 import { charger, lireEmplacements, NOMBRE_EMPLACEMENTS, sauvegarder, supprimer } from './emplacements';
@@ -249,6 +250,27 @@ describe('migrations', () => {
     const migre = migrer({ ...etat, version: 9 });
     expect(migre?.version).toBe(VERSION_ETAT);
     expect(migre?.didacticiel).toBeNull();
+  });
+
+  it('migre une sauvegarde v10 : chaque segment part de la réputation acquise, sans nouveauté avant le palier 2', () => {
+    const { clientele: _c, nouveautes: _n, ...etat } = creerEtatInitial();
+    const migre = migrer({ ...etat, version: 10, palier: 1, reputation: 21.5 });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.clientele.satisfaction).toEqual({ touriste: 21.5, habitue: 21.5, affaires: 21.5, groupe: 21.5 });
+    expect(migre?.clientele.historique).toEqual([]);
+    expect(migre?.systemes.clientele).toBe(false);
+    expect(migre?.nouveautes).toEqual([]);
+    expect(migre?.reputation).toBe(21.5);
+  });
+
+  it('migre une sauvegarde v10 au palier 2 : l’onglet Clientèle s’ouvre, présenté par Josée', () => {
+    const { clientele: _c, nouveautes: _n, ...etat } = creerEtatInitial();
+    const systemes = { ...etat.systemes, affaires: true, groupes: true };
+    const migre = migrer({ ...etat, version: 10, palier: 2, reputation: 33, systemes });
+    expect(migre?.systemes).toMatchObject({ clientele: true, affaires: true, groupes: true, bar: false });
+    expect(migre?.nouveautes).toEqual(['clientele']);
+    expect(trouverNouveaute('clientele')?.palier).toBe(2);
+    expect(migre?.clientele.satisfaction.affaires).toBe(33);
   });
 
   it('refuse une version future ou des données sans version', () => {

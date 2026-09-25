@@ -16,6 +16,7 @@ import type { QuestionEntretien } from '../content/candidats';
 import { SANNE, type DefinitionEmploye, type Silhouette, type Talent } from '../content/personnel';
 import { PARTIE_PAR_DEFAUT, type Genre } from '../content/partie';
 import type { EvenementMoteur } from './tick';
+import { clienteleDeDepart, type Clientele } from './clientele';
 
 /** Drapeaux d'ouverture des systèmes. L'interface masque ou verrouille ce qui est fermé. */
 export interface Systemes {
@@ -238,6 +239,10 @@ export interface EtatJeu {
   prochainImprevu: number;
   /** Personnes parties, dont la carte d'adieu reste à montrer. */
   adieux: string[];
+  /** Satisfaction par segment et fréquentation (v0.3). La réputation en est la moyenne pondérée. */
+  clientele: Clientele;
+  /** Nouveautés arrivées avec une mise à jour du jeu, pour un palier déjà atteint : Josée les présente. */
+  nouveautes: string[];
   /** Étape du didacticiel de Madame Josée, ou null s'il est fini ou passé. */
   didacticiel: number | null;
   /** État courant du générateur pseudo-aléatoire. */
@@ -245,7 +250,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 10;
+export const VERSION_ETAT = 11;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -387,6 +392,8 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     ...maisonDeDepart(),
     ...recrutementDeDepart(),
     ...personnelDeDepart(),
+    clientele: clienteleDeDepart(),
+    nouveautes: [],
     didacticiel: options.didacticiel ? 0 : null,
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,
   };

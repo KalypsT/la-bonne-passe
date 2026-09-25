@@ -11,6 +11,7 @@ import { CarteImprevu } from './CarteImprevu';
 import { CarteEssai } from './CarteEssai';
 import { CarteAide } from './CarteAide';
 import { CartePalier } from './CartePalier';
+import { CarteNouveautes } from './CarteNouveautes';
 import { Didacticiel } from './Didacticiel';
 import { Panneau } from './Panneau';
 import { useInterface, type Fiche } from './store';
@@ -75,6 +76,7 @@ export function EcranJeu() {
       {carte === 'bilan' && <CarteBilan partie={partie} />}
       {carte === 'dispute' && <CarteDispute />}
       {carte === 'palier' && <CartePalier partie={partie} />}
+      {carte === 'nouveautes' && <CarteNouveautes partie={partie} />}
       {carte === 'entretien' && <CarteEntretien partie={partie} />}
       {carte === 'essai' && <CarteEssai partie={partie} />}
       {carte === 'imprevu' && <CarteImprevu partie={partie} />}

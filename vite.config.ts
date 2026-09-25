@@ -6,7 +6,8 @@ export default defineConfig({
   base: '/la-bonne-passe/',
   plugins: [react()],
   test: {
-    include: ['src/**/*.test.ts'],
+    // `npm run rapport` joue les parties simulées de l'équilibrage (fichiers *.rapport.ts), sans rien vérifier.
+    include: process.env.RAPPORT ? ['src/**/*.rapport.ts'] : ['src/**/*.test.ts'],
     environment: 'node',
   },
 });

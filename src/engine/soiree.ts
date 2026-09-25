@@ -11,6 +11,17 @@ import { declencherImprevu, type EvenementImprevu } from './imprevus';
 import { aTrait, nuitDuPersonnel, type EvenementPersonnel } from './personnel';
 import { revelerTraits, type EvenementRecrutement } from './recrutement';
 import { ecart, instant } from './temps';
+import {
+  attraitSegment,
+  changerReputationGlobale,
+  changerSatisfaction,
+  gainReputation,
+  noterClient,
+  ouvrirNuitClientele,
+  segmentOuvert,
+} from './clientele';
+
+export { gainReputation, segmentOuvert };
 
 export type EvenementSoiree =
   | { type: 'arrivee'; client: string }
@@ -76,6 +87,7 @@ export function ouvrirNuit(etat: EtatJeu): void {
   }
   etat.linge += etat.lingeCommande;
   etat.lingeCommande = 0;
+  ouvrirNuitClientele(etat);
 }
 
 export function fermerNuit(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
@@ -104,12 +116,6 @@ function mettreEnReserve(etat: EtatJeu, evenements: Sortie): void {
   evenements.push({ type: 'miseEnReserve', montant });
 }
 
-/** Variation de réputation après un rendez-vous : les gains ralentissent quand elle monte. */
-export function gainReputation(reputation: number, qualite: number): number {
-  const brut = (qualite - 0.4) * B.REPUTATION_PAR_RDV;
-  return brut > 0 ? brut * Math.pow(1 - reputation / 100, B.REPUTATION_FREIN) : brut;
-}
-
 function occupes(etat: EtatJeu) {
   return {
     chambres: new Set(etat.rendezVous.map((r) => r.chambreId)),
@@ -136,31 +142,23 @@ function patienceClient(etat: EtatJeu, modele: ModeleClient): number {
   return (modele.patience ?? B.PATIENCE_CLIENT) + (fetardeEnService(etat) ? B.TRAITS_EFFETS.fetardePatience : 0);
 }
 
-/** Segments de clientèle ouverts : Touristes et Habitués d'emblée, Affaires et Groupes au palier 2. */
-export function segmentOuvert(etat: EtatJeu, segment: Segment): boolean {
-  if (segment === 'affaires') return etat.systemes.affaires;
-  if (segment === 'groupe') return etat.systemes.groupes;
-  return true;
-}
-
 export function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
-  if (etat.file.length >= B.PLACES_FILE) {
-    if (etat.nuit) etat.nuit.perdus += 1;
-    etat.reputation = borner(etat.reputation - B.REPUTATION_FILE_PLEINE);
-    evenements.push({ type: 'filePleine' });
-    return;
-  }
   const presents = new Set([...etat.file.map((c) => c.modele), ...etat.rendezVous.map((r) => r.modele)]);
   const possibles = CLIENTS.filter((c) => !presents.has(c.id) && segmentOuvert(etat, c.segment));
   if (possibles.length === 0) return;
   const offre = trouverOffre(etat.offre);
   const poids = possibles.map((c) => {
-    let p = (offre.attire[c.segment] ?? 1) * B.POIDS_SEGMENTS[c.segment];
-    if (c.segment === 'habitue') p *= 0.6 + etat.reputation / 60;
+    let p = (offre.attire[c.segment] ?? 1) * B.POIDS_SEGMENTS[c.segment] * attraitSegment(etat, c.segment);
     if (c.segment === 'groupe' && fetardeEnService(etat)) p *= B.FETARDE_ATTIRE_GROUPES;
     return p;
   });
   const modele = tirage.choisir(possibles, poids);
+  // Quai plein : le client repart aussitôt, et son segment s'en souvient.
+  if (etat.file.length >= B.PLACES_FILE) {
+    perdreClient(etat, modele.segment, B.REPUTATION_FILE_PLEINE);
+    evenements.push({ type: 'filePleine' });
+    return;
+  }
   mettreSurLeQuai(etat, modele, evenements);
   // Un groupe, c'est rarement une personne seule.
   if (modele.segment === 'groupe' && etat.file.length < B.PLACES_FILE && tirage.chance(B.GROUPE_CHANCE_ACCOMPAGNE)) {
@@ -169,6 +167,13 @@ export function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void
     );
     if (amis.length > 0) mettreSurLeQuai(etat, tirage.choisir(amis), evenements);
   }
+}
+
+/** Un client repart sans avoir été reçu : son segment perd un peu, selon ce qu'il supporte mal. */
+function perdreClient(etat: EtatJeu, segment: Segment, perte: number): void {
+  if (etat.nuit) etat.nuit.perdus += 1;
+  noterClient(etat, segment, 'perdus');
+  changerSatisfaction(etat, segment, -perte * B.SATISFACTION_PAR_CLIENT * B.SENSIBILITE_ATTENTE[segment]);
 }
 
 function mettreSurLeQuai(etat: EtatJeu, modele: ModeleClient, evenements: Sortie): void {
@@ -236,8 +241,10 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
     Math.round((modele.budget * trouverOffre(etat.offre).prix * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
   const maison = Math.round(prix * (1 - employe.part));
   etat.tresorerie += maison;
-  const gain = gainReputation(etat.reputation, qualite);
-  etat.reputation = borner(etat.reputation + (gain > 0 ? gain * trouverOffre(etat.offre).reputation : gain));
+  const gain = gainReputation(etat.clientele.satisfaction[modele.segment], qualite);
+  const effet = gain > 0 ? gain * trouverOffre(etat.offre).reputation : gain;
+  changerSatisfaction(etat, modele.segment, effet * B.SATISFACTION_PAR_CLIENT);
+  noterClient(etat, modele.segment, 'servis');
 
   const fatigue = tirage.entre(B.FATIGUE_PAR_RDV_MIN, B.FATIGUE_PAR_RDV_MAX);
   employe.fatigue = borner(employe.fatigue + fatigue * (aTrait(employe, 'Fêtarde') ? B.TRAITS_EFFETS.fetardeFatigue : 1));
@@ -283,8 +290,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
       client.patience -= B.MINUTES_PAR_TICK;
       if (client.patience <= 0) {
         etat.file = etat.file.filter((c) => c !== client);
-        etat.reputation = borner(etat.reputation - B.REPUTATION_CLIENT_PERDU);
-        if (etat.nuit) etat.nuit.perdus += 1;
+        perdreClient(etat, modeleClient(client.modele).segment, B.REPUTATION_CLIENT_PERDU);
         evenements.push({ type: 'clientParti', client: modeleClient(client.modele).nom });
       }
     }
@@ -303,7 +309,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
     if (etat.dispute && maintenant >= etat.dispute.expire) {
       etat.dispute = null;
       depenser(etat, B.DISPUTE_CASSE);
-      etat.reputation = borner(etat.reputation - B.DISPUTE_REPUTATION);
+      changerReputationGlobale(etat, -B.DISPUTE_REPUTATION);
       evenements.push({ type: 'disputeDegeneree', montant: B.DISPUTE_CASSE });
     } else if (
       !etat.dispute &&

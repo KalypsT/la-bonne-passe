@@ -1,4 +1,6 @@
+import { SEGMENTS } from '../content/clientele';
 import { TEXTES } from '../content/textes';
+import { segmentsOuverts } from '../engine/clientele';
 import type { EtatJeu } from '../engine/etat';
 import { formaterEuros } from './format';
 import { Jauge } from './Jauge';
@@ -68,6 +70,25 @@ export function CarteBilan({ partie }: { partie: EtatJeu }) {
                 <h3>{t.pireAvis}</h3>
                 <p className="avis">« {bilan.pireAvis.texte} »</p>
                 <p className="sous">{bilan.pireAvis.client}</p>
+              </>
+            )}
+            {partie.systemes.clientele && (
+              <>
+                <h3>{t.clientele}</h3>
+                <dl className="bilan-segments">
+                  {segmentsOuverts(partie).map((s) => {
+                    const ecart = partie.clientele.satisfaction[s] - partie.clientele.satisfactionOuverture[s];
+                    return (
+                      <div key={s} style={{ display: 'contents' }}>
+                        <dt>{SEGMENTS[s]}</dt>
+                        <dd>
+                          {Math.round(partie.clientele.satisfaction[s])}{' '}
+                          <span className={ecart <= -0.5 ? 'negatif' : ecart >= 0.5 ? 'positif' : 'sous'}>({TEXTES.clientele.ecart(ecart)})</span>
+                        </dd>
+                      </div>
+                    );
+                  })}
+                </dl>
               </>
             )}
             <h3>{t.fatigue}</h3>

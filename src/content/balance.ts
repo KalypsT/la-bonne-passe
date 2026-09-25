@@ -192,9 +192,8 @@ export const SEUIL_MENACE_LEVEE = 30;
 export const DELAI_MENACE = 3;
 export const DELAI_MENACE_FIDELE = 2;
 export const LOYAUTE_DELAI_BONUS = 70;
-/** Un départ : le moral des autres et la réputation auprès des habitués en pâtissent. */
+/** Un départ : le moral des autres en pâtit (et la satisfaction des habitués, voir DEPART_SATISFACTION_HABITUES). */
 export const DEPART_MORAL_AUTRES = 5;
-export const DEPART_REPUTATION = 1;
 
 /** Effets des traits. */
 export const TRAITS_EFFETS = {
@@ -259,3 +258,30 @@ export const GROUPE_DISPUTE = 1.3;
 export const FETARDE_ATTIRE_GROUPES = 1.6;
 /** Poids de base des nouveaux segments dans les arrivées, avant l'offre du soir. */
 export const POIDS_SEGMENTS = { touriste: 1, habitue: 1, affaires: 0.7, groupe: 0.8 };
+
+// ——— Clientèle : satisfaction par segment (v0.3) ———
+
+/**
+ * Chaque segment a sa satisfaction (0 à 100), qui nourrit la réputation auprès de lui.
+ * La réputation globale est la moyenne pondérée des segments ouverts, avec ces poids.
+ */
+export const POIDS_REPUTATION = { touriste: 1, habitue: 1.2, affaires: 0.9, groupe: 0.8 };
+/**
+ * Un client ne touche que son segment : ses gains et ses pertes sont multipliés par ce facteur,
+ * pour que la réputation globale avance à peu près au même rythme qu'avant la v0.3.
+ */
+export const SATISFACTION_PAR_CLIENT = 2.2;
+/** Un client parti sans être reçu : perte multipliée selon ce que le segment supporte mal. */
+export const SENSIBILITE_ATTENTE = { touriste: 1, habitue: 1, affaires: 2, groupe: 0.8 };
+/** Un départ du personnel : les habitués perdent leurs repères. */
+export const DEPART_SATISFACTION_HABITUES = 3;
+/**
+ * Attrait d'un segment dans les arrivées : BASE + satisfaction × PENTE.
+ * Les habitués sont les plus sensibles : ils reviennent quand ils sont contents.
+ */
+export const ATTRAIT_BASE = 0.5;
+export const ATTRAIT_PENTE = { touriste: 0.02, habitue: 0.035, affaires: 0.025, groupe: 0.015 };
+/** Nuits gardées pour la fréquentation affichée dans l'onglet Clientèle. */
+export const NUITS_HISTORIQUE_CLIENTELE = 7;
+/** Humeur d'un segment affichée dans sa fiche : basse sous le premier seuil, haute au-dessus du second. */
+export const SEUILS_HUMEUR = [25, 50] as const;

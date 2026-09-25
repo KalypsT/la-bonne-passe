@@ -20,7 +20,7 @@ export const JOSEE = {
 /** Ce que Josée dit en présentant chaque palier. */
 export const JOSEE_PALIERS: Record<number, string> = {
   1: 'Première nuit bouclée. Demain, des candidats vont passer : Sanne ne peut pas tout porter seule. Et ces chambres sous les draps, elles ne se rouvriront pas toutes seules.',
-  2: 'On commence à parler de toi dans le quartier. Les costumes-cravates et les bandes de copains arrivent : les premiers sont pressés, les seconds bruyants.',
+  2: 'On commence à parler de toi dans le quartier. Les costumes-cravates et les bandes de copains arrivent : les premiers sont pressés, les seconds bruyants. Chacun sa page dans le carnet : soigne ceux qui comptent pour toi.',
 };
 
 /** Remarques de Josée sur la réserve de sécurité. */

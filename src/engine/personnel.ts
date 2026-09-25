@@ -4,6 +4,7 @@
 import * as B from '../content/balance';
 import { CHAMBRES } from '../content/maison';
 import type { Employe, EtatJeu } from './etat';
+import { changerSatisfaction } from './clientele';
 import { creerTirage, type Tirage } from './hasard';
 
 export type EvenementPersonnel =
@@ -139,7 +140,7 @@ export function depart(etat: EtatJeu, e: Employe, evenements: Sortie): void {
   etat.essaisATrancher = etat.essaisATrancher.filter((id) => id !== e.id);
   for (const cle of Object.keys(etat.affinites)) if (cle.split('|').includes(e.id)) delete etat.affinites[cle];
   for (const autre of etat.personnel) changerMoral(autre, -B.DEPART_MORAL_AUTRES);
-  etat.reputation = borner(etat.reputation - B.DEPART_REPUTATION);
+  changerSatisfaction(etat, 'habitue', -B.DEPART_SATISFACTION_HABITUES);
   etat.adieux.push(e.prenom);
   evenements.push({ type: 'depart', prenom: e.prenom });
 }

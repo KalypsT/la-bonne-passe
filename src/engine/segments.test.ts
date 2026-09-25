@@ -3,6 +3,7 @@ import * as B from '../content/balance';
 import { CLIENTS, trouverOffre } from '../content/clientele';
 import { creerEtatInitial, type EtatJeu } from './etat';
 import { creerTirage } from './hasard';
+import { fixerReputation } from './clientele';
 import { accorderPalier } from './paliers';
 import { arrivee, facteurDispute, modeleClient, segmentOuvert } from './soiree';
 import { tick } from './tick';
@@ -32,7 +33,7 @@ describe('palier 2 : se faire un nom', () => {
     const avant = { ...soiree(1), minuteDuJour: h(3, 55), reputation: B.REPUTATION_PALIER_2 + 0.5 };
     const { etat, evenements } = tick(avant);
     expect(etat.palier).toBe(2);
-    expect(etat.systemes).toMatchObject({ affaires: true, groupes: true, bar: false, clientele: false });
+    expect(etat.systemes).toMatchObject({ affaires: true, groupes: true, bar: false, clientele: true });
     expect(etat.annonces).toEqual([2]);
     expect(evenements).toContainEqual({ type: 'palier', numero: 2 });
   });
@@ -99,7 +100,8 @@ describe('offres et moral', () => {
     expect(trouverOffre('feutree').qualite).toBeGreaterThan(0);
     const rdv = { chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', duree: 60, restant: 5 };
     const gain = (offre: 'classique' | 'happy') => {
-      const avant = soiree(1, { offre, rendezVous: [rdv], reputation: 20 });
+      const avant = soiree(1, { offre, rendezVous: [rdv] });
+      fixerReputation(avant, 20);
       return tick(avant).etat.reputation - 20;
     };
     expect(gain('happy')).toBeGreaterThan(gain('classique'));
