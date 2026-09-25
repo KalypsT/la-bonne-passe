@@ -27,7 +27,7 @@ function avancer(etat: EtatJeu, n: number) {
     const r = tick(courant);
     evenements.push(...r.evenements);
     courant = r.evenements.some((e) => e.type === 'briefing')
-      ? appliquerOrdres(r.etat, [{ type: 'validerBriefing' }])
+      ? appliquerOrdres(r.etat, [{ type: 'validerBriefing' }]).etat
       : r.etat;
   }
   return { etat: courant, evenements };
@@ -53,7 +53,7 @@ describe('tick du moteur', () => {
     const { etat, evenements } = tick(partieA(h(23, 55)));
     expect(etat.minuteDuJour).toBe(0);
     expect(etat.jour).toBe(1);
-    expect(evenements).toEqual([]);
+    expect(evenements.filter((e) => e.type === 'nouveauJour')).toEqual([]);
   });
 
   it('change de jour à 5 h', () => {
@@ -82,26 +82,26 @@ describe('briefing de 19 h', () => {
   });
 
   it('reprend le temps une fois le briefing validé', () => {
-    const valide = appliquerOrdres(creerEtatInitial(), [{ type: 'validerBriefing' }]);
+    const valide = appliquerOrdres(creerEtatInitial(), [{ type: 'validerBriefing' }]).etat;
     expect(valide.briefingJour).toBe(1);
     expect(tick(valide).etat.minuteDuJour).toBe(HEURE_BRIEFING + 5);
   });
 
   it('ignore une validation hors du briefing', () => {
     const etat = { ...partieA(h(10), 2), briefingJour: 1 };
-    expect(appliquerOrdres(etat, [{ type: 'validerBriefing' }])).toBe(etat);
+    expect(appliquerOrdres(etat, [{ type: 'validerBriefing' }]).etat).toEqual(etat);
   });
 });
 
 describe('ouverture et fermeture', () => {
   it('ouvre à 20 h et ferme à 4 h', () => {
     const { etat: ouverte, evenements } = tick(partieA(h(19, 55)));
-    expect(evenements).toEqual([{ type: 'ouverture', jour: 1 }]);
+    expect(evenements[0]).toEqual({ type: 'ouverture', jour: 1 });
     expect(estOuvert(ouverte)).toBe(true);
     expect(estOuvert(partieA(h(2)))).toBe(true);
 
     const fermeture = tick(partieA(h(3, 55)));
-    expect(fermeture.evenements).toEqual([{ type: 'fermeture', jour: 1 }]);
+    expect(fermeture.evenements.filter((e) => e.type === 'fermeture')).toEqual([{ type: 'fermeture', jour: 1 }]);
     expect(estOuvert(fermeture.etat)).toBe(false);
     expect(HEURE_OUVERTURE).toBe(h(20));
     expect(HEURE_FERMETURE).toBe(h(4));
@@ -113,7 +113,8 @@ describe('ouverture et fermeture', () => {
 
   it('enchaîne une journée complète : briefing, ouverture, fermeture, nouveau jour', () => {
     const { etat, evenements } = avancer(creerEtatInitial(), 1 + (24 * 60) / MINUTES_PAR_TICK);
-    expect(evenements.map((e) => e.type)).toEqual(['briefing', 'ouverture', 'fermeture', 'nouveauJour', 'briefing']);
+    const rythme = ['briefing', 'ouverture', 'fermeture', 'nouveauJour'];
+    expect(evenements.map((e) => e.type).filter((t) => rythme.includes(t))).toEqual([...rythme, 'briefing']);
     expect(etat.jour).toBe(2);
     expect(etat.minuteDuJour).toBe(HEURE_BRIEFING);
   });

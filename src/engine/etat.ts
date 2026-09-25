@@ -2,12 +2,15 @@ import {
   ETAT_CHAMBRE_FERMEE,
   ETAT_CHAMBRE_OUVERTE,
   GRAINE_PAR_DEFAUT,
+  LINGE_INITIAL,
   MINUTE_DE_DEPART,
   PROPRETE_CHAMBRE_OUVERTE,
   REPUTATION_INITIALE,
   TRESORERIE_INITIALE,
 } from '../content/balance';
+import type { Offre } from '../content/clientele';
 import { CHAMBRES } from '../content/maison';
+import { SANNE, type DefinitionEmploye, type Talent } from '../content/personnel';
 import { PARTIE_PAR_DEFAUT, type Genre } from '../content/partie';
 
 /** Drapeaux d'ouverture des systèmes. L'interface masque ou verrouille ce qui est fermé. */
@@ -41,6 +44,57 @@ export interface EtatChambre {
   etat: number;
 }
 
+export interface Employe {
+  id: string;
+  talents: Record<Talent, number>;
+  traits: string[];
+  /** Part gardée sur chaque rendez-vous. */
+  part: number;
+  fatigue: number;
+  moral: number;
+  loyaute: number;
+  /** Rendez-vous déjà faits ce soir. */
+  rdvCeSoir: number;
+  /** Au repos jusqu'à la fin de la nuit. */
+  repos: boolean;
+}
+
+export interface ClientEnFile {
+  id: number;
+  modele: string;
+  /** Patience restante, en minutes. */
+  patience: number;
+}
+
+export interface RendezVous {
+  chambreId: string;
+  employeId: string;
+  clientId: number;
+  modele: string;
+  duree: number;
+  /** Minutes restantes. */
+  restant: number;
+}
+
+export interface Avis {
+  client: string;
+  texte: string;
+  qualite: number;
+}
+
+/** Comptes de la nuit en cours, pour le bilan de fermeture. */
+export interface Nuit {
+  numero: number;
+  recettes: number;
+  partPersonnel: number;
+  depenses: number;
+  servis: number;
+  perdus: number;
+  reputationDebut: number;
+  meilleurAvis: Avis | null;
+  pireAvis: Avis | null;
+}
+
 export interface EtatJeu {
   version: number;
   joueur: Joueur;
@@ -61,12 +115,27 @@ export interface EtatJeu {
   /** Dernier jour dont le briefing de 19 h a été validé (0 : aucun). */
   briefingJour: number;
   chambres: EtatChambre[];
+  personnel: Employe[];
+  equipes: { menage: number };
+  /** Draps propres en stock. */
+  linge: number;
+  /** Draps commandés au briefing, livrés à l'ouverture. */
+  lingeCommande: number;
+  offre: Offre;
+  file: ClientEnFile[];
+  rendezVous: RendezVous[];
+  prochainClient: number;
+  /** Nuit en cours, ou dernière nuit terminée jusqu'à la prochaine ouverture. */
+  nuit: Nuit | null;
+  nuitsBouclees: number;
+  /** Dispute en cours sur le quai : instant (en minutes absolues) où elle dégénère. */
+  dispute: { expire: number } | null;
   /** État courant du générateur pseudo-aléatoire. */
   hasard: number;
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 4;
+export const VERSION_ETAT = 5;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -90,6 +159,37 @@ export function chambresDeDepart(): EtatChambre[] {
   }));
 }
 
+export function creerEmploye(def: DefinitionEmploye): Employe {
+  return {
+    id: def.id,
+    talents: { ...def.talents },
+    traits: [...def.traits],
+    part: def.part,
+    fatigue: def.fatigue,
+    moral: def.moral,
+    loyaute: def.loyaute,
+    rdvCeSoir: 0,
+    repos: false,
+  };
+}
+
+/** Champs ajoutés en version 5 : le personnel et la vie de la soirée. */
+export function soireeDeDepart() {
+  return {
+    personnel: [creerEmploye(SANNE)],
+    equipes: { menage: 1 },
+    linge: LINGE_INITIAL,
+    lingeCommande: 0,
+    offre: 'classique' as Offre,
+    file: [],
+    rendezVous: [],
+    prochainClient: 1,
+    nuit: null,
+    nuitsBouclees: 0,
+    dispute: null,
+  };
+}
+
 export interface OptionsNouvellePartie {
   graine?: number;
   joueur?: Joueur;
@@ -111,6 +211,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     minuteDuJour: MINUTE_DE_DEPART,
     briefingJour: 0,
     chambres: chambresDeDepart(),
+    ...soireeDeDepart(),
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,
   };
 }

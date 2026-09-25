@@ -3,12 +3,17 @@ import { trouverChambre, trouverPiece } from '../content/maison';
 import { TEXTES } from '../content/textes';
 import type { EtatChambre, EtatJeu } from '../engine/etat';
 import { estOuvert, momentDeLaJournee } from '../engine/temps';
+import type { Alerte } from '../engine/alertes';
 import { Avatar } from './Avatar';
 import { DecorChambre } from './DecorChambres';
 import { GEOMETRIE_CHAMBRES, GEOMETRIE_PIECES, type Rect } from './geometrie';
+import { Vie, type Montant } from './Vie';
 
 interface Props {
   partie: EtatJeu;
+  alertes: Alerte[];
+  montants: Montant[];
+  onAlerte: (alerte: Alerte) => void;
   /** Pièce mise en évidence (fiche ouverte dans le panneau). */
   selection: string | null;
   onChoisir: (id: string) => void;
@@ -24,7 +29,7 @@ function lumiereDuJour(minute: number): number {
 }
 
 /** La maison en coupe : décor du prototype, piloté par l'état du jeu. */
-export function Maison({ partie, selection, onChoisir }: Props) {
+export function Maison({ partie, alertes, montants, onAlerte, selection, onChoisir }: Props) {
   const ouvert = estOuvert(partie);
   const moment = momentDeLaJournee(partie);
   const jour = lumiereDuJour(partie.minuteDuJour);
@@ -223,6 +228,8 @@ export function Maison({ partie, selection, onChoisir }: Props) {
           />
         ))}
       </g>
+
+      <Vie partie={partie} alertes={alertes} montants={montants} onAlerte={onAlerte} />
     </svg>
   );
 }
@@ -362,6 +369,11 @@ function Motifs() {
           <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
+      <pattern id="velours" width="8" height="10" patternUnits="userSpaceOnUse">
+        <rect width="8" height="10" fill="#6A0C25" />
+        <rect width="3" height="10" fill="#8C1733" />
+        <rect x="6.4" width="1.2" height="10" fill="#4A0619" />
+      </pattern>
       <filter id="flou">
         <feGaussianBlur stdDeviation="2.5" />
       </filter>
