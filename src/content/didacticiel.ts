@@ -108,7 +108,7 @@ export const AIDE_ONGLETS: Record<string, string> = {
   personnel:
     'Ton équipe et tes candidats. Surveille fatigue et moral : sous 20 de moral, on te menace de partir. Un entretien ou une prime, ça aide. Un soir de repos aussi.',
   clientele:
-    'Tes clients, segment par segment. Chacun a sa satisfaction : contents, ils reviennent ; ta réputation est leur moyenne. Touche un segment pour voir ce qu’il attend.',
+    'Tes clients, segment par segment. Chacun a sa satisfaction : contents, ils reviennent ; ta réputation est leur moyenne. Touche un segment pour voir ce qu’il attend. Les règles de la maison (tarif, formule, porte, accueil) se changent à tout moment.',
   finances:
     'Ta trésorerie, l’emprunt et la réserve de sécurité. La mensualité tombe le 28 : la réserve paie en premier.',
   relations: 'Le quartier, la mairie, les voisins et les rivales. Pas encore ouvert.',

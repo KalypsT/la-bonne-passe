@@ -21,6 +21,7 @@ import { TALENTS, TRAITS, type Talent } from '../content/personnel';
 import { TEXTES } from '../content/textes';
 import type { Candidat, Employe, EtatJeu, Systemes } from '../engine/etat';
 import { affinite, peutRecevoirEnEntretien, peutRecevoirPrime } from '../engine/personnel';
+import { quotaAtteint } from '../engine/regles';
 import { jourProchaineMensualite, NOMBRE_MENSUALITES } from '../engine/soiree';
 import { estOuvert, heureDeInstant, jourDeLaSemaine } from '../engine/temps';
 import { Figurine } from '../scene/Figurine';
@@ -29,7 +30,7 @@ import { Cadenas } from './Icones';
 import { Jauge } from './Jauge';
 import { JoseeLigne } from './Josee';
 import { texteEvenement } from './journal';
-import { FicheSegment, OngletClientele } from './OngletClientele';
+import { FicheRegles, FicheSegment, OngletClientele } from './OngletClientele';
 import { useInterface, type Fiche, type Onglet } from './store';
 
 const t = TEXTES.panneau;
@@ -90,6 +91,8 @@ export function Panneau({ partie }: { partie: EtatJeu }) {
           <FicheEmploye partie={partie} id={fiche.id} />
         ) : fiche?.type === 'segment' ? (
           <FicheSegment partie={partie} id={fiche.id} />
+        ) : fiche?.type === 'regles' ? (
+          <FicheRegles partie={partie} />
         ) : fiche ? (
           <FichePiece partie={partie} fiche={fiche} />
         ) : (
@@ -272,7 +275,7 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
     </button>
   );
 
-  if (fiche.type === 'employe' || fiche.type === 'segment') return retour;
+  if (fiche.type === 'employe' || fiche.type === 'segment' || fiche.type === 'regles') return retour;
   if (fiche.type === 'piece') {
     const piece = trouverPiece(fiche.id);
     const rouvre = palier(2);
@@ -337,7 +340,7 @@ function statutEmploye(partie: EtatJeu, e: Employe): string {
   if (e.repos) return st.repos;
   if (!estOuvert(partie)) return st.horsService;
   if (e.fatigue > SEUIL_EPUISEMENT) return st.epuisee(e.genre);
-  if (e.rdvCeSoir >= partie.rdvMax) return st.quota;
+  if (quotaAtteint(partie, e)) return st.quota;
   return st.disponible;
 }
 
@@ -409,7 +412,7 @@ function FicheEmploye({ partie, id }: { partie: EtatJeu; id: string }) {
       <Jauge nom={p.fatigue} valeur={employe.fatigue} alerte={employe.fatigue > 70} />
       <Jauge nom={p.moral} valeur={employe.moral} alerte={employe.moral < 35} />
       <Jauge nom={p.loyaute} valeur={employe.loyaute} />
-      {estOuvert(partie) && <p className="sous">{p.rdvCeSoir(employe.rdvCeSoir, partie.rdvMax)}</p>}
+      {estOuvert(partie) && <p className="sous">{p.rdvCeSoir(employe.rdvCeSoir, employe.chargeCeSoir, partie.rdvMax)}</p>}
       {estOuvert(partie) && !employe.repos && (
         <button className="bouton discret pleine-largeur" disabled={enRdv} onClick={() => ordonner({ type: 'repos', employeId: employe.id })}>
           {p.mettreAuRepos}

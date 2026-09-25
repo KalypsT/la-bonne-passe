@@ -9,6 +9,9 @@ import {
   RDV_MAX_PAR_SOIR,
   REPUTATION_INITIALE,
   TRESORERIE_INITIALE,
+  type IdFormule,
+  type IdPriorite,
+  type IdSelection,
 } from '../content/balance';
 import type { Offre } from '../content/clientele';
 import { CHAMBRES } from '../content/maison';
@@ -34,6 +37,23 @@ export interface Systemes {
   affaires: boolean;
   groupes: boolean;
   bar: boolean;
+  /** Tarif général et formule (palier 2). */
+  tarifs: boolean;
+  /** Sélection à l'entrée et priorité d'accueil (palier 2). */
+  porte: boolean;
+}
+
+/** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
+export interface Regles {
+  /** Indice du cran de tarif dans TARIFS (1 : prix normal). */
+  tarif: number;
+  formule: IdFormule;
+  selection: IdSelection;
+  priorite: IdPriorite;
+}
+
+export function reglesDeDepart(): Regles {
+  return { tarif: 1, formule: 'standard', selection: 'normale', priorite: 'arrivee' };
 }
 
 export interface Joueur {
@@ -84,6 +104,8 @@ export interface Employe extends Identite {
   loyaute: number;
   /** Rendez-vous déjà faits ce soir. */
   rdvCeSoir: number;
+  /** Charge de ces rendez-vous (un court compte moins, une soirée complète plus), comparée au maximum du planning. */
+  chargeCeSoir: number;
   /** Au repos jusqu'à la fin de la nuit. */
   repos: boolean;
   /** Repos prévu au planning du briefing : appliqué à l'ouverture. */
@@ -134,6 +156,8 @@ export interface RendezVous {
   employeId: string;
   clientId: number;
   modele: string;
+  /** Formule en vigueur quand le rendez-vous a commencé. */
+  formule: IdFormule;
   duree: number;
   /** Minutes restantes. */
   restant: number;
@@ -241,6 +265,7 @@ export interface EtatJeu {
   adieux: string[];
   /** Satisfaction par segment et fréquentation (v0.3). La réputation en est la moyenne pondérée. */
   clientele: Clientele;
+  regles: Regles;
   /** Nouveautés arrivées avec une mise à jour du jeu, pour un palier déjà atteint : Josée les présente. */
   nouveautes: string[];
   /** Étape du didacticiel de Madame Josée, ou null s'il est fini ou passé. */
@@ -250,7 +275,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 11;
+export const VERSION_ETAT = 12;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -266,6 +291,8 @@ export function systemesDeDepart(): Systemes {
     affaires: false,
     groupes: false,
     bar: false,
+    tarifs: false,
+    porte: false,
   };
 }
 
@@ -297,6 +324,7 @@ export function creerEmploye(def: DefinitionEmploye): Employe {
     moral: def.moral,
     loyaute: def.loyaute,
     rdvCeSoir: 0,
+    chargeCeSoir: 0,
     repos: false,
     ...suiviDeDepart(),
   };
@@ -393,6 +421,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     ...recrutementDeDepart(),
     ...personnelDeDepart(),
     clientele: clienteleDeDepart(),
+    regles: reglesDeDepart(),
     nouveautes: [],
     didacticiel: options.didacticiel ? 0 : null,
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,

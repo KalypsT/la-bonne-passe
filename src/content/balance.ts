@@ -1,5 +1,7 @@
 // Valeurs d'équilibrage du jeu, regroupées ici pour pouvoir les ajuster facilement.
 
+import type { Segment } from './clientele';
+
 /** Durée d'un pas du moteur, en minutes de jeu. */
 export const MINUTES_PAR_TICK = 5;
 
@@ -285,3 +287,71 @@ export const ATTRAIT_PENTE = { touriste: 0.02, habitue: 0.035, affaires: 0.025, 
 export const NUITS_HISTORIQUE_CLIENTELE = 7;
 /** Humeur d'un segment affichée dans sa fiche : basse sous le premier seuil, haute au-dessus du second. */
 export const SEUILS_HUMEUR = [25, 50] as const;
+
+// ——— Règles de la maison (v0.3, palier 2) : tarifs, formule, sélection, priorité ———
+
+/** Crans du tarif général : écart au prix normal. */
+export const TARIFS = [-0.2, 0, 0.2] as const;
+/**
+ * Sensibilité de chaque segment au tarif : la demande varie de −élasticité × écart
+ * (au tarif +20 %, les touristes viennent 30 % moins, les affaires 4 % moins).
+ */
+export const ELASTICITE_PRIX = { touriste: 1.5, habitue: 0.8, affaires: 0.2, groupe: 1 };
+/** Demande minimale d'un segment, quel que soit le tarif. */
+export const DEMANDE_PRIX_MIN = 0.2;
+/** Le tarif se sent aussi dans l'avis : qualité ressentie − élasticité × écart × ce facteur. */
+export const PRIX_RESSENTI = 0.8;
+/** À ce prix-là, on attend : patience sur le quai × (1 − écart × ce facteur). */
+export const PATIENCE_TARIF = 1;
+
+export type IdFormule = 'court' | 'standard' | 'complete';
+export interface ReglageFormule {
+  /** Durée, prix, fatigue, usure du moral et salissure, en multiplicateurs. */
+  duree: number;
+  prix: number;
+  /** Ce que compte le rendez-vous dans le maximum par personne et par soir. */
+  charge: number;
+  /** Arrivées multipliées, et poids de certains segments : les pressés fuient les longues soirées. */
+  affluence: number;
+  attire: Partial<Record<Segment, number>>;
+  fatigue: number;
+  salissure: number;
+  /** Qualité ressentie selon le segment. */
+  qualite: Partial<Record<Segment, number>>;
+}
+export const FORMULES: Record<IdFormule, ReglageFormule> = {
+  court: { duree: 0.6, prix: 0.6, charge: 0.75, affluence: 1.1, attire: { affaires: 1.4 }, fatigue: 0.7, salissure: 0.7, qualite: { affaires: 0.06, touriste: -0.03, habitue: -0.08 } },
+  standard: { duree: 1, prix: 1, charge: 1, affluence: 1, attire: {}, fatigue: 1, salissure: 1, qualite: {} },
+  complete: { duree: 1.5, prix: 1.7, charge: 1.5, affluence: 0.8, attire: { affaires: 0.4, habitue: 1.3 }, fatigue: 1.4, salissure: 1.2, qualite: { habitue: 0.1, touriste: 0.06, groupe: 0.03, affaires: -0.1 } },
+};
+
+export type IdSelection = 'laxiste' | 'normale' | 'stricte';
+export interface ReglageSelection {
+  /** Arrivées multipliées. */
+  affluence: number;
+  /** Chance de dispute multipliée. */
+  dispute: number;
+  /** Poids d'un segment dans les arrivées, multiplié. */
+  attire: Partial<Record<Segment, number>>;
+  /** Part des clients d'un segment refusés à la porte. */
+  refus: Partial<Record<Segment, number>>;
+  /** Qualité ressentie selon le segment : une maison calme ou un joyeux bazar. */
+  qualite: Partial<Record<Segment, number>>;
+  /** Portier loué pour la soirée, payé à l'ouverture. */
+  cout: number;
+}
+export const SELECTIONS: Record<IdSelection, ReglageSelection> = {
+  laxiste: { affluence: 1, dispute: 1.6, attire: { groupe: 1.4, touriste: 1.1 }, refus: {}, qualite: { groupe: 0.05, touriste: 0.03, habitue: -0.03, affaires: -0.04 }, cout: 0 },
+  normale: { affluence: 1, dispute: 1, attire: {}, refus: {}, qualite: {}, cout: 0 },
+  stricte: { affluence: 1, dispute: 0.4, attire: {}, refus: { groupe: 0.5, touriste: 0.2 }, qualite: { habitue: 0.03, affaires: 0.04 }, cout: 80 },
+};
+/** Un client refusé à la porte : son segment le prend un peu mal (avant SATISFACTION_PAR_CLIENT). */
+export const REFUS_SATISFACTION = 0.15;
+
+export type IdPriorite = 'arrivee' | 'habitues' | 'presses';
+/** Le segment servi en priorité se sent reconnu : qualité ressentie en plus. */
+export const PRIORITE_QUALITE: Record<IdPriorite, Partial<Record<Segment, number>>> = {
+  arrivee: {},
+  habitues: { habitue: 0.04 },
+  presses: { affaires: 0.04 },
+};

@@ -22,7 +22,7 @@ import { clienteleDeDepart } from '../engine/clientele';
 import { SYSTEMES_PAR_PALIER } from '../engine/paliers';
 import { planifierVisitesScenarisees } from '../engine/recrutement';
 import { PARTIE_PAR_DEFAUT } from '../content/partie';
-import { VERSION_ETAT, type EtatJeu } from '../engine/etat';
+import { reglesDeDepart, VERSION_ETAT, type EtatJeu } from '../engine/etat';
 
 type Donnees = Record<string, unknown>;
 
@@ -155,6 +155,20 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       nouveautes: deuxieme ? ['clientele'] : [],
     };
   },
+  // v11 → v12 : règles de la maison (tarif, formule, sélection, priorité), ouvertes au palier 2.
+  // Chaque personne compte la charge de ses rendez-vous du soir ; un rendez-vous en cours est une formule standard.
+  11: (d) => {
+    const deuxieme = typeof d.palier === 'number' && d.palier >= 2;
+    const systemes = { ...(estObjet(d.systemes) ? d.systemes : {}), tarifs: deuxieme, porte: deuxieme };
+    const personnel = Array.isArray(d.personnel)
+      ? d.personnel.map((e: unknown) => (estObjet(e) ? { ...e, chargeCeSoir: typeof e.rdvCeSoir === 'number' ? e.rdvCeSoir : 0 } : e))
+      : d.personnel;
+    const rendezVous = Array.isArray(d.rendezVous)
+      ? d.rendezVous.map((r: unknown) => (estObjet(r) ? { ...r, formule: 'standard' } : r))
+      : d.rendezVous;
+    const nouveautes = [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(deuxieme ? ['regles'] : [])];
+    return { ...d, version: 12, systemes, personnel, rendezVous, regles: reglesDeDepart(), nouveautes };
+  },
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -205,6 +219,8 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(d.clientele.satisfaction) &&
     Array.isArray(d.clientele.historique) &&
     Array.isArray(d.nouveautes) &&
+    estObjet(d.regles) &&
+    typeof d.regles.tarif === 'number' &&
     estObjet(d.systemes)
   );
 }

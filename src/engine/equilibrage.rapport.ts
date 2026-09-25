@@ -3,6 +3,7 @@
 
 import { it } from 'vitest';
 import type { Offre, Segment } from '../content/clientele';
+import type { Regles } from './etat';
 import { partsDeClientele, simuler, type ResumeNuit } from './simulation';
 
 const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -15,6 +16,7 @@ interface Strategie {
   rdvMax: number;
   recruter?: boolean;
   renover?: boolean;
+  regles?: Partial<Regles>;
 }
 
 const STRATEGIES: Strategie[] = [
@@ -22,6 +24,14 @@ const STRATEGIES: Strategie[] = [
   { nom: 'Classique, 4', offre: 'classique', rdvMax: 4 },
   { nom: 'Happy hour, 4', offre: 'happy', rdvMax: 4 },
   { nom: 'Feutrée, 4', offre: 'feutree', rdvMax: 4 },
+  { nom: 'Classique 3, tarif −20 %', offre: 'classique', rdvMax: 3, regles: { tarif: 0 } },
+  { nom: 'Classique 3, tarif +20 %', offre: 'classique', rdvMax: 3, regles: { tarif: 2 } },
+  { nom: 'Classique 3, formule courte', offre: 'classique', rdvMax: 3, regles: { formule: 'court' } },
+  { nom: 'Classique 3, soirée complète', offre: 'classique', rdvMax: 3, regles: { formule: 'complete' } },
+  { nom: 'Classique 3, sélection laxiste', offre: 'classique', rdvMax: 3, regles: { selection: 'laxiste' } },
+  { nom: 'Classique 3, sélection stricte', offre: 'classique', rdvMax: 3, regles: { selection: 'stricte' } },
+  { nom: 'Classique 3, habitués d’abord', offre: 'classique', rdvMax: 3, regles: { priorite: 'habitues' } },
+  { nom: 'Classique 3, pressés d’abord', offre: 'classique', rdvMax: 3, regles: { priorite: 'presses' } },
   { nom: 'Passif (classique, sans recruter ni rénover)', offre: 'classique', rdvMax: 4, recruter: false, renover: false },
 ];
 

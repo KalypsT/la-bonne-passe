@@ -80,7 +80,7 @@ describe('planning du briefing', () => {
     const deux = ouvrir(equipe(), { rdvMax: 2 });
     expect(deux.rdvMax).toBe(2);
     expect(ouvrir(equipe(), { rdvMax: 7 }).rdvMax).toBe(B.RDV_MAX_PAR_SOIR);
-    const auMax = modifier({ ...deux, minuteDuJour: h(21), file: [{ id: 1, modele: 'poete', patience: 50 }] }, 'sanne', { rdvCeSoir: 2 });
+    const auMax = modifier({ ...deux, minuteDuJour: h(21), file: [{ id: 1, modele: 'poete', patience: 50 }] }, 'sanne', { rdvCeSoir: 2, chargeCeSoir: 2 });
     expect(tick(auMax).etat.rendezVous).toHaveLength(0);
   });
 
@@ -124,14 +124,14 @@ describe('effets des traits', () => {
 
   it('une Fêtarde se fatigue plus vite, mais les clients patientent plus longtemps', () => {
     const base = ouvrir(equipe(['ines']));
-    const rdv = (id: string) => ({ chambreId: 'boudoir', employeId: id, clientId: 1, modele: 'retraite', duree: 60, restant: 5 });
+    const rdv = (id: string) => ({ chambreId: 'boudoir', employeId: id, clientId: 1, modele: 'retraite', formule: 'standard' as const, duree: 60, restant: 5 });
     const fatigueDe = (id: string) => {
       const etat = modifier({ ...base, minuteDuJour: h(21), rendezVous: [rdv(id)] }, id, { fatigue: 20 });
       return perso(tick({ ...etat, hasard: 42 }).etat, id).fatigue - 20;
     };
     expect(fatigueDe('ines') / fatigueDe('sanne')).toBeCloseTo(B.TRAITS_EFFETS.fetardeFatigue, 1);
     // Personne ne reçoit : le premier client arrivé garde toute sa patience, et plus.
-    let soir: EtatJeu = { ...base, minuteDuJour: h(21), prochainClient: 2, personnel: base.personnel.map((e) => ({ ...e, rdvCeSoir: 9 })) };
+    let soir: EtatJeu = { ...base, minuteDuJour: h(21), prochainClient: 2, personnel: base.personnel.map((e) => ({ ...e, rdvCeSoir: 9, chargeCeSoir: 9 })) };
     for (let i = 0; i < 60 && soir.file.length === 0; i++) soir = tick(soir).etat;
     expect(soir.file.length).toBeGreaterThan(0);
     expect(soir.file[0]!.patience).toBe(B.PATIENCE_CLIENT + B.TRAITS_EFFETS.fetardePatience);
