@@ -111,7 +111,7 @@ describe('migrations', () => {
     expect(migre?.version).toBe(VERSION_ETAT);
     expect(migre?.jour).toBe(4);
     expect(migre?.minuteDuJour).toBe(22 * 60);
-    expect(migre?.paliers.personnel).toBe(true);
+    expect(migre?.systemes.personnel).toBe(true);
     expect(migre?.chapitre).toBe(1);
     expect(migre?.tresorerie).toBe(TRESORERIE_INITIALE);
     expect(typeof migre?.joueur.prenom).toBe('string');
@@ -119,15 +119,50 @@ describe('migrations', () => {
   });
 
   it('migre une sauvegarde v2 en gardant le joueur et en ajoutant la tenue', () => {
-    const v3 = creerEtatInitial({
-      joueur: { prenom: 'Bram', avatar: 'patron-2', tenue: 1, genre: 'patron' },
-      nomMaison: 'Le Velours',
-    });
-    const { tenue: _tenue, ...joueurV2 } = v3.joueur;
-    const migre = migrer({ ...v3, version: 2, joueur: joueurV2 });
+    const v2 = {
+      version: 2,
+      joueur: { prenom: 'Bram', avatar: 'patron-2', genre: 'patron' },
+      maison: { nom: 'Le Velours', ville: 'Amsterdam' },
+      chapitre: 1,
+      tresorerie: 2500,
+      jour: 3,
+      minuteDuJour: 10 * 60,
+      hasard: 5,
+      paliers: { personnel: false, clientele: false, finances: false, relations: false },
+    };
+    const migre = migrer(v2);
     expect(migre?.version).toBe(VERSION_ETAT);
     expect(migre?.joueur).toEqual({ prenom: 'Bram', avatar: 'patron-2', tenue: 0, genre: 'patron' });
     expect(migre?.maison.nom).toBe('Le Velours');
+    expect(migre?.tresorerie).toBe(2500);
+  });
+
+  it('migre une sauvegarde v3 : chambres, réputation, systèmes et briefing', () => {
+    const v3 = (minuteDuJour: number, jour: number) => ({
+      version: 3,
+      joueur: { prenom: 'Inès', avatar: 'patronne-3', tenue: 1, genre: 'patronne' },
+      maison: { nom: 'Rouge & Or', ville: 'Amsterdam' },
+      chapitre: 1,
+      tresorerie: 3000,
+      jour,
+      minuteDuJour,
+      hasard: 5,
+      paliers: { personnel: false, clientele: false, finances: false, relations: false },
+    });
+    const aDixNeufHeures = migrer(v3(19 * 60, 1));
+    expect(aDixNeufHeures?.version).toBe(VERSION_ETAT);
+    expect(aDixNeufHeures?.briefingJour).toBe(0);
+    expect(aDixNeufHeures?.chambres.filter((c) => c.ouverte).map((c) => c.id)).toEqual(['boudoir']);
+    expect(aDixNeufHeures?.systemes.personnel).toBe(true);
+    expect(aDixNeufHeures?.systemes.clientele).toBe(false);
+    expect(aDixNeufHeures).not.toHaveProperty('paliers');
+
+    // 21 h : le briefing est considéré comme fait.
+    expect(migrer(v3(21 * 60, 1))?.briefingJour).toBe(1);
+    // 1 h du matin, jour 2 à l'ancienne (minuit) : c'est encore la soirée du jour 1.
+    const apresMinuit = migrer(v3(60, 2));
+    expect(apresMinuit?.jour).toBe(1);
+    expect(apresMinuit?.briefingJour).toBe(1);
   });
 
   it('refuse une version future ou des données sans version', () => {
