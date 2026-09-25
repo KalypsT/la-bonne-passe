@@ -57,7 +57,7 @@ export const TEXTES_FORMULES: Record<IdFormule, TexteOption> = {
   complete: {
     nom: 'Soirée complète',
     court: 'Complète',
-    effet: 'Une heure et demie, 70 % plus cher, plus fatigant. Les habitués sont comblés ; les pressés passent leur chemin.',
+    effet: 'Une heure et demie, 85 % plus cher, plus fatigant. Les habitués sont comblés ; les pressés passent leur chemin.',
     josee: 'Du temps, du champagne imaginaire et des confidences. Ça rapporte, mais les chambres tournent moins.',
   },
 };

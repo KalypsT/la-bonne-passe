@@ -47,8 +47,8 @@ const arrondi = (n: number) => Math.round(n).toLocaleString('fr-FR');
 
 it('rapport d’équilibrage', () => {
   const lignes = [
-    '| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |',
-    '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+    '| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
   ];
   for (const s of STRATEGIES) {
     const parties = GRAINES.map((graine) => simuler({ graine, nuits: NUITS, ...s, offre: s.offreSelon ?? s.offre }));
@@ -63,6 +63,11 @@ it('rapport d’équilibrage', () => {
         `${arrondi(moy((p) => semaine2(p).reduce((t, n) => t + n.resultat, 0) / 7))} € | ` +
         `${arrondi(moy((p) => semaine2(p).reduce((t, n) => t + n.net, 0) / 7))} € | ` +
         `${arrondi(moy((p) => p.etat.tresorerie + p.etat.reserve))} € | ` +
+        `${moy((p) => {
+          const s = semaine2(p);
+          const perdus = s.reduce((t, n) => t + n.perdus, 0);
+          return (100 * perdus) / Math.max(1, perdus + s.reduce((t, n) => t + n.servis, 0));
+        }).toFixed(0)} % | ` +
         `${moy((p) => p.etat.personnel.reduce((t, e) => t + e.moral, 0) / Math.max(1, p.etat.personnel.length)).toFixed(0)} | ` +
         `${moy((p) => p.departs).toFixed(1).replace('.', ',')} | ${SEGMENTS.map((seg) => parts[seg].toFixed(0)).join(' / ')} | ${satisfaction.join(' / ')} |`,
     );

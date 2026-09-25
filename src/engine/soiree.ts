@@ -342,7 +342,7 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   // Le client paie selon la qualité ; il juge aussi le prix, surtout s'il y est sensible.
   const ressentie = borner(qualite + prixRessenti(etat, modele.segment), 0, 1);
   const tarif = trouverOffre(etat.offre).prix * (1 + ecartTarif(etat)) * formule.prix * prixTheme(etat);
-  const prix = Math.round((modele.budget * tarif * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
+  const prix = Math.round((modele.budget * B.BUDGET_CLIENTS * tarif * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
   const maison = Math.round(prix * (1 - employe.part));
   encaisser(etat, maison, 'rendezVous');
   const gain = gainReputation(etat.clientele.satisfaction[modele.segment], ressentie);
