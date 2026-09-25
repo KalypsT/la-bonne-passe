@@ -221,7 +221,7 @@ Chaque segment a sa propre satisfaction, qui nourrit la réputation auprès de l
 
 ### Tendances
 
-Chaque semaine, un ou deux contextes modifient la demande : un congrès médical (Affaires en hausse), un match européen (Groupes), la haute saison (Touristes), un scandale politique (VIP en retrait). Ils s'annoncent au briefing du lundi.
+Chaque semaine, un ou deux contextes modifient la demande : un congrès médical (Affaires en hausse), un match européen (Groupes), la haute saison (Touristes), un scandale politique (VIP en retrait). Ils s'annoncent au briefing du lundi. Ils s'ouvrent au premier lundi après le palier 2, ne concernent que des segments ouverts, et certains creusent la demande (grève des trains, contrôles de police) : c'est alors l'offre, pas le prix, qui fait la différence. Josée les présente dans le bilan du lundi et au briefing, avec un conseil.
 
 ### Leviers d'offre
 
@@ -302,7 +302,7 @@ Cibles : une soirée correcte rapporte 600 à 1 000 € net à la maison, une ex
 
 | Outil | Ce que le joueur décide | Effet | Palier |
 | --- | --- | --- | --- |
-| Bilan du lundi | rien, il le lit | Recettes et dépenses par poste, résultat de la semaine, trésorerie projetée sur 4 semaines | Départ |
+| Bilan du lundi | rien, il le lit | Recettes et dépenses par poste, résultat de la semaine, trésorerie projetée sur 4 semaines (mensualités et remboursements compris) ; carte en pause le lundi à 5 h, à revoir dans l'onglet Finances | Départ |
 | Réserve de sécurité | 0, 10 ou 20 % de la recette du soir mis de côté | Couvre la mensualité ; y toucher hors urgence vaut une remarque de Josée | 1 |
 | Tarifs et formules | 3 crans de tarif général, une formule | ±20 % de recette par rendez-vous, effet inverse sur la demande selon le segment | 2 |
 | Avance fournisseur | accepter ou refuser une offre du grossiste | 1 500 € de stock du bar sans payer, remboursés +10 % sous 2 semaines | 2 |

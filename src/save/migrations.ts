@@ -18,7 +18,8 @@ import {
   suiviDeDepart,
 } from '../engine/etat';
 import { cleAffinite } from '../engine/personnel';
-import { clienteleDeDepart } from '../engine/clientele';
+import { clienteleDeDepart, type ParSegment } from '../engine/clientele';
+import { numeroSemaine, semaineDeDepart } from '../engine/semaine';
 import { SYSTEMES_PAR_PALIER } from '../engine/paliers';
 import { planifierVisitesScenarisees } from '../engine/recrutement';
 import { PARTIE_PAR_DEFAUT } from '../content/partie';
@@ -179,6 +180,16 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     const nouveautes = [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(deuxieme ? ['bar'] : [])];
     return { ...d, ...barDeDepart(), version: 13, systemes, equipes, nuit, nouveautes };
   },
+  // v13 → v14 : la semaine (comptes par poste, tendances) et le bilan du lundi.
+  // La semaine en cours repart de zéro ; les tendances s'ouvriront au prochain lundi, si le palier 2 est atteint.
+  13: (d) => {
+    const systemes = { ...(estObjet(d.systemes) ? d.systemes : {}), tendances: false };
+    const jour = typeof d.jour === 'number' ? d.jour : 1;
+    const reputation = typeof d.reputation === 'number' ? d.reputation : REPUTATION_INITIALE;
+    const semaine = { ...semaineDeDepart(reputation), numero: numeroSemaine(jour) };
+    if (estObjet(d.clientele) && estObjet(d.clientele.satisfaction)) semaine.satisfactionDebut = { ...(d.clientele.satisfaction as ParSegment) };
+    return { ...d, version: 14, systemes, semaine, bilanSemaine: null, bilanAVoir: false };
+  },
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -235,6 +246,8 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(d.avance) &&
     estObjet(d.equipes) &&
     typeof d.equipes.bar === 'number' &&
+    estObjet(d.semaine) &&
+    typeof d.bilanAVoir === 'boolean' &&
     estObjet(d.systemes)
   );
 }

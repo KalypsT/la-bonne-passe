@@ -296,7 +296,7 @@ export const TARIFS = [-0.2, 0, 0.2] as const;
  * Sensibilité de chaque segment au tarif : la demande varie de −élasticité × écart
  * (au tarif +20 %, les touristes viennent 30 % moins, les affaires 4 % moins).
  */
-export const ELASTICITE_PRIX = { touriste: 1.5, habitue: 0.8, affaires: 0.2, groupe: 1 };
+export const ELASTICITE_PRIX = { touriste: 2, habitue: 0.8, affaires: 0.2, groupe: 1.3 };
 /** Demande minimale d'un segment, quel que soit le tarif. */
 export const DEMANDE_PRIX_MIN = 0.2;
 /** Le tarif se sent aussi dans l'avis : qualité ressentie − élasticité × écart × ce facteur. */
@@ -311,6 +311,8 @@ export interface ReglageFormule {
   prix: number;
   /** Ce que compte le rendez-vous dans le maximum par personne et par soir. */
   charge: number;
+  /** Écart de prix ressenti, ajouté à celui du tarif : il agit sur la demande, l'avis et la patience. */
+  prixRessenti: number;
   /** Arrivées multipliées, et poids de certains segments : les pressés fuient les longues soirées. */
   affluence: number;
   attire: Partial<Record<Segment, number>>;
@@ -320,11 +322,11 @@ export interface ReglageFormule {
   qualite: Partial<Record<Segment, number>>;
 }
 export const FORMULES: Record<IdFormule, ReglageFormule> = {
-  court: { duree: 0.6, prix: 0.6, charge: 0.75, affluence: 1.1, attire: { affaires: 1.4 }, fatigue: 0.7, salissure: 0.7, qualite: { affaires: 0.06, touriste: -0.03, habitue: -0.08 } },
-  standard: { duree: 1, prix: 1, charge: 1, affluence: 1, attire: {}, fatigue: 1, salissure: 1, qualite: {} },
+  court: { duree: 0.6, prix: 0.6, charge: 0.75, prixRessenti: 0, affluence: 1.1, attire: { affaires: 1.4 }, fatigue: 0.7, salissure: 0.7, qualite: { affaires: 0.06, touriste: -0.03, habitue: -0.08 } },
+  standard: { duree: 1, prix: 1, charge: 1, prixRessenti: 0, affluence: 1, attire: {}, fatigue: 1, salissure: 1, qualite: {} },
   /** Rendez-vous classique avec une bouteille du bar (bar ouvert et servi). */
-  champagne: { duree: 1.1, prix: 1.25, charge: 1, affluence: 1, attire: { affaires: 1.2, groupe: 1.2 }, fatigue: 1.3, salissure: 1, qualite: { affaires: 0.05, groupe: 0.05, touriste: -0.06, habitue: -0.06 } },
-  complete: { duree: 1.5, prix: 1.7, charge: 1.5, affluence: 0.8, attire: { affaires: 0.4, habitue: 1.3 }, fatigue: 1.4, salissure: 1.2, qualite: { habitue: 0.1, touriste: 0.06, groupe: 0.03, affaires: -0.1 } },
+  champagne: { duree: 1.1, prix: 1.25, charge: 1, prixRessenti: 0.15, affluence: 1, attire: { affaires: 1.2, groupe: 1.2 }, fatigue: 1.3, salissure: 1, qualite: { affaires: 0.05, groupe: 0.05, touriste: -0.06, habitue: -0.06 } },
+  complete: { duree: 1.5, prix: 1.7, charge: 1.5, prixRessenti: 0.05, affluence: 0.8, attire: { affaires: 0.4, habitue: 1.3 }, fatigue: 1.4, salissure: 1.2, qualite: { habitue: 0.1, touriste: 0.06, groupe: 0.03, affaires: -0.1 } },
 };
 
 export type IdSelection = 'laxiste' | 'normale' | 'stricte';
@@ -389,3 +391,25 @@ export const BAR_PATIENCE = 10;
 /** Formule champagne : bouteilles prises au bar par rendez-vous. */
 export const CHAMPAGNE_BOUTEILLES = 1;
 export const AVANCE_FOURNISSEUR = { bouteilles: 250, valeur: 1500, taux: 0.1, jours: 14, heure: 11 * 60 };
+
+// ——— La semaine : tendances et bilan du lundi (v0.3) ———
+
+/** Chaque lundi, une tendance, et parfois une deuxième. */
+export const TENDANCE_DEUXIEME_CHANCE = 0.4;
+/**
+ * Effets des tendances : la demande de chaque segment est multipliée (le volume des arrivées suit),
+ * et certaines font monter le ton sur le quai. `segments` : ceux qui doivent être ouverts pour la tirer.
+ */
+export const TENDANCES_EFFETS: Record<string, { demande: Partial<Record<Segment, number>>; dispute?: number; segments: Segment[] }> = {
+  congres: { demande: { affaires: 2.2 }, segments: ['affaires'] },
+  match: { demande: { groupe: 2 }, dispute: 1.4, segments: ['groupe'] },
+  hauteSaison: { demande: { touriste: 1.7 }, segments: ['touriste'] },
+  greve: { demande: { touriste: 0.3, groupe: 0.4, affaires: 0.6, habitue: 0.8 }, segments: ['touriste', 'groupe'] },
+  salon: { demande: { affaires: 1.5, touriste: 1.2 }, segments: ['affaires'] },
+  pluie: { demande: { touriste: 0.6, groupe: 0.7, affaires: 0.8, habitue: 1.2 }, segments: ['habitue'] },
+  paie: { demande: { habitue: 1.6 }, segments: ['habitue'] },
+  evg: { demande: { groupe: 1.8, touriste: 1.1 }, dispute: 1.3, segments: ['groupe'] },
+  controles: { demande: { touriste: 0.5, habitue: 0.5, affaires: 0.4, groupe: 0.5 }, segments: ['affaires'] },
+};
+/** Projection du bilan du lundi : sur combien de semaines. */
+export const SEMAINES_PROJETEES = 4;

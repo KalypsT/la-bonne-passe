@@ -169,3 +169,55 @@ Lecture :
 - **La sélection laxiste rapporte enfin quelque chose** : les groupes boivent 30 € chacun. Elle passe à +22 € par jour, toujours au prix de −6 de réputation.
 - **La formule champagne** : +250 € par jour au début, mais touristes et habitués décrochent (26 et 27 de satisfaction) et le personnel se fatigue plus vite. En réglant, un poids de 1,15 par rendez-vous faisait tomber un maximum de 3 à 2 rendez-vous par soir et ruinait la formule : attention aux paliers entiers de la charge.
 - **Paradoxe à traiter en partie 6** : la patience en plus sur le quai et la meilleure qualité attirent plus de monde dans une maison déjà pleine, donc plus de clients perdus. D'où la réputation un peu plus basse avec le bar (31 contre 33 sans). La pénalité des clients perdus pèse trop lourd face à la saturation.
+
+## La semaine : tendances et bilan du lundi (v0.3, partie 4)
+
+- **Comptes par poste** (`src/engine/comptes.ts`) : chaque mouvement d'argent passe par `depenser`, `encaisser` ou `noterDepense`, avec son poste. Un test vérifie, sur 5 semaines simulées, que le résultat de chaque bilan égale exactement la variation de trésorerie + réserve d'un lundi à l'autre.
+- **Bilan du lundi** à 5 h (carte en pause) : recettes et dépenses par poste, résultat, réputation, clients, satisfaction par segment, et avoir projeté sur 4 semaines (résultat de la semaine hors travaux, mensualités et remboursement du grossiste à leur date).
+- **Tendances** : ouvertes au premier lundi après le palier 2, 1 tendance par semaine et 40 % de chances d'une deuxième, parmi celles dont les segments sont ouverts. Elles multiplient la demande d'un segment (le volume des arrivées suit) et parfois les disputes (`TENDANCES_EFFETS`).
+- **Élasticité au prix relevée** : touristes 1,5 → 2, groupes 1 → 1,3. Chaque formule a un écart de prix ressenti (champagne +0,15, soirée complète +0,05) : sans lui, le champagne gagnait toutes les semaines creuses.
+- **Semaines creuses creusées** : grève (touristes × 0,3, groupes × 0,4, affaires × 0,6, habitués × 0,8), contrôles (tout × 0,4 à 0,5). Sinon la maison restait pleine et rien ne changeait.
+
+### L'offre change-t-elle la partie ?
+
+Première mesure, avant réglage : la même réponse gagnait toutes les semaines (tarif +20 % pour l'argent, soirée feutrée pour la réputation). La maison étant presque toujours pleine, les tendances ne changeaient rien.
+
+Après réglage, une même tendance forcée toutes les semaines (6 graines, 35 nuits, classique à 3 ; argent = résultat réel par jour des nuits 15 à 35, puis réputation à la nuit 35) :
+
+| Semaine | Classique | Tarif +20 % | Sélection stricte | Sélection laxiste |
+| --- | --- | --- | --- | --- |
+| Congrès médical | 518 € · 30 | 850 € · 20 | 557 € · 38 | 530 € · 22 |
+| Contrôles de police | 285 € · 48 | 173 € · 36 | 100 € · 50 | 304 € · 43 |
+| Match européen | 407 € · 15 | 665 € · 17 | 404 € · 36 | 399 € · 11 |
+
+- Le tarif +20 % rapporte 60 % de plus pendant un congrès, et 40 % de moins pendant une semaine de contrôles.
+- Un soir de match, le portier fait passer la réputation de 15 à 36 ; la porte ouverte la fait tomber à 11.
+- Pendant une semaine creuse, brader ne sert à rien (le tarif −20 % perd 25 à 40 %) : mieux vaut vendre plus à ceux qui viennent (soirée complète, champagne). Josée le dit.
+
+Un joueur simulé qui suit les tendances (`choixAdaptatif` dans `simulation.ts`) finit le mois avec une réputation de 36 contre 29 pour la classique fixe, et 1 000 € de plus. `src/engine/equilibrage-semaine.test.ts` garde ces trois résultats. Les tests d'équilibrage du bar et des règles jouent sans tendance, pour mesurer la mécanique et pas le hasard des semaines.
+
+| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 4 à 6 | 30 / 27 / 29 | 709 € | 1 144 € | 12 640 € | 78 | 0,0 | 23 / 28 / 18 / 32 | 28 / 34 / 14 / 37 |
+| Classique, 4 | 3 à 4 | 32 / 34 / 34 | 801 € | 1 245 € | 15 736 € | 68 | 0,4 | 24 / 31 / 19 / 26 | 36 / 41 / 18 / 41 |
+| Happy hour, 4 | 3 à 3 | 34 / 34 / 33 | 593 € | 1 039 € | 9 252 € | 64 | 0,7 | 33 / 28 / 11 / 28 | 44 / 37 / 8 / 40 |
+| Feutrée, 4 | 3 à 4 | 33 / 41 / 47 | 769 € | 1 209 € | 13 782 € | 73 | 0,1 | 21 / 39 / 17 / 23 | 45 / 56 / 35 / 49 |
+| Adaptatif (suit les tendances), 3 | 4 à 6 | 30 / 32 / 36 | 811 € | 1 247 € | 13 638 € | 80 | 0,0 | 22 / 34 / 20 / 24 | 26 / 47 / 33 / 36 |
+| Classique 3, sans bar | 4 à 6 | 30 / 29 / 29 | 554 € | 880 € | 12 326 € | 80 | 0,0 | 25 / 31 / 15 / 29 | 28 / 37 / 17 / 33 |
+| Classique 3, bar à 2, sans avance | 4 à 6 | 30 / 29 / 31 | 573 € | 1 156 € | 10 303 € | 81 | 0,0 | 23 / 28 / 18 / 32 | 30 / 36 / 16 / 38 |
+| Classique 3, champagne | 4 à 6 | 30 / 28 / 22 | 884 € | 1 321 € | 15 478 € | 79 | 0,2 | 18 / 32 / 21 / 30 | 5 / 25 / 27 / 36 |
+| Classique 3, tarif −20 % | 4 à 6 | 30 / 32 / 32 | 458 € | 894 € | 6 378 € | 76 | 0,0 | 26 / 32 / 14 / 27 | 44 / 35 / 5 / 41 |
+| Classique 3, tarif +20 % | 4 à 6 | 29 / 27 / 24 | 836 € | 1 272 € | 16 062 € | 80 | 0,0 | 16 / 32 / 23 / 29 | 5 / 35 / 30 / 25 |
+| Classique 3, formule courte | 4 à 6 | 32 / 35 / 39 | 644 € | 1 080 € | 10 816 € | 81 | 0,0 | 20 / 28 / 23 / 28 | 36 / 36 / 37 / 49 |
+| Classique 3, soirée complète | 4 à 6 | 29 / 27 / 30 | 743 € | 1 179 € | 13 298 € | 79 | 0,0 | 21 / 40 / 6 / 33 | 24 / 48 / 8 / 37 |
+| Classique 3, sélection laxiste | 4 à 6 | 29 / 26 / 23 | 609 € | 1 045 € | 10 749 € | 79 | 0,0 | 20 / 32 / 13 / 35 | 26 / 22 / 5 / 43 |
+| Classique 3, sélection stricte | 4 à 6 | 31 / 36 / 42 | 480 € | 915 € | 8 963 € | 80 | 0,0 | 25 / 36 / 21 / 18 | 40 / 53 / 37 / 34 |
+| Classique 3, habitués d’abord | 4 à 6 | 30 / 29 / 30 | 710 € | 1 146 € | 11 885 € | 78 | 0,0 | 23 / 31 / 18 / 28 | 27 / 39 / 13 / 39 |
+| Classique 3, pressés d’abord | 4 à 6 | 31 / 29 / 29 | 732 € | 1 168 € | 12 332 € | 77 | 0,0 | 22 / 28 / 20 / 30 | 27 / 32 / 19 / 39 |
+| Passif (classique, sans recruter ni rénover) | jamais | 11 / 5 / 2 | 10 € | 231 € | 2 148 € | 46 | 0,0 | 58 / 42 / 0 / 0 | 2 / 1 / 0 / 0 |
+
+À surveiller :
+
+- **Les semaines chargées font baisser la réputation de tout le monde** : plus de demande dans une maison pleine, ce sont plus de clients perdus. La classique fixe tombe à 29 à la nuit 28 (33 sans tendance). C'est le paradoxe déjà noté : à traiter en partie 6.
+- **Le tarif −20 % ne rapporte jamais**, même en semaine creuse (il faudrait 25 % de clients en plus rien que pour compenser). Il ne sert qu'à la satisfaction des touristes. À revoir en partie 6, avec la saturation.
+- **Champagne et tarif +20 % font tomber les touristes à 5** sur un mois : ceux qui jouent l'argent à fond le paient.

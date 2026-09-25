@@ -12,6 +12,8 @@ import { declencherImprevu, type EvenementImprevu } from './imprevus';
 import { aTrait, nuitDuPersonnel, type EvenementPersonnel } from './personnel';
 import { revelerTraits, type EvenementRecrutement } from './recrutement';
 import { ecart, instant } from './temps';
+import { depenser, encaisser, noterDepense } from './comptes';
+import { demandeTendance, disputeTendance } from './semaine';
 import {
   attraitSegment,
   changerReputationGlobale,
@@ -96,11 +98,7 @@ function nouvelleNuit(etat: EtatJeu): Nuit {
   };
 }
 
-/** Dépense : trésorerie et comptes de la nuit en cours. */
-export function depenser(etat: EtatJeu, montant: number): void {
-  etat.tresorerie -= montant;
-  if (etat.nuit && etat.nuitsBouclees < etat.nuit.numero) etat.nuit.depenses += montant;
-}
+export { depenser };
 
 export function ouvrirNuit(etat: EtatJeu, evenements: Sortie): void {
   etat.nuit = nouvelleNuit(etat);
@@ -120,7 +118,7 @@ export function ouvrirNuit(etat: EtatJeu, evenements: Sortie): void {
   // Sélection stricte : le portier se paie à l'ouverture.
   const portier = selectionActive(etat).cout;
   if (portier > 0) {
-    depenser(etat, portier);
+    depenser(etat, portier, 'portier');
     evenements.push({ type: 'portier', montant: portier });
   }
 }
@@ -182,7 +180,7 @@ export function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void
   const presents = new Set([...etat.file.map((c) => c.modele), ...etat.rendezVous.map((r) => r.modele)]);
   const possibles = CLIENTS.filter((c) => !presents.has(c.id) && segmentOuvert(etat, c.segment));
   if (possibles.length === 0) return;
-  const poids = possibles.map((c) => poidsSegment(etat, c.segment) * demandePrix(etat, c.segment));
+  const poids = possibles.map((c) => poidsSegment(etat, c.segment) * demandeSegment(etat, c.segment));
   const modele = tirage.choisir(possibles, poids);
   // Sélection à l'entrée : la porte se referme poliment.
   const refus = selectionActive(etat).refus[modele.segment] ?? 0;
@@ -226,20 +224,25 @@ function poidsSegment(etat: EtatJeu, segment: Segment): number {
   return p;
 }
 
+/** Demande d'un segment : l'effet inverse du tarif, et les tendances de la semaine. */
+function demandeSegment(etat: EtatJeu, segment: Segment): number {
+  return demandePrix(etat, segment) * demandeTendance(etat, segment);
+}
+
 /**
- * Effet du tarif sur le volume des arrivées : la demande moyenne des clients possibles, pondérée
- * par leur poids. Un tarif haut fait fuir surtout les segments sensibles au prix.
+ * Effet du tarif et des tendances sur le volume des arrivées : la demande moyenne des clients possibles,
+ * pondérée par leur poids. Un tarif haut fait fuir surtout les segments sensibles au prix ; un congrès fait venir du monde.
  */
-export function facteurTarif(etat: EtatJeu): number {
+export function facteurDemande(etat: EtatJeu): number {
   let total = 0;
-  let avecPrix = 0;
+  let avecDemande = 0;
   for (const c of CLIENTS) {
     if (!segmentOuvert(etat, c.segment)) continue;
     const p = poidsSegment(etat, c.segment);
     total += p;
-    avecPrix += p * demandePrix(etat, c.segment);
+    avecDemande += p * demandeSegment(etat, c.segment);
   }
-  return total > 0 ? avecPrix / total : 1;
+  return total > 0 ? avecDemande / total : 1;
 }
 
 function mettreSurLeQuai(etat: EtatJeu, modele: ModeleClient, evenements: Sortie): void {
@@ -321,7 +324,7 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   const tarif = trouverOffre(etat.offre).prix * (1 + ecartTarif(etat)) * formule.prix;
   const prix = Math.round((modele.budget * tarif * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
   const maison = Math.round(prix * (1 - employe.part));
-  etat.tresorerie += maison;
+  encaisser(etat, maison, 'rendezVous');
   const gain = gainReputation(etat.clientele.satisfaction[modele.segment], ressentie);
   const effet = gain > 0 ? gain * trouverOffre(etat.offre).reputation : gain;
   changerSatisfaction(etat, modele.segment, effet * B.SATISFACTION_PAR_CLIENT);
@@ -359,7 +362,7 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
 export function facteurDispute(etat: EtatJeu): number {
   const n = etat.personnel.filter((e) => e.enServiceCeSoir && !e.repos && aTrait(e, 'Tête brûlée')).length;
   const groupes = etat.file.filter((c) => modeleClient(c.modele).segment === 'groupe').length;
-  return Math.pow(B.TRAITS_EFFETS.teteBruleeDispute, n) * Math.pow(B.GROUPE_DISPUTE, groupes) * selectionActive(etat).dispute;
+  return Math.pow(B.TRAITS_EFFETS.teteBruleeDispute, n) * Math.pow(B.GROUPE_DISPUTE, groupes) * selectionActive(etat).dispute * disputeTendance(etat);
 }
 
 /** Un pas de 5 minutes de la vie de la maison. */
@@ -392,14 +395,14 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
       trouverOffre(etat.offre).affluence *
       selectionActive(etat).affluence *
       B.FORMULES[formuleActive(etat)].affluence *
-      facteurTarif(etat);
+      facteurDemande(etat);
     if (premierClientGaranti || tirage.chance(parHeure * heures)) arrivee(etat, tirage, evenements);
 
     // Dispute sur le quai
     const maintenant = instant(etat);
     if (etat.dispute && maintenant >= etat.dispute.expire) {
       etat.dispute = null;
-      depenser(etat, B.DISPUTE_CASSE);
+      depenser(etat, B.DISPUTE_CASSE, 'incidents');
       changerReputationGlobale(etat, -B.DISPUTE_REPUTATION);
       evenements.push({ type: 'disputeDegeneree', montant: B.DISPUTE_CASSE });
     } else if (
@@ -448,7 +451,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
   if (etat.minuteDuJour === B.HEURE_SALAIRES) {
     const montant = etat.equipes.menage * B.SALAIRE_MENAGE + etat.equipes.bar * B.SALAIRE_BAR;
     if (montant > 0) {
-      depenser(etat, montant);
+      depenser(etat, montant, 'salaires');
       evenements.push({ type: 'salaires', montant });
     }
   }
@@ -456,6 +459,15 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
 
 /** Nombre de mensualités de l'emprunt de rachat. */
 export const NOMBRE_MENSUALITES = Math.ceil(B.EMPRUNT_RACHAT / B.MENSUALITE);
+
+/** Jours des prochaines mensualités (jusqu'à n), dans l'ordre. */
+export function prochainesMensualites(etat: EtatJeu, n: number): number[] {
+  const jours: number[] = [];
+  for (let k = etat.mensualitesPayees; k < NOMBRE_MENSUALITES && jours.length < n; k++) {
+    jours.push(B.JOUR_PREMIERE_MENSUALITE + k * B.JOURS_PAR_MOIS);
+  }
+  return jours;
+}
 
 /** Jour de la prochaine mensualité, ou null si l'emprunt est remboursé. */
 export function jourProchaineMensualite(etat: EtatJeu): number | null {
@@ -466,7 +478,7 @@ export function jourProchaineMensualite(etat: EtatJeu): number | null {
 /** Charges fixes au début de chaque lundi (sauf le tout premier), mensualité le jour dit. */
 export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
   if (etat.jour > 1 && (etat.jour - 1) % 7 === 0) {
-    depenser(etat, B.CHARGES_FIXES);
+    depenser(etat, B.CHARGES_FIXES, 'charges');
     evenements.push({ type: 'charges', montant: B.CHARGES_FIXES });
   }
   rembourserAvance(etat, evenements);
@@ -474,7 +486,8 @@ export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
     // La réserve paie en premier, la trésorerie complète.
     const depuisReserve = Math.min(etat.reserve, B.MENSUALITE);
     etat.reserve -= depuisReserve;
-    depenser(etat, B.MENSUALITE - depuisReserve);
+    noterDepense(etat, depuisReserve, 'mensualite');
+    depenser(etat, B.MENSUALITE - depuisReserve, 'mensualite');
     etat.mensualitesPayees += 1;
     evenements.push({
       type: 'mensualite',

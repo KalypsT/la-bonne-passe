@@ -5,6 +5,7 @@ import * as B from '../content/balance';
 import { CHAMBRES } from '../content/maison';
 import type { Employe, EtatJeu } from './etat';
 import { changerSatisfaction } from './clientele';
+import { depenser } from './comptes';
 import { creerTirage, type Tirage } from './hasard';
 
 export type EvenementPersonnel =
@@ -211,8 +212,7 @@ export function appliquerPersonnel(etat: EtatJeu, ordre: OrdrePersonnel, eveneme
       const e = etat.personnel.find((x) => x.id === ordre.employeId);
       const prime = B.PRIMES[ordre.niveau];
       if (!e || !prime || !etat.systemes.planning || !peutRecevoirPrime(etat, e)) return;
-      etat.tresorerie -= prime.montant;
-      if (etat.nuit && etat.nuitsBouclees < etat.nuit.numero) etat.nuit.depenses += prime.montant;
+      depenser(etat, prime.montant, 'personnel');
       e.dernierePrime = etat.jour;
       changerMoral(e, prime.moral);
       changerLoyaute(e, prime.loyaute);

@@ -22,6 +22,7 @@ import { TEXTES } from '../content/textes';
 import type { Candidat, Employe, EtatJeu, Systemes } from '../engine/etat';
 import { affinite, peutRecevoirEnEntretien, peutRecevoirPrime } from '../engine/personnel';
 import { quotaAtteint } from '../engine/regles';
+import { totalDepenses, totalRecettes } from '../engine/comptes';
 import { jourProchaineMensualite, NOMBRE_MENSUALITES } from '../engine/soiree';
 import { estOuvert, heureDeInstant, jourDeLaSemaine } from '../engine/temps';
 import { Figurine } from '../scene/Figurine';
@@ -549,6 +550,7 @@ function OngletPersonnel({ partie }: { partie: EtatJeu }) {
 }
 
 function OngletFinances({ partie }: { partie: EtatJeu }) {
+  const ouvrirCarte = useInterface((s) => s.ouvrirCarte);
   const jour = jourProchaineMensualite(partie);
   const restantes = NOMBRE_MENSUALITES - partie.mensualitesPayees;
   return (
@@ -571,6 +573,22 @@ function OngletFinances({ partie }: { partie: EtatJeu }) {
           </div>
         )}
       </dl>
+      <dl className="chiffres">
+        <div>
+          <dt>{TEXTES.semaine.enCours}</dt>
+          <dd>
+            {TEXTES.semaine.enCoursDetail(
+              formaterEuros(totalRecettes(partie.semaine.comptes)),
+              formaterEuros(totalDepenses(partie.semaine.comptes)),
+            )}
+          </dd>
+        </div>
+      </dl>
+      {partie.bilanSemaine && (
+        <button className="bouton discret pleine-largeur" onClick={() => ouvrirCarte('semaine')}>
+          {TEXTES.semaine.revoir}
+        </button>
+      )}
       {partie.avance.statut === 'acceptee' && partie.avance.echeance !== null && (
         <dl className="chiffres">
           <div>

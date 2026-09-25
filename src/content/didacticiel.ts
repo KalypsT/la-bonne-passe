@@ -110,7 +110,7 @@ export const AIDE_ONGLETS: Record<string, string> = {
   clientele:
     'Tes clients, segment par segment. Chacun a sa satisfaction : contents, ils reviennent ; ta réputation est leur moyenne. Touche un segment pour voir ce qu’il attend. Les règles de la maison (tarif, formule, porte, accueil) se changent à tout moment.',
   finances:
-    'Ta trésorerie, l’emprunt et la réserve de sécurité. La mensualité tombe le 28 : la réserve paie en premier.',
+    'Ta trésorerie, l’emprunt et la réserve de sécurité. La mensualité tombe le 28 : la réserve paie en premier. Chaque lundi, le bilan de la semaine fait les comptes poste par poste.',
   relations: 'Le quartier, la mairie, les voisins et les rivales. Pas encore ouvert.',
   journal: 'Tout ce qui s’est passé, du plus récent au plus ancien.',
 };

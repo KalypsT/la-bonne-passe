@@ -308,6 +308,18 @@ describe('migrations', () => {
     expect(avant?.nouveautes).toEqual([]);
   });
 
+  it('migre une sauvegarde v13 : semaine en cours sans comptes, pas de bilan en attente, tendances au prochain lundi', () => {
+    const { semaine: _s, bilanSemaine: _b, bilanAVoir: _a, ...etat } = creerEtatInitial();
+    const { tendances: _t, ...systemes } = etat.systemes;
+    const migre = migrer({ ...etat, version: 13, jour: 16, reputation: 31, palier: 2, systemes });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.semaine).toMatchObject({ numero: 3, tendances: [], reputationDebut: 31, servis: 0, perdus: 0 });
+    expect(migre?.semaine.comptes.recettes.rendezVous).toBe(0);
+    expect(migre?.bilanSemaine).toBeNull();
+    expect(migre?.bilanAVoir).toBe(false);
+    expect(migre?.systemes.tendances).toBe(false);
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

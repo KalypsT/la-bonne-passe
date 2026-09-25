@@ -4,6 +4,7 @@ import * as B from '../content/balance';
 import type { Offre, Segment } from '../content/clientele';
 import type { ParSegment } from './clientele';
 import { creerEtatInitial, type EtatJeu, type Regles } from './etat';
+import type { BilanSemaine } from './semaine';
 import { appliquerOrdresSurPlace, tickSurPlace, type Ordre } from './tick';
 
 export interface ResumeNuit {
@@ -36,22 +37,25 @@ export interface OptionsSimulation {
   /** Rénover les chambres dès que la trésorerie le permet. */
   renover?: boolean;
   rdvMax?: number;
-  /** Règles de la maison appliquées dès leur ouverture (palier 2). */
-  regles?: Partial<Regles>;
+  /** Règles de la maison appliquées dès leur ouverture (palier 2), fixes ou choisies selon la partie. */
+  regles?: Partial<Regles> | ((etat: EtatJeu) => Partial<Regles>);
   /** Rouvrir le bar une fois les chambres rénovées, avec cet effectif (0 : ne pas rouvrir). */
   equipeBar?: number;
   /** Accepter l'avance du grossiste. */
   avance?: boolean;
+  /** Pour les mesures : ces tendances toutes les semaines, dès qu'elles sont ouvertes. */
+  tendances?: string[];
 }
 
 const ORDRE_RENOVATION = ['orientale', 'velours', 'miroirs'];
 
 /** Joue une partie avec des décisions simples et raisonnables, et résume chaque nuit. */
-export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat: EtatJeu; departs: number } {
+export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat: EtatJeu; departs: number; bilans: BilanSemaine[] } {
   const { graine, nuits, recruter = true, renover = true, rdvMax = 3, equipeBar = 1, avance = true } = options;
   const etat = creerEtatInitial({ graine });
   const resumes: ResumeNuit[] = [];
   let departs = 0;
+  const bilans: BilanSemaine[] = [];
   let avoirPrecedent = etat.tresorerie + etat.reserve;
   // La simulation travaille sur sa propre copie de l'état, modifiée sur place : bien plus rapide.
   const jouer = (ordres: Ordre[]) => {
@@ -68,6 +72,7 @@ export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat
     const r = { evenements: tickSurPlace(etat, ordres) };
     for (const e of r.evenements) {
       if (e.type === 'depart') departs += 1;
+      if (e.type === 'bilanSemaine' && etat.bilanSemaine) bilans.push(structuredClone(etat.bilanSemaine));
       if (e.type === 'bilan') {
         resumes.push({
           numero: e.nuit.numero,
@@ -88,9 +93,11 @@ export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat
       }
     }
 
+    if (options.tendances && etat.systemes.tendances) etat.semaine.tendances = options.tendances;
+
     // Règles de la maison, dès qu'elles s'ouvrent.
     if (options.regles && etat.systemes.tarifs) {
-      const r = options.regles;
+      const r = typeof options.regles === 'function' ? options.regles(etat) : options.regles;
       const ordresRegles: Ordre[] = [];
       if (r.tarif !== undefined && r.tarif !== etat.regles.tarif) ordresRegles.push({ type: 'regle', regle: 'tarif', valeur: r.tarif });
       if (r.formule && r.formule !== etat.regles.formule) ordresRegles.push({ type: 'regle', regle: 'formule', valeur: r.formule });
@@ -145,7 +152,7 @@ export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat
       jouer([{ type: 'validerBriefing', offre, commanderLinge: etat.linge < 40, commanderBar, repos, rdvMax }]);
     }
   }
-  return { nuits: resumes, etat, departs };
+  return { nuits: resumes, etat, departs, bilans };
 }
 
 /** Part de chaque segment parmi les clients servis sur un ensemble de nuits, en %. */
@@ -155,4 +162,23 @@ export function partsDeClientele(nuits: ResumeNuit[]): Record<Segment, number> {
   const somme = Object.values(total).reduce((a, b) => a + b, 0) || 1;
   for (const s of Object.keys(total) as Segment[]) total[s] = (total[s] * 100) / somme;
   return total;
+}
+
+/**
+ * Le joueur qui lit les tendances du lundi et adapte son offre et ses règles.
+ * Sert à vérifier que l'offre change vraiment la partie (voir equilibrage-semaine.test.ts).
+ */
+export function choixAdaptatif(etat: EtatJeu): { offre: Offre; regles: Partial<Regles> } {
+  const t = new Set(etat.semaine.tendances);
+  const barPlein = etat.bar.ouvert && etat.equipes.bar > 0 && etat.bar.stock > 20;
+  const base: Partial<Regles> = { tarif: 1, formule: 'standard', selection: 'normale', priorite: 'arrivee' };
+  // Les notes de frais en ville : les prix montent, les pressés passent devant.
+  if (t.has('congres') || t.has('salon')) return { offre: 'classique', regles: { ...base, tarif: 2, priorite: 'presses' } };
+  // Les bandes de copains ou la foule : un portier garde la maison vivable.
+  if (t.has('match') || t.has('evg') || t.has('hauteSaison')) return { offre: 'classique', regles: { ...base, selection: 'stricte' } };
+  // Semaine creuse : on ne brade pas, on vend plus à ceux qui viennent.
+  if (t.has('greve') || t.has('controles')) return { offre: 'classique', regles: { ...base, formule: barPlein ? 'champagne' : 'complete' } };
+  // Les habitués reviennent : on les choie.
+  if (t.has('pluie') || t.has('paie')) return { offre: 'feutree', regles: { ...base, priorite: 'habitues' } };
+  return { offre: 'classique', regles: base };
 }

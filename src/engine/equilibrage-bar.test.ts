@@ -17,7 +17,8 @@ beforeAll(() => {
     parties.set(
       nom,
       GRAINES.map((graine) => {
-        const r = simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 42, ...options });
+        // Sans tendance : on mesure le bar, pas le hasard des semaines.
+        const r = simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 42, tendances: [], ...options });
         return { nuits: r.nuits, avoir: r.etat.tresorerie + r.etat.reserve };
       }),
     );

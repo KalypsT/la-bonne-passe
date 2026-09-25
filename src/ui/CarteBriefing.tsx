@@ -10,6 +10,7 @@ import { TEXTES_DIDACTICIEL } from '../content/didacticiel';
 import { JoseeLigne } from './Josee';
 import { resumeRegles } from './OngletClientele';
 import { TEXTES_FORMULES } from '../content/regles';
+import { trouverTendance } from '../content/tendances';
 import { formuleActive } from '../engine/regles';
 import { useInterface } from './store';
 
@@ -24,6 +25,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
   const [rdvMax, setRdvMax] = useState(partie.rdvMax);
   const planning = partie.systemes.planning;
   const formule = formuleActive(partie);
+  const tendances = partie.semaine.tendances.flatMap((id) => trouverTendance(id) ?? []);
   const basculer = (id: string) => {
     const suivant = repos.includes(id) ? repos.filter((x) => x !== id) : [...repos, id];
     if (suivant.length < partie.personnel.length) setRepos(suivant);
@@ -139,6 +141,14 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
               <p className="sous">
                 <b>{t.regles}</b> {resumeRegles(partie)}
               </p>
+            )}
+            {tendances.length > 0 && (
+              <>
+                <p className="sous">
+                  <b>{t.tendances}</b> {tendances.map((td) => td.nom).join(' · ')}
+                </p>
+                {jourDeLaSemaine(partie.jour) === 0 && partie.didacticiel === null && <JoseeLigne texte={tendances[0]!.josee} />}
+              </>
             )}
           </section>
         </div>
