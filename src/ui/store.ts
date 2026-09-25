@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { trouverAvatar } from '../content/avatars';
 import type { Offre } from '../content/clientele';
+import { ETAPES_DIDACTICIEL, type AttenteDidacticiel } from '../content/didacticiel';
+import { alertes } from '../engine/alertes';
 import { creerEtatInitial, type EtatJeu, type Nuit } from '../engine/etat';
 import { nettoyerNom } from '../engine/identite';
 import { secondesParTick } from '../engine/temps';
@@ -24,7 +26,8 @@ export type Carte =
   | 'essai'
   | 'imprevu'
   | 'entretienIndividuel'
-  | 'adieu';
+  | 'adieu'
+  | 'aide';
 
 export interface ChoixCreation {
   prenom: string;
@@ -89,6 +92,9 @@ interface EtatInterface {
   ouvrirEntretien: (candidatId: string) => void;
   /** Reçoit une personne de l'équipe en entretien individuel (carte en pause). */
   ouvrirEntretienIndividuel: (employeId: string) => void;
+  /** Signale au didacticiel une action du joueur ; l'étape avance si c'est celle qu'elle attendait. */
+  signalerDidacticiel: (attente: AttenteDidacticiel) => void;
+  passerDidacticiel: () => void;
   ouvrirFiche: (fiche: Fiche | null) => void;
 }
 
@@ -106,6 +112,11 @@ function carteEnAttente(partie: EtatJeu | null): Carte | null {
   if (partie.adieux.length > 0) return 'adieu';
   if (partie.essaisATrancher.length > 0) return 'essai';
   return null;
+}
+
+/** Étape du didacticiel en cours, ou null. */
+function etapeDidacticiel(partie: EtatJeu | null) {
+  return partie && partie.didacticiel !== null ? (ETAPES_DIDACTICIEL[partie.didacticiel] ?? null) : null;
 }
 
 /** Événements qui mettent le jeu en pause et ouvrent une carte. */
@@ -173,6 +184,7 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     if (emplacement === null) return;
     const partie = creerEtatInitial({
       graine: Date.now(),
+      didacticiel: true,
       joueur: { prenom: nettoyerNom(prenom), avatar, tenue, genre: trouverAvatar(avatar).genre },
       nomMaison: nettoyerNom(nomMaison),
     });
@@ -209,11 +221,16 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     set({ ecran: 'titre', emplacementActif: null, partie: null, emplacements: lireEmplacements() });
   },
 
-  choisirVitesse: (vitesse) => set({ vitesse }),
+  choisirVitesse: (vitesse) => {
+    set({ vitesse });
+    if (vitesse > 0) get().signalerDidacticiel('vitesse');
+  },
 
   avancer: (secondes) => {
     const { partie, vitesse, carte } = get();
     if (!partie || vitesse === 0 || carte) return;
+    // Josée parle : le temps attend.
+    if (etapeDidacticiel(partie)?.pause) return;
     reserveDeTemps += secondes * vitesse;
 
     let courante = partie;
@@ -233,6 +250,13 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     }
     if (reserveDeTemps > 5) reserveDeTemps = 0;
     if (courante === partie && evenements.length === 0) return;
+    // Didacticiel : à la première chambre sale et libre (pour pouvoir la nettoyer), le jeu se met en pause.
+    const saleEtLibre = (c: EtatJeu) =>
+      alertes(c).some((a) => a.type === 'chambreSale' && !c.rendezVous.some((r) => r.chambreId === a.chambreId));
+    if (etapeDidacticiel(courante)?.attend === 'chambreSale' && saleEtLibre(courante)) {
+      courante = appliquerOrdres(courante, [{ type: 'didacticiel', etape: (courante.didacticiel ?? 0) + 1 }]).etat;
+      reserveDeTemps = 0;
+    }
 
     const { carte: nouvelleCarte, bilan, candidat } = recevoirEvenements(evenements, set);
     set((s) => ({
@@ -250,6 +274,7 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     reserveDeTemps = 0;
     const resultat = appliquerOrdres(partie, [{ type: 'validerBriefing', offre, commanderLinge, repos, rdvMax }]);
     set({ partie: resultat.etat, carte: null, vitesse: vitesse === 0 ? 1 : vitesse });
+    get().signalerDidacticiel('briefing');
     get().sauvegarderPartie();
   },
 
@@ -259,6 +284,9 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     const resultat = appliquerOrdres(partie, [ordre]);
     recevoirEvenements(resultat.evenements, set);
     set({ partie: resultat.etat });
+    if (ordre.type === 'nettoyageExpress' && resultat.evenements.some((e) => e.type === 'nettoyage')) {
+      get().signalerDidacticiel('nettoyage');
+    }
     // L'entretien se referme quand le candidat n'attend plus (embauché, refusé ou parti).
     const { carte, candidatOuvert } = get();
     if (carte === 'entretien' && !resultat.etat.candidats.some((c) => c.id === candidatOuvert)) {
@@ -277,14 +305,38 @@ export const useInterface = create<EtatInterface>((set, get) => ({
       suite = carteEnAttente(resultat.etat);
     }
     set({ carte: suite });
+    if (!carte && actuelle === 'palier') get().signalerDidacticiel('palier');
   },
 
-  choisirOnglet: (onglet) => set({ onglet, fiche: null }),
+  choisirOnglet: (onglet) => {
+    set({ onglet, fiche: null });
+    if (onglet === 'personnel') get().signalerDidacticiel('personnel');
+  },
 
   ouvrirEntretien: (candidatId) => set({ carte: 'entretien', candidatOuvert: candidatId }),
 
   ouvrirEntretienIndividuel: (employeId) => set({ carte: 'entretienIndividuel', employeOuvert: employeId }),
 
-  ouvrirFiche: (fiche) =>
-    set(fiche ? { fiche, onglet: fiche.type === 'employe' ? 'personnel' : 'maison' } : { fiche: null }),
+  ouvrirFiche: (fiche) => {
+    set(fiche ? { fiche, onglet: fiche.type === 'employe' ? 'personnel' : 'maison' } : { fiche: null });
+    if (fiche?.type === 'chambre' && fiche.id === 'boudoir') get().signalerDidacticiel('boudoir');
+  },
+
+  signalerDidacticiel: (attente) => {
+    const { partie } = get();
+    const etape = etapeDidacticiel(partie);
+    if (!partie || !etape || etape.attend !== attente) return;
+    const suivante = (partie.didacticiel ?? 0) + 1;
+    const fin = suivante >= ETAPES_DIDACTICIEL.length;
+    set({ partie: appliquerOrdres(partie, [{ type: 'didacticiel', etape: fin ? null : suivante }]).etat });
+    reserveDeTemps = 0;
+    if (fin) get().sauvegarderPartie();
+  },
+
+  passerDidacticiel: () => {
+    const { partie, vitesse } = get();
+    if (!partie) return;
+    set({ partie: appliquerOrdres(partie, [{ type: 'didacticiel', etape: null }]).etat, vitesse: vitesse === 0 ? 1 : vitesse });
+    get().sauvegarderPartie();
+  },
 }));

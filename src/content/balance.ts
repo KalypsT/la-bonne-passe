@@ -18,6 +18,8 @@ export const HEURE_OUVERTURE = 20 * 60;
 export const HEURE_FERMETURE = 4 * 60;
 /** Heure de départ d'une nouvelle partie : directement au briefing. */
 export const MINUTE_DE_DEPART = HEURE_BRIEFING;
+/** Avec le didacticiel, la partie commence une heure avant, pour visiter la maison et lancer le temps. */
+export const MINUTE_DE_DEPART_DIDACTICIEL = 18 * 60;
 
 // ——— Rythme en temps réel, à la vitesse ×1 ———
 

@@ -138,6 +138,8 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     const systemes = { ...(estObjet(d.systemes) ? d.systemes : {}), affaires: deuxieme, groupes: deuxieme };
     return { ...d, version: 9, systemes };
   },
+  // v9 → v10 : étape du didacticiel. Une partie existante n'a pas de didacticiel.
+  9: (d) => ({ ...d, version: 10, didacticiel: null }),
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -183,6 +185,7 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(d.affinites) &&
     Array.isArray(d.imprevusVus) &&
     Array.isArray(d.adieux) &&
+    (d.didacticiel === null || typeof d.didacticiel === 'number') &&
     estObjet(d.systemes)
   );
 }

@@ -4,6 +4,7 @@ import {
   GRAINE_PAR_DEFAUT,
   LINGE_INITIAL,
   MINUTE_DE_DEPART,
+  MINUTE_DE_DEPART_DIDACTICIEL,
   PROPRETE_CHAMBRE_OUVERTE,
   RDV_MAX_PAR_SOIR,
   REPUTATION_INITIALE,
@@ -237,12 +238,14 @@ export interface EtatJeu {
   prochainImprevu: number;
   /** Personnes parties, dont la carte d'adieu reste à montrer. */
   adieux: string[];
+  /** Étape du didacticiel de Madame Josée, ou null s'il est fini ou passé. */
+  didacticiel: number | null;
   /** État courant du générateur pseudo-aléatoire. */
   hasard: number;
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 9;
+export const VERSION_ETAT = 10;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -361,6 +364,8 @@ export interface OptionsNouvellePartie {
   graine?: number;
   joueur?: Joueur;
   nomMaison?: string;
+  /** Commence par la soirée guidée de Madame Josée, une heure avant le briefing. */
+  didacticiel?: boolean;
 }
 
 export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
@@ -375,13 +380,14 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     tresorerie: TRESORERIE_INITIALE,
     reputation: REPUTATION_INITIALE,
     jour: 1,
-    minuteDuJour: MINUTE_DE_DEPART,
+    minuteDuJour: options.didacticiel ? MINUTE_DE_DEPART_DIDACTICIEL : MINUTE_DE_DEPART,
     briefingJour: 0,
     chambres: chambresDeDepart(),
     ...soireeDeDepart(),
     ...maisonDeDepart(),
     ...recrutementDeDepart(),
     ...personnelDeDepart(),
+    didacticiel: options.didacticiel ? 0 : null,
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,
   };
 }

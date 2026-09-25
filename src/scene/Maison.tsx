@@ -225,6 +225,7 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
             height={r.h}
             rx="3"
             className={selection === id ? 'zone choisie' : 'zone'}
+            data-tuto={`piece-${id}`}
             onClick={() => onChoisir(id)}
           />
         ))}

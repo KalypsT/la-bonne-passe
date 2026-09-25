@@ -253,6 +253,11 @@ export const TEXTES = {
     reussite: 'C’est passé.',
     echec: 'Raté.',
   },
+  aide: {
+    titre: 'Aide',
+    bouton: '?',
+    ok: 'Compris',
+  },
   adieu: {
     titre: (prenom: string) => `${prenom} s’en va`,
     texte: (prenom: string) =>

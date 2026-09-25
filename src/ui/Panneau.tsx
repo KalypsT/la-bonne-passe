@@ -56,7 +56,7 @@ export function Panneau({ partie }: { partie: EtatJeu }) {
   const dernier = lignesJournal(partie)[0];
 
   return (
-    <aside className="panneau">
+    <aside className="panneau" data-tuto="panneau">
       <nav className="onglets">
         {ONGLETS.map((o) => {
           const ferme = o.systeme !== undefined && !partie.systemes[o.systeme];
@@ -65,6 +65,7 @@ export function Panneau({ partie }: { partie: EtatJeu }) {
             <button
               key={o.id}
               aria-pressed={onglet === o.id}
+              data-tuto={`onglet-${o.id}`}
               className={ferme ? 'onglet verrouille' : 'onglet'}
               aria-label={ferme && o.palier ? TEXTES.onglets.verrouille(nom, o.palier) : nom}
               onClick={() => choisirOnglet(o.id)}
@@ -318,6 +319,7 @@ function BoutonNettoyage({ chambreId, desactive }: { chambreId: string; desactiv
     <button
       className="bouton principal pleine-largeur"
       disabled={desactive}
+      data-tuto="nettoyage"
       onClick={() => ordonner({ type: 'nettoyageExpress', chambreId })}
     >
       {TEXTES.actions.nettoyageExpress(formaterEuros(NETTOYAGE_EXPRESS))}

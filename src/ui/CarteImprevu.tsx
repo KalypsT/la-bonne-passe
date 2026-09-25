@@ -1,5 +1,7 @@
 import { trouverImprevu } from '../content/imprevus';
+import { TEXTES_DIDACTICIEL } from '../content/didacticiel';
 import type { EtatJeu } from '../engine/etat';
+import { JoseeLigne } from './Josee';
 import { remplir } from './modeles';
 import { useInterface } from './store';
 
@@ -25,6 +27,7 @@ export function CarteImprevu({ partie }: { partie: EtatJeu }) {
           {texte(def.titre)}
         </h2>
         <p>{texte(def.texte)}</p>
+        {partie.didacticiel !== null && <JoseeLigne texte={TEXTES_DIDACTICIEL.imprevu} />}
         {def.choix.map((c, i) => (
           <button key={c.texte} className="choix" onClick={() => choisir(i)}>
             {texte(c.texte)}

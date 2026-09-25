@@ -9,7 +9,9 @@ import { CarteEntretien } from './CarteEntretien';
 import { CarteEntretienIndividuel } from './CarteEntretienIndividuel';
 import { CarteImprevu } from './CarteImprevu';
 import { CarteEssai } from './CarteEssai';
+import { CarteAide } from './CarteAide';
 import { CartePalier } from './CartePalier';
+import { Didacticiel } from './Didacticiel';
 import { Panneau } from './Panneau';
 import { useInterface, type Fiche } from './store';
 import { useBoucle } from './useBoucle';
@@ -30,12 +32,14 @@ export function EcranJeu() {
   const ouvrirFiche = useInterface((s) => s.ouvrirFiche);
   const choisirOnglet = useInterface((s) => s.choisirOnglet);
   const ouvrirCarte = useInterface((s) => s.ouvrirCarte);
+  const signalerDidacticiel = useInterface((s) => s.signalerDidacticiel);
   useBoucle();
   if (!partie) return null;
 
   const surAlerte = (alerte: Alerte) => {
     switch (alerte.type) {
       case 'chambreSale':
+        signalerDidacticiel('bulle');
         ouvrirFiche({ type: 'chambre', id: alerte.chambreId });
         break;
       case 'linge':
@@ -76,6 +80,8 @@ export function EcranJeu() {
       {carte === 'imprevu' && <CarteImprevu partie={partie} />}
       {carte === 'entretienIndividuel' && <CarteEntretienIndividuel partie={partie} />}
       {carte === 'adieu' && <CarteAdieu partie={partie} />}
+      {carte === 'aide' && <CarteAide />}
+      <Didacticiel partie={partie} />
     </div>
   );
 }

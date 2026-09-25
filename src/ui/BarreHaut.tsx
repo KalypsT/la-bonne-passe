@@ -10,6 +10,7 @@ export function BarreHaut({ partie }: { partie: EtatJeu }) {
   const vitesse = useInterface((s) => s.vitesse);
   const choisirVitesse = useInterface((s) => s.choisirVitesse);
   const retourTitre = useInterface((s) => s.retourTitre);
+  const ouvrirCarte = useInterface((s) => s.ouvrirCarte);
   const t = TEXTES.jeu;
   const ouvert = estOuvert(partie);
   const jourSemaine = TEXTES.jours[jourDeLaSemaine(partie.jour)] ?? '';
@@ -30,7 +31,7 @@ export function BarreHaut({ partie }: { partie: EtatJeu }) {
         <span>{TEXTES.date(jourSemaine, partie.jour)}</span>
       </span>
       <span className={ouvert ? 'pastille ouverte' : 'pastille'}>{ouvert ? t.ouvert : t.ferme}</span>
-      <div className="vitesses" role="group">
+      <div className="vitesses" role="group" data-tuto="vitesses">
         {([0, ...VITESSES] as Vitesse[]).map((v) => (
           <button
             key={v}
@@ -42,6 +43,9 @@ export function BarreHaut({ partie }: { partie: EtatJeu }) {
           </button>
         ))}
       </div>
+      <button className="bouton discret bouton-aide" aria-label={TEXTES.aide.titre} onClick={() => ouvrirCarte('aide')}>
+        {TEXTES.aide.bouton}
+      </button>
       <button className="bouton discret bouton-menu" onClick={retourTitre}>
         {t.menu}
       </button>
