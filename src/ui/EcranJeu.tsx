@@ -4,7 +4,10 @@ import { BarreHaut } from './BarreHaut';
 import { CarteBilan } from './CarteBilan';
 import { CarteBriefing } from './CarteBriefing';
 import { CarteDispute } from './CarteDispute';
+import { CarteAdieu } from './CarteAdieu';
 import { CarteEntretien } from './CarteEntretien';
+import { CarteEntretienIndividuel } from './CarteEntretienIndividuel';
+import { CarteImprevu } from './CarteImprevu';
 import { CarteEssai } from './CarteEssai';
 import { CartePalier } from './CartePalier';
 import { Panneau } from './Panneau';
@@ -39,6 +42,7 @@ export function EcranJeu() {
         choisirOnglet('maison');
         break;
       case 'epuisement':
+      case 'menace':
         ouvrirFiche({ type: 'employe', id: alerte.employeId });
         break;
       case 'dispute':
@@ -69,6 +73,9 @@ export function EcranJeu() {
       {carte === 'palier' && <CartePalier partie={partie} />}
       {carte === 'entretien' && <CarteEntretien partie={partie} />}
       {carte === 'essai' && <CarteEssai partie={partie} />}
+      {carte === 'imprevu' && <CarteImprevu partie={partie} />}
+      {carte === 'entretienIndividuel' && <CarteEntretienIndividuel partie={partie} />}
+      {carte === 'adieu' && <CarteAdieu partie={partie} />}
     </div>
   );
 }

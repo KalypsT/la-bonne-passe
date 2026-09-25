@@ -9,7 +9,15 @@ import {
 } from '../content/balance';
 import { CHAMBRES } from '../content/maison';
 import { SANNE } from '../content/personnel';
-import { creerEmploye, maisonDeDepart, recrutementDeDepart, soireeDeDepart } from '../engine/etat';
+import {
+  creerEmploye,
+  maisonDeDepart,
+  personnelDeDepart,
+  recrutementDeDepart,
+  soireeDeDepart,
+  suiviDeDepart,
+} from '../engine/etat';
+import { cleAffinite } from '../engine/personnel';
 import { SYSTEMES_PAR_PALIER } from '../engine/paliers';
 import { planifierVisitesScenarisees } from '../engine/recrutement';
 import { PARTIE_PAR_DEFAUT } from '../content/partie';
@@ -112,6 +120,18 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     if (typeof d.palier === 'number' && d.palier >= 1) planifierVisitesScenarisees(suite as unknown as EtatJeu);
     return suite;
   },
+  // v7 → v8 : planning, rendez-vous maximum, affinités, imprévus, menaces de départ et adieux.
+  // Tout le monde est considéré en service ; les paires existantes partent d'une affinité neutre.
+  7: (d) => {
+    const personnel = Array.isArray(d.personnel)
+      ? d.personnel.map((e: unknown) => (estObjet(e) ? { ...suiviDeDepart(), enServiceCeSoir: true, ...e } : e))
+      : d.personnel;
+    const ids = (personnel as unknown[]).flatMap((e) => (estObjet(e) && typeof e.id === 'string' ? [e.id] : []));
+    const affinites: Record<string, number> = {};
+    for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) affinites[cleAffinite(ids[i]!, ids[j]!)] = 0;
+    const nuit = estObjet(d.nuit) ? { imprevus: 0, ...d.nuit } : d.nuit;
+    return { ...d, ...personnelDeDepart(), version: 8, personnel, affinites, nuit };
+  },
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -153,6 +173,10 @@ function estEtatValide(d: Donnees): boolean {
     Array.isArray(d.visites) &&
     Array.isArray(d.essaisATrancher) &&
     typeof d.prochainCandidat === 'number' &&
+    typeof d.rdvMax === 'number' &&
+    estObjet(d.affinites) &&
+    Array.isArray(d.imprevusVus) &&
+    Array.isArray(d.adieux) &&
     estObjet(d.systemes)
   );
 }

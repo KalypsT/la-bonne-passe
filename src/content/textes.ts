@@ -181,6 +181,19 @@ export const TEXTES = {
     essaiConfirme: (prenom: string) => `${prenom} reste dans la maison. Sanne a déjà prévu un gâteau.`,
     finCollaboration: (prenom: string) => `${prenom} rend ses clés. Sans rancune, promis.`,
     traitRevele: (prenom: string, trait: string) => `On découvre ${prenom} sous un nouveau jour : ${trait.toLowerCase()}.`,
+    menaceDepart: (prenom: string, jour: string, genre: 'f' | 'm') =>
+      `${prenom} parle de partir. Il te reste jusqu’à ${jour} pour ${genre === 'f' ? 'la' : 'le'} retenir.`,
+    menaceLevee: (prenom: string) => `${prenom} a retrouvé le sourire : plus question de partir.`,
+    depart: (prenom: string) => `${prenom} a rendu ses clés. La loge paraît plus grande, et plus triste.`,
+    promesseRompue: (prenom: string, genre: 'f' | 'm') =>
+      `${prenom} attend toujours la soirée de repos promise. ${genre === 'f' ? 'Elle' : 'Il'} ne l’oubliera pas.`,
+    entretienEcouter: (prenom: string) => `Tu as écouté ${prenom}. Ça ne coûte rien, et ça compte.`,
+    entretienPromettre: (prenom: string) => `Tu as promis une soirée de repos à ${prenom}, sous 3 jours.`,
+    entretienRecadrer: (prenom: string) => `Tu as recadré ${prenom}. Concentration maximale ce soir, sourire minimal.`,
+    prime: (prenom: string, montant: string) => `Prime de ${montant} pour ${prenom}.`,
+    amitie: (a: string, b: string) => `${a} et ${b} sont désormais inséparables.`,
+    rivalite: (a: string, b: string) => `Entre ${a} et ${b}, le courant ne passe plus.`,
+    imprevu: (titre: string) => `Imprévu : ${titre.charAt(0).toLowerCase()}${titre.slice(1)}.`,
   },
   recrutement: {
     candidats: 'Candidats',
@@ -207,6 +220,42 @@ export const TEXTES = {
     reflechir: 'Réfléchir',
     refuser: 'Refuser poliment',
     complet: (max: number) => `La maison ne peut pas accueillir plus de ${max} personnes pour l’instant.`,
+  },
+  planning: {
+    titre: 'Planning du soir',
+    travaille: 'Travaille',
+    repos: 'Repos',
+    reposDetail: 'Repos : fatigue en baisse, moral en hausse.',
+    unAuMoins: 'Il faut au moins une personne en service.',
+    rdvMax: 'Rendez-vous max par personne',
+    rdvMaxAide: ['Personnel reposé, recettes limitées.', 'Raisonnable.', 'Rentable… jusqu’à l’épuisement.'],
+    promesse: 'repos promis',
+    menace: 'veut partir',
+  },
+  suivi: {
+    entretien: 'Entretien individuel',
+    entretienFait: 'Entretien déjà fait aujourd’hui',
+    entretienOccupe: 'En rendez-vous',
+    primes: 'Prime',
+    prime: (montant: string) => `Prime de ${montant}`,
+    primeAttente: (jours: number) => `Prochaine prime possible dans ${jours} jour${jours > 1 ? 's' : ''}`,
+    menace: (jour: string) => `Veut partir. Il te reste jusqu’à ${jour} pour remonter son moral au-dessus de 30.`,
+    promesse: (jour: string) => `Repos promis : à placer au planning avant ${jour}.`,
+    affinites: 'Affinités',
+    niveauxAffinite: (v: number) =>
+      v >= 40 ? 'Amitié' : v >= 15 ? 'Complicité' : v > -15 ? 'Neutre' : v > -30 ? 'Froid' : 'Rivalité',
+    titreEntretien: (prenom: string) => `Entretien avec ${prenom}`,
+    fermer: 'Plus tard',
+  },
+  imprevu: {
+    reussite: 'C’est passé.',
+    echec: 'Raté.',
+  },
+  adieu: {
+    titre: (prenom: string) => `${prenom} s’en va`,
+    texte: (prenom: string) =>
+      `${prenom} a vidé son casier et laissé un mot sur le miroir de la loge. Le reste de l’équipe accuse le coup, et quelques habitués demandent déjà de ses nouvelles.`,
+    ok: 'Tourner la page',
   },
   essai: {
     titre: (prenom: string) => `Fin d’essai : ${prenom}`,
@@ -268,6 +317,7 @@ export const TEXTES = {
     linge: 'Plus de linge propre',
     epuisement: (prenom: string, genre: 'f' | 'm') => `${prenom} est ${genre === 'f' ? 'épuisée' : 'épuisé'}`,
     dispute: 'Dispute sur le quai',
+    menace: (prenom: string) => `${prenom} veut partir`,
   },
   personnel: {
     ans: (age: number) => `${age} ans`,

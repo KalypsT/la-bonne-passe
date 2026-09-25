@@ -8,7 +8,8 @@ import {
   RENOVATION,
   SALAIRE_MENAGE,
   TAUX_RESERVE,
-  RDV_MAX_PAR_SOIR,
+  JOURS_ENTRE_PRIMES,
+  PRIMES,
   SEUIL_CHAMBRE_INUTILISABLE,
   SEUIL_EPUISEMENT,
   SEUIL_LINGE,
@@ -19,6 +20,7 @@ import { PALIERS } from '../content/paliers';
 import { TALENTS, TRAITS, type Talent } from '../content/personnel';
 import { TEXTES } from '../content/textes';
 import type { Candidat, Employe, EtatJeu, Systemes } from '../engine/etat';
+import { affinite, peutRecevoirEnEntretien, peutRecevoirPrime } from '../engine/personnel';
 import { jourProchaineMensualite, NOMBRE_MENSUALITES } from '../engine/soiree';
 import { estOuvert, heureDeInstant, jourDeLaSemaine } from '../engine/temps';
 import { Figurine } from '../scene/Figurine';
@@ -328,7 +330,7 @@ function statutEmploye(partie: EtatJeu, e: Employe): string {
   if (e.repos) return st.repos;
   if (!estOuvert(partie)) return st.horsService;
   if (e.fatigue > SEUIL_EPUISEMENT) return st.epuisee(e.genre);
-  if (e.rdvCeSoir >= RDV_MAX_PAR_SOIR) return st.quota;
+  if (e.rdvCeSoir >= partie.rdvMax) return st.quota;
   return st.disponible;
 }
 
@@ -394,16 +396,19 @@ function FicheEmploye({ partie, id }: { partie: EtatJeu; id: string }) {
           <span className="pastille ouverte">{statutEmploye(partie, employe)}</span>
         </div>
       </div>
+      {employe.menaceDepart !== null && <p className="alerte-ligne">{TEXTES.suivi.menace(nomDuJour(employe.menaceDepart))}</p>}
+      {employe.promesseRepos !== null && <p className="sous laiton">{TEXTES.suivi.promesse(nomDuJour(employe.promesseRepos + 1))}</p>}
       {employe.finEssai !== null && <p className="sous">{p.enEssai(nomDuJour(employe.finEssai))}</p>}
       <Jauge nom={p.fatigue} valeur={employe.fatigue} alerte={employe.fatigue > 70} />
       <Jauge nom={p.moral} valeur={employe.moral} alerte={employe.moral < 35} />
       <Jauge nom={p.loyaute} valeur={employe.loyaute} />
-      {estOuvert(partie) && <p className="sous">{p.rdvCeSoir(employe.rdvCeSoir, RDV_MAX_PAR_SOIR)}</p>}
+      {estOuvert(partie) && <p className="sous">{p.rdvCeSoir(employe.rdvCeSoir, partie.rdvMax)}</p>}
       {estOuvert(partie) && !employe.repos && (
         <button className="bouton discret pleine-largeur" disabled={enRdv} onClick={() => ordonner({ type: 'repos', employeId: employe.id })}>
           {p.mettreAuRepos}
         </button>
       )}
+      {partie.systemes.planning && <Suivi partie={partie} employe={employe} />}
       <h3>{p.talents}</h3>
       <Talents talents={employe.talents} />
       <h3>{p.traits}</h3>
@@ -418,7 +423,64 @@ function FicheEmploye({ partie, id }: { partie: EtatJeu; id: string }) {
         </p>
       ))}
       <p className="sous">{p.part(Math.round(employe.part * 100))}</p>
+      <Affinites partie={partie} employe={employe} />
     </div>
+  );
+}
+
+/** Entretien individuel et primes. */
+function Suivi({ partie, employe }: { partie: EtatJeu; employe: Employe }) {
+  const ordonner = useInterface((s) => s.ordonner);
+  const ouvrirEntretienIndividuel = useInterface((s) => s.ouvrirEntretienIndividuel);
+  const su = TEXTES.suivi;
+  const entretienPossible = peutRecevoirEnEntretien(partie, employe);
+  const enRdv = partie.rendezVous.some((r) => r.employeId === employe.id);
+  const primePossible = peutRecevoirPrime(partie, employe);
+  return (
+    <>
+      <button
+        className="bouton principal pleine-largeur"
+        disabled={!entretienPossible}
+        onClick={() => ouvrirEntretienIndividuel(employe.id)}
+      >
+        {entretienPossible ? su.entretien : enRdv ? su.entretienOccupe : su.entretienFait}
+      </button>
+      <div className="boutons-ligne" role="group" aria-label={su.primes}>
+        {PRIMES.map((prime, niveau) => (
+          <button
+            key={prime.montant}
+            className="bouton discret"
+            disabled={!primePossible || partie.tresorerie < prime.montant}
+            onClick={() => ordonner({ type: 'prime', employeId: employe.id, niveau })}
+          >
+            {su.prime(formaterEuros(prime.montant))}
+          </button>
+        ))}
+      </div>
+      {!primePossible && (
+        <p className="sous">{su.primeAttente(JOURS_ENTRE_PRIMES - (partie.jour - employe.dernierePrime))}</p>
+      )}
+    </>
+  );
+}
+
+function Affinites({ partie, employe }: { partie: EtatJeu; employe: Employe }) {
+  const autres = partie.personnel.filter((e) => e.id !== employe.id);
+  if (autres.length === 0) return null;
+  const su = TEXTES.suivi;
+  return (
+    <>
+      <h3>{su.affinites}</h3>
+      {autres.map((autre) => {
+        const v = affinite(partie, employe.id, autre.id);
+        return (
+          <p key={autre.id} className="trait">
+            <b>{autre.prenom}</b>{' '}
+            <span className={v <= -30 ? 'negatif' : v >= 40 ? 'positif' : ''}>{su.niveauxAffinite(v)}</span>
+          </p>
+        );
+      })}
+    </>
   );
 }
 

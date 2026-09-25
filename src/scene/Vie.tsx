@@ -140,6 +140,8 @@ export function cleAlerte(a: Alerte): string {
       return `sale-${a.chambreId}`;
     case 'epuisement':
       return `epuisement-${a.employeId}`;
+    case 'menace':
+      return `menace-${a.employeId}`;
     default:
       return a.type;
   }
@@ -160,6 +162,12 @@ function positionBulle(a: Alerte, partie: EtatJeu) {
     }
     case 'dispute':
       return POSITIONS.bulleDispute;
+    case 'menace': {
+      // Au-dessus de la personne au salon, décalée pour ne pas couvrir une bulle d’épuisement.
+      const i = partie.personnel.findIndex((e) => e.id === a.employeId);
+      const place = POSITIONS.salon[i];
+      return place ? { x: place.x + 14, y: place.y - 56 } : null;
+    }
   }
 }
 
@@ -177,6 +185,8 @@ function libelle(a: Alerte, partie: EtatJeu): string {
     }
     case 'dispute':
       return t.dispute;
+    case 'menace':
+      return t.menace(partie.personnel.find((x) => x.id === a.employeId)?.prenom ?? a.employeId);
   }
 }
 
@@ -185,7 +195,7 @@ function Bulle({ alerte, libelle, x, y, onClick }: { alerte: Alerte; libelle: st
   const R = 11;
   const circonference = 2 * Math.PI * R;
   const part = alerte.type === 'dispute' ? alerte.restant / alerte.total : 1;
-  const urgente = alerte.type === 'dispute' || (alerte.type === 'chambreSale' && alerte.inutilisable);
+  const urgente = alerte.type === 'dispute' || alerte.type === 'menace' || (alerte.type === 'chambreSale' && alerte.inutilisable);
   return (
     <g className="bulle" transform={`translate(${x} ${y})`} onClick={onClick} role="button" aria-label={libelle}>
       <circle r="24" fill="transparent" />
@@ -236,5 +246,13 @@ function Pictogramme({ type }: { type: Alerte['type'] }) {
     case 'dispute':
       // Éclair
       return <path d="M1 -6L-4 1H0L-1 6L4 -1H0Z" fill="#FF4F8B" />;
+    case 'menace':
+      // Valise
+      return (
+        <g>
+          <rect x="-5" y="-2.5" width="10" height="7" rx="1.2" fill="#8A5A2B" />
+          <path d="M-2 -2.5V-4.5H2V-2.5" stroke="#5A3A22" strokeWidth="1.1" fill="none" />
+        </g>
+      );
   }
 }

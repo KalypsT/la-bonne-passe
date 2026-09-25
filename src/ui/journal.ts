@@ -1,3 +1,4 @@
+import { trouverImprevu } from '../content/imprevus';
 import { JOSEE_RESERVE } from '../content/josee';
 import { trouverChambre } from '../content/maison';
 import { PALIERS } from '../content/paliers';
@@ -6,6 +7,16 @@ import type { EtatJeu } from '../engine/etat';
 import { jourDeLaSemaine } from '../engine/temps';
 import type { EvenementMoteur } from '../engine/tick';
 import { formaterEuros, formaterHeure } from './format';
+import { remplir } from './modeles';
+
+/** Genre d'une personne de l'équipe, retrouvée par son identifiant ou son prénom. */
+function genreDe(partie: EtatJeu, cle: string | undefined): 'f' | 'm' {
+  return partie.personnel.find((e) => e.id === cle || e.prenom === cle)?.genre ?? 'f';
+}
+
+function nomDuJour(jour: number): string {
+  return TEXTES.date(TEXTES.jours[jourDeLaSemaine(jour)] ?? '', jour).toLowerCase();
+}
 
 /** Prénom d'une personne : celui que porte l'événement, sinon celui de l'équipe actuelle. */
 export function prenomEmploye(partie: EtatJeu, id: string, prenom?: string): string {
@@ -98,6 +109,40 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return t.finCollaboration(evenement.prenom);
     case 'traitRevele':
       return t.traitRevele(evenement.prenom, evenement.trait);
+    case 'menaceDepart':
+      return t.menaceDepart(evenement.prenom, nomDuJour(evenement.jour), genreDe(partie, evenement.employeId));
+    case 'menaceLevee':
+      return t.menaceLevee(evenement.prenom);
+    case 'depart':
+      return t.depart(evenement.prenom);
+    case 'promesseRompue':
+      return t.promesseRompue(evenement.prenom, genreDe(partie, evenement.employeId));
+    case 'entretienIndividuel':
+      return evenement.reponse === 'ecouter'
+        ? t.entretienEcouter(evenement.prenom)
+        : evenement.reponse === 'promettre'
+          ? t.entretienPromettre(evenement.prenom)
+          : t.entretienRecadrer(evenement.prenom);
+    case 'prime':
+      return t.prime(evenement.prenom, formaterEuros(evenement.montant));
+    case 'amitie':
+      return t.amitie(evenement.prenom, evenement.prenom2);
+    case 'rivalite':
+      return t.rivalite(evenement.prenom, evenement.prenom2);
+    case 'imprevu': {
+      const def = trouverImprevu(evenement.id);
+      const e = partie.personnel.find((x) => x.id === evenement.employeId);
+      const e2 = partie.personnel.find((x) => x.id === evenement.employe2Id);
+      return def ? t.imprevu(remplir(def.titre, partie, e, e2)) : null;
+    }
+    case 'imprevuTranche': {
+      const choix = trouverImprevu(evenement.id)?.choix[evenement.choix];
+      if (!choix) return null;
+      const texte = evenement.reussite ? choix.journal : (choix.journalEchec ?? choix.journal);
+      const p1 = evenement.prenom ? { prenom: evenement.prenom, genre: genreDe(partie, evenement.prenom) } : undefined;
+      const p2 = evenement.prenom2 ? { prenom: evenement.prenom2, genre: genreDe(partie, evenement.prenom2) } : undefined;
+      return remplir(texte, partie, p1, p2);
+    }
     case 'bilan':
       return null;
     default:

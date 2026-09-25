@@ -66,7 +66,7 @@ export const DERNIER_RDV_AVANT_FERMETURE = 45;
 /** Durée d'un rendez-vous, en minutes (tirée entre les deux). */
 export const DUREE_RDV_MIN = 50;
 export const DUREE_RDV_MAX = 75;
-/** Rendez-vous maximum par personne et par soir (règle non réglable avant le palier 1). */
+/** Rendez-vous maximum par personne et par soir, au départ ; réglable au briefing dès le palier 1. */
 export const RDV_MAX_PAR_SOIR = 4;
 
 /** Effets sur la réputation. Un rendez-vous rapporte (qualité − 0,4) × REPUTATION_PAR_RDV. */
@@ -168,3 +168,75 @@ export const NUITS_POUR_REVELER_TRAIT = 2;
 export const MARCHE_BASE = 1;
 export const MARCHE_REPUTATION_PAR_CANDIDAT = 20;
 export const MARCHE_MAX = 5;
+
+// ——— Personnel complet (palier 1) ———
+
+/** Rendez-vous maximum par personne et par soir : crans proposés au briefing, et valeur de départ. */
+export const RDV_MAX_CRANS = [2, 3, 4] as const;
+/** Une soirée de repos au planning : moral regagné à la fermeture. */
+export const MORAL_SOIR_DE_REPOS = 8;
+/** Moral bas : sous ce seuil, la qualité des rendez-vous baisse. */
+export const SEUIL_MORAL_BAS = 30;
+export const MALUS_QUALITE_MORAL_BAS = 0.06;
+
+/** Menace de départ : sous ce moral, la personne annonce qu'elle part ; au-dessus du second, elle reste. */
+export const SEUIL_MENACE_DEPART = 20;
+export const SEUIL_MENACE_LEVEE = 30;
+/** Jours laissés pour la retenir (plus pour une personne Fidèle ou très loyale). */
+export const DELAI_MENACE = 3;
+export const DELAI_MENACE_FIDELE = 2;
+export const LOYAUTE_DELAI_BONUS = 70;
+/** Un départ : le moral des autres et la réputation auprès des habitués en pâtissent. */
+export const DEPART_MORAL_AUTRES = 5;
+export const DEPART_REPUTATION = 1;
+
+/** Effets des traits. */
+export const TRAITS_EFFETS = {
+  merePoule: 3, // moral des autres, chaque nuit
+  fideleLoyaute: 0.5, // les pertes de loyauté sont multipliées par ce facteur
+  divaSansPremium: 4, // moral perdu chaque nuit sans chambre premium ouverte
+  ambitieuseParPoint: 1.5, // moral gagné par point de réputation gagné dans la nuit
+  solitaireRepos: 1.5, // récupération au repos multipliée
+  solitaireMoralRepos: 4, // moral en plus d'un soir de repos
+  teteBruleeDispute: 1.5, // chance de dispute sur le quai multipliée, par Tête brûlée en service
+  fetardeFatigue: 1.25, // fatigue par rendez-vous multipliée
+  fetardePatience: 15, // minutes de patience en plus pour les clients, si une Fêtarde est en service
+};
+
+/** Entretien individuel : une fois par jour et par personne. */
+export const ENTRETIEN = {
+  ecouter: { moral: 8, loyaute: 2 },
+  promettre: { moral: 14, loyaute: 4 },
+  recadrer: { moral: -8, loyaute: -2, qualite: 0.06 },
+  /** Promesse de repos non tenue dans ce délai (jours) : */
+  delaiPromesse: 3,
+  promesseRompue: { moral: -15, loyaute: -10 },
+};
+
+/** Primes : une par semaine et par personne. */
+export const PRIMES = [
+  { montant: 50, moral: 8, loyaute: 3 },
+  { montant: 120, moral: 18, loyaute: 7 },
+];
+export const JOURS_ENTRE_PRIMES = 7;
+
+/** Affinités entre employés, de −100 (rivalité) à +100 (amitié). */
+export const AFFINITE = {
+  initialeEcart: 15,
+  initialeMerePoule: 10,
+  parNuitPartagee: 2,
+  solitaire: -2,
+  teteBrulee: -3,
+  diva: -3,
+  merePoule: 3,
+  hasard: 3,
+  seuilAmitie: 40,
+  seuilRivalite: -30,
+  moralAmitie: 2,
+};
+
+/** Imprévus : environ 2 par soirée, en pause. */
+export const IMPREVU_CHANCE_PAR_HEURE = 0.35;
+export const IMPREVUS_MAX_PAR_NUIT = 3;
+export const IMPREVU_ECART_MIN = 75; // minutes entre deux imprévus
+export const IMPREVU_PREMIER_APRES = 30; // minutes après l'ouverture, au plus tôt
