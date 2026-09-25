@@ -330,7 +330,7 @@ Gardes ajoutées (`src/engine/equilibrage-mois.test.ts`, `equilibrage-semaine.te
 - tarif −20 % : presque gratuit et apprécié pendant une semaine creuse (contrôles : −4 € par jour, +4 de réputation), ruineux le reste du temps (−180 € par jour) ;
 - les gardes des parties précédentes tiennent toujours (palier 2 entre les nuits 3 et 7, aucune offre ni règle gagnante partout, bar rentable sur six semaines, thèmes qui soignent leur monde).
 
-`npm test` : 278 tests en 10 secondes environ (14 secondes et 187 tests avant la v0.3).
+`npm test` : 279 tests en 10 secondes environ (14 secondes et 187 tests avant la v0.3).
 
 ### La question de la v0.3 : l'offre change-t-elle vraiment la partie ?
 
@@ -346,3 +346,5 @@ Oui, et les gardes le vérifient :
 - le bar coûte plus qu'il ne rapporte le premier mois (rénovation, salaire, remboursement du grossiste) : c'est un investissement qui paie à partir de la cinquième ou sixième semaine ;
 - une semaine creuse fait perdre de l'argent (−65 à −100 € par jour) : c'est voulu, la réserve est là pour ça ;
 - les effets des thèmes restent modestes : à juger au téléphone.
+
+Partie jouée de bout en bout dans le navigateur (nouvelle partie, didacticiel passé, ×4 jusqu'au jour 15, sans erreur) : palier 1 à la première nuit, palier 2 vers la nuit 4, bar rouvert le jour 4, grossiste le jour 6. La semaine 2 finit à +10 € ; le bilan du lundi annonce la caisse sous zéro dans deux semaines (mensualité et remboursement du grossiste), et Josée prévient. Ce test a aussi fait apparaître une projection trop optimiste (les charges fixes absentes de la première semaine), corrigée.
