@@ -15,7 +15,16 @@ export type Fiche =
   | { type: 'chambre'; id: string }
   | { type: 'piece'; id: 'salon' | 'bar' | 'bureau' }
   | { type: 'employe'; id: string };
-export type Carte = 'briefing' | 'bilan' | 'dispute' | 'palier' | 'entretien' | 'essai';
+export type Carte =
+  | 'briefing'
+  | 'bilan'
+  | 'dispute'
+  | 'palier'
+  | 'entretien'
+  | 'essai'
+  | 'imprevu'
+  | 'entretienIndividuel'
+  | 'adieu';
 
 export interface ChoixCreation {
   prenom: string;
@@ -51,6 +60,8 @@ interface EtatInterface {
   fiche: Fiche | null;
   /** Candidat reçu dans la carte d'entretien. */
   candidatOuvert: string | null;
+  /** Personne reçue en entretien individuel. */
+  employeOuvert: string | null;
   /** Comptes de la dernière nuit, affichés dans la carte de bilan. */
   bilan: Nuit | null;
   montants: MontantFlottant[];
@@ -68,7 +79,7 @@ interface EtatInterface {
   choisirVitesse: (vitesse: Vitesse) => void;
   /** Appelée à chaque image avec le temps réel écoulé, en secondes. */
   avancer: (secondes: number) => void;
-  validerBriefing: (choix: { offre: Offre; commanderLinge: boolean }) => void;
+  validerBriefing: (choix: { offre: Offre; commanderLinge: boolean; repos: string[]; rdvMax: number }) => void;
   /** Envoie un ordre au moteur (nettoyage, linge, repos, dispute), sans faire avancer le temps. */
   ordonner: (ordre: Ordre) => void;
   /** Ouvre une carte ; fermer (null) passe à la carte en attente, comme une annonce de palier. */
@@ -76,6 +87,8 @@ interface EtatInterface {
   choisirOnglet: (onglet: Onglet) => void;
   /** Reçoit un candidat en entretien (carte en pause). */
   ouvrirEntretien: (candidatId: string) => void;
+  /** Reçoit une personne de l'équipe en entretien individuel (carte en pause). */
+  ouvrirEntretienIndividuel: (employeId: string) => void;
   ouvrirFiche: (fiche: Fiche | null) => void;
 }
 
@@ -88,13 +101,15 @@ let prochainMontant = 1;
 /** Carte qui attend son tour une fois la carte courante fermée. */
 function carteEnAttente(partie: EtatJeu | null): Carte | null {
   if (!partie) return null;
+  if (partie.imprevu) return 'imprevu';
   if (partie.annonces.length > 0) return 'palier';
+  if (partie.adieux.length > 0) return 'adieu';
   if (partie.essaisATrancher.length > 0) return 'essai';
   return null;
 }
 
 /** Événements qui mettent le jeu en pause et ouvrent une carte. */
-const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai']);
+const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai', 'imprevu', 'depart']);
 
 /** Traduit les événements en montants flottants et en cartes à ouvrir. Le journal, lui, vit dans la partie. */
 function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
@@ -109,6 +124,8 @@ function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
       carte = 'entretien';
       candidat = e.candidatId;
     }
+    if (e.type === 'imprevu') carte = 'imprevu';
+    if (e.type === 'depart' && !carte) carte = 'adieu';
     if (e.type === 'finEssai' && !carte) carte = 'essai';
     if (e.type === 'bilan') {
       carte = 'bilan';
@@ -136,6 +153,7 @@ const etatDeJeuInitial = {
   onglet: 'maison' as Onglet,
   fiche: null,
   candidatOuvert: null,
+  employeOuvert: null,
   bilan: null,
   montants: [],
 };
@@ -226,11 +244,11 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     if (bilan) get().sauvegarderPartie();
   },
 
-  validerBriefing: ({ offre, commanderLinge }) => {
+  validerBriefing: ({ offre, commanderLinge, repos, rdvMax }) => {
     const { partie, vitesse } = get();
     if (!partie) return;
     reserveDeTemps = 0;
-    const resultat = appliquerOrdres(partie, [{ type: 'validerBriefing', offre, commanderLinge }]);
+    const resultat = appliquerOrdres(partie, [{ type: 'validerBriefing', offre, commanderLinge, repos, rdvMax }]);
     set({ partie: resultat.etat, carte: null, vitesse: vitesse === 0 ? 1 : vitesse });
     get().sauvegarderPartie();
   },
@@ -252,9 +270,9 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   ouvrirCarte: (carte) => {
     const { partie, carte: actuelle } = get();
     let suite = carte ?? carteEnAttente(partie);
-    // Fermer une annonce : le moteur la marque comme vue, puis on passe à la suivante.
-    if (!carte && actuelle === 'palier' && partie) {
-      const resultat = appliquerOrdres(partie, [{ type: 'annonceVue' }]);
+    // Fermer une annonce ou un adieu : le moteur les marque comme vus, puis on passe à la suite.
+    if (!carte && (actuelle === 'palier' || actuelle === 'adieu') && partie) {
+      const resultat = appliquerOrdres(partie, [{ type: actuelle === 'palier' ? 'annonceVue' : 'adieuVu' }]);
       set({ partie: resultat.etat });
       suite = carteEnAttente(resultat.etat);
     }
@@ -264,6 +282,8 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   choisirOnglet: (onglet) => set({ onglet, fiche: null }),
 
   ouvrirEntretien: (candidatId) => set({ carte: 'entretien', candidatOuvert: candidatId }),
+
+  ouvrirEntretienIndividuel: (employeId) => set({ carte: 'entretienIndividuel', employeOuvert: employeId }),
 
   ouvrirFiche: (fiche) =>
     set(fiche ? { fiche, onglet: fiche.type === 'employe' ? 'personnel' : 'maison' } : { fiche: null }),

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { COMMANDE_LINGE, HEURE_FERMETURE, HEURE_OUVERTURE } from '../content/balance';
+import { COMMANDE_LINGE, HEURE_FERMETURE, HEURE_OUVERTURE, RDV_MAX_CRANS } from '../content/balance';
 import { OFFRES, type Offre } from '../content/clientele';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
@@ -13,6 +13,16 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
   const validerBriefing = useInterface((s) => s.validerBriefing);
   const [offre, setOffre] = useState<Offre>(partie.offre);
   const [commanderLinge, setCommanderLinge] = useState(false);
+  // Planning : une personne promise au repos est proposée au repos d'office.
+  const [repos, setRepos] = useState<string[]>(() => partie.personnel.filter((e) => e.promesseRepos !== null).map((e) => e.id));
+  const [rdvMax, setRdvMax] = useState(partie.rdvMax);
+  const planning = partie.systemes.planning;
+  const basculer = (id: string) => {
+    const suivant = repos.includes(id) ? repos.filter((x) => x !== id) : [...repos, id];
+    if (suivant.length < partie.personnel.length) setRepos(suivant);
+  };
+  const pl = TEXTES.planning;
+  const indiceRdv = Math.max(0, RDV_MAX_CRANS.findIndex((n) => n === rdvMax));
   const t = TEXTES.briefing;
   const p = TEXTES.personnel;
   const jourSemaine = TEXTES.jours[jourDeLaSemaine(partie.jour)] ?? '';
@@ -29,7 +39,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
               {TEXTES.date(jourSemaine, partie.jour)} · {t.horaires(formaterHeure(HEURE_OUVERTURE), formaterHeure(HEURE_FERMETURE))}
             </p>
           </div>
-          <button className="bouton principal" onClick={() => validerBriefing({ offre, commanderLinge })}>
+          <button className="bouton principal" onClick={() => validerBriefing({ offre, commanderLinge, repos: planning ? repos : [], rdvMax })}>
             {t.lancer}
           </button>
         </header>
@@ -39,13 +49,44 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
         <div className="carte-colonnes">
           <section>
             <h3>{t.ceSoir}</h3>
-            {partie.personnel.map((e) => (
-              <p key={e.id} className="mini-fiche">
-                <b>{e.prenom}</b> · {p.fatigue.toLowerCase()}{' '}
-                <span className={e.fatigue > 70 ? 'negatif' : ''}>{Math.round(e.fatigue)} %</span> · {p.moral.toLowerCase()}{' '}
-                <span className={e.moral < 35 ? 'negatif' : ''}>{Math.round(e.moral)} %</span>
-              </p>
-            ))}
+            {partie.personnel.map((e) => {
+              const auRepos = repos.includes(e.id);
+              return (
+                <div key={e.id} className="ligne-planning">
+                  <p className="mini-fiche">
+                    <b>{e.prenom}</b>
+                    {e.menaceDepart !== null && <span className="negatif"> · {pl.menace}</span>}
+                    {e.promesseRepos !== null && <span className="laiton"> · {pl.promesse}</span>}
+                    <br />
+                    {p.fatigue.toLowerCase()} <span className={e.fatigue > 70 ? 'negatif' : ''}>{Math.round(e.fatigue)} %</span> ·{' '}
+                    {p.moral.toLowerCase()} <span className={e.moral < 35 ? 'negatif' : ''}>{Math.round(e.moral)} %</span>
+                  </p>
+                  {planning && (
+                    <button
+                      className={auRepos ? 'choix-court choisi' : 'choix-court'}
+                      aria-pressed={auRepos}
+                      aria-label={`${e.prenom} : ${auRepos ? pl.repos : pl.travaille}`}
+                      onClick={() => basculer(e.id)}
+                    >
+                      {auRepos ? pl.repos : pl.travaille}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            {planning && (
+              <>
+                <h3>{pl.rdvMax}</h3>
+                <div className="boutons-ligne" role="group" aria-label={pl.rdvMax}>
+                  {RDV_MAX_CRANS.map((n) => (
+                    <button key={n} className={rdvMax === n ? 'choix-court choisi' : 'choix-court'} aria-pressed={rdvMax === n} onClick={() => setRdvMax(n)}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <p className="sous">{pl.rdvMaxAide[indiceRdv]}</p>
+              </>
+            )}
             {!partie.systemes.planning && <p className="sous">{t.planningVerrouille(partie.personnel[0]?.prenom ?? '')}</p>}
             <h3>{t.linge}</h3>
             <p className="sous">{t.stockLinge(partie.linge)}</p>

@@ -16,8 +16,9 @@ import {
   type DefinitionCandidat,
 } from '../content/candidats';
 import { TRAITS_DU_MARCHE, type Silhouette, type Talent } from '../content/personnel';
-import type { Candidat, Employe, EtatJeu } from './etat';
+import { suiviDeDepart, type Candidat, type Employe, type EtatJeu } from './etat';
 import type { Tirage } from './hasard';
+import { initialiserAffinites } from './personnel';
 import { instant, jourDeLaSemaine } from './temps';
 
 export type EvenementRecrutement =
@@ -192,6 +193,7 @@ export function revelerTraits(
   evenements: { push(e: Extract<EvenementRecrutement, { type: 'traitRevele' }>): unknown },
 ): void {
   for (const e of etat.personnel) {
+    if (!e.enServiceCeSoir) continue;
     e.nuitsTravaillees += 1;
     const cache = e.traits.find((t) => !e.traitsConnus.includes(t));
     if (!cache || e.nuitsTravaillees < B.NUITS_POUR_REVELER_TRAIT) continue;
@@ -220,6 +222,7 @@ function embaucher(etat: EtatJeu, c: Candidat, part: number): Employe {
     loyaute: Math.min(100, B.RECRUE.loyaute + (part > 0.5 ? B.BONUS_LOYAUTE_PART_HAUTE : 0)),
     rdvCeSoir: 0,
     repos: false,
+    ...suiviDeDepart(),
   };
 }
 
@@ -239,6 +242,7 @@ export function appliquerRecrutement(etat: EtatJeu, ordre: OrdreRecrutement, eve
       if (ordre.part >= c.partMin) {
         etat.candidats = etat.candidats.filter((x) => x !== c);
         etat.personnel.push(embaucher(etat, c, ordre.part));
+        initialiserAffinites(etat, c.id);
         evenements.push({ type: 'embauche', employeId: c.id, prenom: c.prenom, part: ordre.part });
       } else if (c.contreOffre === null) {
         c.contreOffre = c.partMin;

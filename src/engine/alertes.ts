@@ -6,7 +6,8 @@ export type Alerte =
   | { type: 'chambreSale'; chambreId: string; inutilisable: boolean }
   | { type: 'linge' }
   | { type: 'epuisement'; employeId: string }
-  | { type: 'dispute'; restant: number; total: number };
+  | { type: 'dispute'; restant: number; total: number }
+  | { type: 'menace'; employeId: string };
 
 /** Alertes à afficher en bulles sur la maison. Elles découlent de l'état du jeu. */
 export function alertes(etat: EtatJeu): Alerte[] {
@@ -23,6 +24,7 @@ export function alertes(etat: EtatJeu): Alerte[] {
       if (!e.repos && e.fatigue > B.SEUIL_EPUISEMENT) liste.push({ type: 'epuisement', employeId: e.id });
     }
   }
+  for (const e of etat.personnel) if (e.menaceDepart !== null) liste.push({ type: 'menace', employeId: e.id });
   if (etat.dispute) {
     liste.push({ type: 'dispute', restant: Math.max(0, etat.dispute.expire - instant(etat)), total: B.DISPUTE_DELAI });
   }

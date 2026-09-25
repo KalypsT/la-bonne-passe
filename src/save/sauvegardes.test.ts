@@ -221,6 +221,21 @@ describe('migrations', () => {
     expect(migre?.personnel[0]).toMatchObject({ moral: 33, nuitsTravaillees: 4 });
   });
 
+  it('migre une sauvegarde v7 : planning, affinités neutres, imprévus et suivi du personnel', () => {
+    const { rdvMax: _r, affinites: _a, imprevu: _i, imprevusVus: _iv, prochainImprevu: _p, adieux: _ad, ...etat } = creerEtatInitial();
+    const sanne = etat.personnel[0]!;
+    const { reposPrevu: _rp, enServiceCeSoir: _es, menaceDepart: _m, dernierEntretien: _de, dernierePrime: _dp, promesseRepos: _pr, recadre: _rc, ...ancienne } = sanne;
+    const mila = { ...ancienne, id: 'mila', prenom: 'Mila', moral: 44 };
+    const nuit = { numero: 2, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0 };
+    const migre = migrer({ ...etat, version: 7, personnel: [ancienne, mila], nuit });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.rdvMax).toBe(4);
+    expect(migre?.affinites).toEqual({ 'mila|sanne': 0 });
+    expect(migre?.personnel[1]).toMatchObject({ moral: 44, menaceDepart: null, promesseRepos: null, enServiceCeSoir: true });
+    expect(migre?.nuit?.imprevus).toBe(0);
+    expect(migre).toMatchObject({ imprevu: null, imprevusVus: [], adieux: [] });
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

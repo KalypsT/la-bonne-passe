@@ -2,7 +2,9 @@ import * as B from '../content/balance';
 import type { Offre } from '../content/clientele';
 import type { EtatJeu } from './etat';
 import { creerTirage } from './hasard';
-import { depenser, fermerNuit, ouvrirNuit, prelevementsDuMatin, vivre, type EvenementSoiree } from './soiree';
+import { trancherImprevu, type EvenementImprevu, type OrdreImprevu } from './imprevus';
+import { appliquerPersonnel, matinDuPersonnel, type EvenementPersonnel, type OrdrePersonnel } from './personnel';
+import { arrivee, depenser, fermerNuit, ouvrirNuit, prelevementsDuMatin, vivre, type EvenementSoiree } from './soiree';
 import {
   appliquerRecrutement,
   arriveeVisites,
@@ -14,7 +16,14 @@ import { attendBriefing, estOuvert, instant, MINUTES_PAR_JOUR } from './temps';
 
 /** Ordres envoyés par l'interface au moteur. */
 export type Ordre =
-  | { type: 'validerBriefing'; offre?: Offre; commanderLinge?: boolean }
+  | {
+      type: 'validerBriefing';
+      offre?: Offre;
+      commanderLinge?: boolean;
+      /** Planning (palier 1) : qui se repose ce soir, et le maximum de rendez-vous par personne. */
+      repos?: string[];
+      rdvMax?: number;
+    }
   | { type: 'nettoyageExpress'; chambreId: string }
   | { type: 'livraisonLinge' }
   | { type: 'repos'; employeId: string }
@@ -24,7 +33,9 @@ export type Ordre =
   | { type: 'retirerReserve' }
   | { type: 'equipeMenage'; effectif: number }
   | { type: 'annonceVue' }
-  | OrdreRecrutement;
+  | OrdreRecrutement
+  | OrdrePersonnel
+  | OrdreImprevu;
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -41,7 +52,9 @@ export type EvenementMoteur =
   | { type: 'retraitReserve'; montant: number; urgence: boolean }
   | { type: 'equipeMenage'; effectif: number }
   | EvenementSoiree
-  | EvenementRecrutement;
+  | EvenementRecrutement
+  | EvenementPersonnel
+  | EvenementImprevu;
 
 /** Taille du journal gardé dans la sauvegarde. */
 export const TAILLE_JOURNAL = 50;
@@ -82,6 +95,13 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       if (ordre.commanderLinge) {
         depenser(etat, B.COMMANDE_LINGE.prix);
         etat.lingeCommande += B.COMMANDE_LINGE.draps;
+      }
+      if (etat.systemes.planning) {
+        if (ordre.rdvMax !== undefined && (B.RDV_MAX_CRANS as readonly number[]).includes(ordre.rdvMax)) etat.rdvMax = ordre.rdvMax;
+        // Au moins une personne travaille ce soir.
+        const repos = new Set(ordre.repos ?? []);
+        const tousAuRepos = etat.personnel.every((e) => repos.has(e.id));
+        for (const e of etat.personnel) e.reposPrevu = !tousAuRepos && repos.has(e.id);
       }
       return;
     }
@@ -159,6 +179,17 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'annonceVue':
       etat.annonces.shift();
       return;
+    case 'entretienIndividuel':
+    case 'prime':
+    case 'adieuVu':
+      appliquerPersonnel(etat, ordre, evenements);
+      return;
+    case 'choixImprevu': {
+      const tirage = creerTirage(etat.hasard);
+      trancherImprevu(etat, ordre.choix, tirage, () => arrivee(etat, tirage, evenements), evenements);
+      etat.hasard = tirage.etat();
+      return;
+    }
     default:
       appliquerRecrutement(etat, ordre, evenements);
   }
@@ -198,6 +229,7 @@ export function tick(etatInitial: EtatJeu, ordres: readonly Ordre[] = []): Resul
     evenements.push({ type: 'nouveauJour', jour: etat.jour });
     prelevementsDuMatin(etat, evenements);
     matinRecrutement(etat, tirage, evenements);
+    matinDuPersonnel(etat, evenements);
   }
   avancerTravaux(etat, evenements);
   arriveeVisites(etat, evenements);

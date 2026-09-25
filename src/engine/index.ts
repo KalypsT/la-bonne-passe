@@ -7,3 +7,5 @@ export * from './temps';
 export * from './tick';
 export * from './paliers';
 export * from './recrutement';
+export * from './personnel';
+export * from './imprevus';

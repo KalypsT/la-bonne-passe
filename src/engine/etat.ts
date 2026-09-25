@@ -5,6 +5,7 @@ import {
   LINGE_INITIAL,
   MINUTE_DE_DEPART,
   PROPRETE_CHAMBRE_OUVERTE,
+  RDV_MAX_PAR_SOIR,
   REPUTATION_INITIALE,
   TRESORERIE_INITIALE,
 } from '../content/balance';
@@ -80,6 +81,20 @@ export interface Employe extends Identite {
   rdvCeSoir: number;
   /** Au repos jusqu'à la fin de la nuit. */
   repos: boolean;
+  /** Repos prévu au planning du briefing : appliqué à l'ouverture. */
+  reposPrevu: boolean;
+  /** A pris son service à l'ouverture ce soir. */
+  enServiceCeSoir: boolean;
+  /** Menace de départ : jour où la personne part si rien ne change, ou null. */
+  menaceDepart: number | null;
+  /** Jour du dernier entretien individuel (0 : jamais). */
+  dernierEntretien: number;
+  /** Jour de la dernière prime (très négatif : jamais). */
+  dernierePrime: number;
+  /** Promesse de repos : jour limite pour la tenir, ou null. */
+  promesseRepos: number | null;
+  /** Jour où la personne a été recadrée : plus concentrée ce soir-là. */
+  recadre: number;
 }
 
 export interface Candidat extends Identite {
@@ -138,6 +153,16 @@ export interface Nuit {
   pireAvis: Avis | null;
   /** Part de la recette mise en réserve à la fermeture. */
   reserve: number;
+  /** Imprévus tranchés cette nuit. */
+  imprevus: number;
+}
+
+/** Imprévu en attente de ta décision (carte en pause). */
+export interface ImprevuEnCours {
+  id: string;
+  /** Personne concernée, et seconde personne pour une querelle. */
+  employeId: string | null;
+  employe2Id: string | null;
 }
 
 /** Une ligne du journal : l'événement brut, mis en texte à l'affichage (les textes restent dans src/content). */
@@ -198,12 +223,23 @@ export interface EtatJeu {
   prochainCandidat: number;
   /** Personnes dont la période d'essai est finie et attend ta décision. */
   essaisATrancher: string[];
+  /** Rendez-vous maximum par personne et par soir (planning). */
+  rdvMax: number;
+  /** Affinité de chaque paire, clé « idA|idB » triée. */
+  affinites: Record<string, number>;
+  imprevu: ImprevuEnCours | null;
+  /** Imprévus déjà vus au moins une fois. */
+  imprevusVus: string[];
+  /** Instant à partir duquel un nouvel imprévu peut tomber. */
+  prochainImprevu: number;
+  /** Personnes parties, dont la carte d'adieu reste à montrer. */
+  adieux: string[];
   /** État courant du générateur pseudo-aléatoire. */
   hasard: number;
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 7;
+export const VERSION_ETAT = 8;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -249,6 +285,20 @@ export function creerEmploye(def: DefinitionEmploye): Employe {
     loyaute: def.loyaute,
     rdvCeSoir: 0,
     repos: false,
+    ...suiviDeDepart(),
+  };
+}
+
+/** Champs de suivi d'une personne, ajoutés en version 8. */
+export function suiviDeDepart() {
+  return {
+    reposPrevu: false,
+    enServiceCeSoir: false,
+    menaceDepart: null as number | null,
+    dernierEntretien: 0,
+    dernierePrime: -99,
+    promesseRepos: null as number | null,
+    recadre: 0,
   };
 }
 
@@ -290,6 +340,18 @@ export function recrutementDeDepart() {
   };
 }
 
+/** Champs ajoutés en version 8 : planning, affinités, imprévus et départs. */
+export function personnelDeDepart() {
+  return {
+    rdvMax: RDV_MAX_PAR_SOIR,
+    affinites: {} as Record<string, number>,
+    imprevu: null as ImprevuEnCours | null,
+    imprevusVus: [] as string[],
+    prochainImprevu: 0,
+    adieux: [] as string[],
+  };
+}
+
 export interface OptionsNouvellePartie {
   graine?: number;
   joueur?: Joueur;
@@ -314,6 +376,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     ...soireeDeDepart(),
     ...maisonDeDepart(),
     ...recrutementDeDepart(),
+    ...personnelDeDepart(),
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,
   };
 }

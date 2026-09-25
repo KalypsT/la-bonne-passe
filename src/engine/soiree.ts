@@ -7,6 +7,8 @@ import { trouverChambre } from '../content/maison';
 import type { EtatJeu, Nuit } from './etat';
 import type { Tirage } from './hasard';
 import { verifierPaliers, type EvenementPalier } from './paliers';
+import { declencherImprevu, type EvenementImprevu } from './imprevus';
+import { aTrait, nuitDuPersonnel, type EvenementPersonnel } from './personnel';
 import { revelerTraits, type EvenementRecrutement } from './recrutement';
 import { ecart, instant } from './temps';
 
@@ -24,7 +26,9 @@ export type EvenementSoiree =
   | { type: 'mensualite'; montant: number; depuisReserve: number; restantes: number }
   | { type: 'bilan'; nuit: Nuit }
   | EvenementPalier
-  | Extract<EvenementRecrutement, { type: 'traitRevele' }>;
+  | Extract<EvenementRecrutement, { type: 'traitRevele' }>
+  | EvenementPersonnel
+  | EvenementImprevu;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -50,6 +54,7 @@ function nouvelleNuit(etat: EtatJeu): Nuit {
     meilleurAvis: null,
     pireAvis: null,
     reserve: 0,
+    imprevus: 0,
   };
 }
 
@@ -61,9 +66,13 @@ export function depenser(etat: EtatJeu, montant: number): void {
 
 export function ouvrirNuit(etat: EtatJeu): void {
   etat.nuit = nouvelleNuit(etat);
+  // Le planning du briefing s'applique : qui se repose ce soir, qui prend son service.
   for (const e of etat.personnel) {
     e.rdvCeSoir = 0;
-    e.repos = false;
+    e.repos = e.reposPrevu;
+    e.enServiceCeSoir = !e.repos;
+    e.reposPrevu = false;
+    if (e.repos) e.promesseRepos = null;
   }
   etat.linge += etat.lingeCommande;
   etat.lingeCommande = 0;
@@ -74,11 +83,8 @@ export function fermerNuit(etat: EtatJeu, tirage: Tirage, evenements: Sortie): v
   for (const rdv of [...etat.rendezVous]) terminerRdv(etat, rdv.chambreId, tirage, evenements);
   etat.file = [];
   etat.dispute = null;
-  // Une Mère poule remonte le moral des autres.
-  for (const e of etat.personnel) {
-    if (!e.traits.includes('Mère poule')) continue;
-    for (const autre of etat.personnel) if (autre !== e) autre.moral = borner(autre.moral + 3);
-  }
+  etat.imprevu = null;
+  nuitDuPersonnel(etat, etat.nuit?.reputationDebut ?? etat.reputation, tirage, evenements);
   revelerTraits(etat, evenements);
   for (const e of etat.personnel) e.repos = false;
   etat.nuitsBouclees += 1;
@@ -113,7 +119,7 @@ function occupes(etat: EtatJeu) {
 
 export function employeDisponible(etat: EtatJeu, id: string): boolean {
   const e = etat.personnel.find((x) => x.id === id);
-  return !!e && !e.repos && e.rdvCeSoir < B.RDV_MAX_PAR_SOIR && !occupes(etat).employes.has(id);
+  return !!e && !e.repos && e.rdvCeSoir < etat.rdvMax && !occupes(etat).employes.has(id);
 }
 
 export function chambreDisponible(etat: EtatJeu, id: string): boolean {
@@ -121,7 +127,13 @@ export function chambreDisponible(etat: EtatJeu, id: string): boolean {
   return !!c && c.ouverte && c.proprete >= B.SEUIL_CHAMBRE_INUTILISABLE && !occupes(etat).chambres.has(id);
 }
 
-function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
+/** Une Fêtarde en service met l'ambiance : les clients patientent plus longtemps. */
+function patienceClient(etat: EtatJeu): number {
+  const fetarde = etat.personnel.some((e) => e.enServiceCeSoir && !e.repos && aTrait(e, 'Fêtarde'));
+  return B.PATIENCE_CLIENT + (fetarde ? B.TRAITS_EFFETS.fetardePatience : 0);
+}
+
+export function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
   if (etat.file.length >= B.PLACES_FILE) {
     if (etat.nuit) etat.nuit.perdus += 1;
     etat.reputation = borner(etat.reputation - B.REPUTATION_FILE_PLEINE);
@@ -138,7 +150,7 @@ function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
     return p;
   });
   const modele = tirage.choisir(possibles, poids);
-  etat.file.push({ id: etat.prochainClient, modele: modele.id, patience: B.PATIENCE_CLIENT });
+  etat.file.push({ id: etat.prochainClient, modele: modele.id, patience: patienceClient(etat) });
   etat.prochainClient += 1;
   evenements.push({ type: 'arrivee', client: modele.nom });
 }
@@ -184,7 +196,9 @@ export function qualiteRdv(etat: EtatJeu, chambreId: string, employeId: string, 
     (etat.linge > 0 ? q.linge : 0) +
     (trouverChambre(chambreId)?.premium ? q.premium : 0) +
     trouverOffre(etat.offre).qualite -
-    (employe.fatigue > B.SEUIL_FATIGUE ? q.malusFatigue : 0);
+    (employe.fatigue > B.SEUIL_FATIGUE ? q.malusFatigue : 0) -
+    (employe.moral < B.SEUIL_MORAL_BAS ? B.MALUS_QUALITE_MORAL_BAS : 0) +
+    (employe.recadre === etat.jour ? B.ENTRETIEN.recadrer.qualite : 0);
   return borner(valeur, 0, 1);
 }
 
@@ -202,7 +216,8 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   etat.tresorerie += maison;
   etat.reputation = borner(etat.reputation + gainReputation(etat.reputation, qualite));
 
-  employe.fatigue = borner(employe.fatigue + tirage.entre(B.FATIGUE_PAR_RDV_MIN, B.FATIGUE_PAR_RDV_MAX));
+  const fatigue = tirage.entre(B.FATIGUE_PAR_RDV_MIN, B.FATIGUE_PAR_RDV_MAX);
+  employe.fatigue = borner(employe.fatigue + fatigue * (aTrait(employe, 'Fêtarde') ? B.TRAITS_EFFETS.fetardeFatigue : 1));
   employe.rdvCeSoir += 1;
   etat.linge = Math.max(0, etat.linge - B.LINGE_PAR_RDV);
   chambre.proprete = borner(chambre.proprete - tirage.entre(B.SALISSURE_MIN, B.SALISSURE_MAX));
@@ -219,6 +234,12 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   }
   etat.rendezVous = etat.rendezVous.filter((r) => r !== rdv);
   evenements.push({ type: 'finRdv', chambreId, client: modele.nom, montant: maison, avis: avis.texte });
+}
+
+/** Chaque Tête brûlée en service fait monter le ton sur le quai. */
+export function facteurDispute(etat: EtatJeu): number {
+  const n = etat.personnel.filter((e) => e.enServiceCeSoir && !e.repos && aTrait(e, 'Tête brûlée')).length;
+  return Math.pow(B.TRAITS_EFFETS.teteBruleeDispute, n);
 }
 
 /** Un pas de 5 minutes de la vie de la maison. */
@@ -262,11 +283,13 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
     } else if (
       !etat.dispute &&
       etat.file.length >= 2 &&
-      tirage.chance(B.DISPUTE_CHANCE_PAR_HEURE * etat.file.length * heures)
+      tirage.chance(B.DISPUTE_CHANCE_PAR_HEURE * etat.file.length * heures * facteurDispute(etat))
     ) {
       etat.dispute = { expire: maintenant + B.DISPUTE_DELAI };
       evenements.push({ type: 'dispute' });
     }
+
+    declencherImprevu(etat, tirage, evenements);
 
     // Répartition des clients, sauf juste avant la fermeture
     if (ecart(etat.minuteDuJour, B.HEURE_FERMETURE) > B.DERNIER_RDV_AVANT_FERMETURE) repartir(etat, tirage, evenements);
@@ -289,7 +312,10 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
   const auTravail = occupes(etat).employes;
   for (const e of etat.personnel) {
     if (!auTravail.has(e.id)) {
-      const recup = ouvert && !e.repos ? B.RECUPERATION_EN_SERVICE : B.RECUPERATION_AU_REPOS;
+      const recup =
+        ouvert && !e.repos
+          ? B.RECUPERATION_EN_SERVICE
+          : B.RECUPERATION_AU_REPOS * (aTrait(e, 'Solitaire') ? B.TRAITS_EFFETS.solitaireRepos : 1);
       e.fatigue = borner(e.fatigue - recup * heures);
     }
     if (e.fatigue > B.SEUIL_FATIGUE) e.moral = borner(e.moral - B.MORAL_PERTE_FATIGUE * heures);
