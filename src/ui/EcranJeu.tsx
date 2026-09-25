@@ -26,7 +26,7 @@ export function EcranJeu() {
         </button>
       </header>
       <main className="jeu-provisoire">
-        <Avatar avatar={partie.joueur.avatar} taille={64} />
+        <Avatar avatar={partie.joueur.avatar} tenue={partie.joueur.tenue} taille={88} />
         <p className="jeu-bienvenue">{t.bienvenue(partie.joueur.prenom, partie.joueur.genre, partie.maison.nom)}</p>
         <p className="carte-detail">{t.bientot}</p>
         <button className="bouton principal" onClick={avancerUneHeure}>

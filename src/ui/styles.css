@@ -286,6 +286,139 @@ body {
   font-size: 14px;
 }
 
+/* Création du personnage : avatars à gauche, champs à droite */
+.ecran-creation {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 16px;
+  padding: 10px 16px;
+  background: radial-gradient(ellipse at 25% 30%, rgba(92, 21, 48, 0.5), transparent 60%), var(--nuit);
+}
+
+.creation-avatars,
+.creation-champs {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.creation-avatars {
+  align-items: center;
+  justify-content: center;
+}
+
+.creation-champs {
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.creation-avatars h1 {
+  margin: 0;
+  font-family: 'Yellowtail', 'Brush Script MT', cursive;
+  font-weight: 400;
+  font-size: 28px;
+  color: var(--neon-doux);
+  text-shadow: 0 0 10px rgba(255, 79, 139, 0.6);
+}
+
+.grille-avatars {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 8px;
+}
+
+.choix-avatar {
+  padding: 3px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+  opacity: 0.7;
+}
+
+.choix-avatar.choisi {
+  opacity: 1;
+  border-color: var(--neon);
+  box-shadow: 0 0 12px rgba(255, 79, 139, 0.55);
+}
+
+.choix-avatar:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
+}
+
+.nom-avatar {
+  margin: 0;
+  color: var(--laiton);
+  font-size: 14px;
+}
+
+.choix-tenue {
+  display: flex;
+  gap: 6px;
+}
+
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.champ span,
+.apercu-enseigne span {
+  font-size: 12.5px;
+  color: var(--attenue);
+}
+
+.champ input {
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ligne);
+  background: rgba(11, 28, 34, 0.8);
+  color: var(--creme);
+  font: inherit;
+  font-size: 16px; /* 16 px minimum : évite le zoom automatique d'iOS */
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.champ input:focus {
+  outline: none;
+  border-color: var(--neon);
+}
+
+.champ input[aria-invalid='true'] {
+  border-color: var(--neon);
+}
+
+.erreur {
+  font-style: normal;
+  font-size: 12.5px;
+  color: var(--neon-doux);
+}
+
+.apercu-enseigne {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.apercu-enseigne .enseigne {
+  width: 100%;
+  max-width: 320px;
+  max-height: 90px;
+}
+
+.enseigne.eteinte .enseigne-texte {
+  fill: #6b5560;
+  stroke: none;
+  animation: none;
+}
+
 /* Écran de jeu provisoire */
 .ecran-jeu {
   height: 100%;

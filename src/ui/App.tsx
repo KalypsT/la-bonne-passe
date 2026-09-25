@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { EcranCreation } from './EcranCreation';
 import { EcranJeu } from './EcranJeu';
 import { EcranTitre } from './EcranTitre';
 import { useInterface } from './store';
@@ -25,6 +26,7 @@ export function App() {
     <>
       <div className="jeu">
         {ecran === 'titre' && <EcranTitre />}
+        {ecran === 'creation' && <EcranCreation />}
         {ecran === 'jeu' && <EcranJeu />}
       </div>
       <TourneTelephone />

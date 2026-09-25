@@ -34,6 +34,7 @@ describe('emplacements de sauvegarde', () => {
       statut: 'partie',
       resume: {
         avatar: etat.joueur.avatar,
+        tenue: 0,
         prenom: etat.joueur.prenom,
         nomMaison: 'Le Velours',
         chapitre: 1,
@@ -114,6 +115,19 @@ describe('migrations', () => {
     expect(migre?.chapitre).toBe(1);
     expect(migre?.tresorerie).toBe(TRESORERIE_INITIALE);
     expect(typeof migre?.joueur.prenom).toBe('string');
+    expect(migre?.joueur.tenue).toBe(0);
+  });
+
+  it('migre une sauvegarde v2 en gardant le joueur et en ajoutant la tenue', () => {
+    const v3 = creerEtatInitial({
+      joueur: { prenom: 'Bram', avatar: 'patron-2', tenue: 1, genre: 'patron' },
+      nomMaison: 'Le Velours',
+    });
+    const { tenue: _tenue, ...joueurV2 } = v3.joueur;
+    const migre = migrer({ ...v3, version: 2, joueur: joueurV2 });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.joueur).toEqual({ prenom: 'Bram', avatar: 'patron-2', tenue: 0, genre: 'patron' });
+    expect(migre?.maison.nom).toBe('Le Velours');
   });
 
   it('refuse une version future ou des données sans version', () => {

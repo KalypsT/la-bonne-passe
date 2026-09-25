@@ -69,7 +69,7 @@ function CarteEmplacement({ numero, emplacement, maintenant }: PropsCarte) {
   return (
     <div className="carte-emplacement">
       <div className="carte-entete">
-        <Avatar avatar={r.avatar} taille={44} />
+        <Avatar avatar={r.avatar} tenue={r.tenue ?? 0} taille={44} />
         <div className="carte-noms">
           <p className="carte-maison">{r.nomMaison}</p>
           <p className="carte-prenom">{r.prenom}</p>

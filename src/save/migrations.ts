@@ -22,6 +22,12 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     chapitre: 1,
     tresorerie: TRESORERIE_INITIALE,
   }),
+  // v2 → v3 : ajout de la variante de tenue de l'avatar.
+  2: (d) => ({
+    ...d,
+    version: 3,
+    joueur: { ...(estObjet(d.joueur) ? d.joueur : {}), tenue: 0 },
+  }),
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -37,6 +43,8 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(joueur) &&
     typeof joueur.prenom === 'string' &&
     typeof joueur.avatar === 'string' &&
+    typeof joueur.tenue === 'number' &&
+    (joueur.genre === 'patronne' || joueur.genre === 'patron') &&
     estObjet(maison) &&
     typeof maison.nom === 'string' &&
     typeof d.chapitre === 'number' &&
