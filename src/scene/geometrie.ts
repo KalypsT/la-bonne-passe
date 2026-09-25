@@ -19,3 +19,14 @@ export const GEOMETRIE_PIECES: Record<'salon' | 'bar' | 'bureau', Rect> = {
   bar: { x: 334, y: 236, w: 96, h: 70 },
   bureau: { x: 434, y: 236, w: 70, h: 70 },
 };
+
+/** Points de la scène où se tiennent les personnages (position des pieds). */
+export const POSITIONS = {
+  /** Places sur le quai, de la porte vers la droite. */
+  file: [192, 218, 244, 270].map((x) => ({ x, y: 392 })),
+  porte: { x: 135, y: 392 },
+  /** Places du personnel qui attend au salon. */
+  salon: [{ x: 150, y: 304 }, { x: 184, y: 304 }, { x: 218, y: 304 }, { x: 252, y: 304 }],
+  bulleLinge: { x: 112, y: 262 },
+  bulleDispute: { x: 231, y: 356 },
+};

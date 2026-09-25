@@ -165,6 +165,17 @@ describe('migrations', () => {
     expect(apresMinuit?.briefingJour).toBe(1);
   });
 
+  it('migre une sauvegarde v4 : Sanne, le ménage, le linge et un quai vide', () => {
+    const { personnel: _p, equipes: _e, linge: _l, lingeCommande: _lc, offre: _o, file: _f, rendezVous: _r, prochainClient: _pc, nuit: _n, nuitsBouclees: _nb, dispute: _d, ...v4 } =
+      creerEtatInitial();
+    const migre = migrer({ ...v4, version: 4, tresorerie: 1234 });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.personnel.map((e) => e.id)).toEqual(['sanne']);
+    expect(migre?.equipes.menage).toBe(1);
+    expect(migre?.file).toEqual([]);
+    expect(migre?.tresorerie).toBe(1234);
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

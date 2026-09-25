@@ -8,6 +8,7 @@ import {
   TRESORERIE_INITIALE,
 } from '../content/balance';
 import { CHAMBRES } from '../content/maison';
+import { soireeDeDepart } from '../engine/etat';
 import { PARTIE_PAR_DEFAUT } from '../content/partie';
 import { VERSION_ETAT, type EtatJeu } from '../engine/etat';
 
@@ -69,6 +70,13 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       })),
     };
   },
+  // v4 → v5 : Sanne, l'équipe de ménage, le linge, l'offre du soir et la vie de la soirée.
+  // Une partie sauvegardée en pleine soirée reprend avec un quai vide.
+  4: (d) => ({
+    ...d,
+    ...soireeDeDepart(),
+    version: 5,
+  }),
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -97,6 +105,10 @@ function estEtatValide(d: Donnees): boolean {
     typeof d.reputation === 'number' &&
     typeof d.briefingJour === 'number' &&
     Array.isArray(d.chambres) &&
+    Array.isArray(d.personnel) &&
+    Array.isArray(d.file) &&
+    Array.isArray(d.rendezVous) &&
+    typeof d.linge === 'number' &&
     estObjet(d.systemes)
   );
 }

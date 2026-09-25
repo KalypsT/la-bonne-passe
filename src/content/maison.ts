@@ -7,13 +7,16 @@ export interface DefinitionChambre {
   premium: boolean;
   /** En service dès le départ ; les autres dorment sous des draps. */
   ouverteAuDepart: boolean;
+  /** Formes avec article, pour les phrases : « au Boudoir », « du Boudoir ». */
+  dans: string;
+  de: string;
 }
 
 export const CHAMBRES: DefinitionChambre[] = [
-  { id: 'boudoir', nom: 'Boudoir', theme: 'Rose poudré et guirlandes', premium: false, ouverteAuDepart: true },
-  { id: 'orientale', nom: 'Chambre orientale', theme: 'Coussins, lanternes et thé à la menthe', premium: false, ouverteAuDepart: false },
-  { id: 'velours', nom: 'Suite velours', theme: 'Damas bordeaux et lustre', premium: true, ouverteAuDepart: false },
-  { id: 'miroirs', nom: 'Chambre miroirs', theme: 'Miroirs biseautés, satin rose', premium: true, ouverteAuDepart: false },
+  { id: 'boudoir', nom: 'Boudoir', theme: 'Rose poudré et guirlandes', premium: false, ouverteAuDepart: true, dans: 'au Boudoir', de: 'du Boudoir' },
+  { id: 'orientale', nom: 'Chambre orientale', theme: 'Coussins, lanternes et thé à la menthe', premium: false, ouverteAuDepart: false, dans: 'dans la chambre orientale', de: 'de la chambre orientale' },
+  { id: 'velours', nom: 'Suite velours', theme: 'Damas bordeaux et lustre', premium: true, ouverteAuDepart: false, dans: 'dans la suite velours', de: 'de la suite velours' },
+  { id: 'miroirs', nom: 'Chambre miroirs', theme: 'Miroirs biseautés, satin rose', premium: true, ouverteAuDepart: false, dans: 'dans la chambre miroirs', de: 'de la chambre miroirs' },
 ];
 
 export interface DefinitionPiece {

@@ -1,32 +1,92 @@
-import { HEURE_DEBUT_JOURNEE, HEURE_FERMETURE, HEURE_OUVERTURE, MINUTES_PAR_TICK } from '../content/balance';
+import * as B from '../content/balance';
+import type { Offre } from '../content/clientele';
 import type { EtatJeu } from './etat';
+import { creerTirage } from './hasard';
+import { depenser, fermerNuit, ouvrirNuit, prelevementsDuMatin, vivre, type EvenementSoiree } from './soiree';
 import { attendBriefing, estOuvert, MINUTES_PAR_JOUR } from './temps';
 
 /** Ordres envoyés par l'interface au moteur. */
-export type Ordre = { type: 'validerBriefing' };
+export type Ordre =
+  | { type: 'validerBriefing'; offre?: Offre; commanderLinge?: boolean }
+  | { type: 'nettoyageExpress'; chambreId: string }
+  | { type: 'livraisonLinge' }
+  | { type: 'repos'; employeId: string }
+  | { type: 'regleDispute'; choix: 'verre' | 'calmer' };
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
   | { type: 'briefing'; jour: number }
   | { type: 'ouverture'; jour: number }
-  | { type: 'fermeture'; jour: number };
+  | { type: 'fermeture'; jour: number }
+  | { type: 'nettoyage'; chambreId: string; montant: number }
+  | { type: 'livraisonLinge'; montant: number }
+  | { type: 'repos'; employeId: string }
+  | { type: 'disputeReglee'; choix: 'verre' | 'calmer'; reussite: boolean }
+  | EvenementSoiree;
 
 export interface ResultatTick {
   etat: EtatJeu;
   evenements: EvenementMoteur[];
 }
 
-/** Applique les ordres du joueur, sans faire avancer le temps. */
-export function appliquerOrdres(etat: EtatJeu, ordres: readonly Ordre[]): EtatJeu {
-  let resultat = etat;
-  for (const ordre of ordres) {
-    switch (ordre.type) {
-      case 'validerBriefing':
-        if (attendBriefing(resultat)) resultat = { ...resultat, briefingJour: resultat.jour };
-        break;
+function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): void {
+  switch (ordre.type) {
+    case 'validerBriefing': {
+      if (!attendBriefing(etat)) return;
+      etat.briefingJour = etat.jour;
+      if (ordre.offre) etat.offre = ordre.offre;
+      if (ordre.commanderLinge) {
+        depenser(etat, B.COMMANDE_LINGE.prix);
+        etat.lingeCommande += B.COMMANDE_LINGE.draps;
+      }
+      return;
+    }
+    case 'nettoyageExpress': {
+      const chambre = etat.chambres.find((c) => c.id === ordre.chambreId);
+      const occupee = etat.rendezVous.some((r) => r.chambreId === ordre.chambreId);
+      if (!chambre || !chambre.ouverte || occupee || chambre.proprete >= 100) return;
+      depenser(etat, B.NETTOYAGE_EXPRESS);
+      chambre.proprete = 100;
+      evenements.push({ type: 'nettoyage', chambreId: chambre.id, montant: B.NETTOYAGE_EXPRESS });
+      return;
+    }
+    case 'livraisonLinge':
+      depenser(etat, B.LIVRAISON_EXPRESS_LINGE.prix);
+      etat.linge += B.LIVRAISON_EXPRESS_LINGE.draps;
+      evenements.push({ type: 'livraisonLinge', montant: B.LIVRAISON_EXPRESS_LINGE.prix });
+      return;
+    case 'repos': {
+      const employe = etat.personnel.find((e) => e.id === ordre.employeId);
+      if (!employe || employe.repos) return;
+      employe.repos = true;
+      evenements.push({ type: 'repos', employeId: employe.id });
+      return;
+    }
+    case 'regleDispute': {
+      if (!etat.dispute) return;
+      etat.dispute = null;
+      let reussite = true;
+      if (ordre.choix === 'verre') {
+        depenser(etat, B.DISPUTE_VERRE_OFFERT);
+      } else {
+        const tirage = creerTirage(etat.hasard);
+        reussite = tirage.chance(B.DISPUTE_CALMER_REUSSITE);
+        etat.hasard = tirage.etat();
+        if (!reussite) etat.reputation = Math.max(0, etat.reputation - 1);
+      }
+      evenements.push({ type: 'disputeReglee', choix: ordre.choix, reussite });
+      return;
     }
   }
-  return resultat;
+}
+
+/** Applique les ordres du joueur, sans faire avancer le temps. */
+export function appliquerOrdres(etat: EtatJeu, ordres: readonly Ordre[]): ResultatTick {
+  if (ordres.length === 0) return { etat, evenements: [] };
+  const copie = structuredClone(etat);
+  const evenements: EvenementMoteur[] = [];
+  for (const ordre of ordres) appliquer(copie, ordre, evenements);
+  return { etat: copie, evenements };
 }
 
 /**
@@ -34,32 +94,39 @@ export function appliquerOrdres(etat: EtatJeu, ordres: readonly Ordre[]): EtatJe
  * À 19 h, le temps reste bloqué tant que le briefing n'est pas validé.
  */
 export function tick(etatInitial: EtatJeu, ordres: readonly Ordre[] = []): ResultatTick {
-  const etat = appliquerOrdres(etatInitial, ordres);
-  if (attendBriefing(etat)) {
-    return { etat, evenements: [{ type: 'briefing', jour: etat.jour }] };
+  const apresOrdres = appliquerOrdres(etatInitial, ordres);
+  const evenements: EvenementMoteur[] = [...apresOrdres.evenements];
+  if (attendBriefing(apresOrdres.etat)) {
+    evenements.push({ type: 'briefing', jour: apresOrdres.etat.jour });
+    return { etat: apresOrdres.etat, evenements };
   }
 
-  const evenements: EvenementMoteur[] = [];
+  const etat = apresOrdres.etat === etatInitial ? structuredClone(etatInitial) : apresOrdres.etat;
+  const tirage = creerTirage(etat.hasard);
   const etaitOuvert = estOuvert(etat);
-  const minuteDuJour = (etat.minuteDuJour + MINUTES_PAR_TICK) % MINUTES_PAR_JOUR;
-  let jour = etat.jour;
 
-  if (minuteDuJour === HEURE_DEBUT_JOURNEE) {
-    jour += 1;
-    evenements.push({ type: 'nouveauJour', jour });
+  etat.minuteDuJour = (etat.minuteDuJour + B.MINUTES_PAR_TICK) % MINUTES_PAR_JOUR;
+  if (etat.minuteDuJour === B.HEURE_DEBUT_JOURNEE) {
+    etat.jour += 1;
+    evenements.push({ type: 'nouveauJour', jour: etat.jour });
+    prelevementsDuMatin(etat, evenements);
   }
 
-  const suivant: EtatJeu = { ...etat, jour, minuteDuJour };
-
-  if (!etaitOuvert && estOuvert(suivant) && minuteDuJour === HEURE_OUVERTURE) {
-    evenements.push({ type: 'ouverture', jour });
-  }
-  if (etaitOuvert && minuteDuJour === HEURE_FERMETURE) {
-    evenements.push({ type: 'fermeture', jour });
-  }
-  if (attendBriefing(suivant)) {
-    evenements.push({ type: 'briefing', jour });
+  const ouvert = estOuvert(etat);
+  if (!etaitOuvert && ouvert) {
+    ouvrirNuit(etat);
+    evenements.push({ type: 'ouverture', jour: etat.jour });
   }
 
-  return { etat: suivant, evenements };
+  vivre(etat, ouvert, tirage, evenements);
+
+  if (etaitOuvert && !ouvert) {
+    evenements.push({ type: 'fermeture', jour: etat.jour });
+    fermerNuit(etat, tirage, evenements);
+  }
+  if (attendBriefing(etat)) evenements.push({ type: 'briefing', jour: etat.jour });
+
+  etat.hasard = tirage.etat();
+  return { etat, evenements };
 }
+

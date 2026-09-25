@@ -1,11 +1,24 @@
-import { EMPRUNT_RACHAT, JOUR_PREMIERE_MENSUALITE, MENSUALITE } from '../content/balance';
+import {
+  EMPRUNT_RACHAT,
+  JOUR_PREMIERE_MENSUALITE,
+  LIVRAISON_EXPRESS_LINGE,
+  MENSUALITE,
+  NETTOYAGE_EXPRESS,
+  RDV_MAX_PAR_SOIR,
+  SEUIL_CHAMBRE_INUTILISABLE,
+  SEUIL_EPUISEMENT,
+  SEUIL_LINGE,
+} from '../content/balance';
 import { PIECES_COMMUNES, trouverChambre, trouverPiece } from '../content/maison';
 import { PALIERS } from '../content/paliers';
+import { SANNE, TALENTS, TRAITS, type Talent } from '../content/personnel';
 import { TEXTES } from '../content/textes';
-import type { EtatJeu, Systemes } from '../engine/etat';
-import { jourDeLaSemaine } from '../engine/temps';
+import type { Employe, EtatJeu, Systemes } from '../engine/etat';
+import { estOuvert, jourDeLaSemaine } from '../engine/temps';
+import { Figurine } from '../scene/Figurine';
 import { formaterEuros, formaterHeure } from './format';
 import { Cadenas } from './Icones';
+import { Jauge } from './Jauge';
 import { useInterface, type Fiche, type Onglet } from './store';
 
 const t = TEXTES.panneau;
@@ -112,6 +125,20 @@ function ProchainPalier({ partie }: { partie: EtatJeu }) {
   );
 }
 
+function Linge({ partie }: { partie: EtatJeu }) {
+  const ordonner = useInterface((s) => s.ordonner);
+  const a = TEXTES.actions;
+  return (
+    <>
+      <h3>{TEXTES.briefing.linge}</h3>
+      <p className={partie.linge < SEUIL_LINGE ? 'sous negatif' : 'sous'}>{a.lingeStock(partie.linge)}</p>
+      <button className="bouton discret pleine-largeur" onClick={() => ordonner({ type: 'livraisonLinge' })}>
+        {a.livraisonLinge(LIVRAISON_EXPRESS_LINGE.draps, formaterEuros(LIVRAISON_EXPRESS_LINGE.prix))}
+      </button>
+    </>
+  );
+}
+
 function Ligne({ titre, detail, fiche }: { titre: string; detail: string; fiche: Fiche }) {
   const ouvrirFiche = useInterface((s) => s.ouvrirFiche);
   return (
@@ -134,11 +161,18 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
           <Ligne
             key={c.id}
             titre={def.nom}
-            detail={c.ouverte ? `${t.enService} · ${t.proprete.toLowerCase()} ${Math.round(c.proprete)} %` : t.sousDraps}
+            detail={
+              partie.rendezVous.some((r) => r.chambreId === c.id)
+                ? TEXTES.actions.occupee
+                : c.ouverte
+                  ? `${t.enService} · ${t.proprete.toLowerCase()} ${Math.round(c.proprete)} %`
+                  : t.sousDraps
+            }
             fiche={{ type: 'chambre', id: c.id }}
           />
         );
       })}
+      <Linge partie={partie} />
       <h3>{t.piecesCommunes}</h3>
       {PIECES_COMMUNES.map((p) => (
         <Ligne
@@ -149,19 +183,6 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
         />
       ))}
     </>
-  );
-}
-
-function Jauge({ nom, valeur }: { nom: string; valeur: number }) {
-  return (
-    <div className="jauge">
-      <span>
-        {nom} <b>{Math.round(valeur)} %</b>
-      </span>
-      <div className={valeur < 40 ? 'jauge-barre basse' : 'jauge-barre'}>
-        <i style={{ width: `${Math.max(0, Math.min(100, valeur))}%` }} />
-      </div>
-    </div>
   );
 }
 
@@ -194,6 +215,7 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
   const chambre = partie.chambres.find((c) => c.id === fiche.id);
   if (!def || !chambre) return retour;
   const renovation = palier(1);
+  const occupee = partie.rendezVous.some((r) => r.chambreId === chambre.id);
   return (
     <div className="fiche">
       {retour}
@@ -201,9 +223,15 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
         {def.nom} {def.premium && <span className="pastille premium">{t.premium}</span>}
       </h2>
       <p className="sous">{def.theme}</p>
-      <p className="statut">{chambre.ouverte ? t.enService : t.sousDraps}</p>
-      {chambre.ouverte && <Jauge nom={t.proprete} valeur={chambre.proprete} />}
+      <p className="statut">{occupee ? TEXTES.actions.occupee : chambre.ouverte ? t.enService : t.sousDraps}</p>
+      {chambre.ouverte && <Jauge nom={t.proprete} valeur={chambre.proprete} alerte={chambre.proprete < 40} />}
       <Jauge nom={t.etat} valeur={chambre.etat} />
+      {chambre.ouverte && chambre.proprete < SEUIL_CHAMBRE_INUTILISABLE && (
+        <p className="sous negatif">{TEXTES.actions.inutilisable}</p>
+      )}
+      {chambre.ouverte && (
+        <BoutonNettoyage chambreId={chambre.id} desactive={occupee || chambre.proprete >= 100} />
+      )}
       {!chambre.ouverte && !partie.systemes.renovation && (
         <p className="verrou-ligne">
           <Cadenas /> {t.renovationVerrouillee(renovation.numero, renovation.nom)}
@@ -213,11 +241,94 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
   );
 }
 
+function BoutonNettoyage({ chambreId, desactive }: { chambreId: string; desactive: boolean }) {
+  const ordonner = useInterface((s) => s.ordonner);
+  return (
+    <button
+      className="bouton principal pleine-largeur"
+      disabled={desactive}
+      onClick={() => ordonner({ type: 'nettoyageExpress', chambreId })}
+    >
+      {TEXTES.actions.nettoyageExpress(formaterEuros(NETTOYAGE_EXPRESS))}
+    </button>
+  );
+}
+
+function statutEmploye(partie: EtatJeu, e: Employe): string {
+  const st = TEXTES.personnel.statuts;
+  if (partie.rendezVous.some((r) => r.employeId === e.id)) return st.rdv;
+  if (e.repos) return st.repos;
+  if (!estOuvert(partie)) return st.horsService;
+  if (e.fatigue > SEUIL_EPUISEMENT) return st.epuisee;
+  if (e.rdvCeSoir >= RDV_MAX_PAR_SOIR) return st.quota;
+  return st.disponible;
+}
+
+function Pastilles({ n }: { n: number }) {
+  return (
+    <span className="pastilles" aria-label={`${n} sur 5`}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <i key={i} className={i <= n ? 'pleine' : ''} />
+      ))}
+    </span>
+  );
+}
+
+function FicheEmploye({ partie, employe }: { partie: EtatJeu; employe: Employe }) {
+  const ordonner = useInterface((s) => s.ordonner);
+  const p = TEXTES.personnel;
+  const def = SANNE; // Seule Sanne pour l'instant ; le recrutement arrive au palier 1.
+  const enRdv = partie.rendezVous.some((r) => r.employeId === employe.id);
+  return (
+    <div className="employe">
+      <div className="employe-entete">
+        <svg className="portrait" viewBox="4 -1 16 20" aria-hidden="true">
+          <Figurine silhouette={def.silhouette} x={12} y={50} hauteur={50} />
+        </svg>
+        <div>
+          <h2>
+            {def.prenom} <small>{p.ans(def.age)}</small>
+          </h2>
+          <p className="sous">{def.accroche}</p>
+          <span className="pastille ouverte">{statutEmploye(partie, employe)}</span>
+        </div>
+      </div>
+      <Jauge nom={p.fatigue} valeur={employe.fatigue} alerte={employe.fatigue > 70} />
+      <Jauge nom={p.moral} valeur={employe.moral} alerte={employe.moral < 35} />
+      <Jauge nom={p.loyaute} valeur={employe.loyaute} />
+      {estOuvert(partie) && <p className="sous">{p.rdvCeSoir(employe.rdvCeSoir, RDV_MAX_PAR_SOIR)}</p>}
+      {estOuvert(partie) && !employe.repos && (
+        <button className="bouton discret pleine-largeur" disabled={enRdv} onClick={() => ordonner({ type: 'repos', employeId: employe.id })}>
+          {p.mettreAuRepos}
+        </button>
+      )}
+      <h3>{p.talents}</h3>
+      <div className="talents">
+        {(Object.keys(TALENTS) as Talent[]).map((k) => (
+          <div key={k}>
+            <span>{TALENTS[k]}</span>
+            <Pastilles n={employe.talents[k]} />
+          </div>
+        ))}
+      </div>
+      <h3>{p.traits}</h3>
+      {employe.traits.map((trait) => (
+        <p key={trait} className="trait">
+          <b>{trait}</b> {TRAITS[trait]}
+        </p>
+      ))}
+      <p className="sous">{p.part(Math.round(employe.part * 100))}</p>
+    </div>
+  );
+}
+
 function OngletPersonnel({ partie }: { partie: EtatJeu }) {
   const recrutement = palier(1);
   return (
     <>
-      <p className="sous">{t.personnelProvisoire}</p>
+      {partie.personnel.map((e) => (
+        <FicheEmploye key={e.id} partie={partie} employe={e} />
+      ))}
       {!partie.systemes.recrutement && (
         <p className="verrou-ligne">
           <Cadenas /> {t.recrutementVerrouille(recrutement.numero, recrutement.nom)}
