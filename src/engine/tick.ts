@@ -35,6 +35,8 @@ export type Ordre =
       commanderLinge?: boolean;
       /** Commande de bouteilles pour le bar, livrée à l'ouverture. */
       commanderBar?: boolean;
+      /** Soirée à thème, payée tout de suite (null ou absent : pas de thème). */
+      theme?: string | null;
       /** Planning (palier 1) : qui se repose ce soir, et le maximum de rendez-vous par personne. */
       repos?: string[];
       rdvMax?: number;
@@ -119,6 +121,13 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       if (ordre.commanderLinge) {
         depenser(etat, B.COMMANDE_LINGE.prix, 'linge');
         etat.lingeCommande += B.COMMANDE_LINGE.draps;
+      }
+      etat.themeDuSoir = null;
+      const theme = ordre.theme ? B.THEMES[ordre.theme] : undefined;
+      if (ordre.theme && theme && etat.systemes.themes && etat.tresorerie >= theme.cout) {
+        depenser(etat, theme.cout, 'themes');
+        etat.themeDuSoir = ordre.theme;
+        etat.semaine.themes.push(ordre.theme);
       }
       if (ordre.commanderBar && etat.bar.ouvert) {
         depenser(etat, B.COMMANDE_BAR.prix, 'bar');

@@ -190,6 +190,17 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     if (estObjet(d.clientele) && estObjet(d.clientele.satisfaction)) semaine.satisfactionDebut = { ...(d.clientele.satisfaction as ParSegment) };
     return { ...d, version: 14, systemes, semaine, bilanSemaine: null, bilanAVoir: false };
   },
+  // v14 → v15 : soirées à thème, ouvertes avec les tendances ; un nouveau poste « thèmes » dans les comptes.
+  14: (d) => {
+    const ouvertes = estObjet(d.systemes) && d.systemes.tendances === true;
+    const systemes = { ...(estObjet(d.systemes) ? d.systemes : {}), themes: ouvertes };
+    const avecPoste = (c: unknown) =>
+      estObjet(c) && estObjet(c.depenses) ? { ...c, depenses: { ...c.depenses, themes: 0 } } : c;
+    const semaine = estObjet(d.semaine) ? { ...d.semaine, themes: [], comptes: avecPoste(d.semaine.comptes) } : d.semaine;
+    const bilanSemaine = estObjet(d.bilanSemaine) ? { ...d.bilanSemaine, comptes: avecPoste(d.bilanSemaine.comptes) } : d.bilanSemaine;
+    const nouveautes = [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(ouvertes ? ['themes'] : [])];
+    return { ...d, version: 15, systemes, semaine, bilanSemaine, themeDuSoir: null, nouveautes };
+  },
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -248,6 +259,7 @@ function estEtatValide(d: Donnees): boolean {
     typeof d.equipes.bar === 'number' &&
     estObjet(d.semaine) &&
     typeof d.bilanAVoir === 'boolean' &&
+    (d.themeDuSoir === null || typeof d.themeDuSoir === 'string') &&
     estObjet(d.systemes)
   );
 }

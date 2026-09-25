@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { COMMANDE_BAR, COMMANDE_LINGE, FORMULES, SEUIL_BAR, HEURE_FERMETURE, HEURE_OUVERTURE, RDV_MAX_CRANS } from '../content/balance';
+import { COMMANDE_BAR, COMMANDE_LINGE, FORMULES, SEUIL_BAR, THEMES, HEURE_FERMETURE, HEURE_OUVERTURE, RDV_MAX_CRANS } from '../content/balance';
 import { OFFRES, type Offre } from '../content/clientele';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
@@ -11,6 +11,8 @@ import { JoseeLigne } from './Josee';
 import { resumeRegles } from './OngletClientele';
 import { TEXTES_FORMULES } from '../content/regles';
 import { trouverTendance } from '../content/tendances';
+import { THEMES_SOIREE } from '../content/themes';
+import { forceSiProgramme } from '../engine/themes';
 import { formuleActive } from '../engine/regles';
 import { useInterface } from './store';
 
@@ -20,6 +22,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
   const [offre, setOffre] = useState<Offre>(partie.offre);
   const [commanderLinge, setCommanderLinge] = useState(false);
   const [commanderBar, setCommanderBar] = useState(false);
+  const [theme, setTheme] = useState<string | null>(null);
   // Planning : une personne promise au repos est proposée au repos d'office.
   const [repos, setRepos] = useState<string[]>(() => partie.personnel.filter((e) => e.promesseRepos !== null).map((e) => e.id));
   const [rdvMax, setRdvMax] = useState(partie.rdvMax);
@@ -48,7 +51,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
               {TEXTES.date(jourSemaine, partie.jour)} · {t.horaires(formaterHeure(HEURE_OUVERTURE), formaterHeure(HEURE_FERMETURE))}
             </p>
           </div>
-          <button className="bouton principal" onClick={() => validerBriefing({ offre, commanderLinge, commanderBar, repos: planning ? repos : [], rdvMax })}>
+          <button className="bouton principal" onClick={() => validerBriefing({ offre, commanderLinge, commanderBar, repos: planning ? repos : [], rdvMax, theme })}>
             {t.lancer}
           </button>
         </header>
@@ -137,6 +140,37 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
               </button>
             ))}
             {partie.didacticiel === null && premierSoir && <p className="conseil">{t.conseilPremierSoir}</p>}
+            {partie.systemes.themes && (
+              <>
+                <h3>{t.theme}</h3>
+                <button className={theme === null ? 'choix choisi' : 'choix'} aria-pressed={theme === null} onClick={() => setTheme(null)}>
+                  {t.sansTheme}
+                  <small>{t.sansThemeDetail}</small>
+                </button>
+                {THEMES_SOIREE.map((th) => {
+                  const cout = THEMES[th.id]?.cout ?? 0;
+                  const force = forceSiProgramme(partie, th.id);
+                  const tropCher = partie.tresorerie < cout;
+                  return (
+                    <button
+                      key={th.id}
+                      className={theme === th.id ? 'choix choisi' : 'choix'}
+                      aria-pressed={theme === th.id}
+                      disabled={tropCher}
+                      onClick={() => setTheme(th.id)}
+                    >
+                      {th.nom} · {t.themePrix(formaterEuros(cout))}
+                      <small>
+                        {th.effet}
+                        {force < 1 && ` ${t.themeLasse(Math.round(force * 100))}`}
+                        {tropCher && ` ${t.themeTropCher}`}
+                      </small>
+                    </button>
+                  );
+                })}
+                {theme && <JoseeLigne texte={THEMES_SOIREE.find((th) => th.id === theme)?.josee ?? ''} />}
+              </>
+            )}
             {partie.systemes.tarifs && (
               <p className="sous">
                 <b>{t.regles}</b> {resumeRegles(partie)}

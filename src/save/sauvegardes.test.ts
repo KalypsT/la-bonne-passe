@@ -320,6 +320,24 @@ describe('migrations', () => {
     expect(migre?.systemes.tendances).toBe(false);
   });
 
+  it('migre une sauvegarde v14 : soirées à thème ouvertes avec les tendances, nouveau poste dans les comptes', () => {
+    const { themeDuSoir: _t, ...etat } = creerEtatInitial();
+    const { themes: _th, ...systemes } = { ...etat.systemes, tendances: true };
+    const { themes: _s, ...semaine } = etat.semaine;
+    const { themes: _c, ...depenses } = semaine.comptes.depenses;
+    const ancienne = { ...semaine, comptes: { ...semaine.comptes, depenses } };
+    const migre = migrer({ ...etat, version: 14, palier: 2, systemes, semaine: ancienne, bilanSemaine: null, nouveautes: [] });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.systemes.themes).toBe(true);
+    expect(migre?.themeDuSoir).toBeNull();
+    expect(migre?.semaine.themes).toEqual([]);
+    expect(migre?.semaine.comptes.depenses.themes).toBe(0);
+    expect(migre?.nouveautes).toEqual(['themes']);
+    const avant = migrer({ ...etat, version: 14, systemes: { ...systemes, tendances: false }, semaine: ancienne, nouveautes: [] });
+    expect(avant?.systemes.themes).toBe(false);
+    expect(avant?.nouveautes).toEqual([]);
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

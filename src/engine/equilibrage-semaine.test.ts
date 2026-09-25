@@ -10,11 +10,20 @@ const GRAINES = [1, 2, 3, 4, 5, 6];
 type Partie = { nuits: ResumeNuit[]; avoir: number };
 const parties = new Map<string, Partie[]>();
 
-function jouer(nom: string, offre: Offre | ((e: Parameters<typeof choixAdaptatif>[0]) => Offre), regles: Partial<Regles> | ((e: Parameters<typeof choixAdaptatif>[0]) => Partial<Regles>), tendances?: string[], nuits = 35) {
+type Etat = Parameters<typeof choixAdaptatif>[0];
+
+function jouer(
+  nom: string,
+  offre: Offre | ((e: Etat) => Offre),
+  regles: Partial<Regles> | ((e: Etat) => Partial<Regles>),
+  tendances?: string[],
+  nuits = 35,
+  theme?: (e: Etat) => string | null,
+) {
   parties.set(
     nom,
     GRAINES.map((graine) => {
-      const r = simuler({ graine, offre, rdvMax: 3, nuits, regles, tendances });
+      const r = simuler({ graine, offre, rdvMax: 3, nuits, regles, tendances, theme });
       return { nuits: r.nuits, avoir: r.etat.tresorerie + r.etat.reserve };
     }),
   );
@@ -24,6 +33,7 @@ beforeAll(() => {
   // Tendances tirées au hasard, 28 nuits : le joueur qui ne touche à rien contre celui qui s'adapte.
   jouer('fixe', 'classique', {}, undefined, 28);
   jouer('adaptatif', (e) => choixAdaptatif(e).offre, (e) => choixAdaptatif(e).regles, undefined, 28);
+  jouer('adaptatifThemes', (e) => choixAdaptatif(e).offre, (e) => choixAdaptatif(e).regles, undefined, 28, (e) => choixAdaptatif(e).theme);
   // Une même tendance toutes les semaines, pour comparer les réponses.
   for (const t of ['congres', 'controles', 'match']) {
     jouer(`${t}-classique`, 'classique', {}, [t]);
@@ -55,5 +65,10 @@ describe('l’offre change la partie', () => {
   it('le joueur qui suit les tendances fait mieux, en réputation comme en argent, que celui qui ne touche à rien', () => {
     expect(reputation('adaptatif')).toBeGreaterThan(reputation('fixe') + 3);
     expect(moyenne('adaptatif', (p) => p.avoir)).toBeGreaterThan(moyenne('fixe', (p) => p.avoir));
+  });
+
+  it('avec deux soirées à thème par semaine, il achète de la réputation sans se ruiner', () => {
+    expect(reputation('adaptatifThemes')).toBeGreaterThan(reputation('adaptatif') + 3);
+    expect(moyenne('adaptatifThemes', (p) => p.avoir)).toBeGreaterThan(moyenne('fixe', (p) => p.avoir) * 0.97);
   });
 });

@@ -221,3 +221,59 @@ Un joueur simulé qui suit les tendances (`choixAdaptatif` dans `simulation.ts`)
 - **Les semaines chargées font baisser la réputation de tout le monde** : plus de demande dans une maison pleine, ce sont plus de clients perdus. La classique fixe tombe à 29 à la nuit 28 (33 sans tendance). C'est le paradoxe déjà noté : à traiter en partie 6.
 - **Le tarif −20 % ne rapporte jamais**, même en semaine creuse (il faudrait 25 % de clients en plus rien que pour compenser). Il ne sert qu'à la satisfaction des touristes. À revoir en partie 6, avec la saturation.
 - **Champagne et tarif +20 % font tomber les touristes à 5** sur un mois : ceux qui jouent l'argent à fond le paient.
+
+## Soirées à thème (v0.3, partie 5)
+
+Ouvertes avec les tendances, au premier lundi après le palier 2. Programmées au briefing, payées tout de suite, valables pour la soirée. Valeurs dans `balance.ts` (`THEMES`, `THEME_LASSITUDE`) :
+
+| Thème | Coût | Supplément | Ce qui le distingue | Fatigue |
+| --- | --- | --- | --- | --- |
+| Soirée masquée | 100 € | +10 % | attire les affaires (× 1,8), qui l'adorent (+0,08) | × 1 |
+| Soirée burlesque | 120 € | +15 % | bouche-à-oreille × 1,5 ; groupes et touristes ravis, habitués agacés ; +20 min de patience | × 1,2 |
+| Soirée jazz | 80 € | +10 % | attire et comble les habitués ; disputes × 0,7 | × 0,85 |
+| Années folles | 150 € | +15 % | bar × 1,8 (recette et bouteilles) ; tout le monde un peu plus content | × 1,3 |
+
+Un même thème répété dans la semaine perd la moitié de ses effets à chaque reprise (le coût, lui, reste entier).
+
+Premiers réglages, et ce qu'ils ont appris :
+
+- Avec des coûts de 200 à 350 € et sans supplément, un thème perdait toujours de l'argent : la maison étant pleine, l'afflux ne se transforme pas en rendez-vous. D'où les coûts divisés par deux et le supplément payé par chaque client.
+- **Quai plein** : un client qui passe son chemin devant un quai complet ne coûte plus de réputation (`REPUTATION_FILE_PLEINE` 0,05 → 0) ; un client parti las d'attendre coûte 0,1 au lieu de 0,15. Ce n'était pas la cause principale (l'effet est faible), mais c'est plus juste et ça allège le paradoxe de la saturation.
+- Le burlesque ne servait à rien (il attire du monde qu'on ne peut pas recevoir) : il est devenu le thème du bouche-à-oreille.
+
+Mesures, thème le vendredi et le samedi (8 graines, 35 nuits, classique à 3 ; argent = résultat réel par jour des nuits 15 à 35) :
+
+| Semaine | Sans thème | Masquée | Burlesque | Jazz | Années folles |
+| --- | --- | --- | --- | --- | --- |
+| Sans tendance | 441 € · 34 | 472 € · 36 | 438 € · 35 | 424 € · 37 | 443 € · 33 |
+| Match européen | 399 € · 18 | 429 € · 19 | 424 € · 21 | 402 € · 21 | 432 € · 18 |
+| Congrès médical | 536 € · 30 | 550 € · 31 | 521 € · 29 | 511 € · 33 | 548 € · 29 |
+
+- Chaque thème soigne son monde : masquée → affaires +8, jazz → habitués +7, années folles → bar +20 %, burlesque → réputation un soir de match (21 contre 18).
+- Deux soirées par semaine coûtent peu et rapportent un peu de réputation. Un thème est un investissement en réputation, pas une machine à cash : le joueur adaptatif avec thèmes finit à 41 de réputation contre 34 sans, pour 1 600 € de moins sur le mois.
+- `src/engine/equilibrage-themes.test.ts` garde ces résultats ; `equilibrage-semaine.test.ts` vérifie que les thèmes achètent de la réputation sans ruiner (au moins 97 % de l'argent du joueur qui ne touche à rien).
+
+| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 3 à 5 | 30 / 31 / 32 | 682 € | 1 118 € | 11 716 € | 79 | 0,0 | 21 / 30 / 16 / 33 | 29 / 38 / 18 / 41 |
+| Classique, 4 | 3 à 4 | 33 / 36 / 32 | 908 € | 1 351 € | 16 384 € | 64 | 0,6 | 24 / 31 / 18 / 28 | 33 / 39 / 18 / 39 |
+| Happy hour, 4 | 3 à 3 | 35 / 35 / 30 | 614 € | 1 059 € | 9 604 € | 58 | 0,7 | 35 / 26 / 11 / 28 | 42 / 34 / 6 / 35 |
+| Feutrée, 4 | 3 à 4 | 33 / 41 / 48 | 833 € | 1 273 € | 14 517 € | 74 | 0,0 | 22 / 37 / 15 / 26 | 44 / 57 / 35 / 52 |
+| Adaptatif (suit les tendances), 3 | 3 à 5 | 30 / 33 / 38 | 717 € | 1 177 € | 12 521 € | 80 | 0,0 | 21 / 35 / 18 / 26 | 33 / 48 / 31 / 36 |
+| Classique 3, sans bar | 3 à 5 | 30 / 32 / 33 | 585 € | 911 € | 12 913 € | 78 | 0,0 | 23 / 33 / 16 / 28 | 34 / 40 / 21 / 37 |
+| Classique 3, bar à 2, sans avance | 3 à 5 | 30 / 32 / 33 | 538 € | 1 121 € | 9 758 € | 79 | 0,0 | 20 / 30 / 16 / 33 | 31 / 39 / 19 / 41 |
+| Classique 3, champagne | 3 à 5 | 29 / 28 / 25 | 877 € | 1 314 € | 14 599 € | 81 | 0,1 | 16 / 31 / 20 / 33 | 7 / 26 / 30 / 38 |
+| Classique 3, tarif −20 % | 3 à 5 | 30 / 33 / 30 | 472 € | 907 € | 6 910 € | 74 | 0,0 | 29 / 29 / 14 / 28 | 41 / 31 / 5 / 42 |
+| Classique 3, tarif +20 % | 3 à 5 | 28 / 27 / 27 | 956 € | 1 392 € | 15 654 € | 81 | 0,0 | 14 / 30 / 24 / 32 | 8 / 37 / 31 / 31 |
+| Classique 3, formule courte | 3 à 5 | 32 / 37 / 39 | 616 € | 1 052 € | 10 752 € | 79 | 0,0 | 20 / 29 / 27 / 24 | 35 / 36 / 43 / 47 |
+| Classique 3, soirée complète | 3 à 5 | 29 / 28 / 30 | 673 € | 1 107 € | 12 757 € | 78 | 0,0 | 23 / 42 / 8 / 28 | 29 / 46 / 8 / 34 |
+| Classique 3, sélection laxiste | 3 à 5 | 29 / 25 / 23 | 584 € | 1 020 € | 11 013 € | 78 | 0,0 | 22 / 30 / 11 / 37 | 26 / 21 / 5 / 45 |
+| Classique 3, sélection stricte | 3 à 5 | 32 / 37 / 42 | 458 € | 893 € | 9 511 € | 79 | 0,0 | 21 / 39 / 21 / 18 | 36 / 55 / 40 / 33 |
+| Classique 3, habitués d’abord | 3 à 5 | 30 / 33 / 34 | 651 € | 1 085 € | 11 105 € | 80 | 0,0 | 20 / 33 / 16 / 31 | 32 / 43 / 18 / 42 |
+| Classique 3, pressés d’abord | 3 à 5 | 30 / 33 / 34 | 682 € | 1 117 € | 11 755 € | 78 | 0,0 | 22 / 30 / 17 / 32 | 31 / 40 / 23 / 42 |
+| Passif (classique, sans recruter ni rénover) | jamais | 13 / 8 / 4 | 13 € | 232 € | 2 129 € | 49 | 0,0 | 53 / 47 / 0 / 0 | 5 / 4 / 0 / 0 |
+
+À surveiller :
+
+- Le jazz ne sert à rien une semaine de pluie ou de fin du mois : les habitués sont déjà là en nombre. Josée ne le conseille plus ces semaines-là.
+- Les écarts restent modestes (±30 € par jour, ±3 de réputation) : deux soirs sur sept. Un joueur qui programme un thème tous les soirs paie la lassitude.

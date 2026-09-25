@@ -5,6 +5,7 @@ import * as B from '../content/balance';
 import type { Segment } from '../content/clientele';
 import { depenser, encaisser } from './comptes';
 import type { EtatJeu } from './etat';
+import { barTheme } from './themes';
 import { instant, MINUTES_PAR_JOUR } from './temps';
 
 export type OrdreBar =
@@ -62,8 +63,9 @@ function retirerStock(etat: EtatJeu, bouteilles: number, evenements: Sortie): vo
  */
 export function venteBar(etat: EtatJeu, segment: Segment, evenements: Sortie): number {
   if (!barSert(etat)) return 0;
-  const montant = B.BAR_RECETTE[segment];
-  retirerStock(etat, B.BAR_CONSO[segment], evenements);
+  // Un thème festif fait boire davantage.
+  const montant = Math.round(B.BAR_RECETTE[segment] * barTheme(etat));
+  retirerStock(etat, B.BAR_CONSO[segment] * barTheme(etat), evenements);
   encaisser(etat, montant, 'bar');
   if (etat.nuit) {
     etat.nuit.recettes += montant;

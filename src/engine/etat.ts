@@ -44,6 +44,8 @@ export interface Systemes {
   porte: boolean;
   /** Tendances de la semaine (premier lundi après le palier 2). */
   tendances: boolean;
+  /** Soirées à thème, programmées au briefing (en même temps que les tendances). */
+  themes: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -308,6 +310,8 @@ export interface EtatJeu {
   bilanSemaine: BilanSemaine | null;
   /** Le bilan du lundi attend d'être lu (carte en pause). */
   bilanAVoir: boolean;
+  /** Thème de la soirée programmé au dernier briefing, ou null. */
+  themeDuSoir: string | null;
   /** Nouveautés arrivées avec une mise à jour du jeu, pour un palier déjà atteint : Josée les présente. */
   nouveautes: string[];
   /** Étape du didacticiel de Madame Josée, ou null s'il est fini ou passé. */
@@ -317,7 +321,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 14;
+export const VERSION_ETAT = 15;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -336,6 +340,7 @@ export function systemesDeDepart(): Systemes {
     tarifs: false,
     porte: false,
     tendances: false,
+    themes: false,
   };
 }
 
@@ -469,6 +474,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     semaine: semaineDeDepart(),
     bilanSemaine: null,
     bilanAVoir: false,
+    themeDuSoir: null,
     nouveautes: [],
     didacticiel: options.didacticiel ? 0 : null,
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,

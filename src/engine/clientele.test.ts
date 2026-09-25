@@ -75,15 +75,17 @@ describe('satisfaction par segment', () => {
     expect(perte('touriste-egare')).toBeCloseTo(B.REPUTATION_CLIENT_PERDU * B.SATISFACTION_PAR_CLIENT, 5);
   });
 
-  it('un client refoulé par un quai plein pèse sur son segment', () => {
+  it('un client refoulé par un quai plein compte comme perdu, sans coûter de réputation : la maison affiche complet', () => {
     const plein = [1, 2, 3, 4].map((id) => ({ id, modele: 'etudiant', patience: 50 }));
     const etat = soiree(1, { file: plein.slice(0, B.PLACES_FILE) });
+    etat.clientele.historique = [{ servis: { touriste: 0, habitue: 0, affaires: 0, groupe: 0 }, perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0 } }];
     const avant = structuredClone(etat.clientele.satisfaction);
     const evenements: { type: string }[] = [];
     arrivee(etat, creerTirage(3), evenements);
     expect(evenements).toEqual([{ type: 'filePleine' }]);
-    const baisse = (['touriste', 'habitue'] as const).filter((s) => etat.clientele.satisfaction[s] < avant[s]);
-    expect(baisse).toHaveLength(1);
+    expect(etat.clientele.satisfaction).toEqual(avant);
+    const perdus = etat.clientele.historique[0]!.perdus;
+    expect(perdus.touriste + perdus.habitue).toBe(1);
   });
 
   it('une dispute qui dégénère fait baisser tous les segments', () => {

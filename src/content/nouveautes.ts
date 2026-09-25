@@ -23,6 +23,11 @@ export const NOUVEAUTES: Nouveaute[] = [
     palier: 2,
     texte: 'Le bar peut rouvrir : 1 200 € et 8 h de travaux. Puis une équipe Bar, du stock, et la formule champagne.',
   },
+  {
+    id: 'themes',
+    palier: 2,
+    texte: 'Soirées à thème, au briefing : masquée, burlesque, jazz ou années folles. Chacune attire son monde.',
+  },
 ];
 
 export function trouverNouveaute(id: string): Nouveaute | undefined {
