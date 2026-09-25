@@ -5,6 +5,8 @@ export interface DefinitionPalier {
   nom: string;
   objectif: string;
   ouvre: string;
+  /** Détail de ce qui s'ouvre, pour la carte d'annonce. */
+  details?: string[];
 }
 
 export const PALIERS: DefinitionPalier[] = [
@@ -14,6 +16,13 @@ export const PALIERS: DefinitionPalier[] = [
     nom: 'Rouvrir',
     objectif: 'Boucler une première soirée.',
     ouvre: 'Recrutement, rénovation des chambres, planning du soir, réserve de sécurité.',
+    details: [
+      'Recrutement : des candidats vont passer dans la journée.',
+      'Rénovation des chambres sous les draps : 900\u00a0€, 8\u00a0h de travaux.',
+      'Une deuxième personne au ménage.',
+      'Planning du soir, au briefing.',
+      'Réserve de sécurité, dans l’onglet Finances.',
+    ],
   },
   {
     numero: 2,

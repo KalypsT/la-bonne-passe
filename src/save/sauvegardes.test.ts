@@ -176,6 +176,30 @@ describe('migrations', () => {
     expect(migre?.tresorerie).toBe(1234);
   });
 
+  /** Une sauvegarde telle que la v0.1 l'écrivait (version 5). */
+  function v5(champs: Record<string, unknown> = {}) {
+    const { reserve: _r, tauxReserve: _t, mensualitesPayees: _m, annonces: _a, journal: _j, ...etat } = creerEtatInitial();
+    const { planning: _p, reserve: _rs, ...systemes } = etat.systemes;
+    const chambres = etat.chambres.map(({ travaux: _tr, ...c }) => c);
+    return { ...etat, version: 5, systemes, chambres, ...champs };
+  }
+
+  it('migre une sauvegarde v5 : travaux, réserve, mensualités et journal vide', () => {
+    const migre = migrer(v5({ tresorerie: 2222 }));
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.chambres.every((c) => c.travaux === null)).toBe(true);
+    expect(migre).toMatchObject({ reserve: 0, tauxReserve: 0, mensualitesPayees: 0, annonces: [], journal: [], palier: 0 });
+    expect(migre?.systemes).toMatchObject({ planning: false, reserve: false, recrutement: false });
+    expect(migre?.tresorerie).toBe(2222);
+  });
+
+  it('accorde le palier 1, avec son annonce, à une partie v5 qui a bouclé une nuit', () => {
+    const migre = migrer(v5({ nuitsBouclees: 2 }));
+    expect(migre?.palier).toBe(1);
+    expect(migre?.annonces).toEqual([1]);
+    expect(migre?.systemes).toMatchObject({ recrutement: true, renovation: true, planning: true, reserve: true, bar: false });
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

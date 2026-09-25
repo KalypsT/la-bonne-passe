@@ -4,6 +4,7 @@ import { BarreHaut } from './BarreHaut';
 import { CarteBilan } from './CarteBilan';
 import { CarteBriefing } from './CarteBriefing';
 import { CarteDispute } from './CarteDispute';
+import { CartePalier } from './CartePalier';
 import { Panneau } from './Panneau';
 import { useInterface, type Fiche } from './store';
 import { useBoucle } from './useBoucle';
@@ -63,6 +64,7 @@ export function EcranJeu() {
       {carte === 'briefing' && <CarteBriefing partie={partie} />}
       {carte === 'bilan' && <CarteBilan partie={partie} />}
       {carte === 'dispute' && <CarteDispute />}
+      {carte === 'palier' && <CartePalier partie={partie} />}
     </div>
   );
 }

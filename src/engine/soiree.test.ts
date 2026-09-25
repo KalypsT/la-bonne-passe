@@ -58,7 +58,7 @@ describe('clients et rendez-vous', () => {
   it('un rendez-vous terminé rapporte la part de la maison et use la chambre, le linge et Sanne', () => {
     const avant = partieA(h(21), {
       rendezVous: [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', duree: 60, restant: 5 }],
-      nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null },
+      nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0 },
     });
     const { etat, evenements } = tick(avant);
     const fin = evenements.find((e) => e.type === 'finRdv');
@@ -83,7 +83,7 @@ describe('clients et rendez-vous', () => {
     const etat0 = partieA(h(21), {
       file: [{ id: 9, modele: 'poete', patience: 5 }],
       rendezVous: [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', duree: 60, restant: 60 }],
-      nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null },
+      nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0 },
     });
     const { etat, evenements } = tick(etat0);
     expect(evenements).toContainEqual({ type: 'clientParti', client: 'Le poète fauché' });
@@ -122,7 +122,7 @@ describe('clients et rendez-vous', () => {
     let etat = partieA(h(21), {
       file,
       personnel: creerEtatInitial().personnel.map((e) => ({ ...e, repos: true })),
-      nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null },
+      nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0 },
     });
     let pleine = false;
     for (let i = 0; i < 40 && !pleine; i++) {
@@ -251,7 +251,7 @@ describe('fermeture et bilan', () => {
     const avant = partieA(h(3, 55), {
       file: [{ id: 5, modele: 'poete', patience: 40 }],
       rendezVous: [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 4, modele: 'retraite', duree: 60, restant: 40 }],
-      nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null },
+      nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0 },
     });
     const { etat, evenements } = tick(avant);
     expect(etat.rendezVous).toHaveLength(0);

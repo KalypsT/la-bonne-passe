@@ -12,6 +12,7 @@ import type { Offre } from '../content/clientele';
 import { CHAMBRES } from '../content/maison';
 import { SANNE, type DefinitionEmploye, type Talent } from '../content/personnel';
 import { PARTIE_PAR_DEFAUT, type Genre } from '../content/partie';
+import type { EvenementMoteur } from './tick';
 
 /** Drapeaux d'ouverture des systèmes. L'interface masque ou verrouille ce qui est fermé. */
 export interface Systemes {
@@ -21,6 +22,10 @@ export interface Systemes {
   relations: boolean;
   recrutement: boolean;
   renovation: boolean;
+  /** Planning du soir au briefing (palier 1). */
+  planning: boolean;
+  /** Réserve de sécurité (palier 1). */
+  reserve: boolean;
   bar: boolean;
 }
 
@@ -42,6 +47,8 @@ export interface EtatChambre {
   proprete: number;
   /** État général en %, qui baisse avec l'usure. */
   etat: number;
+  /** Travaux en cours : instant (en minutes absolues) où ils se terminent. */
+  travaux: number | null;
 }
 
 export interface Employe {
@@ -93,6 +100,15 @@ export interface Nuit {
   reputationDebut: number;
   meilleurAvis: Avis | null;
   pireAvis: Avis | null;
+  /** Part de la recette mise en réserve à la fermeture. */
+  reserve: number;
+}
+
+/** Une ligne du journal : l'événement brut, mis en texte à l'affichage (les textes restent dans src/content). */
+export interface EntreeJournal {
+  jour: number;
+  minuteDuJour: number;
+  evenement: EvenementMoteur;
 }
 
 export interface EtatJeu {
@@ -130,12 +146,21 @@ export interface EtatJeu {
   nuitsBouclees: number;
   /** Dispute en cours sur le quai : instant (en minutes absolues) où elle dégénère. */
   dispute: { expire: number } | null;
+  /** Réserve de sécurité, en euros, mise de côté hors de la trésorerie. */
+  reserve: number;
+  /** Part de la recette du soir mise en réserve : 0, 0,1 ou 0,2. */
+  tauxReserve: number;
+  mensualitesPayees: number;
+  /** Paliers atteints dont la carte d'annonce n'a pas encore été vue. */
+  annonces: number[];
+  /** Derniers événements, du plus récent au plus ancien. */
+  journal: EntreeJournal[];
   /** État courant du générateur pseudo-aléatoire. */
   hasard: number;
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 5;
+export const VERSION_ETAT = 6;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -146,6 +171,8 @@ export function systemesDeDepart(): Systemes {
     relations: false,
     recrutement: false,
     renovation: false,
+    planning: false,
+    reserve: false,
     bar: false,
   };
 }
@@ -156,6 +183,7 @@ export function chambresDeDepart(): EtatChambre[] {
     ouverte: c.ouverteAuDepart,
     proprete: c.ouverteAuDepart ? PROPRETE_CHAMBRE_OUVERTE : 0,
     etat: c.ouverteAuDepart ? ETAT_CHAMBRE_OUVERTE : ETAT_CHAMBRE_FERMEE,
+    travaux: null,
   }));
 }
 
@@ -190,6 +218,17 @@ export function soireeDeDepart() {
   };
 }
 
+/** Champs ajoutés en version 6 : paliers, réserve, mensualités et journal. */
+export function maisonDeDepart() {
+  return {
+    reserve: 0,
+    tauxReserve: 0,
+    mensualitesPayees: 0,
+    annonces: [] as number[],
+    journal: [] as EntreeJournal[],
+  };
+}
+
 export interface OptionsNouvellePartie {
   graine?: number;
   joueur?: Joueur;
@@ -212,6 +251,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     briefingJour: 0,
     chambres: chambresDeDepart(),
     ...soireeDeDepart(),
+    ...maisonDeDepart(),
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,
   };
 }

@@ -5,3 +5,4 @@ export * from './identite';
 export * from './soiree';
 export * from './temps';
 export * from './tick';
+export * from './paliers';

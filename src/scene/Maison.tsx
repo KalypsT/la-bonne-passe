@@ -2,7 +2,9 @@ import type { ReactNode } from 'react';
 import { trouverChambre, trouverPiece } from '../content/maison';
 import { TEXTES } from '../content/textes';
 import type { EtatChambre, EtatJeu } from '../engine/etat';
+import { heureDeInstant } from '../engine/soiree';
 import { estOuvert, momentDeLaJournee } from '../engine/temps';
+import { formaterHeure } from '../ui/format';
 import type { Alerte } from '../engine/alertes';
 import { Avatar } from './Avatar';
 import { DecorChambre } from './DecorChambres';
@@ -246,8 +248,40 @@ function Chambre({ chambre }: { chambre: EtatChambre }) {
       </Etiquette>
       {/* Poussière : plus la chambre est sale, plus elle se voile */}
       {chambre.ouverte && <rect x={r.x} y={r.y} width={r.w} height={r.h} fill="#3A2A10" opacity={((100 - chambre.proprete) / 100) * 0.55} />}
-      {!chambre.ouverte && <Draps rect={r} texte={TEXTES.scene.chambreFermee(def.nom)} />}
+      {!chambre.ouverte && (
+        <Draps
+          rect={r}
+          texte={
+            chambre.travaux !== null
+              ? TEXTES.scene.travaux(formaterHeure(heureDeInstant(chambre.travaux)))
+              : TEXTES.scene.chambreFermee(def.nom)
+          }
+        />
+      )}
+      {chambre.travaux !== null && <Chantier rect={r} />}
       <Lambrequin rect={r} />
+    </g>
+  );
+}
+
+/** Échelle et bande de chantier sur une chambre en travaux. */
+function Chantier({ rect: r }: { rect: Rect }) {
+  const x = r.x + r.w - 40;
+  const bas = r.y + r.h - 4;
+  return (
+    <g className="chantier">
+      <g stroke="#C8913E" strokeWidth="1.6">
+        <path d={`M${x} ${bas}L${x + 8} ${r.y + 22}M${x + 14} ${bas}L${x + 20} ${r.y + 22}`} />
+        {[0.2, 0.4, 0.6, 0.8].map((k) => {
+          const y = bas - (bas - r.y - 22) * k;
+          return <path key={k} d={`M${x + 8 * k} ${y}H${x + 14 + 6 * k}`} strokeWidth="1.1" />;
+        })}
+      </g>
+      <rect x={r.x + 10} y={bas - 7} width="60" height="5" fill="#D4A64A" />
+      <path
+        d={Array.from({ length: 6 }, (_, i) => `M${r.x + 12 + i * 10} ${bas - 2}l4 -5h4l-4 5Z`).join('')}
+        fill="#1A1014"
+      />
     </g>
   );
 }

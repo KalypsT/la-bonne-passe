@@ -47,7 +47,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
                 <span className={e.moral < 35 ? 'negatif' : ''}>{Math.round(e.moral)} %</span>
               </p>
             ))}
-            {!partie.systemes.recrutement && <p className="sous">{t.planningVerrouille(SANNE.prenom)}</p>}
+            {!partie.systemes.planning && <p className="sous">{t.planningVerrouille(SANNE.prenom)}</p>}
             <h3>{t.linge}</h3>
             <p className="sous">{t.stockLinge(partie.linge)}</p>
             <button

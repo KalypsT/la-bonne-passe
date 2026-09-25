@@ -34,6 +34,12 @@ export function CarteBilan({ partie }: { partie: EtatJeu }) {
               <dt>{t.depenses}</dt>
               <dd>{formaterEuros(bilan.depenses)}</dd>
             </div>
+            {bilan.reserve > 0 && (
+              <div>
+                <dt>{t.reserve}</dt>
+                <dd>{formaterEuros(bilan.reserve)}</dd>
+              </div>
+            )}
             <div>
               <dt>{t.servis}</dt>
               <dd>{bilan.servis}</dd>
