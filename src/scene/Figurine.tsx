@@ -55,6 +55,13 @@ export function Figurine({ silhouette: s, x, y, hauteur = 44, balai = false }: P
       {/* Cou et tête */}
       <rect x="10.8" y="11" width="2.4" height="4" fill={s.teint} />
       <ellipse cx="12" cy="7.6" rx="4" ry="4.6" fill={s.teint} />
+      {s.perles && (
+        <g fill="#F4ECE0">
+          {[9.6, 10.8, 12, 13.2, 14.4].map((cx, i) => (
+            <circle key={cx} cx={cx} cy={i === 0 || i === 4 ? 14.6 : 15.2} r=".55" />
+          ))}
+        </g>
+      )}
       <Coiffure silhouette={s} />
       {s.lunettes && (
         <g stroke="#1A1014" strokeWidth=".5" fill="none">

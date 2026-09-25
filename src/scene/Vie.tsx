@@ -31,11 +31,11 @@ export function Vie({ partie, alertes, montants, onAlerte }: Props) {
   const enService = ouvert || momentDeLaJournee(partie) === 'briefing';
   const occupes = new Set(partie.rendezVous.map((r) => r.employeId));
   const chambresOccupees = new Set(partie.rendezVous.map((r) => r.chambreId));
-  const enMenage = partie.equipes.menage > 0
-    ? partie.chambres
-        .filter((c) => c.ouverte && c.proprete < 99.5 && !chambresOccupees.has(c.id))
-        .sort((a, b) => a.proprete - b.proprete)[0]
-    : undefined;
+  // Une personne de ménage par chambre à nettoyer, les plus sales d'abord.
+  const enMenage = partie.chambres
+    .filter((c) => c.ouverte && c.proprete < 99.5 && !chambresOccupees.has(c.id))
+    .sort((a, b) => a.proprete - b.proprete)
+    .slice(0, partie.equipes.menage);
 
   return (
     <g className="vie">
@@ -76,15 +76,11 @@ export function Vie({ partie, alertes, montants, onAlerte }: Props) {
         })}
 
       {/* Ménage */}
-      {enMenage && GEOMETRIE_CHAMBRES[enMenage.id] && (
-        <Figurine
-          silhouette={SILHOUETTE_MENAGE}
-          x={GEOMETRIE_CHAMBRES[enMenage.id]!.x + GEOMETRIE_CHAMBRES[enMenage.id]!.w - 26}
-          y={GEOMETRIE_CHAMBRES[enMenage.id]!.y + GEOMETRIE_CHAMBRES[enMenage.id]!.h - 2}
-          hauteur={40}
-          balai
-        />
-      )}
+      {enMenage.map((chambre) => {
+        const r = GEOMETRIE_CHAMBRES[chambre.id];
+        if (!r) return null;
+        return <Figurine key={chambre.id} silhouette={SILHOUETTE_MENAGE} x={r.x + r.w - 26} y={r.y + r.h - 2} hauteur={40} balai />;
+      })}
 
       {/* Clients sur le quai */}
       {partie.file.map((client, i) => {

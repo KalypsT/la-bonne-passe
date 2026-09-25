@@ -2,7 +2,7 @@ import * as B from '../content/balance';
 import type { Offre } from '../content/clientele';
 import type { EtatJeu } from './etat';
 import { creerTirage } from './hasard';
-import { depenser, fermerNuit, ouvrirNuit, prelevementsDuMatin, vivre, type EvenementSoiree } from './soiree';
+import { depenser, fermerNuit, instant, ouvrirNuit, prelevementsDuMatin, vivre, type EvenementSoiree } from './soiree';
 import { attendBriefing, estOuvert, MINUTES_PAR_JOUR } from './temps';
 
 /** Ordres envoyés par l'interface au moteur. */
@@ -11,7 +11,12 @@ export type Ordre =
   | { type: 'nettoyageExpress'; chambreId: string }
   | { type: 'livraisonLinge' }
   | { type: 'repos'; employeId: string }
-  | { type: 'regleDispute'; choix: 'verre' | 'calmer' };
+  | { type: 'regleDispute'; choix: 'verre' | 'calmer' }
+  | { type: 'renover'; chambreId: string }
+  | { type: 'tauxReserve'; taux: number }
+  | { type: 'retirerReserve' }
+  | { type: 'equipeMenage'; effectif: number }
+  | { type: 'annonceVue' };
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -22,7 +27,37 @@ export type EvenementMoteur =
   | { type: 'livraisonLinge'; montant: number }
   | { type: 'repos'; employeId: string }
   | { type: 'disputeReglee'; choix: 'verre' | 'calmer'; reussite: boolean }
+  | { type: 'debutTravaux'; chambreId: string; montant: number; fin: number }
+  | { type: 'finTravaux'; chambreId: string }
+  | { type: 'tauxReserve'; taux: number }
+  | { type: 'retraitReserve'; montant: number; urgence: boolean }
+  | { type: 'equipeMenage'; effectif: number }
   | EvenementSoiree;
+
+/** Taille du journal gardé dans la sauvegarde. */
+export const TAILLE_JOURNAL = 50;
+
+/** Range les événements dans le journal de la partie, du plus récent au plus ancien. */
+function journaliser(etat: EtatJeu, evenements: readonly EvenementMoteur[]): void {
+  const entrees = evenements
+    .filter((e) => e.type !== 'bilan')
+    .map((evenement) => ({ jour: etat.jour, minuteDuJour: etat.minuteDuJour, evenement }));
+  if (entrees.length === 0) return;
+  etat.journal = [...entrees.reverse(), ...etat.journal].slice(0, TAILLE_JOURNAL);
+}
+
+/** Termine les travaux arrivés à échéance : la chambre sort des draps. */
+function avancerTravaux(etat: EtatJeu, evenements: EvenementMoteur[]): void {
+  const maintenant = instant(etat);
+  for (const chambre of etat.chambres) {
+    if (chambre.travaux === null || maintenant < chambre.travaux) continue;
+    chambre.travaux = null;
+    chambre.ouverte = true;
+    chambre.proprete = B.PROPRETE_APRES_TRAVAUX;
+    chambre.etat = B.ETAT_APRES_TRAVAUX;
+    evenements.push({ type: 'finTravaux', chambreId: chambre.id });
+  }
+}
 
 export interface ResultatTick {
   etat: EtatJeu;
@@ -77,6 +112,44 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       evenements.push({ type: 'disputeReglee', choix: ordre.choix, reussite });
       return;
     }
+    case 'renover': {
+      const chambre = etat.chambres.find((c) => c.id === ordre.chambreId);
+      if (!etat.systemes.renovation || !chambre || chambre.ouverte || chambre.travaux !== null) return;
+      if (etat.tresorerie < B.RENOVATION.prix) return;
+      depenser(etat, B.RENOVATION.prix);
+      chambre.travaux = instant(etat) + B.RENOVATION.heures * 60;
+      const fin = (etat.minuteDuJour + B.RENOVATION.heures * 60) % MINUTES_PAR_JOUR;
+      evenements.push({ type: 'debutTravaux', chambreId: chambre.id, montant: B.RENOVATION.prix, fin });
+      return;
+    }
+    case 'tauxReserve': {
+      if (!etat.systemes.reserve || !(B.TAUX_RESERVE as readonly number[]).includes(ordre.taux)) return;
+      if (etat.tauxReserve === ordre.taux) return;
+      etat.tauxReserve = ordre.taux;
+      evenements.push({ type: 'tauxReserve', taux: ordre.taux });
+      return;
+    }
+    case 'retirerReserve': {
+      if (etat.reserve <= 0) return;
+      const montant = etat.reserve;
+      // Toucher à la réserve alors que la trésorerie est positive n'a rien d'une urgence.
+      const urgence = etat.tresorerie < 0;
+      etat.tresorerie += montant;
+      etat.reserve = 0;
+      evenements.push({ type: 'retraitReserve', montant, urgence });
+      return;
+    }
+    case 'equipeMenage': {
+      const effectif = Math.round(ordre.effectif);
+      if (!etat.systemes.recrutement || effectif < 1 || effectif > B.MENAGE_MAX) return;
+      if (effectif === etat.equipes.menage) return;
+      etat.equipes.menage = effectif;
+      evenements.push({ type: 'equipeMenage', effectif });
+      return;
+    }
+    case 'annonceVue':
+      etat.annonces.shift();
+      return;
   }
 }
 
@@ -86,6 +159,7 @@ export function appliquerOrdres(etat: EtatJeu, ordres: readonly Ordre[]): Result
   const copie = structuredClone(etat);
   const evenements: EvenementMoteur[] = [];
   for (const ordre of ordres) appliquer(copie, ordre, evenements);
+  journaliser(copie, evenements);
   return { etat: copie, evenements };
 }
 
@@ -97,9 +171,11 @@ export function tick(etatInitial: EtatJeu, ordres: readonly Ordre[] = []): Resul
   const apresOrdres = appliquerOrdres(etatInitial, ordres);
   const evenements: EvenementMoteur[] = [...apresOrdres.evenements];
   if (attendBriefing(apresOrdres.etat)) {
+    // Rappel du briefing en attente : déjà inscrit au journal quand 19 h a sonné.
     evenements.push({ type: 'briefing', jour: apresOrdres.etat.jour });
     return { etat: apresOrdres.etat, evenements };
   }
+  const dejaJournalises = evenements.length;
 
   const etat = apresOrdres.etat === etatInitial ? structuredClone(etatInitial) : apresOrdres.etat;
   const tirage = creerTirage(etat.hasard);
@@ -111,6 +187,7 @@ export function tick(etatInitial: EtatJeu, ordres: readonly Ordre[] = []): Resul
     evenements.push({ type: 'nouveauJour', jour: etat.jour });
     prelevementsDuMatin(etat, evenements);
   }
+  avancerTravaux(etat, evenements);
 
   const ouvert = estOuvert(etat);
   if (!etaitOuvert && ouvert) {
@@ -126,6 +203,7 @@ export function tick(etatInitial: EtatJeu, ordres: readonly Ordre[] = []): Resul
   }
   if (attendBriefing(etat)) evenements.push({ type: 'briefing', jour: etat.jour });
 
+  journaliser(etat, evenements.slice(dejaJournalises));
   etat.hasard = tirage.etat();
   return { etat, evenements };
 }

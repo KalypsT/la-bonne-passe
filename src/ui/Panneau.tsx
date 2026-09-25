@@ -1,24 +1,31 @@
 import {
   EMPRUNT_RACHAT,
-  JOUR_PREMIERE_MENSUALITE,
   LIVRAISON_EXPRESS_LINGE,
+  MENAGE_MAX,
   MENSUALITE,
   NETTOYAGE_EXPRESS,
+  RENOVATION,
+  SALAIRE_MENAGE,
+  TAUX_RESERVE,
   RDV_MAX_PAR_SOIR,
   SEUIL_CHAMBRE_INUTILISABLE,
   SEUIL_EPUISEMENT,
   SEUIL_LINGE,
 } from '../content/balance';
 import { PIECES_COMMUNES, trouverChambre, trouverPiece } from '../content/maison';
+import { JOSEE_RESERVE } from '../content/josee';
 import { PALIERS } from '../content/paliers';
 import { SANNE, TALENTS, TRAITS, type Talent } from '../content/personnel';
 import { TEXTES } from '../content/textes';
 import type { Employe, EtatJeu, Systemes } from '../engine/etat';
+import { heureDeInstant, jourProchaineMensualite, NOMBRE_MENSUALITES } from '../engine/soiree';
 import { estOuvert, jourDeLaSemaine } from '../engine/temps';
 import { Figurine } from '../scene/Figurine';
 import { formaterEuros, formaterHeure } from './format';
 import { Cadenas } from './Icones';
 import { Jauge } from './Jauge';
+import { JoseeLigne } from './Josee';
+import { texteEvenement } from './journal';
 import { useInterface, type Fiche, type Onglet } from './store';
 
 const t = TEXTES.panneau;
@@ -40,11 +47,10 @@ function palier(numero: number) {
 export function Panneau({ partie }: { partie: EtatJeu }) {
   const onglet = useInterface((s) => s.onglet);
   const fiche = useInterface((s) => s.fiche);
-  const journal = useInterface((s) => s.journal);
   const choisirOnglet = useInterface((s) => s.choisirOnglet);
   const actuel = ONGLETS.find((o) => o.id === onglet) ?? ONGLETS[0]!;
   const verrouille = actuel.systeme !== undefined && !partie.systemes[actuel.systeme];
-  const dernier = journal[0];
+  const dernier = lignesJournal(partie)[0];
 
   return (
     <aside className="panneau">
@@ -82,7 +88,7 @@ export function Panneau({ partie }: { partie: EtatJeu }) {
             {onglet === 'maison' && <OngletMaison partie={partie} />}
             {onglet === 'personnel' && <OngletPersonnel partie={partie} />}
             {onglet === 'finances' && <OngletFinances partie={partie} />}
-            {onglet === 'journal' && <OngletJournal />}
+            {onglet === 'journal' && <OngletJournal partie={partie} />}
           </>
         )}
       </div>
@@ -164,7 +170,9 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
             detail={
               partie.rendezVous.some((r) => r.chambreId === c.id)
                 ? TEXTES.actions.occupee
-                : c.ouverte
+                : c.travaux !== null
+                  ? t.travaux
+                  : c.ouverte
                   ? `${t.enService} · ${t.proprete.toLowerCase()} ${Math.round(c.proprete)} %`
                   : t.sousDraps
             }
@@ -173,6 +181,7 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
         );
       })}
       <Linge partie={partie} />
+      <EquipeMenage partie={partie} />
       <h3>{t.piecesCommunes}</h3>
       {PIECES_COMMUNES.map((p) => (
         <Ligne
@@ -182,6 +191,64 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
           fiche={{ type: 'piece', id: p.id }}
         />
       ))}
+    </>
+  );
+}
+
+function EquipeMenage({ partie }: { partie: EtatJeu }) {
+  const ordonner = useInterface((s) => s.ordonner);
+  const n = partie.equipes.menage;
+  const ouvert = partie.systemes.recrutement;
+  return (
+    <>
+      <h3>{t.equipeMenage}</h3>
+      <p className="sous">{t.effectifMenage(n, formaterEuros(SALAIRE_MENAGE))}</p>
+      {ouvert ? (
+        <div className="boutons-ligne">
+          <button className="bouton discret" disabled={n <= 1} onClick={() => ordonner({ type: 'equipeMenage', effectif: n - 1 })}>
+            {t.retirerMenage}
+          </button>
+          <button className="bouton discret" disabled={n >= MENAGE_MAX} onClick={() => ordonner({ type: 'equipeMenage', effectif: n + 1 })}>
+            {t.ajouterMenage}
+          </button>
+        </div>
+      ) : (
+        <p className="verrou-ligne">
+          <Cadenas /> {t.menageVerrouille(palier(1).numero, palier(1).nom)}
+        </p>
+      )}
+    </>
+  );
+}
+
+function Renovation({ partie, chambreId }: { partie: EtatJeu; chambreId: string }) {
+  const ordonner = useInterface((s) => s.ordonner);
+  const chambre = partie.chambres.find((c) => c.id === chambreId);
+  if (!chambre || chambre.ouverte) return null;
+  if (chambre.travaux !== null) {
+    return <p className="statut">{t.travauxFin(formaterHeure(heureDeInstant(chambre.travaux)))}</p>;
+  }
+  if (!partie.systemes.renovation) {
+    const renovation = palier(1);
+    return (
+      <p className="verrou-ligne">
+        <Cadenas /> {t.renovationVerrouillee(renovation.numero, renovation.nom)}
+      </p>
+    );
+  }
+  const assez = partie.tresorerie >= RENOVATION.prix;
+  return (
+    <>
+      <button
+        className="bouton principal pleine-largeur"
+        disabled={!assez}
+        onClick={() => ordonner({ type: 'renover', chambreId })}
+      >
+        {t.renover(formaterEuros(RENOVATION.prix), RENOVATION.heures)}
+      </button>
+      <p className={assez ? 'sous' : 'sous negatif'}>
+        {assez ? t.renoverDetail : t.renoverTropCher(formaterEuros(RENOVATION.prix))}
+      </p>
     </>
   );
 }
@@ -214,7 +281,6 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
   const def = trouverChambre(fiche.id);
   const chambre = partie.chambres.find((c) => c.id === fiche.id);
   if (!def || !chambre) return retour;
-  const renovation = palier(1);
   const occupee = partie.rendezVous.some((r) => r.chambreId === chambre.id);
   return (
     <div className="fiche">
@@ -223,7 +289,9 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
         {def.nom} {def.premium && <span className="pastille premium">{t.premium}</span>}
       </h2>
       <p className="sous">{def.theme}</p>
-      <p className="statut">{occupee ? TEXTES.actions.occupee : chambre.ouverte ? t.enService : t.sousDraps}</p>
+      <p className="statut">
+        {occupee ? TEXTES.actions.occupee : chambre.ouverte ? t.enService : chambre.travaux !== null ? t.travaux : t.sousDraps}
+      </p>
       {chambre.ouverte && <Jauge nom={t.proprete} valeur={chambre.proprete} alerte={chambre.proprete < 40} />}
       <Jauge nom={t.etat} valeur={chambre.etat} />
       {chambre.ouverte && chambre.proprete < SEUIL_CHAMBRE_INUTILISABLE && (
@@ -232,11 +300,7 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
       {chambre.ouverte && (
         <BoutonNettoyage chambreId={chambre.id} desactive={occupee || chambre.proprete >= 100} />
       )}
-      {!chambre.ouverte && !partie.systemes.renovation && (
-        <p className="verrou-ligne">
-          <Cadenas /> {t.renovationVerrouillee(renovation.numero, renovation.nom)}
-        </p>
-      )}
+      <Renovation partie={partie} chambreId={chambre.id} />
     </div>
   );
 }
@@ -329,7 +393,9 @@ function OngletPersonnel({ partie }: { partie: EtatJeu }) {
       {partie.personnel.map((e) => (
         <FicheEmploye key={e.id} partie={partie} employe={e} />
       ))}
-      {!partie.systemes.recrutement && (
+      {partie.systemes.recrutement ? (
+        <p className="sous">{t.recrutementOuvert}</p>
+      ) : (
         <p className="verrou-ligne">
           <Cadenas /> {t.recrutementVerrouille(recrutement.numero, recrutement.nom)}
         </p>
@@ -339,27 +405,87 @@ function OngletPersonnel({ partie }: { partie: EtatJeu }) {
 }
 
 function OngletFinances({ partie }: { partie: EtatJeu }) {
-  const dans = JOUR_PREMIERE_MENSUALITE - partie.jour;
+  const jour = jourProchaineMensualite(partie);
+  const restantes = NOMBRE_MENSUALITES - partie.mensualitesPayees;
   return (
-    <dl className="chiffres">
-      <div>
-        <dt>{t.tresorerie}</dt>
-        <dd className={partie.tresorerie < 0 ? 'negatif' : ''}>{formaterEuros(partie.tresorerie)}</dd>
-      </div>
-      <div>
-        <dt>{t.emprunt}</dt>
-        <dd>{formaterEuros(EMPRUNT_RACHAT)}</dd>
-      </div>
-      <div>
-        <dt>{t.mensualite}</dt>
-        <dd>{t.mensualiteDetail(formaterEuros(MENSUALITE), JOUR_PREMIERE_MENSUALITE, dans)}</dd>
-      </div>
-    </dl>
+    <>
+      <dl className="chiffres">
+        <div>
+          <dt>{t.tresorerie}</dt>
+          <dd className={partie.tresorerie < 0 ? 'negatif' : ''}>{formaterEuros(partie.tresorerie)}</dd>
+        </div>
+        <div>
+          <dt>{t.emprunt}</dt>
+          <dd>
+            {formaterEuros(EMPRUNT_RACHAT)} · {restantes > 0 ? t.empruntRestant(restantes) : t.empruntRembourse}
+          </dd>
+        </div>
+        {jour !== null && (
+          <div>
+            <dt>{t.mensualite}</dt>
+            <dd>{t.mensualiteDetail(formaterEuros(MENSUALITE), jour, jour - partie.jour)}</dd>
+          </div>
+        )}
+      </dl>
+      <Reserve partie={partie} />
+    </>
   );
 }
 
-function OngletJournal() {
-  const journal = useInterface((s) => s.journal);
+function Reserve({ partie }: { partie: EtatJeu }) {
+  const ordonner = useInterface((s) => s.ordonner);
+  if (!partie.systemes.reserve) {
+    const p = palier(1);
+    return (
+      <p className="verrou-ligne">
+        <Cadenas /> {t.reserveVerrouillee(p.numero, p.nom)}
+      </p>
+    );
+  }
+  const indice = Math.max(0, TAUX_RESERVE.findIndex((x) => x === partie.tauxReserve));
+  return (
+    <>
+      <h3>{t.reserve}</h3>
+      <p className="sous">{t.reserveDetail}</p>
+      <div className="boutons-ligne" role="group" aria-label={t.reserve}>
+        {TAUX_RESERVE.map((taux) => (
+          <button
+            key={taux}
+            className={partie.tauxReserve === taux ? 'choix-court choisi' : 'choix-court'}
+            aria-pressed={partie.tauxReserve === taux}
+            aria-label={t.reserveTauxLabel(Math.round(taux * 100))}
+            onClick={() => ordonner({ type: 'tauxReserve', taux })}
+          >
+            {t.reserveTaux(Math.round(taux * 100))}
+          </button>
+        ))}
+      </div>
+      <JoseeLigne texte={JOSEE_RESERVE.taux[indice] ?? ''} />
+      <dl className="chiffres">
+        <div>
+          <dt>{t.reserveMontant}</dt>
+          <dd>{formaterEuros(partie.reserve)}</dd>
+        </div>
+      </dl>
+      {partie.reserve > 0 && (
+        <button className="bouton discret pleine-largeur" onClick={() => ordonner({ type: 'retirerReserve' })}>
+          {t.retirerReserve(formaterEuros(partie.reserve))}
+        </button>
+      )}
+    </>
+  );
+}
+
+/** Lignes du journal mises en texte, du plus récent au plus ancien. */
+function lignesJournal(partie: EtatJeu) {
+  return partie.journal.flatMap((e) => {
+    const texte = texteEvenement(e.evenement, partie);
+    return texte ? [{ jour: e.jour, minuteDuJour: e.minuteDuJour, texte }] : [];
+  });
+}
+
+function OngletJournal({ partie }: { partie: EtatJeu }) {
+  const journal = lignesJournal(partie);
   if (journal.length === 0) return <p className="sous">{t.journalVide}</p>;
   return (
     <ol className="journal">
@@ -374,4 +500,3 @@ function OngletJournal() {
     </ol>
   );
 }
-

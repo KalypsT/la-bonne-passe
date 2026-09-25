@@ -11,6 +11,7 @@ export interface Silhouette {
   accent?: string;
   lunettes?: boolean;
   robe?: boolean;
+  perles?: boolean;
 }
 
 export interface DefinitionEmploye {

@@ -1,12 +1,9 @@
 import { create } from 'zustand';
 import { trouverAvatar } from '../content/avatars';
 import type { Offre } from '../content/clientele';
-import { trouverChambre } from '../content/maison';
-import { SANNE } from '../content/personnel';
-import { TEXTES } from '../content/textes';
 import { creerEtatInitial, type EtatJeu, type Nuit } from '../engine/etat';
 import { nettoyerNom } from '../engine/identite';
-import { jourDeLaSemaine, secondesParTick } from '../engine/temps';
+import { secondesParTick } from '../engine/temps';
 import { appliquerOrdres, tick, type EvenementMoteur, type Ordre } from '../engine/tick';
 import { charger, lireEmplacements, sauvegarder, supprimer, type Emplacement } from '../save/emplacements';
 import { formaterEuros } from './format';
@@ -15,19 +12,13 @@ export type Ecran = 'titre' | 'creation' | 'jeu';
 export type Vitesse = 0 | 1 | 2 | 4;
 export type Onglet = 'maison' | 'personnel' | 'clientele' | 'finances' | 'relations' | 'journal';
 export type Fiche = { type: 'chambre'; id: string } | { type: 'piece'; id: 'salon' | 'bar' | 'bureau' };
-export type Carte = 'briefing' | 'bilan' | 'dispute';
+export type Carte = 'briefing' | 'bilan' | 'dispute' | 'palier';
 
 export interface ChoixCreation {
   prenom: string;
   avatar: string;
   tenue: number;
   nomMaison: string;
-}
-
-export interface EntreeJournal {
-  jour: number;
-  minuteDuJour: number;
-  texte: string;
 }
 
 /** Montant qui s'envole au-dessus d'une chambre, purement visuel. */
@@ -40,7 +31,6 @@ export interface MontantFlottant {
 
 /** Nombre maximal de pas calculés par image, pour ne pas geler l'écran après une longue absence. */
 const TICKS_MAX_PAR_IMAGE = 40;
-const TAILLE_JOURNAL = 50;
 const DUREE_MONTANT = 1800;
 
 interface EtatInterface {
@@ -56,7 +46,6 @@ interface EtatInterface {
   carte: Carte | null;
   onglet: Onglet;
   fiche: Fiche | null;
-  journal: EntreeJournal[];
   /** Comptes de la dernière nuit, affichés dans la carte de bilan. */
   bilan: Nuit | null;
   montants: MontantFlottant[];
@@ -77,6 +66,7 @@ interface EtatInterface {
   validerBriefing: (choix: { offre: Offre; commanderLinge: boolean }) => void;
   /** Envoie un ordre au moteur (nettoyage, linge, repos, dispute), sans faire avancer le temps. */
   ordonner: (ordre: Ordre) => void;
+  /** Ouvre une carte ; fermer (null) passe à la carte en attente, comme une annonce de palier. */
   ouvrirCarte: (carte: Carte | null) => void;
   choisirOnglet: (onglet: Onglet) => void;
   ouvrirFiche: (fiche: Fiche | null) => void;
@@ -88,64 +78,18 @@ type Modifier = (fn: (s: EtatInterface) => Partial<EtatInterface>) => void;
 let reserveDeTemps = 0;
 let prochainMontant = 1;
 
-function prenomEmploye(id: string): string {
-  return id === SANNE.id ? SANNE.prenom : id;
+/** Carte qui attend son tour une fois la carte courante fermée. */
+function carteEnAttente(partie: EtatJeu | null): Carte | null {
+  return partie && partie.annonces.length > 0 ? 'palier' : null;
 }
 
-/** Texte du journal pour un événement du moteur, ou null s'il n'y a rien à raconter. */
-function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): string | null {
-  const t = TEXTES.journal;
-  switch (evenement.type) {
-    case 'ouverture':
-      return t.ouverture(partie.maison.nom);
-    case 'fermeture':
-      return t.fermeture;
-    case 'nouveauJour':
-      return t.nouveauJour(TEXTES.jours[jourDeLaSemaine(evenement.jour)] ?? '', evenement.jour);
-    case 'briefing':
-      return t.briefing;
-    case 'arrivee':
-      return t.arrivee(evenement.client);
-    case 'clientParti':
-      return t.clientParti(evenement.client);
-    case 'filePleine':
-      return t.filePleine;
-    case 'debutRdv':
-      return t.debutRdv(prenomEmploye(evenement.employeId), evenement.client, trouverChambre(evenement.chambreId)?.dans ?? '');
-    case 'finRdv':
-      return t.finRdv(evenement.client, evenement.avis, formaterEuros(evenement.montant));
-    case 'salaires':
-      return t.salaires(formaterEuros(evenement.montant));
-    case 'charges':
-      return t.charges(formaterEuros(evenement.montant));
-    case 'dispute':
-      return t.dispute;
-    case 'disputeDegeneree':
-      return t.disputeDegeneree(formaterEuros(evenement.montant));
-    case 'disputeReglee':
-      if (evenement.choix === 'verre') return t.disputeVerre;
-      return evenement.reussite ? t.disputeCalmee(partie.joueur.prenom) : t.disputeRatee;
-    case 'nettoyage':
-      return t.nettoyage(trouverChambre(evenement.chambreId)?.de ?? '', formaterEuros(evenement.montant));
-    case 'livraisonLinge':
-      return t.livraisonLinge(formaterEuros(evenement.montant));
-    case 'repos':
-      return t.repos(prenomEmploye(evenement.employeId));
-    case 'bilan':
-      return null;
-  }
-}
-
-/** Traduit les événements en entrées de journal, montants flottants et cartes à ouvrir. */
-function recevoirEvenements(evenements: EvenementMoteur[], partie: EtatJeu, modifier: Modifier) {
-  const entrees: EntreeJournal[] = [];
+/** Traduit les événements en montants flottants et en cartes à ouvrir. Le journal, lui, vit dans la partie. */
+function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
   const montants: MontantFlottant[] = [];
   let carte: Carte | null = null;
   let bilan: Nuit | null = null;
 
   for (const e of evenements) {
-    const texte = texteEvenement(e, partie);
-    if (texte) entrees.push({ jour: partie.jour, minuteDuJour: partie.minuteDuJour, texte });
     if (e.type === 'briefing') carte = 'briefing';
     if (e.type === 'bilan') {
       carte = 'bilan';
@@ -159,13 +103,8 @@ function recevoirEvenements(evenements: EvenementMoteur[], partie: EtatJeu, modi
     }
   }
 
-  if (entrees.length || montants.length) {
-    modifier((s) => ({
-      journal: [...entrees.reverse(), ...s.journal].slice(0, TAILLE_JOURNAL),
-      montants: [...s.montants, ...montants],
-    }));
-  }
   if (montants.length) {
+    modifier((s) => ({ montants: [...s.montants, ...montants] }));
     const ids = new Set(montants.map((m) => m.id));
     setTimeout(() => modifier((s) => ({ montants: s.montants.filter((m) => !ids.has(m.id)) })), DUREE_MONTANT);
   }
@@ -177,7 +116,6 @@ const etatDeJeuInitial = {
   carte: null,
   onglet: 'maison' as Onglet,
   fiche: null,
-  journal: [],
   bilan: null,
   montants: [],
 };
@@ -212,7 +150,7 @@ export const useInterface = create<EtatInterface>((set, get) => ({
       return;
     }
     reserveDeTemps = 0;
-    set({ ecran: 'jeu', emplacementActif: emplacement, partie, ...etatDeJeuInitial });
+    set({ ecran: 'jeu', emplacementActif: emplacement, partie, ...etatDeJeuInitial, carte: carteEnAttente(partie) });
   },
 
   demanderSuppression: (emplacement) => set({ suppressionDemandee: emplacement }),
@@ -258,7 +196,7 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     if (reserveDeTemps > 5) reserveDeTemps = 0;
     if (courante === partie && evenements.length === 0) return;
 
-    const { carte: nouvelleCarte, bilan } = recevoirEvenements(evenements, courante, set);
+    const { carte: nouvelleCarte, bilan } = recevoirEvenements(evenements, set);
     set((s) => ({ partie: courante, carte: nouvelleCarte ?? s.carte, bilan: bilan ?? s.bilan }));
     if (bilan) get().sauvegarderPartie();
   },
@@ -276,11 +214,21 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     const { partie } = get();
     if (!partie) return;
     const resultat = appliquerOrdres(partie, [ordre]);
-    recevoirEvenements(resultat.evenements, resultat.etat, set);
+    recevoirEvenements(resultat.evenements, set);
     set({ partie: resultat.etat });
   },
 
-  ouvrirCarte: (carte) => set({ carte }),
+  ouvrirCarte: (carte) => {
+    const { partie, carte: actuelle } = get();
+    let suite = carte ?? carteEnAttente(partie);
+    // Fermer une annonce : le moteur la marque comme vue, puis on passe à la suivante.
+    if (!carte && actuelle === 'palier' && partie) {
+      const resultat = appliquerOrdres(partie, [{ type: 'annonceVue' }]);
+      set({ partie: resultat.etat });
+      suite = carteEnAttente(resultat.etat);
+    }
+    set({ carte: suite });
+  },
 
   choisirOnglet: (onglet) => set({ onglet, fiche: null }),
 

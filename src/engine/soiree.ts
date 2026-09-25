@@ -6,6 +6,7 @@ import { AVIS, CLIENTS, trouverOffre, type ModeleClient } from '../content/clien
 import { trouverChambre } from '../content/maison';
 import type { EtatJeu, Nuit } from './etat';
 import type { Tirage } from './hasard';
+import { verifierPaliers, type EvenementPalier } from './paliers';
 import { ecart } from './temps';
 
 export type EvenementSoiree =
@@ -18,7 +19,10 @@ export type EvenementSoiree =
   | { type: 'charges'; montant: number }
   | { type: 'dispute' }
   | { type: 'disputeDegeneree'; montant: number }
-  | { type: 'bilan'; nuit: Nuit };
+  | { type: 'miseEnReserve'; montant: number }
+  | { type: 'mensualite'; montant: number; depuisReserve: number; restantes: number }
+  | { type: 'bilan'; nuit: Nuit }
+  | EvenementPalier;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -36,6 +40,11 @@ export function instant(etat: EtatJeu): number {
   return (etat.jour - 1) * 24 * 60 + ecart(B.HEURE_DEBUT_JOURNEE, etat.minuteDuJour);
 }
 
+/** Heure de l'horloge (minutes depuis minuit) d'un instant absolu. */
+export function heureDeInstant(minutes: number): number {
+  return (B.HEURE_DEBUT_JOURNEE + minutes) % (24 * 60);
+}
+
 function nouvelleNuit(etat: EtatJeu): Nuit {
   return {
     numero: etat.nuitsBouclees + 1,
@@ -47,6 +56,7 @@ function nouvelleNuit(etat: EtatJeu): Nuit {
     reputationDebut: etat.reputation,
     meilleurAvis: null,
     pireAvis: null,
+    reserve: 0,
   };
 }
 
@@ -78,7 +88,26 @@ export function fermerNuit(etat: EtatJeu, tirage: Tirage, evenements: Sortie): v
   }
   for (const e of etat.personnel) e.repos = false;
   etat.nuitsBouclees += 1;
+  mettreEnReserve(etat, evenements);
   if (etat.nuit) evenements.push({ type: 'bilan', nuit: structuredClone(etat.nuit) });
+  verifierPaliers(etat, evenements);
+}
+
+/** Réserve de sécurité : une part de la recette du soir quitte la trésorerie. */
+function mettreEnReserve(etat: EtatJeu, evenements: Sortie): void {
+  if (!etat.systemes.reserve || !etat.nuit || etat.tauxReserve <= 0) return;
+  const montant = Math.round(Math.max(0, etat.nuit.recettes) * etat.tauxReserve);
+  if (montant <= 0) return;
+  etat.tresorerie -= montant;
+  etat.reserve += montant;
+  etat.nuit.reserve = montant;
+  evenements.push({ type: 'miseEnReserve', montant });
+}
+
+/** Variation de réputation après un rendez-vous : les gains ralentissent quand elle monte. */
+export function gainReputation(reputation: number, qualite: number): number {
+  const brut = (qualite - 0.4) * B.REPUTATION_PAR_RDV;
+  return brut > 0 ? brut * Math.pow(1 - reputation / 100, B.REPUTATION_FREIN) : brut;
 }
 
 function occupes(etat: EtatJeu) {
@@ -177,7 +206,7 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
     Math.round((modele.budget * trouverOffre(etat.offre).prix * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
   const maison = Math.round(prix * (1 - employe.part));
   etat.tresorerie += maison;
-  etat.reputation = borner(etat.reputation + (qualite - 0.4) * B.REPUTATION_PAR_RDV);
+  etat.reputation = borner(etat.reputation + gainReputation(etat.reputation, qualite));
 
   employe.fatigue = borner(employe.fatigue + tirage.entre(B.FATIGUE_PAR_RDV_MIN, B.FATIGUE_PAR_RDV_MAX));
   employe.rdvCeSoir += 1;
@@ -283,10 +312,32 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
   }
 }
 
-/** Charges fixes, prélevées au début de chaque lundi (sauf le tout premier). */
+/** Nombre de mensualités de l'emprunt de rachat. */
+export const NOMBRE_MENSUALITES = Math.ceil(B.EMPRUNT_RACHAT / B.MENSUALITE);
+
+/** Jour de la prochaine mensualité, ou null si l'emprunt est remboursé. */
+export function jourProchaineMensualite(etat: EtatJeu): number | null {
+  if (etat.mensualitesPayees >= NOMBRE_MENSUALITES) return null;
+  return B.JOUR_PREMIERE_MENSUALITE + etat.mensualitesPayees * B.JOURS_PAR_MOIS;
+}
+
+/** Charges fixes au début de chaque lundi (sauf le tout premier), mensualité le jour dit. */
 export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
   if (etat.jour > 1 && (etat.jour - 1) % 7 === 0) {
     depenser(etat, B.CHARGES_FIXES);
     evenements.push({ type: 'charges', montant: B.CHARGES_FIXES });
+  }
+  if (etat.jour === jourProchaineMensualite(etat)) {
+    // La réserve paie en premier, la trésorerie complète.
+    const depuisReserve = Math.min(etat.reserve, B.MENSUALITE);
+    etat.reserve -= depuisReserve;
+    depenser(etat, B.MENSUALITE - depuisReserve);
+    etat.mensualitesPayees += 1;
+    evenements.push({
+      type: 'mensualite',
+      montant: B.MENSUALITE,
+      depuisReserve,
+      restantes: NOMBRE_MENSUALITES - etat.mensualitesPayees,
+    });
   }
 }

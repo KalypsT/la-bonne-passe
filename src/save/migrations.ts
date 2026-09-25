@@ -8,7 +8,8 @@ import {
   TRESORERIE_INITIALE,
 } from '../content/balance';
 import { CHAMBRES } from '../content/maison';
-import { soireeDeDepart } from '../engine/etat';
+import { maisonDeDepart, soireeDeDepart } from '../engine/etat';
+import { SYSTEMES_PAR_PALIER } from '../engine/paliers';
 import { PARTIE_PAR_DEFAUT } from '../content/partie';
 import { VERSION_ETAT, type EtatJeu } from '../engine/etat';
 
@@ -77,6 +78,22 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     ...soireeDeDepart(),
     version: 5,
   }),
+  // v5 → v6 : travaux dans les chambres, réserve, mensualités, annonces de palier et journal.
+  // Une partie qui a déjà bouclé une nuit reçoit le palier 1, avec sa carte d'annonce.
+  5: (d) => {
+    const systemes = { ...(estObjet(d.systemes) ? d.systemes : {}), planning: false, reserve: false };
+    const chambres = Array.isArray(d.chambres)
+      ? d.chambres.map((c: unknown) => (estObjet(c) ? { ...c, travaux: null } : c))
+      : d.chambres;
+    const suite = { ...d, ...maisonDeDepart(), version: 6, systemes, chambres };
+    const nuits = typeof d.nuitsBouclees === 'number' ? d.nuitsBouclees : 0;
+    const palier = typeof d.palier === 'number' ? d.palier : 0;
+    if (nuits >= 1 && palier < 1) {
+      for (const s of SYSTEMES_PAR_PALIER[1] ?? []) (systemes as Donnees)[s] = true;
+      return { ...suite, palier: 1, annonces: [1] };
+    }
+    return suite;
+  },
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -109,6 +126,11 @@ function estEtatValide(d: Donnees): boolean {
     Array.isArray(d.file) &&
     Array.isArray(d.rendezVous) &&
     typeof d.linge === 'number' &&
+    typeof d.reserve === 'number' &&
+    typeof d.tauxReserve === 'number' &&
+    typeof d.mensualitesPayees === 'number' &&
+    Array.isArray(d.annonces) &&
+    Array.isArray(d.journal) &&
     estObjet(d.systemes)
   );
 }

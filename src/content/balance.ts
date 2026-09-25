@@ -44,8 +44,11 @@ export const ETAT_CHAMBRE_FERMEE = 35;
 
 export const EMPRUNT_RACHAT = 30000;
 export const MENSUALITE = 2500;
-/** Jour de la première mensualité. */
+/** Jour de la première mensualité, puis tous les 28 jours (un mois de jeu = 4 semaines). */
 export const JOUR_PREMIERE_MENSUALITE = 28;
+export const JOURS_PAR_MOIS = 28;
+/** Réserve de sécurité : part de la recette du soir mise de côté (palier 1). */
+export const TAUX_RESERVE = [0, 0.1, 0.2] as const;
 
 // ——— Clientèle ———
 
@@ -66,9 +69,14 @@ export const DUREE_RDV_MAX = 75;
 /** Rendez-vous maximum par personne et par soir (règle non réglable avant le palier 1). */
 export const RDV_MAX_PAR_SOIR = 4;
 
-/** Effets sur la réputation. */
-export const REPUTATION_PAR_RDV = 8; // × (qualité − 0,4)
-export const REPUTATION_CLIENT_PERDU = 0.2;
+/** Effets sur la réputation. Un rendez-vous rapporte (qualité − 0,4) × REPUTATION_PAR_RDV. */
+export const REPUTATION_PAR_RDV = 3.5;
+/**
+ * Les gains ralentissent quand la réputation monte : × (1 − réputation / 100) ^ FREIN.
+ * Les pertes, elles, tombent en entier. Cible : avec Sanne seule, réputation 25 au mieux vers la nuit 4 ou 5 (voir paliers.test.ts).
+ */
+export const REPUTATION_FREIN = 2;
+export const REPUTATION_CLIENT_PERDU = 0.15;
 export const REPUTATION_FILE_PLEINE = 0.05;
 
 /** Poids de la qualité d'un rendez-vous (0 à 1). */
@@ -112,6 +120,14 @@ export const SEUIL_CHAMBRE_INUTILISABLE = 15;
 export const MENAGE_MAISON_OUVERTE = 5;
 export const MENAGE_MAISON_FERMEE = 16;
 export const NETTOYAGE_EXPRESS = 30;
+/** Effectif de l'équipe de ménage : 1 au départ, jusqu'à MENAGE_MAX à partir du palier 1. */
+export const MENAGE_MAX = 2;
+
+/** Rouvrir une chambre sous des draps (palier 1). */
+export const RENOVATION = { prix: 900, heures: 8 };
+/** Propreté et état d'une chambre qui sort de travaux. */
+export const PROPRETE_APRES_TRAVAUX = 100;
+export const ETAT_APRES_TRAVAUX = 90;
 
 export const LINGE_INITIAL = 40;
 export const LINGE_PAR_RDV = 10;
