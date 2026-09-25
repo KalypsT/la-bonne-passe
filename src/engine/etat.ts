@@ -28,6 +28,9 @@ export interface Systemes {
   planning: boolean;
   /** Réserve de sécurité (palier 1). */
   reserve: boolean;
+  /** Segments de clientèle ouverts au palier 2. */
+  affaires: boolean;
+  groupes: boolean;
   bar: boolean;
 }
 
@@ -239,7 +242,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 8;
+export const VERSION_ETAT = 9;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -252,6 +255,8 @@ export function systemesDeDepart(): Systemes {
     renovation: false,
     planning: false,
     reserve: false,
+    affaires: false,
+    groupes: false,
     bar: false,
   };
 }

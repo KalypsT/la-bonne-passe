@@ -2,7 +2,7 @@
 // Ces fonctions modifient une copie de travail de l'état, faite par le tick.
 
 import * as B from '../content/balance';
-import { AVIS, CLIENTS, trouverOffre, type ModeleClient } from '../content/clientele';
+import { AVIS, CLIENTS, trouverOffre, type ModeleClient, type Segment } from '../content/clientele';
 import { trouverChambre } from '../content/maison';
 import type { EtatJeu, Nuit } from './etat';
 import type { Tirage } from './hasard';
@@ -127,10 +127,20 @@ export function chambreDisponible(etat: EtatJeu, id: string): boolean {
   return !!c && c.ouverte && c.proprete >= B.SEUIL_CHAMBRE_INUTILISABLE && !occupes(etat).chambres.has(id);
 }
 
-/** Une Fêtarde en service met l'ambiance : les clients patientent plus longtemps. */
-function patienceClient(etat: EtatJeu): number {
-  const fetarde = etat.personnel.some((e) => e.enServiceCeSoir && !e.repos && aTrait(e, 'Fêtarde'));
-  return B.PATIENCE_CLIENT + (fetarde ? B.TRAITS_EFFETS.fetardePatience : 0);
+function fetardeEnService(etat: EtatJeu): boolean {
+  return etat.personnel.some((e) => e.enServiceCeSoir && !e.repos && aTrait(e, 'Fêtarde'));
+}
+
+/** Patience d'un client : la sienne, et une Fêtarde en service met l'ambiance. */
+function patienceClient(etat: EtatJeu, modele: ModeleClient): number {
+  return (modele.patience ?? B.PATIENCE_CLIENT) + (fetardeEnService(etat) ? B.TRAITS_EFFETS.fetardePatience : 0);
+}
+
+/** Segments de clientèle ouverts : Touristes et Habitués d'emblée, Affaires et Groupes au palier 2. */
+export function segmentOuvert(etat: EtatJeu, segment: Segment): boolean {
+  if (segment === 'affaires') return etat.systemes.affaires;
+  if (segment === 'groupe') return etat.systemes.groupes;
+  return true;
 }
 
 export function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
@@ -141,16 +151,28 @@ export function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void
     return;
   }
   const presents = new Set([...etat.file.map((c) => c.modele), ...etat.rendezVous.map((r) => r.modele)]);
-  const possibles = CLIENTS.filter((c) => !presents.has(c.id));
+  const possibles = CLIENTS.filter((c) => !presents.has(c.id) && segmentOuvert(etat, c.segment));
   if (possibles.length === 0) return;
   const offre = trouverOffre(etat.offre);
   const poids = possibles.map((c) => {
-    let p = offre.attire[c.segment] ?? 1;
+    let p = (offre.attire[c.segment] ?? 1) * B.POIDS_SEGMENTS[c.segment];
     if (c.segment === 'habitue') p *= 0.6 + etat.reputation / 60;
+    if (c.segment === 'groupe' && fetardeEnService(etat)) p *= B.FETARDE_ATTIRE_GROUPES;
     return p;
   });
   const modele = tirage.choisir(possibles, poids);
-  etat.file.push({ id: etat.prochainClient, modele: modele.id, patience: patienceClient(etat) });
+  mettreSurLeQuai(etat, modele, evenements);
+  // Un groupe, c'est rarement une personne seule.
+  if (modele.segment === 'groupe' && etat.file.length < B.PLACES_FILE && tirage.chance(B.GROUPE_CHANCE_ACCOMPAGNE)) {
+    const amis = CLIENTS.filter(
+      (c) => c.segment === 'groupe' && c.id !== modele.id && !etat.file.some((f) => f.modele === c.id) && !etat.rendezVous.some((r) => r.modele === c.id),
+    );
+    if (amis.length > 0) mettreSurLeQuai(etat, tirage.choisir(amis), evenements);
+  }
+}
+
+function mettreSurLeQuai(etat: EtatJeu, modele: ModeleClient, evenements: Sortie): void {
+  etat.file.push({ id: etat.prochainClient, modele: modele.id, patience: patienceClient(etat, modele) });
   etat.prochainClient += 1;
   evenements.push({ type: 'arrivee', client: modele.nom });
 }
@@ -214,11 +236,13 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
     Math.round((modele.budget * trouverOffre(etat.offre).prix * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
   const maison = Math.round(prix * (1 - employe.part));
   etat.tresorerie += maison;
-  etat.reputation = borner(etat.reputation + gainReputation(etat.reputation, qualite));
+  const gain = gainReputation(etat.reputation, qualite);
+  etat.reputation = borner(etat.reputation + (gain > 0 ? gain * trouverOffre(etat.offre).reputation : gain));
 
   const fatigue = tirage.entre(B.FATIGUE_PAR_RDV_MIN, B.FATIGUE_PAR_RDV_MAX);
   employe.fatigue = borner(employe.fatigue + fatigue * (aTrait(employe, 'Fêtarde') ? B.TRAITS_EFFETS.fetardeFatigue : 1));
   employe.rdvCeSoir += 1;
+  employe.moral = borner(employe.moral - B.MORAL_PAR_RDV);
   etat.linge = Math.max(0, etat.linge - B.LINGE_PAR_RDV);
   chambre.proprete = borner(chambre.proprete - tirage.entre(B.SALISSURE_MIN, B.SALISSURE_MAX));
   chambre.etat = borner(chambre.etat - tirage.entre(B.USURE_MIN, B.USURE_MAX));
@@ -236,10 +260,11 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   evenements.push({ type: 'finRdv', chambreId, client: modele.nom, montant: maison, avis: avis.texte });
 }
 
-/** Chaque Tête brûlée en service fait monter le ton sur le quai. */
+/** Chaque Tête brûlée en service, et chaque client d'un groupe sur le quai, fait monter le ton. */
 export function facteurDispute(etat: EtatJeu): number {
   const n = etat.personnel.filter((e) => e.enServiceCeSoir && !e.repos && aTrait(e, 'Tête brûlée')).length;
-  return Math.pow(B.TRAITS_EFFETS.teteBruleeDispute, n);
+  const groupes = etat.file.filter((c) => modeleClient(c.modele).segment === 'groupe').length;
+  return Math.pow(B.TRAITS_EFFETS.teteBruleeDispute, n) * Math.pow(B.GROUPE_DISPUTE, groupes);
 }
 
 /** Un pas de 5 minutes de la vie de la maison. */
@@ -319,7 +344,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
       e.fatigue = borner(e.fatigue - recup * heures);
     }
     if (e.fatigue > B.SEUIL_FATIGUE) e.moral = borner(e.moral - B.MORAL_PERTE_FATIGUE * heures);
-    else if (e.moral < 70) e.moral = borner(e.moral + B.MORAL_REMONTEE * heures);
+    else if (e.moral < B.MORAL_PLAFOND_NATUREL) e.moral = Math.min(B.MORAL_PLAFOND_NATUREL, e.moral + B.MORAL_REMONTEE * heures);
   }
 
   // Salaires à midi, charges fixes le lundi matin

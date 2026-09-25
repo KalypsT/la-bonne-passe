@@ -132,6 +132,12 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     const nuit = estObjet(d.nuit) ? { imprevus: 0, ...d.nuit } : d.nuit;
     return { ...d, ...personnelDeDepart(), version: 8, personnel, affinites, nuit };
   },
+  // v8 → v9 : segments Affaires et Groupes, ouverts au palier 2 (réputation 25, vérifiée à la fermeture).
+  8: (d) => {
+    const deuxieme = typeof d.palier === 'number' && d.palier >= 2;
+    const systemes = { ...(estObjet(d.systemes) ? d.systemes : {}), affaires: deuxieme, groupes: deuxieme };
+    return { ...d, version: 9, systemes };
+  },
 };
 
 function estObjet(v: unknown): v is Donnees {

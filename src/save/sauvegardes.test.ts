@@ -236,6 +236,14 @@ describe('migrations', () => {
     expect(migre).toMatchObject({ imprevu: null, imprevusVus: [], adieux: [] });
   });
 
+  it('migre une sauvegarde v8 : segments Affaires et Groupes fermés avant le palier 2', () => {
+    const etat = creerEtatInitial();
+    const { affaires: _a, groupes: _g, ...systemes } = etat.systemes;
+    const migre = migrer({ ...etat, version: 8, systemes, palier: 1 });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.systemes).toMatchObject({ affaires: false, groupes: false });
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();
