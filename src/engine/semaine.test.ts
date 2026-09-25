@@ -67,6 +67,15 @@ describe('bilan du lundi', () => {
     expect(appliquerOrdres(etat, [{ type: 'bilanSemaineVu' }]).etat.bilanAVoir).toBe(false);
   });
 
+  it('la projection compte des charges fixes pleines, même après la première semaine qui n’en a pas', () => {
+    const avant = veilleDeLundi(1);
+    avant.semaine.comptes.recettes.rendezVous = 3000;
+    avant.semaine.comptes.depenses.travaux = 900;
+    const { etat } = tick(avant);
+    expect(etat.bilanSemaine?.resultat).toBe(2100);
+    expect(etat.bilanSemaine?.resultatCourant).toBe(3000 - B.CHARGES_FIXES);
+  });
+
   it('pas de bilan un autre jour que le lundi', () => {
     const { evenements } = tick(partie(1, { jour: 3, minuteDuJour: h(4, 55), briefingJour: 3 }));
     expect(evenements.some((e) => e.type === 'bilanSemaine')).toBe(false);

@@ -27,7 +27,10 @@ export interface BilanSemaine {
   numero: number;
   comptes: Comptes;
   resultat: number;
-  /** Résultat sans les dépenses exceptionnelles (travaux, mensualité, avance) : la base de la projection. */
+  /**
+   * Résultat sans les dépenses exceptionnelles (travaux, mensualité, avance), et avec des charges fixes
+   * pleines (la première semaine n'en a pas) : la base de la projection.
+   */
   resultatCourant: number;
   reputationDebut: number;
   reputationFin: number;
@@ -135,9 +138,9 @@ export function cloreSemaine(etat: EtatJeu, prochainesMensualites: number[], tir
   const recettes = totalRecettes(s.comptes);
   const depenses = totalDepenses(s.comptes);
   const d = s.comptes.depenses;
-  const exceptionnel = d.travaux + d.mensualite + d.avance;
+  const exceptionnel = d.travaux + d.mensualite + d.avance + d.charges;
   const avoir = etat.tresorerie + etat.reserve;
-  const resultatCourant = recettes - (depenses - exceptionnel);
+  const resultatCourant = recettes - (depenses - exceptionnel) - B.CHARGES_FIXES;
 
   let premieresTendances = false;
   // Au premier lundi après le palier 2 : les tendances, et les soirées à thème pour y répondre.
