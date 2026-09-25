@@ -1299,3 +1299,62 @@ body {
   background: rgba(255, 79, 139, 0.14);
   color: var(--neon-doux);
 }
+
+/* Personnel et recrutement */
+.ligne-personne {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.ligne-personne > span {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ligne-personne > span small {
+  text-align: left;
+}
+
+.ligne-personne .lien {
+  color: var(--neon-doux);
+}
+
+.portrait.petit {
+  width: 28px;
+  height: 34px;
+  border-radius: 6px;
+}
+
+.trait.cache b {
+  color: var(--attenue);
+  font-style: italic;
+}
+
+.surtitre {
+  margin: 0 0 4px;
+  font-family: 'Yellowtail', cursive;
+  font-size: 20px;
+  color: var(--neon-doux);
+}
+
+.carte-entretien .intro {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+}
+
+.carte-entretien .reponse {
+  margin: 0 0 4px;
+  color: var(--neon-doux);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.tag {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(212, 166, 74, 0.2);
+  color: var(--laiton);
+  font-weight: 600;
+}

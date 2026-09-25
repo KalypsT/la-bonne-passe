@@ -8,8 +8,10 @@ import {
   TRESORERIE_INITIALE,
 } from '../content/balance';
 import { CHAMBRES } from '../content/maison';
-import { maisonDeDepart, soireeDeDepart } from '../engine/etat';
+import { SANNE } from '../content/personnel';
+import { creerEmploye, maisonDeDepart, recrutementDeDepart, soireeDeDepart } from '../engine/etat';
 import { SYSTEMES_PAR_PALIER } from '../engine/paliers';
+import { planifierVisitesScenarisees } from '../engine/recrutement';
 import { PARTIE_PAR_DEFAUT } from '../content/partie';
 import { VERSION_ETAT, type EtatJeu } from '../engine/etat';
 
@@ -94,6 +96,22 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     }
     return suite;
   },
+  // v6 → v7 : identité de chaque personne dans l'état, candidats, visites et périodes d'essai.
+  // Au palier 1, les visites de Mila, Jonas et Inès sont prévues (repoussées si leur heure est passée).
+  6: (d) => {
+    const nuits = typeof d.nuitsBouclees === 'number' ? d.nuitsBouclees : 0;
+    const personnel = Array.isArray(d.personnel)
+      ? d.personnel.map((e: unknown) => {
+          if (!estObjet(e)) return e;
+          const identite = e.id === SANNE.id ? creerEmploye(SANNE) : null;
+          const { rdvCeSoir: _r, repos: _p, fatigue: _f, moral: _m, loyaute: _l, part: _pa, ...base } = identite ?? {};
+          return { ...base, ...e, traitsConnus: Array.isArray(e.traits) ? e.traits : [], finEssai: null, nuitsTravaillees: nuits };
+        })
+      : d.personnel;
+    const suite = { ...d, ...recrutementDeDepart(), version: 7, personnel };
+    if (typeof d.palier === 'number' && d.palier >= 1) planifierVisitesScenarisees(suite as unknown as EtatJeu);
+    return suite;
+  },
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -131,6 +149,10 @@ function estEtatValide(d: Donnees): boolean {
     typeof d.mensualitesPayees === 'number' &&
     Array.isArray(d.annonces) &&
     Array.isArray(d.journal) &&
+    Array.isArray(d.candidats) &&
+    Array.isArray(d.visites) &&
+    Array.isArray(d.essaisATrancher) &&
+    typeof d.prochainCandidat === 'number' &&
     estObjet(d.systemes)
   );
 }

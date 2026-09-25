@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import * as B from '../content/balance';
 import { alertes } from './alertes';
 import { creerEtatInitial, type EtatJeu } from './etat';
-import { instant, qualiteRdv } from './soiree';
+import { qualiteRdv } from './soiree';
+import { instant } from './temps';
 import { appliquerOrdres, tick, type EvenementMoteur, type Ordre } from './tick';
 
 const h = (heures: number, minutes = 0) => heures * 60 + minutes;

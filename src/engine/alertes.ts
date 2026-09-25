@@ -1,7 +1,6 @@
 import * as B from '../content/balance';
 import type { EtatJeu } from './etat';
-import { instant } from './soiree';
-import { estOuvert } from './temps';
+import { estOuvert, instant } from './temps';
 
 export type Alerte =
   | { type: 'chambreSale'; chambreId: string; inutilisable: boolean }

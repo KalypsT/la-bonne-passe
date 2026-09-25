@@ -1,4 +1,3 @@
-import { SANNE } from '../content/personnel';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
 import { formaterEuros } from './format';
@@ -73,7 +72,7 @@ export function CarteBilan({ partie }: { partie: EtatJeu }) {
             )}
             <h3>{t.fatigue}</h3>
             {partie.personnel.map((e) => (
-              <Jauge key={e.id} nom={e.id === SANNE.id ? SANNE.prenom : e.id} valeur={e.fatigue} alerte={e.fatigue > 70} />
+              <Jauge key={e.id} nom={e.prenom} valeur={e.fatigue} alerte={e.fatigue > 70} />
             ))}
           </section>
         </div>
