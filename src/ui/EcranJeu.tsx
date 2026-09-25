@@ -12,6 +12,7 @@ import { CarteEssai } from './CarteEssai';
 import { CarteAide } from './CarteAide';
 import { CartePalier } from './CartePalier';
 import { CarteNouveautes } from './CarteNouveautes';
+import { CarteGrossiste } from './CarteGrossiste';
 import { Didacticiel } from './Didacticiel';
 import { Panneau } from './Panneau';
 import { useInterface, type Fiche } from './store';
@@ -53,6 +54,9 @@ export function EcranJeu() {
       case 'dispute':
         ouvrirCarte('dispute');
         break;
+      case 'barVide':
+        ouvrirFiche({ type: 'piece', id: 'bar' });
+        break;
     }
   };
 
@@ -77,6 +81,7 @@ export function EcranJeu() {
       {carte === 'dispute' && <CarteDispute />}
       {carte === 'palier' && <CartePalier partie={partie} />}
       {carte === 'nouveautes' && <CarteNouveautes partie={partie} />}
+      {carte === 'grossiste' && <CarteGrossiste />}
       {carte === 'entretien' && <CarteEntretien partie={partie} />}
       {carte === 'essai' && <CarteEssai partie={partie} />}
       {carte === 'imprevu' && <CarteImprevu partie={partie} />}

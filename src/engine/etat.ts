@@ -78,6 +78,35 @@ export interface EtatChambre {
   travaux: number | null;
 }
 
+/** Le bar, sous des draps au départ, à rénover au palier 2. */
+export interface EtatBar {
+  ouvert: boolean;
+  /** Travaux en cours : instant (en minutes absolues) où ils se terminent. */
+  travaux: number | null;
+  /** Bouteilles en stock. */
+  stock: number;
+  /** Bouteilles commandées au briefing, livrées à l'ouverture. */
+  commande: number;
+}
+
+/** Avance du grossiste : proposée le lendemain de la réouverture du bar, une seule fois. */
+export interface Avance {
+  statut: 'aVenir' | 'proposee' | 'acceptee' | 'refusee' | 'remboursee';
+  /** Jour où le grossiste passe, une fois le bar rouvert. */
+  jourOffre: number | null;
+  /** Jour du remboursement, si l'avance est acceptée. */
+  echeance: number | null;
+  /** Montant à rembourser, intérêts compris. */
+  montant: number;
+}
+
+export function barDeDepart(): { bar: EtatBar; avance: Avance } {
+  return {
+    bar: { ouvert: false, travaux: null, stock: 0, commande: 0 },
+    avance: { statut: 'aVenir', jourOffre: null, echeance: null, montant: 0 },
+  };
+}
+
 /** Qui est la personne : de quoi l'afficher partout sans revenir aux contenus. */
 export interface Identite {
   id: string;
@@ -184,6 +213,8 @@ export interface Nuit {
   reserve: number;
   /** Imprévus tranchés cette nuit. */
   imprevus: number;
+  /** Recette du bar (comprise dans les recettes). */
+  bar: number;
 }
 
 /** Imprévu en attente de ta décision (carte en pause). */
@@ -222,7 +253,9 @@ export interface EtatJeu {
   briefingJour: number;
   chambres: EtatChambre[];
   personnel: Employe[];
-  equipes: { menage: number };
+  equipes: { menage: number; bar: number };
+  bar: EtatBar;
+  avance: Avance;
   /** Draps propres en stock. */
   linge: number;
   /** Draps commandés au briefing, livrés à l'ouverture. */
@@ -275,7 +308,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 12;
+export const VERSION_ETAT = 13;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -347,7 +380,7 @@ export function suiviDeDepart() {
 export function soireeDeDepart() {
   return {
     personnel: [creerEmploye(SANNE)],
-    equipes: { menage: 1 },
+    equipes: { menage: 1, bar: 0 },
     linge: LINGE_INITIAL,
     lingeCommande: 0,
     offre: 'classique' as Offre,
@@ -422,6 +455,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     ...personnelDeDepart(),
     clientele: clienteleDeDepart(),
     regles: reglesDeDepart(),
+    ...barDeDepart(),
     nouveautes: [],
     didacticiel: options.didacticiel ? 0 : null,
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,

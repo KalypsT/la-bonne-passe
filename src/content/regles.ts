@@ -48,6 +48,12 @@ export const TEXTES_FORMULES: Record<IdFormule, TexteOption> = {
     effet: 'Une heure environ, au prix habituel.',
     josee: 'Une heure, c’est le temps qu’il faut. Ni course, ni roman.',
   },
+  champagne: {
+    nom: 'Formule champagne',
+    court: 'Champagne',
+    effet: 'Un rendez-vous classique avec une bouteille du bar : 50 % plus cher. Les affaires et les groupes adorent ; touristes et habitués trouvent l’addition salée. Il faut un bar ouvert, tenu et approvisionné, sinon c’est un rendez-vous classique.',
+    josee: 'Les bulles délient les langues et les portefeuilles. Surveille la cave, elle se vide vite.',
+  },
   complete: {
     nom: 'Soirée complète',
     court: 'Complète',

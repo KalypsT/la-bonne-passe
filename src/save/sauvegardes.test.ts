@@ -267,8 +267,8 @@ describe('migrations', () => {
     const { clientele: _c, nouveautes: _n, ...etat } = creerEtatInitial();
     const systemes = { ...etat.systemes, affaires: true, groupes: true };
     const migre = migrer({ ...etat, version: 10, palier: 2, reputation: 33, systemes });
-    expect(migre?.systemes).toMatchObject({ clientele: true, affaires: true, groupes: true, bar: false });
-    expect(migre?.nouveautes).toEqual(['clientele', 'regles']);
+    expect(migre?.systemes).toMatchObject({ clientele: true, affaires: true, groupes: true, bar: true });
+    expect(migre?.nouveautes).toEqual(['clientele', 'regles', 'bar']);
     expect(trouverNouveaute('clientele')?.palier).toBe(2);
     expect(migre?.clientele.satisfaction.affaires).toBe(33);
   });
@@ -284,10 +284,27 @@ describe('migrations', () => {
     expect(migre?.systemes).toMatchObject({ tarifs: true, porte: true });
     expect(migre?.personnel[0]?.chargeCeSoir).toBe(2);
     expect(migre?.rendezVous[0]?.formule).toBe('standard');
-    expect(migre?.nouveautes).toEqual(['clientele', 'regles']);
+    expect(migre?.nouveautes).toEqual(['clientele', 'regles', 'bar']);
     expect(trouverNouveaute('regles')?.palier).toBe(2);
     const avant = migrer({ ...etat, version: 11, palier: 1, systemes, personnel, rendezVous: [], nouveautes: [] });
     expect(avant?.systemes).toMatchObject({ tarifs: false, porte: false });
+    expect(avant?.nouveautes).toEqual([]);
+  });
+
+  it('migre une sauvegarde v12 : bar sous ses draps, sans équipe, et nouveauté au palier 2', () => {
+    const { bar: _b, avance: _a, ...etat } = creerEtatInitial();
+    const nuit = { numero: 3, recettes: 100, partPersonnel: 100, depenses: 0, servis: 1, perdus: 0, reputationDebut: 20, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 };
+    const migre = migrer({ ...etat, version: 12, palier: 2, equipes: { menage: 2 }, nuit, nouveautes: [] });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.bar).toEqual({ ouvert: false, travaux: null, stock: 0, commande: 0 });
+    expect(migre?.avance.statut).toBe('aVenir');
+    expect(migre?.equipes).toEqual({ menage: 2, bar: 0 });
+    expect(migre?.nuit?.bar).toBe(0);
+    expect(migre?.systemes.bar).toBe(true);
+    expect(migre?.nouveautes).toEqual(['bar']);
+    expect(trouverNouveaute('bar')?.palier).toBe(2);
+    const avant = migrer({ ...etat, version: 12, palier: 1, equipes: { menage: 1 }, nouveautes: [] });
+    expect(avant?.systemes.bar).toBe(false);
     expect(avant?.nouveautes).toEqual([]);
   });
 

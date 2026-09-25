@@ -18,6 +18,11 @@ export const NOUVEAUTES: Nouveaute[] = [
     palier: 2,
     texte: 'Règles de la maison, dans l’onglet Clientèle : tarif, formule, sélection à l’entrée et priorité d’accueil.',
   },
+  {
+    id: 'bar',
+    palier: 2,
+    texte: 'Le bar peut rouvrir : 1 200 € et 8 h de travaux. Puis une équipe Bar, du stock, et la formule champagne.',
+  },
 ];
 
 export function trouverNouveaute(id: string): Nouveaute | undefined {

@@ -3,6 +3,7 @@
 
 import * as B from '../content/balance';
 import type { Segment } from '../content/clientele';
+import { barSert } from './bar';
 import type { ClientEnFile, Employe, EtatJeu, Regles } from './etat';
 
 export type OrdreRegle =
@@ -22,8 +23,11 @@ export function ecartTarif(etat: EtatJeu): number {
   return etat.systemes.tarifs ? (B.TARIFS[etat.regles.tarif] ?? 0) : 0;
 }
 
+/** La formule en vigueur ; le champagne redevient un rendez-vous classique si le bar ne sert pas. */
 export function formuleActive(etat: EtatJeu): B.IdFormule {
-  return etat.systemes.tarifs ? etat.regles.formule : 'standard';
+  if (!etat.systemes.tarifs) return 'standard';
+  if (etat.regles.formule === 'champagne' && !barSert(etat)) return 'standard';
+  return etat.regles.formule;
 }
 
 export function selectionActive(etat: EtatJeu): B.ReglageSelection {
@@ -94,6 +98,7 @@ export function appliquerRegle(etat: EtatJeu, ordre: OrdreRegle, evenements: { p
       break;
     case 'formule':
       if (!etat.systemes.tarifs || !(ordre.valeur in B.FORMULES) || r.formule === ordre.valeur) return;
+      if (ordre.valeur === 'champagne' && !etat.bar.ouvert) return;
       r.formule = ordre.valeur;
       break;
     case 'selection':

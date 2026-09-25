@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { COMMANDE_LINGE, FORMULES, HEURE_FERMETURE, HEURE_OUVERTURE, RDV_MAX_CRANS } from '../content/balance';
+import { COMMANDE_BAR, COMMANDE_LINGE, FORMULES, SEUIL_BAR, HEURE_FERMETURE, HEURE_OUVERTURE, RDV_MAX_CRANS } from '../content/balance';
 import { OFFRES, type Offre } from '../content/clientele';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
@@ -18,6 +18,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
   const validerBriefing = useInterface((s) => s.validerBriefing);
   const [offre, setOffre] = useState<Offre>(partie.offre);
   const [commanderLinge, setCommanderLinge] = useState(false);
+  const [commanderBar, setCommanderBar] = useState(false);
   // Planning : une personne promise au repos est proposée au repos d'office.
   const [repos, setRepos] = useState<string[]>(() => partie.personnel.filter((e) => e.promesseRepos !== null).map((e) => e.id));
   const [rdvMax, setRdvMax] = useState(partie.rdvMax);
@@ -45,7 +46,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
               {TEXTES.date(jourSemaine, partie.jour)} · {t.horaires(formaterHeure(HEURE_OUVERTURE), formaterHeure(HEURE_FERMETURE))}
             </p>
           </div>
-          <button className="bouton principal" onClick={() => validerBriefing({ offre, commanderLinge, repos: planning ? repos : [], rdvMax })}>
+          <button className="bouton principal" onClick={() => validerBriefing({ offre, commanderLinge, commanderBar, repos: planning ? repos : [], rdvMax })}>
             {t.lancer}
           </button>
         </header>
@@ -106,6 +107,18 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
             >
               {t.commanderLinge(COMMANDE_LINGE.draps, formaterEuros(COMMANDE_LINGE.prix))}
             </button>
+            {partie.bar.ouvert && (
+              <>
+                <h3>{t.bar}</h3>
+                <p className={partie.bar.stock < SEUIL_BAR ? 'sous negatif' : 'sous'}>
+                  {t.stockBar(Math.floor(partie.bar.stock))}
+                  {partie.equipes.bar === 0 && ` · ${t.barSansEquipe}`}
+                </p>
+                <button className={commanderBar ? 'choix choisi' : 'choix'} aria-pressed={commanderBar} onClick={() => setCommanderBar(!commanderBar)}>
+                  {t.commanderBar(COMMANDE_BAR.bouteilles, formaterEuros(COMMANDE_BAR.prix))}
+                </button>
+              </>
+            )}
             {partie.didacticiel !== null && <JoseeLigne texte={TEXTES_DIDACTICIEL.briefing} />}
           </section>
           <section>

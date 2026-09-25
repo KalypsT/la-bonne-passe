@@ -28,5 +28,8 @@ export const POSITIONS = {
   /** Places du personnel qui attend au salon. */
   salon: [{ x: 150, y: 304 }, { x: 184, y: 304 }, { x: 218, y: 304 }, { x: 252, y: 304 }],
   bulleLinge: { x: 112, y: 262 },
+  bulleBar: { x: 408, y: 262 },
+  /** Derrière le comptoir du bar. */
+  bar: [{ x: 366, y: 290 }, { x: 392, y: 290 }],
   bulleDispute: { x: 231, y: 356 },
 };

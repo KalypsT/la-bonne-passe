@@ -121,17 +121,29 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
         <rect x="334" y="236" width="96" height="70" fill="#2A1520" />
         <rect x="342" y="244" width="80" height="24" fill="#1A0E14" />
         <rect x="342" y="256" width="80" height="1.4" fill="#D4A64A" />
+        {/* Bouteilles sur l'étagère : elles suivent le stock */}
         <g>
-          <rect x="346" y="248" width="3" height="8" fill="#5FBF95" />
-          <rect x="352" y="249" width="3" height="7" fill="#E8B45A" />
-          <rect x="358" y="247" width="3" height="9" fill="#8C2640" />
-          <rect x="400" y="248" width="3" height="8" fill="#E8B45A" />
-          <rect x="408" y="247" width="3" height="9" fill="#FF4F8B" />
+          {BOUTEILLES.slice(0, bouteillesVisibles(partie)).map((b, i) => (
+            <rect key={i} x={346 + i * 6} y={256 - b.h} width="3" height={b.h} rx=".6" fill={b.couleur} />
+          ))}
         </g>
+        {partie.bar.ouvert && partie.equipes.bar > 0 && partie.bar.stock > 0 && (
+          <circle cx="382" cy="262" r="34" fill="url(#chaud)" opacity=".45" />
+        )}
         <rect x="338" y="280" width="92" height="26" fill="#2A1812" />
         <rect x="335" y="277" width="95" height="4" rx="1" fill="#D4A64A" />
         <Etiquette x={338} y={246}>{trouverPiece('bar').nom}</Etiquette>
-        {!partie.systemes.bar && <Draps rect={GEOMETRIE_PIECES.bar} texte={TEXTES.scene.pieceFermee(trouverPiece('bar').nom)} />}
+        {!partie.bar.ouvert && (
+          <Draps
+            rect={GEOMETRIE_PIECES.bar}
+            texte={
+              partie.bar.travaux !== null
+                ? TEXTES.scene.travaux(formaterHeure(heureDeInstant(partie.bar.travaux)))
+                : TEXTES.scene.pieceFermee(trouverPiece('bar').nom)
+            }
+          />
+        )}
+        {partie.bar.travaux !== null && <Chantier rect={GEOMETRIE_PIECES.bar} />}
       </g>
 
       {/* Bureau, avec l'avatar du joueur */}
@@ -234,6 +246,17 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
       <Vie partie={partie} alertes={alertes} montants={montants} onAlerte={onAlerte} />
     </svg>
   );
+}
+
+/** Les bouteilles de l'étagère du bar : hauteur et couleur, pour un rang qui ne se répète pas. */
+const BOUTEILLES = ['#5FBF95', '#E8B45A', '#8C2640', '#FF4F8B', '#E8B45A', '#5FA3A8', '#8C2640', '#D8D4CC', '#5FBF95', '#E8B45A', '#FF4F8B', '#8C2640'].map(
+  (couleur, i) => ({ couleur, h: 7 + ((i * 5) % 3) }),
+);
+
+/** Une bouteille visible par tranche de 4 en stock, jusqu'à une étagère pleine. Sous les draps, l'étagère garde son air d'abandon. */
+function bouteillesVisibles(partie: EtatJeu): number {
+  if (!partie.bar.ouvert) return 5;
+  return Math.min(BOUTEILLES.length, Math.ceil(partie.bar.stock / 4));
 }
 
 function Chambre({ chambre }: { chambre: EtatChambre }) {

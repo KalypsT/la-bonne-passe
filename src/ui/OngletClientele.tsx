@@ -142,13 +142,14 @@ export function FicheRegles({ partie }: { partie: EtatJeu }) {
       {groupes.map((g) => (
         <section key={g.cle}>
           <h3>{g.titre}</h3>
-          <div className="boutons-ligne" role="group" aria-label={g.titre}>
+          <div className={g.options.length > 3 ? 'boutons-ligne quatre' : 'boutons-ligne'} role="group" aria-label={g.titre}>
             {g.options.map((o) => (
               <button
                 key={String(o.valeur)}
                 className={g.actuelle === o.valeur ? 'choix-court choisi' : 'choix-court'}
                 aria-pressed={g.actuelle === o.valeur}
                 aria-label={o.texte.nom}
+                disabled={o.valeur === 'champagne' && !partie.bar.ouvert}
                 onClick={() => choisir(g.cle, o.valeur)}
               >
                 {o.texte.court}

@@ -4,6 +4,7 @@ import type { EtatJeu } from './etat';
 import { changerReputationGlobale } from './clientele';
 import { creerTirage } from './hasard';
 import { appliquerRegle, type OrdreRegle } from './regles';
+import { appliquerBar, avancerTravauxBar, visiteGrossiste, type OrdreBar } from './bar';
 import { trancherImprevu, type EvenementImprevu, type OrdreImprevu } from './imprevus';
 import { appliquerPersonnel, matinDuPersonnel, type EvenementPersonnel, type OrdrePersonnel } from './personnel';
 import { arrivee, depenser, fermerNuit, ouvrirNuit, prelevementsDuMatin, vivre, type EvenementSoiree } from './soiree';
@@ -22,6 +23,8 @@ export type Ordre =
       type: 'validerBriefing';
       offre?: Offre;
       commanderLinge?: boolean;
+      /** Commande de bouteilles pour le bar, livrée à l'ouverture. */
+      commanderBar?: boolean;
       /** Planning (palier 1) : qui se repose ce soir, et le maximum de rendez-vous par personne. */
       repos?: string[];
       rdvMax?: number;
@@ -42,7 +45,8 @@ export type Ordre =
   | OrdreRecrutement
   | OrdrePersonnel
   | OrdreImprevu
-  | OrdreRegle;
+  | OrdreRegle
+  | OrdreBar;
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -102,6 +106,10 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       if (ordre.commanderLinge) {
         depenser(etat, B.COMMANDE_LINGE.prix);
         etat.lingeCommande += B.COMMANDE_LINGE.draps;
+      }
+      if (ordre.commanderBar && etat.bar.ouvert) {
+        depenser(etat, B.COMMANDE_BAR.prix);
+        etat.bar.commande += B.COMMANDE_BAR.bouteilles;
       }
       if (etat.systemes.planning) {
         if (ordre.rdvMax !== undefined && (B.RDV_MAX_CRANS as readonly number[]).includes(ordre.rdvMax)) etat.rdvMax = ordre.rdvMax;
@@ -189,6 +197,12 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'regle':
       appliquerRegle(etat, ordre, evenements);
       return;
+    case 'renoverBar':
+    case 'equipeBar':
+    case 'livraisonBar':
+    case 'avanceFournisseur':
+      appliquerBar(etat, ordre, evenements);
+      return;
     case 'nouveautesVues':
       etat.nouveautes = [];
       return;
@@ -257,7 +271,9 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     matinDuPersonnel(etat, evenements);
   }
   avancerTravaux(etat, evenements);
+  avancerTravauxBar(etat, evenements);
   arriveeVisites(etat, evenements);
+  visiteGrossiste(etat, evenements);
 
   const ouvert = estOuvert(etat);
   if (!etaitOuvert && ouvert) {

@@ -66,6 +66,12 @@ export const SANNE: DefinitionEmploye = {
 };
 
 /** La personne de ménage, qui apparaît quand elle nettoie. */
+/** L'équipe Bar : deux silhouettes, en gilet et nœud papillon. */
+export const SILHOUETTES_BAR: Silhouette[] = [
+  { teint: '#C68A62', cheveux: '#1A100C', coiffure: 'courte', haut: '#EDEDED', bas: '#1C1C22', accent: '#8C2640' },
+  { teint: '#F1C7A5', cheveux: '#B5482A', coiffure: 'chignon', haut: '#EDEDED', bas: '#1C1C22', accent: '#8C2640' },
+];
+
 export const SILHOUETTE_MENAGE: Silhouette = {
   teint: '#D9A07A',
   cheveux: '#5A3A22',
