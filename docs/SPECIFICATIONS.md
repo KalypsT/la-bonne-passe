@@ -37,7 +37,7 @@ Une partie commence par le choix d'un emplacement de sauvegarde, puis par la cr�
 
 1. **Avatar** : 6 avatars vectoriels, 3 patronnes et 3 patrons, de styles variés, plus une variante de tenue pour chacun. L'avatar apparaît dans les cartes (briefing, bilans, entretiens) et dans le bureau de la maison.
 2. **Identité** : un prénom, obligatoire. Le jeu accorde ses textes selon l'avatar choisi (« la patronne » ou « le patron »).
-3. **La maison** : le nom de la maison, affiché en néon sur la façade (*La bonne passe* par défaut). En option, un nom de société, utilisé avec humour dans les courriers de la banque, de la mairie et des impôts.
+3. **La maison** : le nom de la maison, affiché en néon sur la façade (*La bonne passe* par défaut). Les courriers de la banque, de la mairie et des impôts sont adressés à la maison.
 
 Un filtre simple empêche les noms injurieux sur l'enseigne. Le nom de la maison reste modifiable une fois, au palier 4.
 
@@ -313,7 +313,7 @@ Cibles : une soirée correcte rapporte 600 à 1 000 € net à la maison, une ex
 - Impôt trimestriel de 20 % du bénéfice, prélevé seul, annoncé 2 semaines avant par Josée.
 - Découvert toléré jusqu'à −2 000 €, avec 1 % d'agios par jour.
 - Au-delà, les salaires ne sont plus versés : moral en baisse, puis départs.
-- Une mensualité impayée : lettre de la banque, adressée à la société du joueur, et +2 points sur le taux du prochain emprunt. Deux mensualités impayées : faillite et fin de partie.
+- Une mensualité impayée : lettre de la banque, adressée à la maison, et +2 points sur le taux du prochain emprunt. Deux mensualités impayées : faillite et fin de partie.
 
 ### Garde-fous de simplicité
 

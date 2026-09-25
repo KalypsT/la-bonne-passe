@@ -8,3 +8,6 @@ export const MINUTE_DE_DEPART = 19 * 60;
 
 /** Graine du hasard par défaut d'une nouvelle partie. */
 export const GRAINE_PAR_DEFAUT = 20260925;
+
+/** Trésorerie au début d'une partie, en euros. */
+export const TRESORERIE_INITIALE = 3000;

@@ -7,6 +7,8 @@
   --laiton: #d4a64a;
   --creme: #f4dcc8;
   --attenue: #b99ca6;
+  --prune: #241320;
+  --ligne: rgba(212, 166, 74, 0.28);
   color-scheme: dark;
 }
 
@@ -38,21 +40,21 @@ body {
     env(safe-area-inset-left);
 }
 
-/* Écran titre provisoire */
+/* Écran titre */
 .ecran-titre {
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 16px;
-  background: radial-gradient(ellipse at 50% 45%, rgba(92, 21, 48, 0.55), transparent 65%), var(--nuit);
+  padding: 8px 16px 12px;
+  background: radial-gradient(ellipse at 50% 20%, rgba(92, 21, 48, 0.55), transparent 60%), var(--nuit);
 }
 
 .enseigne {
-  width: min(78vw, 560px);
-  max-height: 52vh;
+  flex: none;
+  width: min(52vw, 400px);
+  max-height: 28vh;
 }
 
 .enseigne-cadre {
@@ -84,7 +86,7 @@ body {
 }
 
 .sous-titre {
-  margin: 8px 0 0;
+  margin: 2px 0 10px;
   color: var(--laiton);
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -92,9 +94,246 @@ body {
 }
 
 .mention {
-  margin: 4px 0 0;
+  margin: 0;
   color: var(--attenue);
   font-size: 12px;
+}
+
+/* Boutons (zones tactiles d'au moins 40 px) */
+.bouton {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--creme);
+  background: none;
+  border: 1px solid var(--ligne);
+}
+
+.bouton:active {
+  transform: translateY(1px);
+}
+
+.bouton:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
+}
+
+.bouton.principal {
+  border-color: var(--neon);
+  background: rgba(255, 79, 139, 0.16);
+  color: var(--neon-doux);
+}
+
+.bouton.discret {
+  color: var(--attenue);
+}
+
+.bouton.danger {
+  border-color: var(--neon);
+  background: var(--neon);
+  color: var(--nuit);
+  font-weight: 600;
+}
+
+/* Emplacements de sauvegarde */
+.emplacements {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 820px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.carte-emplacement {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid var(--ligne);
+  background: rgba(36, 19, 32, 0.85);
+}
+
+.carte-emplacement.vide {
+  border-style: dashed;
+  background: rgba(11, 28, 34, 0.6);
+}
+
+.carte-emplacement.illisible {
+  border-color: rgba(255, 79, 139, 0.5);
+}
+
+.carte-emplacement > .bouton:last-child,
+.carte-actions {
+  margin-top: auto;
+}
+
+.carte-titre {
+  margin: 0;
+  font-weight: 600;
+}
+
+.carte-detail {
+  margin: 0;
+  color: var(--attenue);
+  font-size: 13px;
+}
+
+.carte-entete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.avatar {
+  flex: none;
+}
+
+.carte-noms {
+  min-width: 0;
+}
+
+.carte-maison,
+.barre-maison {
+  margin: 0;
+  font-family: 'Yellowtail', 'Brush Script MT', cursive;
+  font-size: 22px;
+  line-height: 1.1;
+  color: var(--neon-doux);
+  text-shadow: 0 0 8px rgba(255, 79, 139, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.carte-prenom {
+  margin: 0;
+  font-size: 13px;
+  color: var(--attenue);
+}
+
+.carte-ligne {
+  margin: 0;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.carte-ligne.attenue {
+  color: var(--attenue);
+}
+
+.carte-argent {
+  margin: 0;
+  font-weight: 600;
+  color: var(--laiton);
+  font-variant-numeric: tabular-nums;
+}
+
+.carte-argent.negatif {
+  color: var(--neon);
+}
+
+.carte-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.carte-actions .bouton {
+  flex: 1;
+  padding: 0 8px;
+}
+
+/* Fenêtre de confirmation */
+.voile {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(5, 12, 15, 0.72);
+}
+
+.carte-modale {
+  width: min(100%, 380px);
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--neon);
+  background: var(--prune);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.carte-modale h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+
+.carte-modale p {
+  margin: 0 0 14px;
+  color: var(--attenue);
+  font-size: 14px;
+}
+
+/* Écran de jeu provisoire */
+.ecran-jeu {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.barre-haut {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--ligne);
+  background: rgba(36, 19, 32, 0.9);
+}
+
+.barre-maison {
+  flex: 1;
+  min-width: 0;
+}
+
+.barre-info {
+  font-size: 13px;
+  color: var(--attenue);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.barre-info b {
+  color: var(--creme);
+  font-weight: 600;
+}
+
+.jeu-provisoire {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  text-align: center;
+}
+
+.jeu-bienvenue {
+  margin: 0;
+  font-size: 16px;
 }
 
 /* Écran « tourne ton téléphone », visible seulement en portrait */
