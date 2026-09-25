@@ -11,8 +11,10 @@ export interface Paliers {
 
 export interface Joueur {
   prenom: string;
-  /** Identifiant de l'avatar choisi. */
+  /** Identifiant de l'avatar choisi (voir src/content/avatars.ts). */
   avatar: string;
+  /** Variante de tenue de l'avatar : 0 ou 1. */
+  tenue: number;
   /** Sert à accorder les textes : « la patronne » ou « le patron ». */
   genre: Genre;
 }
@@ -35,7 +37,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 2;
+export const VERSION_ETAT = 3;
 
 export interface OptionsNouvellePartie {
   graine?: number;
@@ -44,10 +46,10 @@ export interface OptionsNouvellePartie {
 }
 
 export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
-  const { prenom, avatar, genre, nomMaison, ville } = PARTIE_PAR_DEFAUT;
+  const { prenom, avatar, tenue, genre, nomMaison, ville } = PARTIE_PAR_DEFAUT;
   return {
     version: VERSION_ETAT,
-    joueur: options.joueur ?? { prenom, avatar, genre },
+    joueur: options.joueur ?? { prenom, avatar, tenue, genre },
     maison: { nom: options.nomMaison ?? nomMaison, ville },
     chapitre: 1,
     tresorerie: TRESORERIE_INITIALE,

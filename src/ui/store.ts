@@ -1,9 +1,18 @@
 import { create } from 'zustand';
+import { trouverAvatar } from '../content/avatars';
 import { creerEtatInitial, type EtatJeu } from '../engine/etat';
+import { nettoyerNom } from '../engine/identite';
 import { tick } from '../engine/tick';
 import { charger, lireEmplacements, sauvegarder, supprimer, type Emplacement } from '../save/emplacements';
 
-export type Ecran = 'titre' | 'jeu';
+export type Ecran = 'titre' | 'creation' | 'jeu';
+
+export interface ChoixCreation {
+  prenom: string;
+  avatar: string;
+  tenue: number;
+  nomMaison: string;
+}
 
 interface EtatInterface {
   ecran: Ecran;
@@ -13,7 +22,10 @@ interface EtatInterface {
   /** Emplacement dont la suppression attend une confirmation. */
   suppressionDemandee: number | null;
 
+  /** Ouvre l'écran de création du personnage pour cet emplacement. */
   nouvellePartie: (emplacement: number) => void;
+  /** Crée la partie à partir des choix (déjà validés) et l'ouvre. */
+  creerPartie: (choix: ChoixCreation) => void;
   continuer: (emplacement: number) => void;
   demanderSuppression: (emplacement: number | null) => void;
   confirmerSuppression: () => void;
@@ -30,10 +42,18 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   partie: null,
   suppressionDemandee: null,
 
-  nouvellePartie: (emplacement) => {
-    const partie = creerEtatInitial({ graine: Date.now() });
+  nouvellePartie: (emplacement) => set({ ecran: 'creation', emplacementActif: emplacement, partie: null }),
+
+  creerPartie: ({ prenom, avatar, tenue, nomMaison }) => {
+    const emplacement = get().emplacementActif;
+    if (emplacement === null) return;
+    const partie = creerEtatInitial({
+      graine: Date.now(),
+      joueur: { prenom: nettoyerNom(prenom), avatar, tenue, genre: trouverAvatar(avatar).genre },
+      nomMaison: nettoyerNom(nomMaison),
+    });
     sauvegarder(emplacement, partie, Date.now());
-    set({ ecran: 'jeu', emplacementActif: emplacement, partie });
+    set({ ecran: 'jeu', partie });
   },
 
   continuer: (emplacement) => {

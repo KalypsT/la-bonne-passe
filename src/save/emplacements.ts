@@ -11,6 +11,8 @@ const CLE_INDEX = `${PREFIXE}:index`;
 /** Résumé léger d'une partie, pour l'écran titre, sans charger la sauvegarde complète. */
 export interface ResumePartie {
   avatar: string;
+  /** Absente des index écrits avant la version 3 : prendre 0. */
+  tenue?: number;
   prenom: string;
   nomMaison: string;
   chapitre: number;
@@ -31,6 +33,7 @@ type Index = Record<string, ResumePartie>;
 export function resumer(etat: EtatJeu, dernierePartie: number): ResumePartie {
   return {
     avatar: etat.joueur.avatar,
+    tenue: etat.joueur.tenue,
     prenom: etat.joueur.prenom,
     nomMaison: etat.maison.nom,
     chapitre: etat.chapitre,
