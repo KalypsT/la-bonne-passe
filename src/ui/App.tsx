@@ -1,12 +1,32 @@
+import { useEffect } from 'react';
+import { EcranJeu } from './EcranJeu';
 import { EcranTitre } from './EcranTitre';
 import { useInterface } from './store';
 import { TourneTelephone } from './TourneTelephone';
 
 export function App() {
   const ecran = useInterface((s) => s.ecran);
+  const sauvegarderPartie = useInterface((s) => s.sauvegarderPartie);
+
+  // Sauvegarde automatique quand l'appli passe en arrière-plan ou se ferme.
+  useEffect(() => {
+    const auMasquage = () => {
+      if (document.visibilityState === 'hidden') sauvegarderPartie();
+    };
+    document.addEventListener('visibilitychange', auMasquage);
+    window.addEventListener('pagehide', sauvegarderPartie);
+    return () => {
+      document.removeEventListener('visibilitychange', auMasquage);
+      window.removeEventListener('pagehide', sauvegarderPartie);
+    };
+  }, [sauvegarderPartie]);
+
   return (
     <>
-      <div className="jeu">{ecran === 'titre' && <EcranTitre />}</div>
+      <div className="jeu">
+        {ecran === 'titre' && <EcranTitre />}
+        {ecran === 'jeu' && <EcranJeu />}
+      </div>
       <TourneTelephone />
     </>
   );
