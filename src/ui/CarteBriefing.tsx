@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { COMMANDE_LINGE, HEURE_FERMETURE, HEURE_OUVERTURE } from '../content/balance';
 import { OFFRES, type Offre } from '../content/clientele';
-import { SANNE } from '../content/personnel';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
 import { jourDeLaSemaine } from '../engine/temps';
@@ -42,12 +41,12 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
             <h3>{t.ceSoir}</h3>
             {partie.personnel.map((e) => (
               <p key={e.id} className="mini-fiche">
-                <b>{e.id === SANNE.id ? SANNE.prenom : e.id}</b> · {p.fatigue.toLowerCase()}{' '}
+                <b>{e.prenom}</b> · {p.fatigue.toLowerCase()}{' '}
                 <span className={e.fatigue > 70 ? 'negatif' : ''}>{Math.round(e.fatigue)} %</span> · {p.moral.toLowerCase()}{' '}
                 <span className={e.moral < 35 ? 'negatif' : ''}>{Math.round(e.moral)} %</span>
               </p>
             ))}
-            {!partie.systemes.planning && <p className="sous">{t.planningVerrouille(SANNE.prenom)}</p>}
+            {!partie.systemes.planning && <p className="sous">{t.planningVerrouille(partie.personnel[0]?.prenom ?? '')}</p>}
             <h3>{t.linge}</h3>
             <p className="sous">{t.stockLinge(partie.linge)}</p>
             <button

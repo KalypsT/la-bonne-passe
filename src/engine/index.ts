@@ -6,3 +6,4 @@ export * from './soiree';
 export * from './temps';
 export * from './tick';
 export * from './paliers';
+export * from './recrutement';

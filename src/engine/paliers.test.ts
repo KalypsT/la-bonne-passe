@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import * as B from '../content/balance';
 import type { Offre } from '../content/clientele';
 import { creerEtatInitial, type EtatJeu } from './etat';
-import { gainReputation, heureDeInstant, instant, jourProchaineMensualite, NOMBRE_MENSUALITES } from './soiree';
+import { gainReputation, jourProchaineMensualite, NOMBRE_MENSUALITES } from './soiree';
+import { heureDeInstant, instant } from './temps';
 import { appliquerOrdres, tick, TAILLE_JOURNAL, type EvenementMoteur, type Ordre } from './tick';
 
 const h = (heures: number, minutes = 0) => heures * 60 + minutes;

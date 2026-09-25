@@ -40,7 +40,15 @@ export const TALENTS: Record<Talent, string> = {
 export const TRAITS: Record<string, string> = {
   'Mère poule': 'Remonte le moral de l’équipe chaque nuit.',
   Fidèle: 'Loyauté élevée, résiste aux offres des rivales.',
+  Diva: 'Perd du moral tant qu’aucune chambre premium n’est ouverte.',
+  Ambitieuse: 'Gagne du moral quand la réputation monte.',
+  Solitaire: 'Récupère mieux les soirs de repos.',
+  'Tête brûlée': 'Ose tout, mais déclenche parfois des disputes.',
+  Fêtarde: 'Met l’ambiance, mais se fatigue plus vite.',
 };
+
+/** Traits possibles pour les candidats du marché. */
+export const TRAITS_DU_MARCHE = Object.keys(TRAITS);
 
 export const SANNE: DefinitionEmploye = {
   id: 'sanne',

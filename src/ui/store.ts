@@ -11,8 +11,11 @@ import { formaterEuros } from './format';
 export type Ecran = 'titre' | 'creation' | 'jeu';
 export type Vitesse = 0 | 1 | 2 | 4;
 export type Onglet = 'maison' | 'personnel' | 'clientele' | 'finances' | 'relations' | 'journal';
-export type Fiche = { type: 'chambre'; id: string } | { type: 'piece'; id: 'salon' | 'bar' | 'bureau' };
-export type Carte = 'briefing' | 'bilan' | 'dispute' | 'palier';
+export type Fiche =
+  | { type: 'chambre'; id: string }
+  | { type: 'piece'; id: 'salon' | 'bar' | 'bureau' }
+  | { type: 'employe'; id: string };
+export type Carte = 'briefing' | 'bilan' | 'dispute' | 'palier' | 'entretien' | 'essai';
 
 export interface ChoixCreation {
   prenom: string;
@@ -46,6 +49,8 @@ interface EtatInterface {
   carte: Carte | null;
   onglet: Onglet;
   fiche: Fiche | null;
+  /** Candidat reçu dans la carte d'entretien. */
+  candidatOuvert: string | null;
   /** Comptes de la dernière nuit, affichés dans la carte de bilan. */
   bilan: Nuit | null;
   montants: MontantFlottant[];
@@ -69,6 +74,8 @@ interface EtatInterface {
   /** Ouvre une carte ; fermer (null) passe à la carte en attente, comme une annonce de palier. */
   ouvrirCarte: (carte: Carte | null) => void;
   choisirOnglet: (onglet: Onglet) => void;
+  /** Reçoit un candidat en entretien (carte en pause). */
+  ouvrirEntretien: (candidatId: string) => void;
   ouvrirFiche: (fiche: Fiche | null) => void;
 }
 
@@ -80,17 +87,29 @@ let prochainMontant = 1;
 
 /** Carte qui attend son tour une fois la carte courante fermée. */
 function carteEnAttente(partie: EtatJeu | null): Carte | null {
-  return partie && partie.annonces.length > 0 ? 'palier' : null;
+  if (!partie) return null;
+  if (partie.annonces.length > 0) return 'palier';
+  if (partie.essaisATrancher.length > 0) return 'essai';
+  return null;
 }
+
+/** Événements qui mettent le jeu en pause et ouvrent une carte. */
+const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai']);
 
 /** Traduit les événements en montants flottants et en cartes à ouvrir. Le journal, lui, vit dans la partie. */
 function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
   const montants: MontantFlottant[] = [];
   let carte: Carte | null = null;
   let bilan: Nuit | null = null;
+  let candidat: string | null = null;
 
   for (const e of evenements) {
     if (e.type === 'briefing') carte = 'briefing';
+    if (e.type === 'visite') {
+      carte = 'entretien';
+      candidat = e.candidatId;
+    }
+    if (e.type === 'finEssai' && !carte) carte = 'essai';
     if (e.type === 'bilan') {
       carte = 'bilan';
       bilan = e.nuit;
@@ -108,7 +127,7 @@ function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
     const ids = new Set(montants.map((m) => m.id));
     setTimeout(() => modifier((s) => ({ montants: s.montants.filter((m) => !ids.has(m.id)) })), DUREE_MONTANT);
   }
-  return { carte, bilan };
+  return { carte, bilan, candidat };
 }
 
 const etatDeJeuInitial = {
@@ -116,6 +135,7 @@ const etatDeJeuInitial = {
   carte: null,
   onglet: 'maison' as Onglet,
   fiche: null,
+  candidatOuvert: null,
   bilan: null,
   montants: [],
 };
@@ -188,7 +208,7 @@ export const useInterface = create<EtatInterface>((set, get) => ({
       courante = resultat.etat;
       evenements.push(...resultat.evenements);
       // Une carte met le jeu en pause : on s'arrête là.
-      if (resultat.evenements.some((e) => e.type === 'briefing' || e.type === 'bilan')) {
+      if (resultat.evenements.some((e) => EVENEMENTS_EN_PAUSE.has(e.type))) {
         reserveDeTemps = 0;
         break;
       }
@@ -196,8 +216,13 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     if (reserveDeTemps > 5) reserveDeTemps = 0;
     if (courante === partie && evenements.length === 0) return;
 
-    const { carte: nouvelleCarte, bilan } = recevoirEvenements(evenements, set);
-    set((s) => ({ partie: courante, carte: nouvelleCarte ?? s.carte, bilan: bilan ?? s.bilan }));
+    const { carte: nouvelleCarte, bilan, candidat } = recevoirEvenements(evenements, set);
+    set((s) => ({
+      partie: courante,
+      carte: nouvelleCarte ?? s.carte,
+      bilan: bilan ?? s.bilan,
+      candidatOuvert: candidat ?? s.candidatOuvert,
+    }));
     if (bilan) get().sauvegarderPartie();
   },
 
@@ -216,6 +241,12 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     const resultat = appliquerOrdres(partie, [ordre]);
     recevoirEvenements(resultat.evenements, set);
     set({ partie: resultat.etat });
+    // L'entretien se referme quand le candidat n'attend plus (embauché, refusé ou parti).
+    const { carte, candidatOuvert } = get();
+    if (carte === 'entretien' && !resultat.etat.candidats.some((c) => c.id === candidatOuvert)) {
+      get().ouvrirCarte(null);
+      get().sauvegarderPartie();
+    }
   },
 
   ouvrirCarte: (carte) => {
@@ -232,5 +263,8 @@ export const useInterface = create<EtatInterface>((set, get) => ({
 
   choisirOnglet: (onglet) => set({ onglet, fiche: null }),
 
-  ouvrirFiche: (fiche) => set(fiche ? { fiche, onglet: 'maison' } : { fiche: null }),
+  ouvrirEntretien: (candidatId) => set({ carte: 'entretien', candidatOuvert: candidatId }),
+
+  ouvrirFiche: (fiche) =>
+    set(fiche ? { fiche, onglet: fiche.type === 'employe' ? 'personnel' : 'maison' } : { fiche: null }),
 }));

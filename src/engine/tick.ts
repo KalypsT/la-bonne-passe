@@ -2,8 +2,15 @@ import * as B from '../content/balance';
 import type { Offre } from '../content/clientele';
 import type { EtatJeu } from './etat';
 import { creerTirage } from './hasard';
-import { depenser, fermerNuit, instant, ouvrirNuit, prelevementsDuMatin, vivre, type EvenementSoiree } from './soiree';
-import { attendBriefing, estOuvert, MINUTES_PAR_JOUR } from './temps';
+import { depenser, fermerNuit, ouvrirNuit, prelevementsDuMatin, vivre, type EvenementSoiree } from './soiree';
+import {
+  appliquerRecrutement,
+  arriveeVisites,
+  matinRecrutement,
+  type EvenementRecrutement,
+  type OrdreRecrutement,
+} from './recrutement';
+import { attendBriefing, estOuvert, instant, MINUTES_PAR_JOUR } from './temps';
 
 /** Ordres envoyés par l'interface au moteur. */
 export type Ordre =
@@ -16,7 +23,8 @@ export type Ordre =
   | { type: 'tauxReserve'; taux: number }
   | { type: 'retirerReserve' }
   | { type: 'equipeMenage'; effectif: number }
-  | { type: 'annonceVue' };
+  | { type: 'annonceVue' }
+  | OrdreRecrutement;
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -25,14 +33,15 @@ export type EvenementMoteur =
   | { type: 'fermeture'; jour: number }
   | { type: 'nettoyage'; chambreId: string; montant: number }
   | { type: 'livraisonLinge'; montant: number }
-  | { type: 'repos'; employeId: string }
+  | { type: 'repos'; employeId: string; prenom?: string }
   | { type: 'disputeReglee'; choix: 'verre' | 'calmer'; reussite: boolean }
   | { type: 'debutTravaux'; chambreId: string; montant: number; fin: number }
   | { type: 'finTravaux'; chambreId: string }
   | { type: 'tauxReserve'; taux: number }
   | { type: 'retraitReserve'; montant: number; urgence: boolean }
   | { type: 'equipeMenage'; effectif: number }
-  | EvenementSoiree;
+  | EvenementSoiree
+  | EvenementRecrutement;
 
 /** Taille du journal gardé dans la sauvegarde. */
 export const TAILLE_JOURNAL = 50;
@@ -94,7 +103,7 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       const employe = etat.personnel.find((e) => e.id === ordre.employeId);
       if (!employe || employe.repos) return;
       employe.repos = true;
-      evenements.push({ type: 'repos', employeId: employe.id });
+      evenements.push({ type: 'repos', employeId: employe.id, prenom: employe.prenom });
       return;
     }
     case 'regleDispute': {
@@ -150,6 +159,8 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'annonceVue':
       etat.annonces.shift();
       return;
+    default:
+      appliquerRecrutement(etat, ordre, evenements);
   }
 }
 
@@ -186,8 +197,10 @@ export function tick(etatInitial: EtatJeu, ordres: readonly Ordre[] = []): Resul
     etat.jour += 1;
     evenements.push({ type: 'nouveauJour', jour: etat.jour });
     prelevementsDuMatin(etat, evenements);
+    matinRecrutement(etat, tirage, evenements);
   }
   avancerTravaux(etat, evenements);
+  arriveeVisites(etat, evenements);
 
   const ouvert = estOuvert(etat);
   if (!etaitOuvert && ouvert) {

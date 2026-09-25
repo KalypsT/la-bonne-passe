@@ -200,6 +200,27 @@ describe('migrations', () => {
     expect(migre?.systemes).toMatchObject({ recrutement: true, renovation: true, planning: true, reserve: true, bar: false });
   });
 
+  /** Une sauvegarde de la partie 1 de la v0.2 (version 6) : Sanne sans identité dans l'état. */
+  function v6(champs: Record<string, unknown> = {}) {
+    const { candidats: _c, visites: _v, prochainCandidat: _p, essaisATrancher: _e, ...etat } = creerEtatInitial();
+    const personnel = etat.personnel.map(({ prenom: _pr, age: _a, genre: _g, accroche: _ac, silhouette: _s, traitsConnus: _t, finEssai: _f, nuitsTravaillees: _n, ...e }) => e);
+    return { ...etat, version: 6, personnel, ...champs };
+  }
+
+  it('migre une sauvegarde v6 : Sanne reçoit son identité, sans candidat avant le palier 1', () => {
+    const migre = migrer(v6());
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.personnel[0]).toMatchObject({ id: 'sanne', prenom: 'Sanne', age: 29, genre: 'f', finEssai: null, traitsConnus: ['Mère poule', 'Fidèle'] });
+    expect(migre?.personnel[0]?.moral).toBe(creerEtatInitial().personnel[0]?.moral);
+    expect(migre).toMatchObject({ candidats: [], visites: [], essaisATrancher: [], prochainCandidat: 1 });
+  });
+
+  it('migre une sauvegarde v6 au palier 1 : Mila, Jonas et Inès sont attendus', () => {
+    const migre = migrer(v6({ palier: 1, jour: 5, minuteDuJour: 12 * 60, nuitsBouclees: 4, personnel: [{ ...v6().personnel[0], moral: 33 }] }));
+    expect(migre?.visites.map((v) => v.candidat.id)).toEqual(['mila', 'jonas', 'ines']);
+    expect(migre?.personnel[0]).toMatchObject({ moral: 33, nuitsTravaillees: 4 });
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

@@ -10,7 +10,8 @@ import {
 } from '../content/balance';
 import type { Offre } from '../content/clientele';
 import { CHAMBRES } from '../content/maison';
-import { SANNE, type DefinitionEmploye, type Talent } from '../content/personnel';
+import type { QuestionEntretien } from '../content/candidats';
+import { SANNE, type DefinitionEmploye, type Silhouette, type Talent } from '../content/personnel';
 import { PARTIE_PAR_DEFAUT, type Genre } from '../content/partie';
 import type { EvenementMoteur } from './tick';
 
@@ -51,10 +52,25 @@ export interface EtatChambre {
   travaux: number | null;
 }
 
-export interface Employe {
+/** Qui est la personne : de quoi l'afficher partout sans revenir aux contenus. */
+export interface Identite {
   id: string;
+  prenom: string;
+  age: number;
+  genre: 'f' | 'm';
+  accroche: string;
+  silhouette: Silhouette;
   talents: Record<Talent, number>;
+  /** Tous ses traits, connus ou non du joueur. */
   traits: string[];
+}
+
+export interface Employe extends Identite {
+  /** Traits que le joueur a découverts. */
+  traitsConnus: string[];
+  /** Jour de fin de la période d'essai, ou null une fois confirmée. */
+  finEssai: number | null;
+  nuitsTravaillees: number;
   /** Part gardée sur chaque rendez-vous. */
   part: number;
   fatigue: number;
@@ -64,6 +80,26 @@ export interface Employe {
   rdvCeSoir: number;
   /** Au repos jusqu'à la fin de la nuit. */
   repos: boolean;
+}
+
+export interface Candidat extends Identite {
+  intro: string;
+  questions: QuestionEntretien[];
+  partMin: number;
+  source: 'visite' | 'annonce' | 'boucheAOreille';
+  /** Jour à partir duquel le candidat ne t'attend plus. */
+  expire: number;
+  /** Question posée à l'entretien (indice), ou null. */
+  questionPosee: number | null;
+  /** Part demandée en retour d'une proposition trop basse, ou null. */
+  contreOffre: number | null;
+}
+
+/** Visite d'un candidat prévue dans la journée : elle met le jeu en pause. */
+export interface Visite {
+  /** Instant de la visite, en minutes absolues. */
+  instant: number;
+  candidat: Candidat;
 }
 
 export interface ClientEnFile {
@@ -155,12 +191,19 @@ export interface EtatJeu {
   annonces: number[];
   /** Derniers événements, du plus récent au plus ancien. */
   journal: EntreeJournal[];
+  /** Candidats qui attendent une réponse (visites passées et marché du lundi). */
+  candidats: Candidat[];
+  /** Visites à venir, candidats compris. */
+  visites: Visite[];
+  prochainCandidat: number;
+  /** Personnes dont la période d'essai est finie et attend ta décision. */
+  essaisATrancher: string[];
   /** État courant du générateur pseudo-aléatoire. */
   hasard: number;
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 6;
+export const VERSION_ETAT = 7;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -190,8 +233,16 @@ export function chambresDeDepart(): EtatChambre[] {
 export function creerEmploye(def: DefinitionEmploye): Employe {
   return {
     id: def.id,
+    prenom: def.prenom,
+    age: def.age,
+    genre: def.genre,
+    accroche: def.accroche,
+    silhouette: { ...def.silhouette },
     talents: { ...def.talents },
     traits: [...def.traits],
+    traitsConnus: [...def.traits],
+    finEssai: null,
+    nuitsTravaillees: 0,
     part: def.part,
     fatigue: def.fatigue,
     moral: def.moral,
@@ -229,6 +280,16 @@ export function maisonDeDepart() {
   };
 }
 
+/** Champs ajoutés en version 7 : le recrutement. */
+export function recrutementDeDepart() {
+  return {
+    candidats: [] as Candidat[],
+    visites: [] as Visite[],
+    prochainCandidat: 1,
+    essaisATrancher: [] as string[],
+  };
+}
+
 export interface OptionsNouvellePartie {
   graine?: number;
   joueur?: Joueur;
@@ -252,6 +313,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     chambres: chambresDeDepart(),
     ...soireeDeDepart(),
     ...maisonDeDepart(),
+    ...recrutementDeDepart(),
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,
   };
 }

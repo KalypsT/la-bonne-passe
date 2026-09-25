@@ -4,6 +4,7 @@ import {
   MENAGE_MAX,
   MENSUALITE,
   NETTOYAGE_EXPRESS,
+  PERSONNEL_MAX,
   RENOVATION,
   SALAIRE_MENAGE,
   TAUX_RESERVE,
@@ -15,11 +16,11 @@ import {
 import { PIECES_COMMUNES, trouverChambre, trouverPiece } from '../content/maison';
 import { JOSEE_RESERVE } from '../content/josee';
 import { PALIERS } from '../content/paliers';
-import { SANNE, TALENTS, TRAITS, type Talent } from '../content/personnel';
+import { TALENTS, TRAITS, type Talent } from '../content/personnel';
 import { TEXTES } from '../content/textes';
-import type { Employe, EtatJeu, Systemes } from '../engine/etat';
-import { heureDeInstant, jourProchaineMensualite, NOMBRE_MENSUALITES } from '../engine/soiree';
-import { estOuvert, jourDeLaSemaine } from '../engine/temps';
+import type { Candidat, Employe, EtatJeu, Systemes } from '../engine/etat';
+import { jourProchaineMensualite, NOMBRE_MENSUALITES } from '../engine/soiree';
+import { estOuvert, heureDeInstant, jourDeLaSemaine } from '../engine/temps';
 import { Figurine } from '../scene/Figurine';
 import { formaterEuros, formaterHeure } from './format';
 import { Cadenas } from './Icones';
@@ -81,6 +82,8 @@ export function Panneau({ partie }: { partie: EtatJeu }) {
       <div className="panneau-corps">
         {verrouille && actuel.palier ? (
           <OngletVerrouille nom={TEXTES.onglets[actuel.id]} numero={actuel.palier} />
+        ) : fiche?.type === 'employe' ? (
+          <FicheEmploye partie={partie} id={fiche.id} />
         ) : fiche ? (
           <FichePiece partie={partie} fiche={fiche} />
         ) : (
@@ -261,6 +264,7 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
     </button>
   );
 
+  if (fiche.type === 'employe') return retour;
   if (fiche.type === 'piece') {
     const piece = trouverPiece(fiche.id);
     const rouvre = palier(2);
@@ -323,7 +327,7 @@ function statutEmploye(partie: EtatJeu, e: Employe): string {
   if (partie.rendezVous.some((r) => r.employeId === e.id)) return st.rdv;
   if (e.repos) return st.repos;
   if (!estOuvert(partie)) return st.horsService;
-  if (e.fatigue > SEUIL_EPUISEMENT) return st.epuisee;
+  if (e.fatigue > SEUIL_EPUISEMENT) return st.epuisee(e.genre);
   if (e.rdvCeSoir >= RDV_MAX_PAR_SOIR) return st.quota;
   return st.disponible;
 }
@@ -338,25 +342,59 @@ function Pastilles({ n }: { n: number }) {
   );
 }
 
-function FicheEmploye({ partie, employe }: { partie: EtatJeu; employe: Employe }) {
+/** Petit portrait en pied, tiré de la silhouette. */
+export function Portrait({ personne, petit = false }: { personne: { silhouette: Employe['silhouette'] }; petit?: boolean }) {
+  return (
+    <svg className={petit ? 'portrait petit' : 'portrait'} viewBox="4 -1 16 20" aria-hidden="true">
+      <Figurine silhouette={personne.silhouette} x={12} y={50} hauteur={50} />
+    </svg>
+  );
+}
+
+export function Talents({ talents }: { talents: Employe['talents'] }) {
+  return (
+    <div className="talents">
+      {(Object.keys(TALENTS) as Talent[]).map((k) => (
+        <div key={k}>
+          <span>{TALENTS[k]}</span>
+          <Pastilles n={talents[k]} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function nomDuJour(jour: number): string {
+  return TEXTES.date(TEXTES.jours[jourDeLaSemaine(jour)] ?? '', jour).toLowerCase();
+}
+
+function FicheEmploye({ partie, id }: { partie: EtatJeu; id: string }) {
   const ordonner = useInterface((s) => s.ordonner);
+  const ouvrirFiche = useInterface((s) => s.ouvrirFiche);
+  const employe = partie.personnel.find((e) => e.id === id);
+  const retour = (
+    <button className="retour" onClick={() => ouvrirFiche(null)}>
+      {t.retour}
+    </button>
+  );
+  if (!employe) return retour;
   const p = TEXTES.personnel;
-  const def = SANNE; // Seule Sanne pour l'instant ; le recrutement arrive au palier 1.
   const enRdv = partie.rendezVous.some((r) => r.employeId === employe.id);
+  const caches = employe.traits.length - employe.traitsConnus.length;
   return (
     <div className="employe">
+      {retour}
       <div className="employe-entete">
-        <svg className="portrait" viewBox="4 -1 16 20" aria-hidden="true">
-          <Figurine silhouette={def.silhouette} x={12} y={50} hauteur={50} />
-        </svg>
+        <Portrait personne={employe} />
         <div>
           <h2>
-            {def.prenom} <small>{p.ans(def.age)}</small>
+            {employe.prenom} <small>{p.ans(employe.age)}</small>
           </h2>
-          <p className="sous">{def.accroche}</p>
+          <p className="sous">{employe.accroche}</p>
           <span className="pastille ouverte">{statutEmploye(partie, employe)}</span>
         </div>
       </div>
+      {employe.finEssai !== null && <p className="sous">{p.enEssai(nomDuJour(employe.finEssai))}</p>}
       <Jauge nom={p.fatigue} valeur={employe.fatigue} alerte={employe.fatigue > 70} />
       <Jauge nom={p.moral} valeur={employe.moral} alerte={employe.moral < 35} />
       <Jauge nom={p.loyaute} valeur={employe.loyaute} />
@@ -367,18 +405,16 @@ function FicheEmploye({ partie, employe }: { partie: EtatJeu; employe: Employe }
         </button>
       )}
       <h3>{p.talents}</h3>
-      <div className="talents">
-        {(Object.keys(TALENTS) as Talent[]).map((k) => (
-          <div key={k}>
-            <span>{TALENTS[k]}</span>
-            <Pastilles n={employe.talents[k]} />
-          </div>
-        ))}
-      </div>
+      <Talents talents={employe.talents} />
       <h3>{p.traits}</h3>
-      {employe.traits.map((trait) => (
+      {employe.traitsConnus.map((trait) => (
         <p key={trait} className="trait">
           <b>{trait}</b> {TRAITS[trait]}
+        </p>
+      ))}
+      {Array.from({ length: caches }, (_, i) => (
+        <p key={i} className="trait cache">
+          <b>{p.traitCache}</b> {p.traitCacheDetail}
         </p>
       ))}
       <p className="sous">{p.part(Math.round(employe.part * 100))}</p>
@@ -386,15 +422,55 @@ function FicheEmploye({ partie, employe }: { partie: EtatJeu; employe: Employe }
   );
 }
 
+function LigneEmploye({ partie, employe }: { partie: EtatJeu; employe: Employe }) {
+  const ouvrirFiche = useInterface((s) => s.ouvrirFiche);
+  return (
+    <button className="ligne ligne-personne" onClick={() => ouvrirFiche({ type: 'employe', id: employe.id })}>
+      <Portrait personne={employe} petit />
+      <span>
+        {employe.prenom}
+        <small>
+          {TEXTES.personnel.fatigue} {Math.round(employe.fatigue)} % · {TEXTES.personnel.moral.toLowerCase()} {Math.round(employe.moral)} %
+        </small>
+      </span>
+      <small>{statutEmploye(partie, employe)}</small>
+    </button>
+  );
+}
+
+function LigneCandidat({ candidat }: { candidat: Candidat }) {
+  const ouvrirEntretien = useInterface((s) => s.ouvrirEntretien);
+  const r = TEXTES.recrutement;
+  return (
+    <button className="ligne ligne-personne" onClick={() => ouvrirEntretien(candidat.id)}>
+      <Portrait personne={candidat} petit />
+      <span>
+        {candidat.prenom} <small>{TEXTES.personnel.ans(candidat.age)} · {r.source[candidat.source]}</small>
+        <small>{r.attendJusquA(nomDuJour(candidat.expire))}</small>
+      </span>
+      <small className="lien">{r.recevoir}</small>
+    </button>
+  );
+}
+
 function OngletPersonnel({ partie }: { partie: EtatJeu }) {
   const recrutement = palier(1);
+  const r = TEXTES.recrutement;
   return (
     <>
+      <h3>{r.effectif(partie.personnel.length, PERSONNEL_MAX)}</h3>
       {partie.personnel.map((e) => (
-        <FicheEmploye key={e.id} partie={partie} employe={e} />
+        <LigneEmploye key={e.id} partie={partie} employe={e} />
       ))}
       {partie.systemes.recrutement ? (
-        <p className="sous">{t.recrutementOuvert}</p>
+        <>
+          <h3>{r.candidats}</h3>
+          {partie.candidats.length === 0 ? (
+            <p className="sous">{partie.visites.length > 0 ? t.recrutementOuvert : r.aucunCandidat}</p>
+          ) : (
+            partie.candidats.map((c) => <LigneCandidat key={c.id} candidat={c} />)
+          )}
+        </>
       ) : (
         <p className="verrou-ligne">
           <Cadenas /> {t.recrutementVerrouille(recrutement.numero, recrutement.nom)}

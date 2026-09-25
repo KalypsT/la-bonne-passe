@@ -31,6 +31,16 @@ export function attendBriefing(etat: EtatJeu): boolean {
   return etat.minuteDuJour === HEURE_BRIEFING && etat.briefingJour !== etat.jour;
 }
 
+/** Temps absolu, en minutes depuis le début de la partie (jour 1 à 5 h). */
+export function instant(etat: EtatJeu): number {
+  return (etat.jour - 1) * MINUTES_PAR_JOUR + ecart(HEURE_DEBUT_JOURNEE, etat.minuteDuJour);
+}
+
+/** Heure de l'horloge (minutes depuis minuit) d'un instant absolu. */
+export function heureDeInstant(minutes: number): number {
+  return (HEURE_DEBUT_JOURNEE + minutes) % MINUTES_PAR_JOUR;
+}
+
 export type Moment = 'nuit' | 'journee' | 'briefing' | 'soiree';
 
 /** Le moment de la journée, pour l'affichage (ciel, lumières, néon). */

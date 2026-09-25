@@ -1,15 +1,15 @@
 import { JOSEE_RESERVE } from '../content/josee';
 import { trouverChambre } from '../content/maison';
 import { PALIERS } from '../content/paliers';
-import { SANNE } from '../content/personnel';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
 import { jourDeLaSemaine } from '../engine/temps';
 import type { EvenementMoteur } from '../engine/tick';
 import { formaterEuros, formaterHeure } from './format';
 
-export function prenomEmploye(id: string): string {
-  return id === SANNE.id ? SANNE.prenom : id;
+/** Prénom d'une personne : celui que porte l'événement, sinon celui de l'équipe actuelle. */
+export function prenomEmploye(partie: EtatJeu, id: string, prenom?: string): string {
+  return prenom ?? partie.personnel.find((e) => e.id === id)?.prenom ?? id;
 }
 
 /** Texte du journal pour un événement du moteur, ou null s'il n'y a rien à raconter. */
@@ -31,7 +31,7 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
     case 'filePleine':
       return t.filePleine;
     case 'debutRdv':
-      return t.debutRdv(prenomEmploye(evenement.employeId), evenement.client, trouverChambre(evenement.chambreId)?.dans ?? '');
+      return t.debutRdv(prenomEmploye(partie, evenement.employeId, evenement.prenom), evenement.client, trouverChambre(evenement.chambreId)?.dans ?? '');
     case 'finRdv':
       return t.finRdv(evenement.client, evenement.avis, formaterEuros(evenement.montant));
     case 'salaires':
@@ -50,7 +50,7 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
     case 'livraisonLinge':
       return t.livraisonLinge(formaterEuros(evenement.montant));
     case 'repos':
-      return t.repos(prenomEmploye(evenement.employeId));
+      return t.repos(prenomEmploye(partie, evenement.employeId, evenement.prenom));
     case 'palier':
       return t.palier(evenement.numero, PALIERS.find((p) => p.numero === evenement.numero)?.nom ?? '');
     case 'debutTravaux':
@@ -74,6 +74,30 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return t.mensualite(formaterEuros(evenement.montant), formaterEuros(evenement.depuisReserve));
     case 'equipeMenage':
       return t.equipeMenage(evenement.effectif);
+    case 'visite':
+      return t.visite(evenement.prenom);
+    case 'marche':
+      return t.marche(evenement.nombre);
+    case 'candidatParti':
+      return t.candidatParti(evenement.prenom);
+    case 'contreOffre':
+      return t.contreOffre(evenement.prenom, Math.round(evenement.part * 100));
+    case 'candidatVexe':
+      return t.candidatVexe(evenement.prenom);
+    case 'candidatRefuse':
+      return t.candidatRefuse(evenement.prenom);
+    case 'reflexion':
+      return t.reflexion(evenement.prenom);
+    case 'embauche':
+      return t.embauche(evenement.prenom, Math.round(evenement.part * 100));
+    case 'finEssai':
+      return t.finEssai(evenement.prenom);
+    case 'essaiConfirme':
+      return t.essaiConfirme(evenement.prenom);
+    case 'finCollaboration':
+      return t.finCollaboration(evenement.prenom);
+    case 'traitRevele':
+      return t.traitRevele(evenement.prenom, evenement.trait);
     case 'bilan':
       return null;
     default:

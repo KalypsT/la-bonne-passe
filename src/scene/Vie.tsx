@@ -1,7 +1,7 @@
 import { PATIENCE_CLIENT } from '../content/balance';
 import { CLIENTS } from '../content/clientele';
 import { trouverChambre } from '../content/maison';
-import { SANNE, SILHOUETTE_MENAGE } from '../content/personnel';
+import { SILHOUETTE_MENAGE } from '../content/personnel';
 import { TEXTES } from '../content/textes';
 import type { Alerte } from '../engine/alertes';
 import type { EtatJeu } from '../engine/etat';
@@ -22,8 +22,6 @@ interface Props {
   montants: Montant[];
   onAlerte: (alerte: Alerte) => void;
 }
-
-const SILHOUETTES_EMPLOYES = { [SANNE.id]: SANNE.silhouette };
 
 /** Personnages, rideaux, bulles et montants : tout ce qui bouge. Purement visuel. */
 export function Vie({ partie, alertes, montants, onAlerte }: Props) {
@@ -65,12 +63,11 @@ export function Vie({ partie, alertes, montants, onAlerte }: Props) {
       {/* Personnel au salon */}
       {enService &&
         partie.personnel.map((e, i) => {
-          const silhouette = SILHOUETTES_EMPLOYES[e.id];
           const place = POSITIONS.salon[i];
-          if (!silhouette || !place || occupes.has(e.id)) return null;
+          if (!place || occupes.has(e.id)) return null;
           return (
             <g key={e.id} opacity={e.repos ? 0.45 : 1}>
-              <Figurine silhouette={silhouette} x={place.x} y={place.y} />
+              <Figurine silhouette={e.silhouette} x={place.x} y={place.y} />
             </g>
           );
         })}
@@ -130,7 +127,7 @@ export function Vie({ partie, alertes, montants, onAlerte }: Props) {
         const position = positionBulle(a, partie);
         if (!position) return null;
         return (
-          <Bulle key={cleAlerte(a)} alerte={a} libelle={libelle(a)} x={position.x} y={position.y} onClick={() => onAlerte(a)} />
+          <Bulle key={cleAlerte(a)} alerte={a} libelle={libelle(a, partie)} x={position.x} y={position.y} onClick={() => onAlerte(a)} />
         );
       })}
     </g>
@@ -166,7 +163,7 @@ function positionBulle(a: Alerte, partie: EtatJeu) {
   }
 }
 
-function libelle(a: Alerte): string {
+function libelle(a: Alerte, partie: EtatJeu): string {
   const t = TEXTES.alertes;
   switch (a.type) {
     case 'chambreSale':
@@ -174,7 +171,10 @@ function libelle(a: Alerte): string {
     case 'linge':
       return t.linge;
     case 'epuisement':
-      return t.epuisement(a.employeId === SANNE.id ? SANNE.prenom : a.employeId);
+    {
+      const e = partie.personnel.find((x) => x.id === a.employeId);
+      return t.epuisement(e?.prenom ?? a.employeId, e?.genre ?? 'f');
+    }
     case 'dispute':
       return t.dispute;
   }

@@ -7,13 +7,14 @@ import { trouverChambre } from '../content/maison';
 import type { EtatJeu, Nuit } from './etat';
 import type { Tirage } from './hasard';
 import { verifierPaliers, type EvenementPalier } from './paliers';
-import { ecart } from './temps';
+import { revelerTraits, type EvenementRecrutement } from './recrutement';
+import { ecart, instant } from './temps';
 
 export type EvenementSoiree =
   | { type: 'arrivee'; client: string }
   | { type: 'clientParti'; client: string }
   | { type: 'filePleine' }
-  | { type: 'debutRdv'; chambreId: string; employeId: string; client: string }
+  | { type: 'debutRdv'; chambreId: string; employeId: string; prenom?: string; client: string }
   | { type: 'finRdv'; chambreId: string; client: string; montant: number; avis: string }
   | { type: 'salaires'; montant: number }
   | { type: 'charges'; montant: number }
@@ -22,7 +23,8 @@ export type EvenementSoiree =
   | { type: 'miseEnReserve'; montant: number }
   | { type: 'mensualite'; montant: number; depuisReserve: number; restantes: number }
   | { type: 'bilan'; nuit: Nuit }
-  | EvenementPalier;
+  | EvenementPalier
+  | Extract<EvenementRecrutement, { type: 'traitRevele' }>;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -35,15 +37,6 @@ export function modeleClient(id: string): ModeleClient {
   return CLIENTS.find((c) => c.id === id) ?? CLIENTS[0]!;
 }
 
-/** Temps absolu, en minutes depuis le début de la partie (jour 1 à 5 h). */
-export function instant(etat: EtatJeu): number {
-  return (etat.jour - 1) * 24 * 60 + ecart(B.HEURE_DEBUT_JOURNEE, etat.minuteDuJour);
-}
-
-/** Heure de l'horloge (minutes depuis minuit) d'un instant absolu. */
-export function heureDeInstant(minutes: number): number {
-  return (B.HEURE_DEBUT_JOURNEE + minutes) % (24 * 60);
-}
 
 function nouvelleNuit(etat: EtatJeu): Nuit {
   return {
@@ -86,6 +79,7 @@ export function fermerNuit(etat: EtatJeu, tirage: Tirage, evenements: Sortie): v
     if (!e.traits.includes('Mère poule')) continue;
     for (const autre of etat.personnel) if (autre !== e) autre.moral = borner(autre.moral + 3);
   }
+  revelerTraits(etat, evenements);
   for (const e of etat.personnel) e.repos = false;
   etat.nuitsBouclees += 1;
   mettreEnReserve(etat, evenements);
@@ -172,7 +166,7 @@ function repartir(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
       duree,
       restant: duree,
     });
-    evenements.push({ type: 'debutRdv', chambreId: chambre.id, employeId: employe.id, client: modele.nom });
+    evenements.push({ type: 'debutRdv', chambreId: chambre.id, employeId: employe.id, prenom: employe.prenom, client: modele.nom });
   }
 }
 

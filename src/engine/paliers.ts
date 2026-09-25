@@ -2,6 +2,7 @@
 // Voir « Montée en puissance » dans les spécifications.
 
 import type { EtatJeu, Systemes } from './etat';
+import { planifierVisitesScenarisees } from './recrutement';
 
 export type EvenementPalier = { type: 'palier'; numero: number };
 
@@ -19,6 +20,8 @@ const DECLENCHEURS: Record<number, (etat: EtatJeu) => boolean> = {
 export function accorderPalier(etat: EtatJeu, numero: number): void {
   etat.palier = numero;
   for (const systeme of SYSTEMES_PAR_PALIER[numero] ?? []) etat.systemes[systeme] = true;
+  // Le recrutement ouvre avec les trois premiers candidats, attendus dans la semaine.
+  if (numero === 1) planifierVisitesScenarisees(etat);
   if (!etat.annonces.includes(numero)) etat.annonces.push(numero);
 }
 

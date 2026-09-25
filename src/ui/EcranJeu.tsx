@@ -4,6 +4,8 @@ import { BarreHaut } from './BarreHaut';
 import { CarteBilan } from './CarteBilan';
 import { CarteBriefing } from './CarteBriefing';
 import { CarteDispute } from './CarteDispute';
+import { CarteEntretien } from './CarteEntretien';
+import { CarteEssai } from './CarteEssai';
 import { CartePalier } from './CartePalier';
 import { Panneau } from './Panneau';
 import { useInterface, type Fiche } from './store';
@@ -37,7 +39,7 @@ export function EcranJeu() {
         choisirOnglet('maison');
         break;
       case 'epuisement':
-        choisirOnglet('personnel');
+        ouvrirFiche({ type: 'employe', id: alerte.employeId });
         break;
       case 'dispute':
         ouvrirCarte('dispute');
@@ -65,6 +67,8 @@ export function EcranJeu() {
       {carte === 'bilan' && <CarteBilan partie={partie} />}
       {carte === 'dispute' && <CarteDispute />}
       {carte === 'palier' && <CartePalier partie={partie} />}
+      {carte === 'entretien' && <CarteEntretien partie={partie} />}
+      {carte === 'essai' && <CarteEssai partie={partie} />}
     </div>
   );
 }

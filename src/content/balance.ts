@@ -147,3 +147,24 @@ export const DISPUTE_CASSE = 120;
 export const DISPUTE_REPUTATION = 2;
 export const DISPUTE_VERRE_OFFERT = 40;
 export const DISPUTE_CALMER_REUSSITE = 0.65;
+
+// ——— Recrutement (palier 1) ———
+
+/** Personnes suivies au plus dans la maison d'origine (Sanne comprise). */
+export const PERSONNEL_MAX = 4;
+/** Parts que le joueur peut proposer à l'entretien. */
+export const PARTS_PROPOSEES = [0.45, 0.5, 0.55] as const;
+/** Proposer plus que le tarif du quartier (50 %) rend la recrue plus loyale d'emblée. */
+export const BONUS_LOYAUTE_PART_HAUTE = 15;
+/** Valeurs de départ d'une recrue. */
+export const RECRUE = { moral: 78, loyaute: 55, fatigue: 10 };
+/** Jours pendant lesquels un candidat reçu en visite attend ta réponse. */
+export const JOURS_REFLEXION = 3;
+/** Durée de la période d'essai, en jours. */
+export const DUREE_ESSAI = 7;
+/** Nuits travaillées avant qu'un trait caché se révèle. */
+export const NUITS_POUR_REVELER_TRAIT = 2;
+/** Marché du lundi : 1 candidat, +1 par tranche de réputation, jusqu'au maximum. */
+export const MARCHE_BASE = 1;
+export const MARCHE_REPUTATION_PAR_CANDIDAT = 20;
+export const MARCHE_MAX = 5;
