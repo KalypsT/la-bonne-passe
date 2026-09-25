@@ -1,4 +1,13 @@
-import { TRESORERIE_INITIALE } from '../content/balance';
+import {
+  ETAT_CHAMBRE_FERMEE,
+  ETAT_CHAMBRE_OUVERTE,
+  HEURE_BRIEFING,
+  HEURE_DEBUT_JOURNEE,
+  PROPRETE_CHAMBRE_OUVERTE,
+  REPUTATION_INITIALE,
+  TRESORERIE_INITIALE,
+} from '../content/balance';
+import { CHAMBRES } from '../content/maison';
 import { PARTIE_PAR_DEFAUT } from '../content/partie';
 import { VERSION_ETAT, type EtatJeu } from '../engine/etat';
 
@@ -28,6 +37,38 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     version: 3,
     joueur: { ...(estObjet(d.joueur) ? d.joueur : {}), tenue: 0 },
   }),
+  // v3 → v4 : horloge avec briefing, réputation, chambres, palier et systèmes.
+  // Le jour change désormais à 5 h et non plus à minuit.
+  3: ({ paliers: _paliers, ...d }) => {
+    const minute = typeof d.minuteDuJour === 'number' ? d.minuteDuJour : HEURE_BRIEFING;
+    const jourBrut = typeof d.jour === 'number' ? d.jour : 1;
+    const jour = minute < HEURE_DEBUT_JOURNEE && jourBrut > 1 ? jourBrut - 1 : jourBrut;
+    // Une partie sauvegardée après 19 h est considérée comme briefée ; à 19 h pile, le briefing reste à faire.
+    const briefe = minute !== HEURE_BRIEFING && (minute > HEURE_BRIEFING || minute < HEURE_DEBUT_JOURNEE);
+    return {
+      ...d,
+      version: 4,
+      jour,
+      palier: 0,
+      systemes: {
+        personnel: true,
+        finances: true,
+        clientele: false,
+        relations: false,
+        recrutement: false,
+        renovation: false,
+        bar: false,
+      },
+      reputation: REPUTATION_INITIALE,
+      briefingJour: briefe ? jour : jour - 1,
+      chambres: CHAMBRES.map((c) => ({
+        id: c.id,
+        ouverte: c.ouverteAuDepart,
+        proprete: c.ouverteAuDepart ? PROPRETE_CHAMBRE_OUVERTE : 0,
+        etat: c.ouverteAuDepart ? ETAT_CHAMBRE_OUVERTE : ETAT_CHAMBRE_FERMEE,
+      })),
+    };
+  },
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -52,7 +93,11 @@ function estEtatValide(d: Donnees): boolean {
     typeof d.jour === 'number' &&
     typeof d.minuteDuJour === 'number' &&
     typeof d.hasard === 'number' &&
-    estObjet(d.paliers)
+    typeof d.palier === 'number' &&
+    typeof d.reputation === 'number' &&
+    typeof d.briefingJour === 'number' &&
+    Array.isArray(d.chambres) &&
+    estObjet(d.systemes)
   );
 }
 
