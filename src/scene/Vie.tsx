@@ -197,7 +197,14 @@ function Bulle({ alerte, libelle, x, y, onClick }: { alerte: Alerte; libelle: st
   const part = alerte.type === 'dispute' ? alerte.restant / alerte.total : 1;
   const urgente = alerte.type === 'dispute' || alerte.type === 'menace' || (alerte.type === 'chambreSale' && alerte.inutilisable);
   return (
-    <g className="bulle" transform={`translate(${x} ${y})`} onClick={onClick} role="button" aria-label={libelle}>
+    <g
+      className="bulle"
+      transform={`translate(${x} ${y})`}
+      onClick={onClick}
+      role="button"
+      aria-label={libelle}
+      data-tuto={alerte.type === 'chambreSale' ? 'bulle-sale' : undefined}
+    >
       <circle r="24" fill="transparent" />
       <g className="bulle-flotte">
         <circle r={R} fill="rgba(255,255,255,.18)" />

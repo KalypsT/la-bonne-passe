@@ -163,7 +163,7 @@ Les traits modifient les règles. Exemples : une Diva perd du moral tant qu'aucu
 
 ### Actions du joueur
 
-1. **Planning** : qui travaille quels soirs, décidé au briefing. Repos, congés, soirée spéciale.
+1. **Planning** : qui travaille quels soirs, décidé au briefing. Repos, congés, soirée spéciale, et le nombre maximum de rendez-vous par personne et par soir (2, 3 ou 4 : plus de recettes, plus d'usure).
 2. **Entretien individuel** : écouter, promettre, recadrer. 2 ou 3 réponses, avec des effets sur le moral et la loyauté.
 3. **Argent** : prime, part reversée, avance sur salaire.
 4. **Évolution** : formations (langues, conversation, danse), promotion en gérante.
@@ -353,7 +353,7 @@ Les événements suivent la montée en puissance : au départ, ils concernent Sa
 
 ## Didacticiel
 
-Le didacticiel tient en une première soirée guidée, juste après la création du personnage, animée par Madame Josée : l'ancienne patronne, 68 ans, chignon gris, lunettes et perles, qui t'a vendu la maison et ne peut pas s'empêcher de passer. Chaque étape met une zone de l'écran en évidence (cadre lumineux) et attend une action. Un bouton permet de passer le didacticiel. Le temps est en pause pendant les explications.
+Le didacticiel tient en une première soirée guidée, juste après la création du personnage (la partie commence alors à 18 h, pour laisser le temps de visiter), animée par Madame Josée : l'ancienne patronne, 68 ans, chignon gris, lunettes et perles, qui t'a vendu la maison et ne peut pas s'empêcher de passer. Chaque étape met une zone de l'écran en évidence (cadre lumineux) et attend une action. Un bouton permet de passer le didacticiel. Le temps est en pause pendant les explications.
 
 1. **Accueil.** « Alors c'est toi, {prénom} ? La maison est à toi désormais. Enfin, à toi et à la banque. »
 2. **La maison.** Une seule chambre en état, les autres sous des draps. Le joueur touche le Boudoir, sa fiche s'ouvre dans le panneau.

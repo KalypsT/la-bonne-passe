@@ -33,6 +33,8 @@ export type Ordre =
   | { type: 'retirerReserve' }
   | { type: 'equipeMenage'; effectif: number }
   | { type: 'annonceVue' }
+  /** Le didacticiel avance (l'interface décide des étapes, le moteur les garde). */
+  | { type: 'didacticiel'; etape: number | null }
   | OrdreRecrutement
   | OrdrePersonnel
   | OrdreImprevu;
@@ -178,6 +180,9 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     }
     case 'annonceVue':
       etat.annonces.shift();
+      return;
+    case 'didacticiel':
+      etat.didacticiel = ordre.etape;
       return;
     case 'entretienIndividuel':
     case 'prime':

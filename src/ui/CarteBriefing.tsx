@@ -6,6 +6,8 @@ import type { EtatJeu } from '../engine/etat';
 import { jourDeLaSemaine } from '../engine/temps';
 import { Avatar } from '../scene/Avatar';
 import { formaterEuros, formaterHeure } from './format';
+import { TEXTES_DIDACTICIEL } from '../content/didacticiel';
+import { JoseeLigne } from './Josee';
 import { useInterface } from './store';
 
 /** Briefing de 19 h, en pause : qui travaille, l'offre du soir, le linge. */
@@ -87,7 +89,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
                 <p className="sous">{pl.rdvMaxAide[indiceRdv]}</p>
               </>
             )}
-            {!partie.systemes.planning && <p className="sous">{t.planningVerrouille(partie.personnel[0]?.prenom ?? '')}</p>}
+            {!partie.systemes.planning && partie.didacticiel === null && <p className="sous">{t.planningVerrouille(partie.personnel[0]?.prenom ?? '')}</p>}
             <h3>{t.linge}</h3>
             <p className="sous">{t.stockLinge(partie.linge)}</p>
             <button
@@ -97,6 +99,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
             >
               {t.commanderLinge(COMMANDE_LINGE.draps, formaterEuros(COMMANDE_LINGE.prix))}
             </button>
+            {partie.didacticiel !== null && <JoseeLigne texte={TEXTES_DIDACTICIEL.briefing} />}
           </section>
           <section>
             <h3>{t.offre}</h3>
@@ -111,7 +114,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
                 <small>{o.description}</small>
               </button>
             ))}
-            {premierSoir && <p className="conseil">{t.conseilPremierSoir}</p>}
+            {partie.didacticiel === null && premierSoir && <p className="conseil">{t.conseilPremierSoir}</p>}
           </section>
         </div>
       </div>

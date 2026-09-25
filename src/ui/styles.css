@@ -1402,3 +1402,61 @@ body {
   font-style: italic;
   font-size: 14px;
 }
+
+/* Didacticiel : cadre lumineux et carte de Josée */
+.tuto-cadre {
+  position: fixed;
+  z-index: 30;
+  border: 2px solid var(--neon);
+  border-radius: 12px;
+  box-shadow: 0 0 0 3px rgba(255, 79, 139, 0.25), 0 0 18px rgba(255, 79, 139, 0.7);
+  pointer-events: none;
+  animation: tuto-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes tuto-pulse {
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 79, 139, 0.12), 0 0 26px rgba(255, 79, 139, 0.9);
+  }
+}
+
+.tuto-carte {
+  position: fixed;
+  z-index: 31;
+  left: calc(12px + env(safe-area-inset-left));
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  width: min(330px, 46vw);
+  padding: 8px 10px;
+  border: 1px solid var(--neon);
+  border-radius: 14px;
+  background: var(--prune);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.tuto-carte.a-droite {
+  left: auto;
+  right: calc(12px + env(safe-area-inset-right));
+}
+
+.tuto-carte .josee {
+  margin: 0 0 6px;
+  padding: 0;
+  background: none;
+}
+
+.tuto-carte .boutons-ligne {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tuto-cadre {
+    animation: none;
+  }
+}
+
+.bouton-aide {
+  flex: none;
+  width: 40px;
+  padding: 0;
+  font-weight: 600;
+}

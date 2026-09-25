@@ -244,6 +244,13 @@ describe('migrations', () => {
     expect(migre?.systemes).toMatchObject({ affaires: false, groupes: false });
   });
 
+  it('migre une sauvegarde v9 : pas de didacticiel pour une partie déjà commencée', () => {
+    const { didacticiel: _d, ...etat } = creerEtatInitial({ didacticiel: true });
+    const migre = migrer({ ...etat, version: 9 });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.didacticiel).toBeNull();
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

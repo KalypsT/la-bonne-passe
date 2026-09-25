@@ -1,3 +1,4 @@
+import { TEXTES_DIDACTICIEL } from '../content/didacticiel';
 import { JOSEE_PALIERS } from '../content/josee';
 import { PALIERS } from '../content/paliers';
 import { TEXTES } from '../content/textes';
@@ -30,7 +31,11 @@ export function CartePalier({ partie }: { partie: EtatJeu }) {
             </ul>
           </section>
           <section>
-            <JoseeLigne texte={JOSEE_PALIERS[palier.numero] ?? ''} />
+            <JoseeLigne
+              texte={
+                partie.didacticiel !== null && palier.numero === 1 ? TEXTES_DIDACTICIEL.palier : (JOSEE_PALIERS[palier.numero] ?? '')
+              }
+            />
             {suivant && <p className="sous">{t.suivant(suivant.numero, suivant.nom, suivant.objectif)}</p>}
           </section>
         </div>
