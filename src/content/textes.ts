@@ -100,6 +100,8 @@ export const TEXTES = {
     renovationVerrouillee: (palier: number, nom: string) =>
       `Rénovation possible au palier ${palier} (${nom}) : 900 € et 8 h de travaux.`,
     barVerrouille: (palier: number, nom: string) => `Le bar rouvre au palier ${palier} (${nom}).`,
+    barPlusTard: 'Le bar dort encore sous son drap. Josée garde la clé de la cave pour une prochaine version.',
+    ongletPlusTard: 'Palier atteint : cet onglet arrive dans une prochaine version du jeu.',
     ongletVerrouille: (palier: number, nom: string, objectif: string) =>
       `S’ouvre au palier ${palier}, « ${nom} » : ${objectif.charAt(0).toLowerCase()}${objectif.slice(1)}`,
     recrutementVerrouille: (palier: number, nom: string) => `Recrutement : palier ${palier} (${nom}).`,

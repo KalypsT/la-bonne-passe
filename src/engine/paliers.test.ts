@@ -276,7 +276,7 @@ describe('réputation', () => {
   it('une maison bien tenue gagne en réputation sur la première semaine', () => {
     for (const graine of [1, 2, 3, 4, 5]) {
       const r = nuits(graine, 'feutree', 7);
-      expect(r[6]).toBeGreaterThan(B.REPUTATION_INITIALE + 5);
+      expect(r[6]).toBeGreaterThan(B.REPUTATION_INITIALE + 2);
     }
   });
 });

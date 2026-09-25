@@ -72,7 +72,7 @@ export function Panneau({ partie }: { partie: EtatJeu }) {
               {ferme ? (
                 <>
                   <Cadenas />
-                  <small>{o.palier}</small>
+                  {partie.palier < (o.palier ?? 0) && <small>{o.palier}</small>}
                 </>
               ) : (
                 nom
@@ -83,7 +83,7 @@ export function Panneau({ partie }: { partie: EtatJeu }) {
       </nav>
       <div className="panneau-corps">
         {verrouille && actuel.palier ? (
-          <OngletVerrouille nom={TEXTES.onglets[actuel.id]} numero={actuel.palier} />
+          <OngletVerrouille nom={TEXTES.onglets[actuel.id]} numero={actuel.palier} atteint={partie.palier >= actuel.palier} />
         ) : fiche?.type === 'employe' ? (
           <FicheEmploye partie={partie} id={fiche.id} />
         ) : fiche ? (
@@ -110,13 +110,14 @@ export function Panneau({ partie }: { partie: EtatJeu }) {
   );
 }
 
-function OngletVerrouille({ nom, numero }: { nom: string; numero: number }) {
+/** Onglet pas encore ouvert. Un palier atteint dont le système n'existe pas encore le dit franchement. */
+function OngletVerrouille({ nom, numero, atteint }: { nom: string; numero: number; atteint: boolean }) {
   const p = palier(numero);
   return (
     <div className="verrou">
       <Cadenas taille={22} />
       <h2>{nom}</h2>
-      <p>{t.ongletVerrouille(p.numero, p.nom, p.objectif)}</p>
+      <p>{atteint ? t.ongletPlusTard : t.ongletVerrouille(p.numero, p.nom, p.objectif)}</p>
     </div>
   );
 }
@@ -277,7 +278,7 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
         <p className="sous">{piece.description}</p>
         {fiche.id === 'bar' && !partie.systemes.bar && (
           <p className="verrou-ligne">
-            <Cadenas /> {t.barVerrouille(rouvre.numero, rouvre.nom)}
+            <Cadenas /> {partie.palier >= rouvre.numero ? t.barPlusTard : t.barVerrouille(rouvre.numero, rouvre.nom)}
           </p>
         )}
       </div>

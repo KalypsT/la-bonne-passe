@@ -3,27 +3,30 @@
 Mesures faites avec le moteur (simulation, graines 1 à 5, nettoyage express dès l'alerte, linge commandé chaque soir).
 Toutes les valeurs sont dans `src/content/balance.ts`.
 
-## Réputation (v0.2, partie 1)
+## Réputation et offres (v0.2, parties 1 et 4)
 
 En v0.1, la réputation atteignait 25 dès la première nuit en soirée feutrée, et 50 à 60 en 4 nuits.
 
 Réglage v0.2 :
 
-- `REPUTATION_PAR_RDV` : 8 → 3,5 ;
-- `REPUTATION_FREIN` = 2 : les gains sont multipliés par (1 − réputation / 100)², les pertes tombent en entier ;
-- `REPUTATION_CLIENT_PERDU` : 0,2 → 0,15 (avec une seule hôtesse, les clients perdus sont structurels).
+- `REPUTATION_PAR_RDV` : 8 → 2 ; `REPUTATION_FREIN` = 2 : les gains sont multipliés par (1 − réputation / 100)², les pertes tombent en entier ;
+- `REPUTATION_CLIENT_PERDU` : 0,2 → 0,15 ;
+- `ARRIVEES_BONUS_REPUTATION` : 3,2 → 2,4, pour que la demande ne sature pas toujours la maison ;
+- offres : soirée feutrée +0,04 de qualité (au lieu de +0,10) ; happy hour sans malus de qualité, et ×1,5 sur les gains de réputation (bouche-à-oreille) ;
+- moral : −2 par rendez-vous, remontée naturelle de 0,15 par heure jusqu'à 60 seulement.
 
-Réputation en fin de nuit, Sanne seule, départ à 15 :
+Simulation d'un joueur actif (`src/engine/simulation.ts` : il embauche Mila, Jonas et Inès, rénove dès qu'il a 1 600 €, met au repos quiconque dépasse 55 de fatigue), 14 nuits, moyenne de 5 graines :
 
-| Offre | Nuit 1 | Nuit 3 | Nuit 7 |
-| --- | --- | --- | --- |
-| Soirée feutrée | 17 à 19 | 22 à 23 | 27 à 32 |
-| Soirée classique | 14 à 17 | 15 à 21 | 18 à 24 |
-| Happy hour | 14 à 17 | 12 à 17 | 11 à 18 |
+| Offre, rendez-vous max | Palier 2 (nuit) | Réputation nuit 7 | Réputation nuit 14 | Net par nuit, semaine 2 | Moral final |
+| --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 4 à 5 | 32 | 35 | 905 € | 70 |
+| Classique, 4 | 3 à 4 | 35 | 43 | 1 120 € | 63 |
+| Happy hour, 4 | 3 à 4 | 41 | 41 | 810 € | 60 |
+| Soirée feutrée, 4 | 3 à 4 | 36 | 51 | 1 085 € | 66 |
 
-Deux tests de `src/engine/paliers.test.ts` gardent la cible : pas de réputation 25 avant la nuit 4 avec Sanne seule, et une maison bien tenue qui progresse sur la semaine.
+Lecture : la classique rapporte le plus, le happy hour fait connaître la maison le plus vite, la soirée feutrée construit la meilleure réputation. Quatre rendez-vous par personne rapportent plus mais usent le moral : 3 départs sur 5 parties en happy hour à 4 rendez-vous.
 
-À revoir en partie 4, une fois l'équipe complète : plus de personnes et de chambres, donc plus de rendez-vous et moins de clients perdus. Le happy hour reste dominé tant que la maison manque de capacité.
+`src/engine/equilibrage.test.ts` garde ces cibles : palier 2 entre la nuit 3 et la nuit 7, 600 à 1 200 € net par nuit, aucune offre gagnante partout, 4 rendez-vous plus rentables mais plus usants, réputation sous 50 la première semaine.
 
 ## Personnel (v0.2, partie 3)
 

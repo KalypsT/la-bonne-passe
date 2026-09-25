@@ -54,7 +54,7 @@ export const TAUX_RESERVE = [0, 0.1, 0.2] as const;
 
 /** Arrivées par heure d'ouverture : BASE + réputation / 100 × BONUS_REPUTATION, puis × affluence de l'offre. */
 export const ARRIVEES_PAR_HEURE_BASE = 1;
-export const ARRIVEES_BONUS_REPUTATION = 3.2;
+export const ARRIVEES_BONUS_REPUTATION = 2.4;
 /** Places sur le quai ; au-delà, le client repart aussitôt. */
 export const PLACES_FILE = 4;
 /** Patience d'un client sur le quai, en minutes de jeu. */
@@ -70,7 +70,7 @@ export const DUREE_RDV_MAX = 75;
 export const RDV_MAX_PAR_SOIR = 4;
 
 /** Effets sur la réputation. Un rendez-vous rapporte (qualité − 0,4) × REPUTATION_PAR_RDV. */
-export const REPUTATION_PAR_RDV = 3.5;
+export const REPUTATION_PAR_RDV = 2.0;
 /**
  * Les gains ralentissent quand la réputation monte : × (1 − réputation / 100) ^ FREIN.
  * Les pertes, elles, tombent en entier. Cible : avec Sanne seule, réputation 25 au mieux vers la nuit 4 ou 5 (voir paliers.test.ts).
@@ -104,7 +104,11 @@ export const SEUIL_EPUISEMENT = 80;
 export const RECUPERATION_EN_SERVICE = 1;
 export const RECUPERATION_AU_REPOS = 4;
 export const MORAL_PERTE_FATIGUE = 2; // par heure
-export const MORAL_REMONTEE = 0.3; // par heure, sous 70
+/** Le moral remonte seul, lentement, jusqu'à un plafond ; au-delà, il faut des soins (repos, entretien, prime). */
+export const MORAL_REMONTEE = 0.15; // par heure
+export const MORAL_PLAFOND_NATUREL = 60;
+/** Chaque rendez-vous use un peu le moral : clients lourds, talons hauts, sourires de commande. */
+export const MORAL_PAR_RDV = 2;
 
 // ——— Maison ———
 
@@ -240,3 +244,16 @@ export const IMPREVU_CHANCE_PAR_HEURE = 0.35;
 export const IMPREVUS_MAX_PAR_NUIT = 3;
 export const IMPREVU_ECART_MIN = 75; // minutes entre deux imprévus
 export const IMPREVU_PREMIER_APRES = 30; // minutes après l'ouverture, au plus tôt
+
+// ——— Palier 2 : se faire un nom ———
+
+/** Réputation qui déclenche le palier 2. */
+export const REPUTATION_PALIER_2 = 25;
+/** Un client d'un groupe arrive parfois avec un ami du même groupe. */
+export const GROUPE_CHANCE_ACCOMPAGNE = 0.5;
+/** Les groupes font monter le ton : chance de dispute multipliée par client de groupe sur le quai. */
+export const GROUPE_DISPUTE = 1.3;
+/** Une Fêtarde en service attire les groupes : poids multiplié. */
+export const FETARDE_ATTIRE_GROUPES = 1.6;
+/** Poids de base des nouveaux segments dans les arrivées, avant l'offre du soir. */
+export const POIDS_SEGMENTS = { touriste: 1, habitue: 1, affaires: 0.7, groupe: 0.8 };
