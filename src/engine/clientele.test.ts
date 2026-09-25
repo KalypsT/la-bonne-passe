@@ -23,7 +23,7 @@ function soiree(palier: number, champs: Partial<EtatJeu> = {}): EtatJeu {
   return { ...etat, annonces: [], visites: [], ...champs };
 }
 
-const rdvQuiFinit = (modele: string) => ({ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele, duree: 60, restant: 5 });
+const rdvQuiFinit = (modele: string) => ({ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele, formule: 'standard' as const, duree: 60, restant: 5 });
 
 describe('satisfaction par segment', () => {
   it('la réputation est la moyenne pondérée des segments ouverts', () => {

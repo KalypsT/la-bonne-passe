@@ -3,6 +3,7 @@ import type { Offre } from '../content/clientele';
 import type { EtatJeu } from './etat';
 import { changerReputationGlobale } from './clientele';
 import { creerTirage } from './hasard';
+import { appliquerRegle, type OrdreRegle } from './regles';
 import { trancherImprevu, type EvenementImprevu, type OrdreImprevu } from './imprevus';
 import { appliquerPersonnel, matinDuPersonnel, type EvenementPersonnel, type OrdrePersonnel } from './personnel';
 import { arrivee, depenser, fermerNuit, ouvrirNuit, prelevementsDuMatin, vivre, type EvenementSoiree } from './soiree';
@@ -40,7 +41,8 @@ export type Ordre =
   | { type: 'didacticiel'; etape: number | null }
   | OrdreRecrutement
   | OrdrePersonnel
-  | OrdreImprevu;
+  | OrdreImprevu
+  | OrdreRegle;
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -184,6 +186,9 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'annonceVue':
       etat.annonces.shift();
       return;
+    case 'regle':
+      appliquerRegle(etat, ordre, evenements);
+      return;
     case 'nouveautesVues':
       etat.nouveautes = [];
       return;
@@ -256,7 +261,7 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
 
   const ouvert = estOuvert(etat);
   if (!etaitOuvert && ouvert) {
-    ouvrirNuit(etat);
+    ouvrirNuit(etat, evenements);
     evenements.push({ type: 'ouverture', jour: etat.jour });
   }
 

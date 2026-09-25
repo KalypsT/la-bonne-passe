@@ -152,6 +152,14 @@ export const TEXTES = {
     offreAttire: (offre: string) => `${offre} les attire.`,
     rienDeSpecial: 'Rien de particulier : une maison bien tenue, et c’est déjà beaucoup.',
     patience: (minutes: number) => `Patience sur le quai : ${minutes} min environ.`,
+    regles: 'Règles de la maison',
+    reglesResume: (tarif: string, formule: string, selection: string, priorite: string) =>
+      `Tarif ${tarif.toLowerCase()} · ${formule.toLowerCase()} · sélection ${selection.toLowerCase()} · ${priorite.toLowerCase()}`,
+    reglesAide: 'Elles s’appliquent tout de suite, même en pleine soirée.',
+    tarif: 'Tarif général',
+    formule: 'Formule',
+    selection: 'Sélection à l’entrée',
+    priorite: 'Priorité d’accueil',
     aVenir: 'À venir',
     aVenirDetail: (palier: number) => `palier ${palier}`,
   },
@@ -175,6 +183,13 @@ export const TEXTES = {
     arrivee: (client: string) => `${client} attend sur le quai.`,
     clientParti: (client: string) => `${client} en a eu assez d’attendre sur le quai.`,
     filePleine: 'Le quai est plein : un client passe son chemin.',
+    refuse: (client: string, feminin: boolean) =>
+      `${client} est refusé${feminin ? 'e' : ''} à la porte. ${feminin ? 'Elle' : 'Il'} repart en maugréant.`,
+    portier: (montant: string) => `Le portier prend son poste, costume noir et oreillette : ${montant}.`,
+    tarif: (nom: string) => `Nouveau tarif : ${nom}.`,
+    formule: (nom: string) => `Nouvelle formule : ${nom.charAt(0).toLowerCase()}${nom.slice(1)}.`,
+    selection: (nom: string) => `Sélection à l’entrée : ${nom.toLowerCase()}.`,
+    priorite: (nom: string) => `Priorité d’accueil : ${nom.charAt(0).toLowerCase()}${nom.slice(1)}.`,
     debutRdv: (employe: string, client: string, dansChambre: string) =>
       `${employe} reçoit ${client.charAt(0).toLowerCase()}${client.slice(1)} ${dansChambre}. Les rideaux se ferment.`,
     finRdv: (client: string, avis: string, montant: string) => `${client} : « ${avis} » (+${montant})`,
@@ -258,6 +273,7 @@ export const TEXTES = {
     unAuMoins: 'Il faut au moins une personne en service.',
     rdvMax: 'Rendez-vous max par personne',
     rdvMaxAide: ['Personnel reposé, recettes limitées.', 'Raisonnable.', 'Rentable… jusqu’à l’épuisement.'],
+    charge: (formule: string, charge: number) => `${formule} : chacun compte pour ${String(charge).replace('.', ',')}.`,
     promesse: 'repos promis',
     menace: 'veut partir',
   },
@@ -308,6 +324,7 @@ export const TEXTES = {
     pieceFermee: (nom: string) => `${nom} : fermé`,
   },
   briefing: {
+    regles: 'Règles de la maison (onglet Clientèle) :',
     titre: 'Briefing de 19 h',
     ceSoir: 'Qui travaille ce soir ?',
     horaires: (ouverture: string, fermeture: string) => `Ouverture à ${ouverture}, fermeture à ${fermeture}.`,
@@ -362,7 +379,10 @@ export const TEXTES = {
     fatigue: 'Fatigue',
     moral: 'Moral',
     loyaute: 'Loyauté',
-    rdvCeSoir: (n: number, max: number) => `Rendez-vous ce soir : ${n} sur ${max}`,
+    rdvCeSoir: (n: number, charge: number, max: number) =>
+      Math.abs(charge - n) < 0.01
+        ? `Rendez-vous ce soir : ${n} sur ${max}`
+        : `Rendez-vous ce soir : ${n}, qui en valent ${charge.toFixed(2).replace(/\.?0+$/, '').replace('.', ',')} sur ${max}`,
     statuts: {
       rdv: 'En rendez-vous',
       repos: 'Au repos ce soir',

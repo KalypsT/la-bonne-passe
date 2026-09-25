@@ -3,7 +3,7 @@
 import * as B from '../content/balance';
 import type { Offre, Segment } from '../content/clientele';
 import type { ParSegment } from './clientele';
-import { creerEtatInitial, type EtatJeu } from './etat';
+import { creerEtatInitial, type EtatJeu, type Regles } from './etat';
 import { appliquerOrdresSurPlace, tickSurPlace, type Ordre } from './tick';
 
 export interface ResumeNuit {
@@ -34,6 +34,8 @@ export interface OptionsSimulation {
   /** Rénover les chambres dès que la trésorerie le permet. */
   renover?: boolean;
   rdvMax?: number;
+  /** Règles de la maison appliquées dès leur ouverture (palier 2). */
+  regles?: Partial<Regles>;
 }
 
 const ORDRE_RENOVATION = ['orientale', 'velours', 'miroirs'];
@@ -77,6 +79,17 @@ export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat
         });
         avoirPrecedent = etat.tresorerie + etat.reserve;
       }
+    }
+
+    // Règles de la maison, dès qu'elles s'ouvrent.
+    if (options.regles && etat.systemes.tarifs) {
+      const r = options.regles;
+      const ordresRegles: Ordre[] = [];
+      if (r.tarif !== undefined && r.tarif !== etat.regles.tarif) ordresRegles.push({ type: 'regle', regle: 'tarif', valeur: r.tarif });
+      if (r.formule && r.formule !== etat.regles.formule) ordresRegles.push({ type: 'regle', regle: 'formule', valeur: r.formule });
+      if (r.selection && r.selection !== etat.regles.selection) ordresRegles.push({ type: 'regle', regle: 'selection', valeur: r.selection });
+      if (r.priorite && r.priorite !== etat.regles.priorite) ordresRegles.push({ type: 'regle', regle: 'priorite', valeur: r.priorite });
+      if (ordresRegles.length) jouer(ordresRegles);
     }
 
     // Cartes en attente, tranchées comme le ferait un joueur prudent.

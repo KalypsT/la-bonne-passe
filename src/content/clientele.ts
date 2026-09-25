@@ -22,6 +22,8 @@ export interface ModeleClient {
   attend: Talent;
   /** Patience sur le quai, en minutes, si elle diffère de la patience ordinaire. */
   patience?: number;
+  /** Pour accorder les textes ; masculin si absent. */
+  genre?: 'f' | 'm';
   silhouette: Silhouette;
 }
 
@@ -38,6 +40,7 @@ export const CLIENTS: ModeleClient[] = [
   {
     id: 'touriste-curieuse',
     nom: 'La touriste curieuse',
+    genre: 'f',
     segment: 'touriste',
     replique: 'On m’a dit que c’était typique.',
     budget: 140,
@@ -103,6 +106,7 @@ export const CLIENTS: ModeleClient[] = [
   {
     id: 'cheffe',
     nom: 'La cheffe d’entreprise',
+    genre: 'f',
     segment: 'affaires',
     replique: 'Journée atroce. Écoutez-moi, c’est tout ce que je demande.',
     budget: 300,
@@ -142,6 +146,7 @@ export const CLIENTS: ModeleClient[] = [
   {
     id: 'collegues',
     nom: 'La collègue en séminaire',
+    genre: 'f',
     segment: 'groupe',
     replique: 'Le team building, c’était ce matin. Ce soir, c’est autre chose.',
     budget: 140,

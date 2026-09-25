@@ -1,12 +1,16 @@
+import { useState } from 'react';
 import { PATIENCE_CLIENT, PRIX_ECART, PRIX_MIN, SEUILS_HUMEUR } from '../content/balance';
 import { CLIENTS, INFOS_SEGMENTS, OFFRES, SEGMENTS, SEGMENTS_A_VENIR, type Segment } from '../content/clientele';
 import { TALENTS } from '../content/personnel';
+import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS, type TexteOption } from '../content/regles';
 import { TEXTES } from '../content/textes';
 import { frequentation, segmentsOuverts } from '../engine/clientele';
 import type { EtatJeu } from '../engine/etat';
 import { formaterEuros } from './format';
 import { Cadenas } from './Icones';
 import { Jauge } from './Jauge';
+import { JoseeLigne } from './Josee';
+import type { OrdreRegle } from '../engine/regles';
 import { useInterface } from './store';
 
 const t = TEXTES.clientele;
@@ -22,6 +26,12 @@ export function OngletClientele({ partie }: { partie: EtatJeu }) {
         <b>{t.reputation(Math.floor(partie.reputation))}</b>
         <span>{t.reputationDetail}</span>
       </div>
+      {partie.systemes.tarifs && (
+        <button className="ligne ligne-regles" onClick={() => ouvrirFiche({ type: 'regles', id: 'regles' })}>
+          <span>{t.regles}</span>
+          <small>{resumeRegles(partie)}</small>
+        </button>
+      )}
       <h3>{t.segments}</h3>
       {segmentsOuverts(partie).map((s) => {
         const valeur = partie.clientele.satisfaction[s];
@@ -99,5 +109,71 @@ export function FicheSegment({ partie, id }: { partie: EtatJeu; id: Segment }) {
       ))}
       {info.attire && <p className="sous">{info.attire}</p>}
     </div>
+  );
+}
+
+type CleRegle = 'tarif' | 'formule' | 'selection' | 'priorite';
+
+/** Fiche des règles de la maison : 4 réglages en 3 crans, effet affiché, avis de Josée. */
+export function FicheRegles({ partie }: { partie: EtatJeu }) {
+  const ouvrirFiche = useInterface((s) => s.ouvrirFiche);
+  const ordonner = useInterface((s) => s.ordonner);
+  const [derniere, setDerniere] = useState<CleRegle>('tarif');
+  const r = partie.regles;
+  const groupes: { cle: CleRegle; titre: string; options: { valeur: number | string; texte: TexteOption }[]; actuelle: number | string }[] = [
+    { cle: 'tarif', titre: t.tarif, options: TEXTES_TARIFS.map((texte, valeur) => ({ valeur, texte })), actuelle: r.tarif },
+    { cle: 'formule', titre: t.formule, options: entrees(TEXTES_FORMULES), actuelle: r.formule },
+    { cle: 'selection', titre: t.selection, options: entrees(TEXTES_SELECTIONS), actuelle: r.selection },
+    { cle: 'priorite', titre: t.priorite, options: entrees(TEXTES_PRIORITES), actuelle: r.priorite },
+  ];
+  const choisir = (cle: CleRegle, valeur: number | string) => {
+    setDerniere(cle);
+    ordonner({ type: 'regle', regle: cle, valeur } as OrdreRegle);
+  };
+  const commentee = groupes.find((g) => g.cle === derniere)!;
+
+  return (
+    <div className="fiche">
+      <button className="retour" onClick={() => ouvrirFiche(null)}>
+        {TEXTES.panneau.retour}
+      </button>
+      <h2>{t.regles}</h2>
+      <p className="sous">{t.reglesAide}</p>
+      {groupes.map((g) => (
+        <section key={g.cle}>
+          <h3>{g.titre}</h3>
+          <div className="boutons-ligne" role="group" aria-label={g.titre}>
+            {g.options.map((o) => (
+              <button
+                key={String(o.valeur)}
+                className={g.actuelle === o.valeur ? 'choix-court choisi' : 'choix-court'}
+                aria-pressed={g.actuelle === o.valeur}
+                aria-label={o.texte.nom}
+                onClick={() => choisir(g.cle, o.valeur)}
+              >
+                {o.texte.court}
+              </button>
+            ))}
+          </div>
+          <p className="sous">{g.options.find((o) => o.valeur === g.actuelle)?.texte.effet}</p>
+        </section>
+      ))}
+      <JoseeLigne texte={commentee.options.find((o) => o.valeur === commentee.actuelle)?.texte.josee ?? ''} />
+    </div>
+  );
+}
+
+function entrees<K extends string>(textes: Record<K, TexteOption>): { valeur: K; texte: TexteOption }[] {
+  return (Object.keys(textes) as K[]).map((valeur) => ({ valeur, texte: textes[valeur] }));
+}
+
+/** Résumé des règles en vigueur, pour l'onglet et le briefing. */
+export function resumeRegles(partie: EtatJeu): string {
+  const r = partie.regles;
+  return t.reglesResume(
+    TEXTES_TARIFS[r.tarif]?.nom ?? '',
+    TEXTES_FORMULES[r.formule].nom,
+    TEXTES_SELECTIONS[r.selection].nom,
+    TEXTES_PRIORITES[r.priorite].nom,
   );
 }

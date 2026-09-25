@@ -98,7 +98,7 @@ describe('offres et moral', () => {
   it('le happy hour fait monter la réputation plus vite, la soirée feutrée soigne la qualité', () => {
     expect(trouverOffre('happy').reputation).toBeGreaterThan(1);
     expect(trouverOffre('feutree').qualite).toBeGreaterThan(0);
-    const rdv = { chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', duree: 60, restant: 5 };
+    const rdv = { chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', formule: 'standard' as const, duree: 60, restant: 5 };
     const gain = (offre: 'classique' | 'happy') => {
       const avant = soiree(1, { offre, rendezVous: [rdv] });
       fixerReputation(avant, 20);
@@ -108,7 +108,7 @@ describe('offres et moral', () => {
   });
 
   it('chaque rendez-vous use un peu le moral', () => {
-    const rdv = { chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', duree: 60, restant: 5 };
+    const rdv = { chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', formule: 'standard' as const, duree: 60, restant: 5 };
     const avant = soiree(1, { rendezVous: [rdv] });
     const apres = tick(avant).etat;
     expect(apres.personnel[0]!.moral).toBeCloseTo(avant.personnel[0]!.moral - B.MORAL_PAR_RDV, 0);

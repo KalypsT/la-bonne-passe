@@ -268,9 +268,27 @@ describe('migrations', () => {
     const systemes = { ...etat.systemes, affaires: true, groupes: true };
     const migre = migrer({ ...etat, version: 10, palier: 2, reputation: 33, systemes });
     expect(migre?.systemes).toMatchObject({ clientele: true, affaires: true, groupes: true, bar: false });
-    expect(migre?.nouveautes).toEqual(['clientele']);
+    expect(migre?.nouveautes).toEqual(['clientele', 'regles']);
     expect(trouverNouveaute('clientele')?.palier).toBe(2);
     expect(migre?.clientele.satisfaction.affaires).toBe(33);
+  });
+
+  it('migre une sauvegarde v11 : règles par défaut, charge du soir, formule standard pour les rendez-vous en cours', () => {
+    const { regles: _r, ...etat } = creerEtatInitial();
+    const { tarifs: _t, porte: _p, ...systemes } = { ...etat.systemes, affaires: true, groupes: true, clientele: true };
+    const personnel = etat.personnel.map(({ chargeCeSoir: _c, ...e }) => ({ ...e, rdvCeSoir: 2 }));
+    const rendezVous = [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'poete', duree: 60, restant: 20 }];
+    const migre = migrer({ ...etat, version: 11, palier: 2, systemes, personnel, rendezVous, nouveautes: ['clientele'] });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.regles).toEqual({ tarif: 1, formule: 'standard', selection: 'normale', priorite: 'arrivee' });
+    expect(migre?.systemes).toMatchObject({ tarifs: true, porte: true });
+    expect(migre?.personnel[0]?.chargeCeSoir).toBe(2);
+    expect(migre?.rendezVous[0]?.formule).toBe('standard');
+    expect(migre?.nouveautes).toEqual(['clientele', 'regles']);
+    expect(trouverNouveaute('regles')?.palier).toBe(2);
+    const avant = migrer({ ...etat, version: 11, palier: 1, systemes, personnel, rendezVous: [], nouveautes: [] });
+    expect(avant?.systemes).toMatchObject({ tarifs: false, porte: false });
+    expect(avant?.nouveautes).toEqual([]);
   });
 
   it('refuse une version future ou des données sans version', () => {

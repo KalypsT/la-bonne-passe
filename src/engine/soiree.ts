@@ -2,6 +2,7 @@
 // Ces fonctions modifient une copie de travail de l'état, faite par le tick.
 
 import * as B from '../content/balance';
+import type { IdFormule } from '../content/balance';
 import { AVIS, CLIENTS, trouverOffre, type ModeleClient, type Segment } from '../content/clientele';
 import { trouverChambre } from '../content/maison';
 import type { EtatJeu, Nuit } from './etat';
@@ -22,6 +23,19 @@ import {
 } from './clientele';
 
 export { gainReputation, segmentOuvert };
+import {
+  chargeFormule,
+  demandePrix,
+  ecartTarif,
+  formuleActive,
+  patienceTarif,
+  prixRessenti,
+  prochainClient,
+  qualiteDesRegles,
+  quotaAtteint,
+  selectionActive,
+  type EvenementRegle,
+} from './regles';
 
 export type EvenementSoiree =
   | { type: 'arrivee'; client: string }
@@ -31,6 +45,7 @@ export type EvenementSoiree =
   | { type: 'finRdv'; chambreId: string; client: string; montant: number; avis: string }
   | { type: 'salaires'; montant: number }
   | { type: 'charges'; montant: number }
+  | { type: 'portier'; montant: number }
   | { type: 'dispute' }
   | { type: 'disputeDegeneree'; montant: number }
   | { type: 'miseEnReserve'; montant: number }
@@ -39,7 +54,8 @@ export type EvenementSoiree =
   | EvenementPalier
   | Extract<EvenementRecrutement, { type: 'traitRevele' }>
   | EvenementPersonnel
-  | EvenementImprevu;
+  | EvenementImprevu
+  | EvenementRegle;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -75,11 +91,12 @@ export function depenser(etat: EtatJeu, montant: number): void {
   if (etat.nuit && etat.nuitsBouclees < etat.nuit.numero) etat.nuit.depenses += montant;
 }
 
-export function ouvrirNuit(etat: EtatJeu): void {
+export function ouvrirNuit(etat: EtatJeu, evenements: Sortie): void {
   etat.nuit = nouvelleNuit(etat);
   // Le planning du briefing s'applique : qui se repose ce soir, qui prend son service.
   for (const e of etat.personnel) {
     e.rdvCeSoir = 0;
+    e.chargeCeSoir = 0;
     e.repos = e.reposPrevu;
     e.enServiceCeSoir = !e.repos;
     e.reposPrevu = false;
@@ -88,6 +105,12 @@ export function ouvrirNuit(etat: EtatJeu): void {
   etat.linge += etat.lingeCommande;
   etat.lingeCommande = 0;
   ouvrirNuitClientele(etat);
+  // Sélection stricte : le portier se paie à l'ouverture.
+  const portier = selectionActive(etat).cout;
+  if (portier > 0) {
+    depenser(etat, portier);
+    evenements.push({ type: 'portier', montant: portier });
+  }
 }
 
 export function fermerNuit(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
@@ -125,7 +148,7 @@ function occupes(etat: EtatJeu) {
 
 export function employeDisponible(etat: EtatJeu, id: string): boolean {
   const e = etat.personnel.find((x) => x.id === id);
-  return !!e && !e.repos && e.rdvCeSoir < etat.rdvMax && !occupes(etat).employes.has(id);
+  return !!e && !e.repos && !quotaAtteint(etat, e) && !occupes(etat).employes.has(id);
 }
 
 export function chambreDisponible(etat: EtatJeu, id: string): boolean {
@@ -139,20 +162,23 @@ function fetardeEnService(etat: EtatJeu): boolean {
 
 /** Patience d'un client : la sienne, et une Fêtarde en service met l'ambiance. */
 function patienceClient(etat: EtatJeu, modele: ModeleClient): number {
-  return (modele.patience ?? B.PATIENCE_CLIENT) + (fetardeEnService(etat) ? B.TRAITS_EFFETS.fetardePatience : 0);
+  const base = (modele.patience ?? B.PATIENCE_CLIENT) * patienceTarif(etat);
+  return Math.round(base + (fetardeEnService(etat) ? B.TRAITS_EFFETS.fetardePatience : 0));
 }
 
 export function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
   const presents = new Set([...etat.file.map((c) => c.modele), ...etat.rendezVous.map((r) => r.modele)]);
   const possibles = CLIENTS.filter((c) => !presents.has(c.id) && segmentOuvert(etat, c.segment));
   if (possibles.length === 0) return;
-  const offre = trouverOffre(etat.offre);
-  const poids = possibles.map((c) => {
-    let p = (offre.attire[c.segment] ?? 1) * B.POIDS_SEGMENTS[c.segment] * attraitSegment(etat, c.segment);
-    if (c.segment === 'groupe' && fetardeEnService(etat)) p *= B.FETARDE_ATTIRE_GROUPES;
-    return p;
-  });
+  const poids = possibles.map((c) => poidsSegment(etat, c.segment) * demandePrix(etat, c.segment));
   const modele = tirage.choisir(possibles, poids);
+  // Sélection à l'entrée : la porte se referme poliment.
+  const refus = selectionActive(etat).refus[modele.segment] ?? 0;
+  if (refus > 0 && tirage.chance(refus)) {
+    changerSatisfaction(etat, modele.segment, -B.REFUS_SATISFACTION * B.SATISFACTION_PAR_CLIENT);
+    evenements.push({ type: 'refuse', client: modele.nom });
+    return;
+  }
   // Quai plein : le client repart aussitôt, et son segment s'en souvient.
   if (etat.file.length >= B.PLACES_FILE) {
     perdreClient(etat, modele.segment, B.REPUTATION_FILE_PLEINE);
@@ -176,6 +202,34 @@ function perdreClient(etat: EtatJeu, segment: Segment, perte: number): void {
   changerSatisfaction(etat, segment, -perte * B.SATISFACTION_PAR_CLIENT * B.SENSIBILITE_ATTENTE[segment]);
 }
 
+/** Poids d'un segment dans les arrivées, avant le tarif : offre du soir, satisfaction, sélection, Fêtarde. */
+function poidsSegment(etat: EtatJeu, segment: Segment): number {
+  let p =
+    (trouverOffre(etat.offre).attire[segment] ?? 1) *
+    B.POIDS_SEGMENTS[segment] *
+    attraitSegment(etat, segment) *
+    (selectionActive(etat).attire[segment] ?? 1) *
+    (B.FORMULES[formuleActive(etat)].attire[segment] ?? 1);
+  if (segment === 'groupe' && fetardeEnService(etat)) p *= B.FETARDE_ATTIRE_GROUPES;
+  return p;
+}
+
+/**
+ * Effet du tarif sur le volume des arrivées : la demande moyenne des clients possibles, pondérée
+ * par leur poids. Un tarif haut fait fuir surtout les segments sensibles au prix.
+ */
+export function facteurTarif(etat: EtatJeu): number {
+  let total = 0;
+  let avecPrix = 0;
+  for (const c of CLIENTS) {
+    if (!segmentOuvert(etat, c.segment)) continue;
+    const p = poidsSegment(etat, c.segment);
+    total += p;
+    avecPrix += p * demandePrix(etat, c.segment);
+  }
+  return total > 0 ? avecPrix / total : 1;
+}
+
 function mettreSurLeQuai(etat: EtatJeu, modele: ModeleClient, evenements: Sortie): void {
   etat.file.push({ id: etat.prochainClient, modele: modele.id, patience: patienceClient(etat, modele) });
   etat.prochainClient += 1;
@@ -184,7 +238,7 @@ function mettreSurLeQuai(etat: EtatJeu, modele: ModeleClient, evenements: Sortie
 
 function repartir(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
   while (etat.file.length > 0) {
-    const client = etat.file[0]!;
+    const client = prochainClient(etat, (c) => modeleClient(c.modele).segment)!;
     const modele = modeleClient(client.modele);
     const chambres = etat.chambres
       .filter((c) => chambreDisponible(etat, c.id))
@@ -195,13 +249,16 @@ function repartir(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
     const chambre = chambres[0];
     const employe = employes[0];
     if (!chambre || !employe) return;
-    const duree = Math.round(tirage.entre(B.DUREE_RDV_MIN, B.DUREE_RDV_MAX) / B.MINUTES_PAR_TICK) * B.MINUTES_PAR_TICK;
-    etat.file.shift();
+    const formule = formuleActive(etat);
+    const brute = tirage.entre(B.DUREE_RDV_MIN, B.DUREE_RDV_MAX) * B.FORMULES[formule].duree;
+    const duree = Math.max(B.MINUTES_PAR_TICK, Math.round(brute / B.MINUTES_PAR_TICK) * B.MINUTES_PAR_TICK);
+    etat.file = etat.file.filter((c) => c !== client);
     etat.rendezVous.push({
       chambreId: chambre.id,
       employeId: employe.id,
       clientId: client.id,
       modele: client.modele,
+      formule,
       duree,
       restant: duree,
     });
@@ -210,12 +267,19 @@ function repartir(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
 }
 
 /** Qualité d'un rendez-vous, entre 0 et 1. */
-export function qualiteRdv(etat: EtatJeu, chambreId: string, employeId: string, modeleId: string): number {
+export function qualiteRdv(
+  etat: EtatJeu,
+  chambreId: string,
+  employeId: string,
+  modeleId: string,
+  formule: IdFormule = 'standard',
+): number {
   const chambre = etat.chambres.find((c) => c.id === chambreId);
   const employe = etat.personnel.find((e) => e.id === employeId);
   if (!chambre || !employe) return 0;
   const q = B.QUALITE;
-  const talent = employe.talents[modeleClient(modeleId).attend];
+  const modele = modeleClient(modeleId);
+  const talent = employe.talents[modele.attend];
   const valeur =
     (talent / 5) * q.talent +
     (chambre.proprete / 100) * q.proprete +
@@ -225,7 +289,8 @@ export function qualiteRdv(etat: EtatJeu, chambreId: string, employeId: string, 
     trouverOffre(etat.offre).qualite -
     (employe.fatigue > B.SEUIL_FATIGUE ? q.malusFatigue : 0) -
     (employe.moral < B.SEUIL_MORAL_BAS ? B.MALUS_QUALITE_MORAL_BAS : 0) +
-    (employe.recadre === etat.jour ? B.ENTRETIEN.recadrer.qualite : 0);
+    (employe.recadre === etat.jour ? B.ENTRETIEN.recadrer.qualite : 0) +
+    qualiteDesRegles(etat, modele.segment, formule);
   return borner(valeur, 0, 1);
 }
 
@@ -236,26 +301,32 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   if (!rdv || !chambre || !employe) return;
   const modele = modeleClient(rdv.modele);
 
-  const qualite = qualiteRdv(etat, chambreId, employe.id, rdv.modele);
-  const prix =
-    Math.round((modele.budget * trouverOffre(etat.offre).prix * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
+  const formule = B.FORMULES[rdv.formule] ?? B.FORMULES.standard;
+  const qualite = qualiteRdv(etat, chambreId, employe.id, rdv.modele, rdv.formule);
+  // Le client paie selon la qualité ; il juge aussi le prix, surtout s'il y est sensible.
+  const ressentie = borner(qualite + prixRessenti(etat, modele.segment), 0, 1);
+  const tarif = trouverOffre(etat.offre).prix * (1 + ecartTarif(etat)) * formule.prix;
+  const prix = Math.round((modele.budget * tarif * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
   const maison = Math.round(prix * (1 - employe.part));
   etat.tresorerie += maison;
-  const gain = gainReputation(etat.clientele.satisfaction[modele.segment], qualite);
+  const gain = gainReputation(etat.clientele.satisfaction[modele.segment], ressentie);
   const effet = gain > 0 ? gain * trouverOffre(etat.offre).reputation : gain;
   changerSatisfaction(etat, modele.segment, effet * B.SATISFACTION_PAR_CLIENT);
   noterClient(etat, modele.segment, 'servis');
 
   const fatigue = tirage.entre(B.FATIGUE_PAR_RDV_MIN, B.FATIGUE_PAR_RDV_MAX);
-  employe.fatigue = borner(employe.fatigue + fatigue * (aTrait(employe, 'Fêtarde') ? B.TRAITS_EFFETS.fetardeFatigue : 1));
+  employe.fatigue = borner(
+    employe.fatigue + fatigue * formule.fatigue * (aTrait(employe, 'Fêtarde') ? B.TRAITS_EFFETS.fetardeFatigue : 1),
+  );
   employe.rdvCeSoir += 1;
-  employe.moral = borner(employe.moral - B.MORAL_PAR_RDV);
+  employe.chargeCeSoir += chargeFormule(rdv.formule);
+  employe.moral = borner(employe.moral - B.MORAL_PAR_RDV * formule.charge);
   etat.linge = Math.max(0, etat.linge - B.LINGE_PAR_RDV);
-  chambre.proprete = borner(chambre.proprete - tirage.entre(B.SALISSURE_MIN, B.SALISSURE_MAX));
+  chambre.proprete = borner(chambre.proprete - tirage.entre(B.SALISSURE_MIN, B.SALISSURE_MAX) * formule.salissure);
   chambre.etat = borner(chambre.etat - tirage.entre(B.USURE_MIN, B.USURE_MAX));
 
-  const liste = qualite >= 0.75 ? AVIS.excellents : qualite >= 0.55 ? AVIS.corrects : AVIS.decevants;
-  const avis = { client: modele.nom, texte: tirage.choisir(liste), qualite };
+  const liste = ressentie >= 0.75 ? AVIS.excellents : ressentie >= 0.55 ? AVIS.corrects : AVIS.decevants;
+  const avis = { client: modele.nom, texte: tirage.choisir(liste), qualite: ressentie };
   if (etat.nuit) {
     etat.nuit.recettes += maison;
     etat.nuit.partPersonnel += prix - maison;
@@ -267,11 +338,11 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   evenements.push({ type: 'finRdv', chambreId, client: modele.nom, montant: maison, avis: avis.texte });
 }
 
-/** Chaque Tête brûlée en service, et chaque client d'un groupe sur le quai, fait monter le ton. */
+/** Chaque Tête brûlée en service, et chaque client d'un groupe sur le quai, fait monter le ton ; la sélection à l'entrée le fait baisser. */
 export function facteurDispute(etat: EtatJeu): number {
   const n = etat.personnel.filter((e) => e.enServiceCeSoir && !e.repos && aTrait(e, 'Tête brûlée')).length;
   const groupes = etat.file.filter((c) => modeleClient(c.modele).segment === 'groupe').length;
-  return Math.pow(B.TRAITS_EFFETS.teteBruleeDispute, n) * Math.pow(B.GROUPE_DISPUTE, groupes);
+  return Math.pow(B.TRAITS_EFFETS.teteBruleeDispute, n) * Math.pow(B.GROUPE_DISPUTE, groupes) * selectionActive(etat).dispute;
 }
 
 /** Un pas de 5 minutes de la vie de la maison. */
@@ -301,7 +372,10 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
       etat.nuitsBouclees === 0 && depuisOuverture === B.PREMIER_CLIENT_APRES && etat.prochainClient === 1;
     const parHeure =
       (B.ARRIVEES_PAR_HEURE_BASE + (etat.reputation / 100) * B.ARRIVEES_BONUS_REPUTATION) *
-      trouverOffre(etat.offre).affluence;
+      trouverOffre(etat.offre).affluence *
+      selectionActive(etat).affluence *
+      B.FORMULES[formuleActive(etat)].affluence *
+      facteurTarif(etat);
     if (premierClientGaranti || tirage.chance(parHeure * heures)) arrivee(etat, tirage, evenements);
 
     // Dispute sur le quai

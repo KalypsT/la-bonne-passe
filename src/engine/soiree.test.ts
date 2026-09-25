@@ -58,7 +58,7 @@ describe('clients et rendez-vous', () => {
 
   it('un rendez-vous terminé rapporte la part de la maison et use la chambre, le linge et Sanne', () => {
     const avant = partieA(h(21), {
-      rendezVous: [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', duree: 60, restant: 5 }],
+      rendezVous: [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', formule: 'standard' as const, duree: 60, restant: 5 }],
       nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 },
     });
     const { etat, evenements } = tick(avant);
@@ -77,13 +77,14 @@ describe('clients et rendez-vous', () => {
     const sanne = etat.personnel[0]!;
     expect(sanne.fatigue).toBeGreaterThan(avant.personnel[0]!.fatigue);
     expect(sanne.rdvCeSoir).toBe(1);
+    expect(sanne.chargeCeSoir).toBe(1);
     expect(etat.nuit?.meilleurAvis?.client).toBe('Le retraité fidèle');
   });
 
   it('un client trop longtemps sur le quai repart, et la réputation baisse', () => {
     const etat0 = partieA(h(21), {
       file: [{ id: 9, modele: 'poete', patience: 5 }],
-      rendezVous: [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', duree: 60, restant: 60 }],
+      rendezVous: [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', formule: 'standard' as const, duree: 60, restant: 60 }],
       nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 },
     });
     const { etat, evenements } = tick(etat0);
@@ -108,7 +109,7 @@ describe('clients et rendez-vous', () => {
     expect(tick(auRepos).etat.rendezVous).toHaveLength(0);
     const auMax = partieA(h(21), {
       file,
-      personnel: creerEtatInitial().personnel.map((e) => ({ ...e, rdvCeSoir: B.RDV_MAX_PAR_SOIR })),
+      personnel: creerEtatInitial().personnel.map((e) => ({ ...e, rdvCeSoir: B.RDV_MAX_PAR_SOIR, chargeCeSoir: B.RDV_MAX_PAR_SOIR })),
     });
     expect(tick(auMax).etat.rendezVous).toHaveLength(0);
   });
@@ -165,7 +166,7 @@ describe('actions du joueur', () => {
   });
 
   it('pas de nettoyage pendant un rendez-vous ni dans une chambre fermée', () => {
-    const rdv = [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', duree: 60, restant: 30 }];
+    const rdv = [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', formule: 'standard' as const, duree: 60, restant: 30 }];
     const occupee = partieA(h(22), { rendezVous: rdv });
     expect(ordre(occupee, { type: 'nettoyageExpress', chambreId: 'boudoir' }).etat.tresorerie).toBe(B.TRESORERIE_INITIALE);
     expect(ordre(partieA(h(22)), { type: 'nettoyageExpress', chambreId: 'velours' }).etat.tresorerie).toBe(B.TRESORERIE_INITIALE);
@@ -251,7 +252,7 @@ describe('fermeture et bilan', () => {
   it('termine les rendez-vous, vide le quai et produit le bilan', () => {
     const avant = partieA(h(3, 55), {
       file: [{ id: 5, modele: 'poete', patience: 40 }],
-      rendezVous: [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 4, modele: 'retraite', duree: 60, restant: 40 }],
+      rendezVous: [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 4, modele: 'retraite', formule: 'standard' as const, duree: 60, restant: 40 }],
       nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 },
     });
     const { etat, evenements } = tick(avant);

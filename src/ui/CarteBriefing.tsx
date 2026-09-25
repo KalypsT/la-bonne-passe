@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { COMMANDE_LINGE, HEURE_FERMETURE, HEURE_OUVERTURE, RDV_MAX_CRANS } from '../content/balance';
+import { COMMANDE_LINGE, FORMULES, HEURE_FERMETURE, HEURE_OUVERTURE, RDV_MAX_CRANS } from '../content/balance';
 import { OFFRES, type Offre } from '../content/clientele';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
@@ -8,6 +8,9 @@ import { Avatar } from '../scene/Avatar';
 import { formaterEuros, formaterHeure } from './format';
 import { TEXTES_DIDACTICIEL } from '../content/didacticiel';
 import { JoseeLigne } from './Josee';
+import { resumeRegles } from './OngletClientele';
+import { TEXTES_FORMULES } from '../content/regles';
+import { formuleActive } from '../engine/regles';
 import { useInterface } from './store';
 
 /** Briefing de 19 h, en pause : qui travaille, l'offre du soir, le linge. */
@@ -19,6 +22,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
   const [repos, setRepos] = useState<string[]>(() => partie.personnel.filter((e) => e.promesseRepos !== null).map((e) => e.id));
   const [rdvMax, setRdvMax] = useState(partie.rdvMax);
   const planning = partie.systemes.planning;
+  const formule = formuleActive(partie);
   const basculer = (id: string) => {
     const suivant = repos.includes(id) ? repos.filter((x) => x !== id) : [...repos, id];
     if (suivant.length < partie.personnel.length) setRepos(suivant);
@@ -86,7 +90,10 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
                     </button>
                   ))}
                 </div>
-                <p className="sous">{pl.rdvMaxAide[indiceRdv]}</p>
+                <p className="sous">
+                  {pl.rdvMaxAide[indiceRdv]}
+                  {formule !== 'standard' && ` ${pl.charge(TEXTES_FORMULES[formule].nom, FORMULES[formule].charge)}`}
+                </p>
               </>
             )}
             {!partie.systemes.planning && partie.didacticiel === null && <p className="sous">{t.planningVerrouille(partie.personnel[0]?.prenom ?? '')}</p>}
@@ -115,6 +122,11 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
               </button>
             ))}
             {partie.didacticiel === null && premierSoir && <p className="conseil">{t.conseilPremierSoir}</p>}
+            {partie.systemes.tarifs && (
+              <p className="sous">
+                <b>{t.regles}</b> {resumeRegles(partie)}
+              </p>
+            )}
           </section>
         </div>
       </div>

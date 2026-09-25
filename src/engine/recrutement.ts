@@ -221,6 +221,7 @@ function embaucher(etat: EtatJeu, c: Candidat, part: number): Employe {
     moral: B.RECRUE.moral,
     loyaute: Math.min(100, B.RECRUE.loyaute + (part > 0.5 ? B.BONUS_LOYAUTE_PART_HAUTE : 0)),
     rdvCeSoir: 0,
+    chargeCeSoir: 0,
     repos: false,
     ...suiviDeDepart(),
   };

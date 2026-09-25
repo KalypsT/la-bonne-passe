@@ -17,7 +17,8 @@ export type Fiche =
   | { type: 'chambre'; id: string }
   | { type: 'piece'; id: 'salon' | 'bar' | 'bureau' }
   | { type: 'employe'; id: string }
-  | { type: 'segment'; id: Segment };
+  | { type: 'segment'; id: Segment }
+  | { type: 'regles'; id: 'regles' };
 export type Carte =
   | 'briefing'
   | 'bilan'
@@ -322,7 +323,7 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   ouvrirEntretienIndividuel: (employeId) => set({ carte: 'entretienIndividuel', employeOuvert: employeId }),
 
   ouvrirFiche: (fiche) => {
-    const onglet: Onglet = fiche?.type === 'employe' ? 'personnel' : fiche?.type === 'segment' ? 'clientele' : 'maison';
+    const onglet: Onglet = fiche?.type === 'employe' ? 'personnel' : fiche?.type === 'segment' || fiche?.type === 'regles' ? 'clientele' : 'maison';
     set(fiche ? { fiche, onglet } : { fiche: null });
     if (fiche?.type === 'chambre' && fiche.id === 'boudoir') get().signalerDidacticiel('boudoir');
   },

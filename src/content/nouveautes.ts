@@ -13,6 +13,11 @@ export const NOUVEAUTES: Nouveaute[] = [
     palier: 2,
     texte: 'Onglet Clientèle : chaque segment a sa satisfaction, et ta réputation en est la moyenne.',
   },
+  {
+    id: 'regles',
+    palier: 2,
+    texte: 'Règles de la maison, dans l’onglet Clientèle : tarif, formule, sélection à l’entrée et priorité d’accueil.',
+  },
 ];
 
 export function trouverNouveaute(id: string): Nouveaute | undefined {

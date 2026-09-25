@@ -1,9 +1,12 @@
+import type { IdFormule, IdPriorite, IdSelection } from '../content/balance';
+import { CLIENTS } from '../content/clientele';
 import { trouverImprevu } from '../content/imprevus';
+import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS } from '../content/regles';
 import { JOSEE_RESERVE } from '../content/josee';
 import { trouverChambre } from '../content/maison';
 import { PALIERS } from '../content/paliers';
 import { TEXTES } from '../content/textes';
-import type { EtatJeu } from '../engine/etat';
+import type { EtatJeu, Regles } from '../engine/etat';
 import { jourDeLaSemaine } from '../engine/temps';
 import type { EvenementMoteur } from '../engine/tick';
 import { formaterEuros, formaterHeure } from './format';
@@ -21,6 +24,21 @@ function nomDuJour(jour: number): string {
 /** Prénom d'une personne : celui que porte l'événement, sinon celui de l'équipe actuelle. */
 export function prenomEmploye(partie: EtatJeu, id: string, prenom?: string): string {
   return prenom ?? partie.personnel.find((e) => e.id === id)?.prenom ?? id;
+}
+
+/** Une règle de la maison a changé : son nouveau nom. */
+function texteRegle(regle: keyof Regles, valeur: number | string): string | null {
+  const t = TEXTES.journal;
+  switch (regle) {
+    case 'tarif':
+      return TEXTES_TARIFS[valeur as number] ? t.tarif(TEXTES_TARIFS[valeur as number]!.nom) : null;
+    case 'formule':
+      return t.formule(TEXTES_FORMULES[valeur as IdFormule]?.nom ?? '');
+    case 'selection':
+      return t.selection(TEXTES_SELECTIONS[valeur as IdSelection]?.nom ?? '');
+    case 'priorite':
+      return t.priorite(TEXTES_PRIORITES[valeur as IdPriorite]?.nom ?? '');
+  }
 }
 
 /** Texte du journal pour un événement du moteur, ou null s'il n'y a rien à raconter. */
@@ -47,6 +65,12 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return t.finRdv(evenement.client, evenement.avis, formaterEuros(evenement.montant));
     case 'salaires':
       return t.salaires(formaterEuros(evenement.montant));
+    case 'refuse':
+      return t.refuse(evenement.client, CLIENTS.find((c) => c.nom === evenement.client)?.genre === 'f');
+    case 'portier':
+      return t.portier(formaterEuros(evenement.montant));
+    case 'regle':
+      return texteRegle(evenement.regle, evenement.valeur);
     case 'charges':
       return t.charges(formaterEuros(evenement.montant));
     case 'dispute':
