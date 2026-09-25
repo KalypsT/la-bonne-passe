@@ -58,7 +58,7 @@ export const TAUX_RESERVE = [0, 0.1, 0.2] as const;
 
 /** Arrivées par heure d'ouverture : BASE + réputation / 100 × BONUS_REPUTATION, puis × affluence de l'offre. */
 export const ARRIVEES_PAR_HEURE_BASE = 1;
-export const ARRIVEES_BONUS_REPUTATION = 2.4;
+export const ARRIVEES_BONUS_REPUTATION = 1.5;
 /** Places sur le quai ; au-delà, le client repart aussitôt. */
 export const PLACES_FILE = 4;
 /** Patience d'un client sur le quai, en minutes de jeu. */
@@ -92,6 +92,8 @@ export const QUALITE = {
   premium: 0.06,
   malusFatigue: 0.15,
 };
+/** Budgets des clients (src/content/clientele.ts) multipliés : le levier général des recettes. */
+export const BUDGET_CLIENTS = 0.8;
 /** Le prix payé varie de 75 % à 125 % du budget selon la qualité. */
 export const PRIX_MIN = 0.75;
 export const PRIX_ECART = 0.5;
@@ -145,9 +147,9 @@ export const LIVRAISON_EXPRESS_LINGE = { draps: 50, prix: 90 };
 
 // ——— Dépenses ———
 
-export const SALAIRE_MENAGE = 90; // par jour et par personne, à midi
+export const SALAIRE_MENAGE = 110; // par jour et par personne, à midi
 export const HEURE_SALAIRES = 12 * 60;
-export const CHARGES_FIXES = 600; // chaque lundi
+export const CHARGES_FIXES = 1350; // chaque lundi
 /** Dispute sur le quai : chance par heure et par client en file au-delà du premier. */
 export const DISPUTE_CHANCE_PAR_HEURE = 0.05;
 export const DISPUTE_DELAI = 40; // minutes avant que ça dégénère
@@ -326,7 +328,7 @@ export const FORMULES: Record<IdFormule, ReglageFormule> = {
   standard: { duree: 1, prix: 1, charge: 1, prixRessenti: 0, affluence: 1, attire: {}, fatigue: 1, salissure: 1, qualite: {} },
   /** Rendez-vous classique avec une bouteille du bar (bar ouvert et servi). */
   champagne: { duree: 1.1, prix: 1.25, charge: 1, prixRessenti: 0.15, affluence: 1, attire: { affaires: 1.2, groupe: 1.2 }, fatigue: 1.3, salissure: 1, qualite: { affaires: 0.05, groupe: 0.05, touriste: -0.06, habitue: -0.06 } },
-  complete: { duree: 1.5, prix: 1.7, charge: 1.5, prixRessenti: 0.05, affluence: 0.8, attire: { affaires: 0.4, habitue: 1.3 }, fatigue: 1.4, salissure: 1.2, qualite: { habitue: 0.1, touriste: 0.06, groupe: 0.03, affaires: -0.1 } },
+  complete: { duree: 1.5, prix: 1.85, charge: 1.5, prixRessenti: 0.05, affluence: 0.8, attire: { affaires: 0.4, habitue: 1.3 }, fatigue: 1.4, salissure: 1.2, qualite: { habitue: 0.1, touriste: 0.06, groupe: 0.03, affaires: -0.1 } },
 };
 
 export type IdSelection = 'laxiste' | 'normale' | 'stricte';
@@ -367,7 +369,7 @@ export const RENOVATION_BAR = { prix: 1200, heures: 8 };
 /** Bouteilles trouvées à la cave le jour de la réouverture. */
 export const BAR_STOCK_REOUVERTURE = 20;
 /** Équipe Bar : salaire par jour et par personne, à midi, et effectif maximal. */
-export const SALAIRE_BAR = 110;
+export const SALAIRE_BAR = 130;
 export const BAR_MAX = 2;
 /** Commande au briefing, livrée à l'ouverture ; livraison express en soirée. Stock en bouteilles. */
 export const COMMANDE_BAR = { bouteilles: 40, prix: 240 };
@@ -441,11 +443,11 @@ export interface ReglageTheme {
 
 export const THEMES: Record<string, ReglageTheme> = {
   masquee: {
-    cout: 100,
+    cout: 80,
     prix: 1.1,
     affluence: 1.05,
     attire: { affaires: 1.8, habitue: 1.2 },
-    qualite: { affaires: 0.08, habitue: 0.04, touriste: 0.02 },
+    qualite: { affaires: 0.2, habitue: 0.04, touriste: 0.02 },
     fatigue: 1,
     dispute: 0.9,
     bar: 1.1,
@@ -453,23 +455,23 @@ export const THEMES: Record<string, ReglageTheme> = {
     bouche: 1,
   },
   burlesque: {
-    cout: 120,
+    cout: 100,
     prix: 1.15,
     affluence: 1.2,
     attire: { touriste: 1.5, groupe: 1.5 },
-    qualite: { groupe: 0.12, touriste: 0.1, habitue: -0.03 },
+    qualite: { groupe: 0.15, touriste: 0.12, habitue: -0.03 },
     fatigue: 1.2,
     dispute: 1,
     bar: 1.3,
     patience: 20,
-    bouche: 1.5,
+    bouche: 1.8,
   },
   jazz: {
-    cout: 80,
+    cout: 60,
     prix: 1.1,
     affluence: 1,
     attire: { habitue: 1.6, touriste: 1.1 },
-    qualite: { habitue: 0.08, affaires: 0.03, touriste: 0.02 },
+    qualite: { habitue: 0.2, affaires: 0.03, touriste: 0.02 },
     fatigue: 0.85,
     dispute: 0.7,
     bar: 1,
@@ -477,7 +479,7 @@ export const THEMES: Record<string, ReglageTheme> = {
     bouche: 1,
   },
   anneesFolles: {
-    cout: 150,
+    cout: 130,
     prix: 1.15,
     affluence: 1.15,
     attire: { groupe: 1.3, touriste: 1.2, affaires: 1.2 },

@@ -52,12 +52,20 @@ export interface OptionsSimulation {
 const ORDRE_RENOVATION = ['orientale', 'velours', 'miroirs'];
 
 /** Joue une partie avec des décisions simples et raisonnables, et résume chaque nuit. */
-export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat: EtatJeu; departs: number; bilans: BilanSemaine[] } {
+export function simuler(options: OptionsSimulation): {
+  nuits: ResumeNuit[];
+  etat: EtatJeu;
+  departs: number;
+  bilans: BilanSemaine[];
+  /** Point le plus bas de la trésorerie pendant la partie. */
+  tresorerieMin: number;
+} {
   const { graine, nuits, recruter = true, renover = true, rdvMax = 3, equipeBar = 1, avance = true } = options;
   const etat = creerEtatInitial({ graine });
   const resumes: ResumeNuit[] = [];
   let departs = 0;
   const bilans: BilanSemaine[] = [];
+  let tresorerieMin = etat.tresorerie;
   let avoirPrecedent = etat.tresorerie + etat.reserve;
   // La simulation travaille sur sa propre copie de l'état, modifiée sur place : bien plus rapide.
   const jouer = (ordres: Ordre[]) => {
@@ -72,6 +80,7 @@ export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat
       }
     }
     const r = { evenements: tickSurPlace(etat, ordres) };
+    tresorerieMin = Math.min(tresorerieMin, etat.tresorerie);
     for (const e of r.evenements) {
       if (e.type === 'depart') departs += 1;
       if (e.type === 'bilanSemaine' && etat.bilanSemaine) bilans.push(structuredClone(etat.bilanSemaine));
@@ -155,7 +164,7 @@ export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat
       jouer([{ type: 'validerBriefing', offre, commanderLinge: etat.linge < 40, commanderBar, repos, rdvMax, theme }]);
     }
   }
-  return { nuits: resumes, etat, departs, bilans };
+  return { nuits: resumes, etat, departs, bilans, tresorerieMin };
 }
 
 /** Part de chaque segment parmi les clients servis sur un ensemble de nuits, en %. */
@@ -186,9 +195,9 @@ export function choixAdaptatif(etat: EtatJeu): { offre: Offre; regles: Partial<R
   if (t.has('match') || t.has('evg') || t.has('hauteSaison')) {
     return { offre: 'classique', regles: { ...base, selection: 'stricte' }, theme: theme('burlesque') };
   }
-  // Semaine creuse : on ne brade pas, on vend plus à ceux qui viennent.
+  // Semaine creuse : un tarif doux, qui ne coûte presque rien et fait des heureux.
   if (t.has('greve') || t.has('controles')) {
-    return { offre: 'classique', regles: { ...base, formule: barPlein ? 'champagne' : 'complete' }, theme: theme(barPlein ? 'anneesFolles' : 'masquee') };
+    return { offre: 'classique', regles: { ...base, tarif: 0 }, theme: theme(barPlein ? 'anneesFolles' : 'masquee') };
   }
   // Les habitués reviennent : on les choie.
   if (t.has('pluie') || t.has('paie')) return { offre: 'feutree', regles: { ...base, priorite: 'habitues' }, theme: null };

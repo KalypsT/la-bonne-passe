@@ -33,7 +33,7 @@ export const TENDANCES: DefinitionTendance[] = [
     id: 'greve',
     nom: 'Grève des trains',
     texte: 'Plus un train à la gare centrale. Touristes et groupes restent coincés à Schiphol.',
-    josee: 'Semaine creuse. Brader ne remplira pas la maison : vends plutôt une soirée complète, ou une bouteille, à ceux qui viennent.',
+    josee: 'Semaine creuse. Un tarif doux ne te coûtera presque rien et fera des heureux. Surtout, ne monte pas tes prix.',
   },
   {
     id: 'salon',
@@ -63,7 +63,7 @@ export const TENDANCES: DefinitionTendance[] = [
     id: 'controles',
     nom: 'Contrôles de police dans le quartier',
     texte: 'Des patrouilles à chaque coin de rue. Rien d’illégal ici, mais les clients discrets préfèrent rester chez eux.',
-    josee: 'Semaine calme. Garde tes prix, repose l’équipe et fais durer le plaisir de ceux qui viennent quand même.',
+    josee: 'Semaine calme. Baisse un peu tes prix, repose l’équipe et soigne ceux qui viennent quand même.',
   },
 ];
 

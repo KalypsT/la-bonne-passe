@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PATIENCE_CLIENT, PRIX_ECART, PRIX_MIN, SEUILS_HUMEUR } from '../content/balance';
+import { BUDGET_CLIENTS, PATIENCE_CLIENT, PRIX_ECART, PRIX_MIN, SEUILS_HUMEUR } from '../content/balance';
 import { CLIENTS, INFOS_SEGMENTS, OFFRES, SEGMENTS, SEGMENTS_A_VENIR, type Segment } from '../content/clientele';
 import { TALENTS } from '../content/personnel';
 import { trouverTendance } from '../content/tendances';
@@ -86,7 +86,7 @@ export function FicheSegment({ partie, id }: { partie: EtatJeu; id: Segment }) {
   const ouvrirFiche = useInterface((s) => s.ouvrirFiche);
   const info = INFOS_SEGMENTS[id];
   const clients = CLIENTS.filter((c) => c.segment === id);
-  const budgets = clients.map((c) => c.budget);
+  const budgets = clients.map((c) => c.budget * BUDGET_CLIENTS);
   const talents = [...new Set(clients.map((c) => TALENTS[c.attend].toLowerCase()))].join(', ');
   const patiences = clients.map((c) => c.patience ?? PATIENCE_CLIENT);
   const patience = Math.round(patiences.reduce((a, b) => a + b, 0) / Math.max(1, patiences.length));

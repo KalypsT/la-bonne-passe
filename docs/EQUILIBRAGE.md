@@ -277,3 +277,72 @@ Mesures, thème le vendredi et le samedi (8 graines, 35 nuits, classique à 3 ; 
 
 - Le jazz ne sert à rien une semaine de pluie ou de fin du mois : les habitués sont déjà là en nombre. Josée ne le conseille plus ces semaines-là.
 - Les écarts restent modestes (±30 € par jour, ±3 de réputation) : deux soirs sur sept. Un joueur qui programme un thème tous les soirs paie la lassitude.
+
+## Rééquilibrage final (v0.3, partie 6)
+
+Trois problèmes relevés au fil des parties :
+
+1. **L'argent était trop facile** : 10 000 à 18 000 € après la première mensualité pour un joueur actif.
+2. **La maison était presque toujours pleine** : un tiers des clients repartait sans être reçu en soirée classique. Tout ce qui attire du monde (happy hour, tendances chargées, thèmes, bar) se transformait en clients perdus.
+3. **Le tarif −20 % ne servait jamais.**
+
+Réglages :
+
+| Valeur | Avant | Après | Pourquoi |
+| --- | --- | --- | --- |
+| `ARRIVEES_BONUS_REPUTATION` | 2,4 | 1,8 | Moins de saturation : clients perdus en semaine 2, classique à 3, de 33 % à 26 % ; joueur adaptatif 21 % |
+| `REPUTATION_FILE_PLEINE` | 0,05 | 0 | Un quai complet n'est pas une déception (partie 5) |
+| `REPUTATION_CLIENT_PERDU` | 0,15 | 0,1 | Idem |
+| `BUDGET_CLIENTS` (nouveau) | 1 | 0,8 | Levier général des recettes |
+| `CHARGES_FIXES` | 600 € | 1 350 € | Le mois se boucle de justesse |
+| `SALAIRE_MENAGE` / `SALAIRE_BAR` | 90 / 110 € | 110 / 130 € | Dans la fourchette des spécifications |
+| Soirée complète, prix | × 1,7 | × 1,85 | Elle perdait de l'argent dans une maison moins pleine |
+| Thèmes, coût | 80 à 150 € | 60 à 130 € | Budgets plus bas, supplément plus faible |
+| Thèmes, qualité du segment visé | +0,08 à +0,12 | +0,15 à +0,2 | Avec des satisfactions plus hautes, l'effet devenait invisible |
+| Burlesque, bouche-à-oreille | × 1,5 | × 1,8 | Idem |
+
+Le « net par nuit » garde sa cible des spécifications (600 à 1 000 € : recettes de la nuit moins ses dépenses) ; ce qui a changé, c'est ce qu'il en reste après les salaires et les charges (200 à 400 € par jour).
+
+| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 3 à 4 | 31 / 33 / 35 | 267 € | 886 € | 2 801 € | 26 % | 78 | 0,0 | 21 / 30 / 19 / 30 | 33 / 41 / 21 / 43 |
+| Classique, 4 | 3 à 4 | 33 / 37 / 39 | 449 € | 1 069 € | 6 693 € | 14 % | 69 | 0,3 | 24 / 28 / 18 / 31 | 39 / 42 / 26 / 48 |
+| Happy hour, 4 | 3 à 3 | 37 / 39 / 35 | 227 € | 841 € | 1 923 € | 27 % | 59 | 0,8 | 35 / 24 / 16 / 25 | 43 / 37 / 18 / 42 |
+| Feutrée, 4 | 3 à 4 | 33 / 41 / 49 | 260 € | 920 € | 2 873 € | 4 % | 80 | 0,0 | 19 / 43 / 13 / 25 | 44 / 60 / 35 / 53 |
+| Adaptatif (suit les tendances), 3 | 3 à 4 | 31 / 35 / 44 | 347 € | 968 € | 3 503 € | 21 % | 82 | 0,0 | 19 / 34 / 23 / 24 | 38 / 53 / 40 / 40 |
+| Classique 3, sans bar | 3 à 4 | 31 / 32 / 35 | 236 € | 709 € | 4 159 € | 28 % | 79 | 0,0 | 22 / 31 / 17 / 30 | 35 / 41 / 22 / 42 |
+| Classique 3, bar à 2, sans avance | 3 à 4 | 31 / 33 / 37 | 112 € | 870 € | 2 005 € | 25 % | 76 | 0,0 | 23 / 31 / 17 / 29 | 36 / 44 / 23 / 44 |
+| Classique 3, champagne | 3 à 4 | 31 / 32 / 29 | 369 € | 988 € | 5 449 € | 15 % | 81 | 0,1 | 18 / 29 / 22 / 31 | 13 / 31 / 32 / 40 |
+| Classique 3, tarif −20 % | 3 à 4 | 32 / 34 / 37 | 77 € | 625 € | 437 € | 35 % | 79 | 0,0 | 27 / 30 / 13 / 30 | 49 / 40 / 11 / 49 |
+| Classique 3, tarif +20 % | 3 à 4 | 29 / 30 / 28 | 391 € | 1 004 € | 6 136 € | 13 % | 81 | 0,0 | 18 / 28 / 25 / 29 | 10 / 37 / 36 / 31 |
+| Classique 3, formule courte | 3 à 4 | 32 / 37 / 43 | 126 € | 744 € | 1 594 € | 12 % | 82 | 0,0 | 20 / 26 / 30 / 24 | 40 / 40 / 46 / 50 |
+| Classique 3, soirée complète | 3 à 4 | 30 / 32 / 33 | 392 € | 995 € | 5 361 € | 30 % | 79 | 0,0 | 22 / 42 / 7 / 28 | 32 / 47 / 10 / 38 |
+| Classique 3, sélection laxiste | 3 à 4 | 29 / 29 / 28 | 205 € | 808 € | 2 897 € | 26 % | 77 | 0,0 | 30 / 26 / 12 / 33 | 34 / 24 / 8 / 47 |
+| Classique 3, sélection stricte | 3 à 4 | 31 / 37 / 43 | 66 € | 654 € | 1 022 € | 8 % | 81 | 0,0 | 17 / 43 / 22 / 18 | 37 / 55 / 41 / 34 |
+| Classique 3, habitués d’abord | 3 à 4 | 31 / 32 / 36 | 215 € | 829 € | 2 791 € | 26 % | 79 | 0,0 | 23 / 33 / 16 / 29 | 34 / 45 / 22 / 43 |
+| Classique 3, pressés d’abord | 3 à 4 | 31 / 33 / 37 | 264 € | 883 € | 3 259 € | 26 % | 76 | 0,0 | 22 / 31 / 19 / 29 | 35 / 42 / 25 / 43 |
+| Passif (classique, sans recruter ni rénover) | jamais | 15 / 9 / 6 | -154 € | 192 € | -1 614 € | 71 % | 42 | 0,0 | 56 / 44 / 0 / 0 | 7 / 4 / 0 / 0 |
+
+Gardes ajoutées (`src/engine/equilibrage-mois.test.ts`, `equilibrage-semaine.test.ts`) :
+
+- joueur actif (classique à 3, trois chambres et le bar rouverts) : 0 à 4 000 € en moyenne après la mensualité du jour 28 (2 800 € mesurés), aucune partie sous −2 000 €, trésorerie jamais sous le découvert toléré ;
+- joueur passif : léger déficit (−1 600 € mesurés, garde entre −3 000 et 0 €) ;
+- tarif −20 % : presque gratuit et apprécié pendant une semaine creuse (contrôles : −4 € par jour, +4 de réputation), ruineux le reste du temps (−180 € par jour) ;
+- les gardes des parties précédentes tiennent toujours (palier 2 entre les nuits 3 et 7, aucune offre ni règle gagnante partout, bar rentable sur six semaines, thèmes qui soignent leur monde).
+
+`npm test` : 278 tests en 10 secondes environ (14 secondes et 187 tests avant la v0.3).
+
+### La question de la v0.3 : l'offre change-t-elle vraiment la partie ?
+
+Oui, et les gardes le vérifient :
+
+- **La clientèle suit l'offre** : 18 points d'écart sur la part des touristes entre happy hour et soirée feutrée.
+- **Chaque règle rapporte et coûte** : aucune ne gagne à la fois sur l'argent et sur la réputation.
+- **La bonne réponse dépend de la semaine** : le tarif +20 % rapporte 60 % de plus pendant un congrès et perd de l'argent pendant une semaine de contrôles ; le −20 % est l'inverse ; un soir de match, le portier sauve la réputation.
+- **Suivre les tendances paie** : le joueur adaptatif finit le mois avec plus d'argent et plus de réputation que celui qui ne touche à rien. Avec deux soirées à thème par semaine, il achète encore de la réputation.
+
+À surveiller en jouant :
+
+- le bar coûte plus qu'il ne rapporte le premier mois (rénovation, salaire, remboursement du grossiste) : c'est un investissement qui paie à partir de la cinquième ou sixième semaine ;
+- une semaine creuse fait perdre de l'argent (−65 à −100 € par jour) : c'est voulu, la réserve est là pour ça ;
+- les effets des thèmes restent modestes : à juger au téléphone.

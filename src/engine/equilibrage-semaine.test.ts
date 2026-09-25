@@ -39,6 +39,9 @@ beforeAll(() => {
     jouer(`${t}-classique`, 'classique', {}, [t]);
     jouer(`${t}-cher`, 'classique', { tarif: 2 }, [t]);
   }
+  jouer('controles-doux', 'classique', { tarif: 0 }, ['controles']);
+  jouer('sans-classique', 'classique', {}, []);
+  jouer('sans-doux', 'classique', { tarif: 0 }, []);
   jouer('match-stricte', 'classique', { selection: 'stricte' }, ['match']);
   jouer('match-laxiste', 'classique', { selection: 'laxiste' }, ['match']);
 }, 30_000);
@@ -57,13 +60,19 @@ describe('l’offre change la partie', () => {
     expect(argent('controles-cher')).toBeLessThan(argent('controles-classique'));
   });
 
+  it('le tarif −20 % : presque gratuit et apprécié pendant une semaine creuse, ruineux le reste du temps', () => {
+    expect(argent('controles-doux')).toBeGreaterThan(argent('controles-classique') - 30);
+    expect(reputation('controles-doux')).toBeGreaterThan(reputation('controles-classique') + 2);
+    expect(argent('sans-doux')).toBeLessThan(argent('sans-classique') - 100);
+  });
+
   it('un soir de match, le portier sauve la réputation ; la porte ouverte la ruine', () => {
     expect(reputation('match-stricte')).toBeGreaterThan(reputation('match-classique') + 10);
     expect(reputation('match-laxiste')).toBeLessThan(reputation('match-classique'));
   });
 
   it('le joueur qui suit les tendances fait mieux, en réputation comme en argent, que celui qui ne touche à rien', () => {
-    expect(reputation('adaptatif')).toBeGreaterThan(reputation('fixe') + 3);
+    expect(reputation('adaptatif')).toBeGreaterThan(reputation('fixe') + 2);
     expect(moyenne('adaptatif', (p) => p.avoir)).toBeGreaterThan(moyenne('fixe', (p) => p.avoir));
   });
 

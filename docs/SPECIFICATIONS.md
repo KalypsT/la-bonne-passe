@@ -185,8 +185,8 @@ Chaque personnage porte un arc de 3 à 5 événements, déclenchés par son mora
 
 | Équipe | Rôle | Coût indicatif | Ouverte au palier |
 | --- | --- | --- | --- |
-| Ménage | Propreté des chambres et du linge | 90 € par jour et par personne | Départ (1 personne) |
-| Bar | Recettes annexes, ambiance du salon, patience sur le quai (le bar se rouvre d'abord : 1 200 €, 8 h de travaux) | 110 € | 2 |
+| Ménage | Propreté des chambres et du linge | 110 € par jour et par personne | Départ (1 personne) |
+| Bar | Recettes annexes, ambiance du salon, patience sur le quai (le bar se rouvre d'abord : 1 200 €, 8 h de travaux) | 130 € | 2 |
 | Accueil | Patience des clients, tri à l'entrée | 100 € | 3 |
 | Sécurité | Prévention et règlement des incidents, discrétion | 130 € | 3 |
 
@@ -290,13 +290,13 @@ La gestion financière est complète mais simple à jouer : trois décisions au 
 | --- | --- | --- |
 | Trésorerie initiale | 3 000 € | une fois |
 | Emprunt de rachat | 30 000 €, mensualité de 2 500 € | chaque 1er du mois (jour 28 pour le premier) |
-| Charges fixes (énergie, assurance de base, licence) | 600 € | chaque lundi |
-| Salaires des équipes | 90 à 130 € par personne | chaque jour à midi |
+| Charges fixes (énergie, assurance de base, licence) | 1 350 € | chaque lundi |
+| Salaires des équipes | 110 à 130 € par personne | chaque jour à midi |
 | Part du personnel | 40 à 65 % de chaque rendez-vous | à chaque rendez-vous |
 | Recette d'un rendez-vous | 60 à 450 € selon client et tarifs | à chaque rendez-vous |
 | Bar | 6 à 30 € par client | à chaque rendez-vous |
 
-Cibles : une soirée correcte rapporte 600 à 1 000 € net à la maison, une excellente 2 000 €. Le premier mois se boucle si le joueur gère activement ; laisser faire mène à un léger déficit.
+Cibles : une soirée correcte rapporte 600 à 1 000 € net à la maison (recettes de la nuit moins ses dépenses), une excellente 2 000 €. Une fois les salaires et les charges payés, il reste 200 à 400 € par jour. Le premier mois se boucle de justesse si le joueur gère activement (0 à 4 000 € après la première mensualité, trois chambres et le bar rouverts) ; laisser faire mène à un léger déficit. Des gardes d'équilibrage vérifient ces cibles (voir docs/EQUILIBRAGE.md).
 
 ### Outils
 
