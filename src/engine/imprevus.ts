@@ -4,6 +4,7 @@
 import * as B from '../content/balance';
 import { IMPREVUS, trouverImprevu, type DefinitionImprevu, type EffetImprevu } from '../content/imprevus';
 import type { Employe, EtatJeu, ImprevuEnCours } from './etat';
+import { changerReputationGlobale } from './clientele';
 import type { Tirage } from './hasard';
 import { affinite, changerLoyaute, changerMoral, ajusterAffinite } from './personnel';
 import { ecart, instant } from './temps';
@@ -88,7 +89,7 @@ function appliquerEffet(etat: EtatJeu, effet: EffetImprevu, imprevu: ImprevuEnCo
   }
   if (e2 && effet.moral2) changerMoral(e2, effet.moral2);
   if (e && e2 && effet.affinite) ajusterAffinite(etat, e.id, e2.id, effet.affinite);
-  if (effet.reputation) etat.reputation = borner(etat.reputation + effet.reputation);
+  if (effet.reputation) changerReputationGlobale(etat, effet.reputation);
   if (effet.argent) {
     etat.tresorerie += effet.argent;
     if (etat.nuit) {

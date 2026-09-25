@@ -125,14 +125,16 @@ Le joueur part presque de rien : une hôtesse, une chambre en état, un salon et
 | --- | --- | --- |
 | Départ | — | Sanne seule ; 1 chambre en état (Boudoir) sur 4, les autres sous des draps ; le salon et le bureau ; 1 personne au ménage. Onglets Maison, Personnel, Finances, Journal. Touristes et Habitués. |
 | 1. Rouvrir | Première soirée bouclée | Recrutement, rénovation des chambres fermées, planning du soir, réserve de sécurité |
-| 2. Se faire un nom | Réputation 25 | Bar et équipe Bar, onglet Clientèle, tarifs et formules, avance fournisseur, segments Affaires et Groupes |
-| 3. Tenir la maison | Première mensualité payée | Équipes Accueil et Sécurité, soirées à thème, onglet Relations, première rivale qui réagit, emprunt, assurance |
+| 2. Se faire un nom | Réputation 25 | Segments Affaires et Groupes, onglet Clientèle, tarifs et formules, sélection à l'entrée et priorité d'accueil ; bar à rénover, puis équipe Bar et avance fournisseur ; soirées à thème et tendances au premier lundi |
+| 3. Tenir la maison | Première mensualité payée | Équipes Accueil et Sécurité, onglet Relations, première rivale qui réagit, emprunt, assurance |
 | 4. Monter en gamme | Réputation 50 et 4 personnes | VIP et Couples curieux, formations, chambres de luxe (Jacuzzi) et niveaux de confort, placement, changement de nom de la maison |
 | 5. S'agrandir | Réputation 70 et accord de la mairie | Agrandissement, jusqu'à 8 personnes, promotion en gérante, deuxième établissement |
 
 - Environ un nouveau système par semaine de jeu, présenté par Josée à son ouverture.
 - Le palier suivant est toujours affiché, avec ce qu'il rapporte.
 - Un palier ouvre une possibilité, pas un cadeau : le joueur paie, choisit et construit lui-même.
+- Un palier riche s'ouvre par étapes : le palier 2 donne d'emblée la clientèle et les règles de la porte ; le bar se rouvre par des travaux, ce qui amène l'équipe Bar et l'offre du grossiste ; les soirées à thème arrivent au briefing du lundi suivant, avec les premières tendances.
+- Une partie qui a déjà passé un palier reçoit ce qu'une mise à jour y ajoute, présenté par Josée au chargement.
 - Chaque nouvel établissement repart petit, avec des paliers plus courts.
 
 ## Personnel
@@ -215,7 +217,7 @@ La clientèle se découpe en segments aux attentes différentes, qui s'ouvrent p
 | VIP | Élevé | Discrétion, prestige | Incidents, indiscrétions, décor | 4 |
 | Couples curieux | Moyen | Conversation, chambre à thème | Accueil, propreté | 4 |
 
-Chaque segment a sa propre satisfaction, qui nourrit la réputation auprès de lui. La réputation globale est leur moyenne pondérée.
+Chaque segment a sa propre satisfaction, qui nourrit la réputation auprès de lui. La réputation globale est leur moyenne pondérée (les habitués pèsent un peu plus). Un segment content revient plus souvent ; un segment s'ouvre avec la réputation déjà acquise. L'onglet Clientèle (palier 2) montre, pour chaque segment, sa satisfaction, sa fréquentation des 7 dernières nuits, son budget, ce qu'il attend, ce qui le fâche et ce qui l'attire.
 
 ### Tendances
 
@@ -224,12 +226,12 @@ Chaque semaine, un ou deux contextes modifient la demande : un congrès médical
 ### Leviers d'offre
 
 1. **Offre du soir**, choisie au briefing dès le départ : soirée classique, happy hour (prix −20 %, affluence +40 %), soirée feutrée (affluence −30 %, satisfaction en hausse).
-2. **Tarifs** : un niveau général et un cran par chambre et par formule.
-3. **Formules** : rendez-vous court, soirée complète, formule champagne, abonnement habitué.
-4. **Soirées à thème** (palier 3), programmées au briefing : masquée, burlesque, jazz, années folles. Chacune coûte, attire un segment et fatigue plus ou moins.
-5. **Sélection à l'entrée** : laxiste, normale, stricte, ou règles ciblées (« pas de groupes après minuit »).
-6. **Priorité d'accueil** : ordre d'arrivée, VIP, habitués.
-7. **Visibilité** : bouche-à-oreille, site discret, concierges d'hôtel, influenceurs. Plus de monde, mais en pays non légal, plus de chaleur.
+2. **Tarifs** : un niveau général en 3 crans (−20 %, normal, +20 %). Pas de tarif par chambre : trop de réglages pour un écran de téléphone.
+3. **Formules** : rendez-vous court et soirée complète (palier 2), formule champagne (bar ouvert) ; abonnement habitué plus tard.
+4. **Soirées à thème** (palier 2, au premier lundi), programmées au briefing : masquée, burlesque, jazz, années folles. Chacune coûte, attire un segment et fatigue plus ou moins.
+5. **Sélection à l'entrée** (palier 2) : laxiste, normale, stricte. Les règles ciblées (« pas de groupes après minuit ») viendront avec l'équipe Accueil.
+6. **Priorité d'accueil** (palier 2) : ordre d'arrivée, habitués d'abord, pressés d'abord ; VIP au palier 4.
+7. **Visibilité** (v0.5, avec les relations et la presse) : bouche-à-oreille, site discret, concierges d'hôtel, influenceurs. Plus de monde, mais en pays non légal, plus de chaleur.
 
 ### Déroulé d'une visite, automatique
 
@@ -302,7 +304,7 @@ Cibles : une soirée correcte rapporte 600 à 1 000 € net à la maison, une ex
 | --- | --- | --- | --- |
 | Bilan du lundi | rien, il le lit | Recettes et dépenses par poste, résultat de la semaine, trésorerie projetée sur 4 semaines | Départ |
 | Réserve de sécurité | 0, 10 ou 20 % de la recette du soir mis de côté | Couvre la mensualité ; y toucher hors urgence vaut une remarque de Josée | 1 |
-| Tarifs et formules | 3 crans par chambre et par formule | ±20 % de recette par rendez-vous, effet inverse sur la demande selon le segment | 2 |
+| Tarifs et formules | 3 crans de tarif général, une formule | ±20 % de recette par rendez-vous, effet inverse sur la demande selon le segment | 2 |
 | Avance fournisseur | accepter ou refuser une offre du grossiste | 1 500 € de stock du bar sans payer, remboursés +10 % sous 2 semaines | 2 |
 | Nouvel emprunt | montant par tranches de 5 000 € (jusqu'à 40 000 €), durée 6, 12 ou 24 mois | Taux de 4 à 9 % selon la réputation et les retards passés | 3 |
 | Assurance | aucune, casse, ou casse + amendes | 80 à 200 € par semaine ; rembourse 70 à 100 % des sinistres couverts | 3 |
@@ -466,7 +468,7 @@ Le jeu se construit par versions jouables, chacune testable sur téléphone en f
 | --- | --- | --- |
 | v0.1 | Dépôt, moteur, déploiement ; écran titre, 3 sauvegardes, création du personnage ; une maison, une nuit complète avec Sanne seule, briefing, alertes de base | Les fondations tiennent-elles ? |
 | v0.2 | Didacticiel, paliers 1 et 2, personnel complet : talents, traits, moral, planning, entretiens, recrutement | Gérer des gens est-il captivant ? |
-| v0.3 | Clientèle : segments, tendances, offre, soirées à thème | L'offre change-t-elle vraiment la partie ? |
+| v0.3 | Clientèle : satisfaction par segment, tarifs et formules, règles de la porte, bar, tendances et bilan du lundi, soirées à thème | L'offre change-t-elle vraiment la partie ? |
 | v0.4 | Événements, 3 premières intrigues, bilans | Les soirées se renouvellent-elles ? |
 | v0.5 | Relations et une maison rivale ; palier 3 | Le quartier vit-il ? |
 | v0.6 | Aménagement, finances complètes, paliers 4 et 5 | La progression sur un mois est-elle motivante ? |

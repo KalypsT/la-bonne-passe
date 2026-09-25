@@ -1,9 +1,10 @@
 // Simulation d'un joueur actif, pour l'équilibrage (utilisée par les tests, jamais par l'interface).
 
 import * as B from '../content/balance';
-import type { Offre } from '../content/clientele';
+import type { Offre, Segment } from '../content/clientele';
+import type { ParSegment } from './clientele';
 import { creerEtatInitial, type EtatJeu } from './etat';
-import { appliquerOrdres, tick, type Ordre } from './tick';
+import { appliquerOrdresSurPlace, tickSurPlace, type Ordre } from './tick';
 
 export interface ResumeNuit {
   numero: number;
@@ -11,6 +12,12 @@ export interface ResumeNuit {
   tresorerie: number;
   /** Recette de la maison moins les dépenses de la nuit. */
   net: number;
+  /** Résultat réel depuis le bilan précédent : trésorerie et réserve, frais fixes et investissements compris. */
+  resultat: number;
+  /** Satisfaction de chaque segment à la fermeture. */
+  satisfaction: ParSegment;
+  /** Clients servis cette nuit, par segment. */
+  servisParSegment: ParSegment;
   servis: number;
   perdus: number;
   personnel: number;
@@ -34,11 +41,13 @@ const ORDRE_RENOVATION = ['orientale', 'velours', 'miroirs'];
 /** Joue une partie avec des décisions simples et raisonnables, et résume chaque nuit. */
 export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat: EtatJeu; departs: number } {
   const { graine, nuits, recruter = true, renover = true, rdvMax = 3 } = options;
-  let etat = creerEtatInitial({ graine });
+  const etat = creerEtatInitial({ graine });
   const resumes: ResumeNuit[] = [];
   let departs = 0;
+  let avoirPrecedent = etat.tresorerie + etat.reserve;
+  // La simulation travaille sur sa propre copie de l'état, modifiée sur place : bien plus rapide.
   const jouer = (ordres: Ordre[]) => {
-    etat = appliquerOrdres(etat, ordres).etat;
+    appliquerOrdresSurPlace(etat, ordres);
   };
 
   for (let pas = 0; pas < nuits * 300 && resumes.length < nuits; pas++) {
@@ -48,8 +57,7 @@ export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat
         ordres.push({ type: 'nettoyageExpress', chambreId: c.id });
       }
     }
-    const r = tick(etat, ordres);
-    etat = r.etat;
+    const r = { evenements: tickSurPlace(etat, ordres) };
     for (const e of r.evenements) {
       if (e.type === 'depart') departs += 1;
       if (e.type === 'bilan') {
@@ -58,12 +66,16 @@ export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat
           reputation: etat.reputation,
           tresorerie: etat.tresorerie,
           net: e.nuit.recettes - e.nuit.depenses,
+          resultat: etat.tresorerie + etat.reserve - avoirPrecedent,
+          satisfaction: { ...etat.clientele.satisfaction },
+          servisParSegment: { ...(etat.clientele.historique[0]?.servis ?? { touriste: 0, habitue: 0, affaires: 0, groupe: 0 }) },
           servis: e.nuit.servis,
           perdus: e.nuit.perdus,
           personnel: etat.personnel.length,
           chambres: etat.chambres.filter((c) => c.ouverte).length,
           palier: etat.palier,
         });
+        avoirPrecedent = etat.tresorerie + etat.reserve;
       }
     }
 
@@ -107,4 +119,13 @@ export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat
     }
   }
   return { nuits: resumes, etat, departs };
+}
+
+/** Part de chaque segment parmi les clients servis sur un ensemble de nuits, en %. */
+export function partsDeClientele(nuits: ResumeNuit[]): Record<Segment, number> {
+  const total: Record<Segment, number> = { touriste: 0, habitue: 0, affaires: 0, groupe: 0 };
+  for (const n of nuits) for (const s of Object.keys(total) as Segment[]) total[s] += n.servisParSegment[s];
+  const somme = Object.values(total).reduce((a, b) => a + b, 0) || 1;
+  for (const s of Object.keys(total) as Segment[]) total[s] = (total[s] * 100) / somme;
+  return total;
 }

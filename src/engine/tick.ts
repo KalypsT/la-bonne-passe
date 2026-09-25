@@ -1,6 +1,7 @@
 import * as B from '../content/balance';
 import type { Offre } from '../content/clientele';
 import type { EtatJeu } from './etat';
+import { changerReputationGlobale } from './clientele';
 import { creerTirage } from './hasard';
 import { trancherImprevu, type EvenementImprevu, type OrdreImprevu } from './imprevus';
 import { appliquerPersonnel, matinDuPersonnel, type EvenementPersonnel, type OrdrePersonnel } from './personnel';
@@ -33,6 +34,8 @@ export type Ordre =
   | { type: 'retirerReserve' }
   | { type: 'equipeMenage'; effectif: number }
   | { type: 'annonceVue' }
+  /** Josée a présenté les nouveautés d'une mise à jour. */
+  | { type: 'nouveautesVues' }
   /** Le didacticiel avance (l'interface décide des étapes, le moteur les garde). */
   | { type: 'didacticiel'; etape: number | null }
   | OrdreRecrutement
@@ -138,7 +141,7 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
         const tirage = creerTirage(etat.hasard);
         reussite = tirage.chance(B.DISPUTE_CALMER_REUSSITE);
         etat.hasard = tirage.etat();
-        if (!reussite) etat.reputation = Math.max(0, etat.reputation - 1);
+        if (!reussite) changerReputationGlobale(etat, -1);
       }
       evenements.push({ type: 'disputeReglee', choix: ordre.choix, reussite });
       return;
@@ -181,6 +184,9 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'annonceVue':
       etat.annonces.shift();
       return;
+    case 'nouveautesVues':
+      etat.nouveautes = [];
+      return;
     case 'didacticiel':
       etat.didacticiel = ordre.etape;
       return;
@@ -204,10 +210,15 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
 export function appliquerOrdres(etat: EtatJeu, ordres: readonly Ordre[]): ResultatTick {
   if (ordres.length === 0) return { etat, evenements: [] };
   const copie = structuredClone(etat);
+  return { etat: copie, evenements: appliquerOrdresSurPlace(copie, ordres) };
+}
+
+/** Comme appliquerOrdres, mais modifie l'état reçu. Réservé à la simulation, qui travaille sur sa propre copie. */
+export function appliquerOrdresSurPlace(etat: EtatJeu, ordres: readonly Ordre[]): EvenementMoteur[] {
   const evenements: EvenementMoteur[] = [];
-  for (const ordre of ordres) appliquer(copie, ordre, evenements);
-  journaliser(copie, evenements);
-  return { etat: copie, evenements };
+  for (const ordre of ordres) appliquer(etat, ordre, evenements);
+  journaliser(etat, evenements);
+  return evenements;
 }
 
 /**
@@ -215,16 +226,20 @@ export function appliquerOrdres(etat: EtatJeu, ordres: readonly Ordre[]): Result
  * À 19 h, le temps reste bloqué tant que le briefing n'est pas validé.
  */
 export function tick(etatInitial: EtatJeu, ordres: readonly Ordre[] = []): ResultatTick {
-  const apresOrdres = appliquerOrdres(etatInitial, ordres);
-  const evenements: EvenementMoteur[] = [...apresOrdres.evenements];
-  if (attendBriefing(apresOrdres.etat)) {
+  const etat = structuredClone(etatInitial);
+  return { etat, evenements: tickSurPlace(etat, ordres) };
+}
+
+/** Comme tick, mais modifie l'état reçu. Réservé à la simulation, qui travaille sur sa propre copie. */
+export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): EvenementMoteur[] {
+  const evenements = appliquerOrdresSurPlace(etat, ordres);
+  if (attendBriefing(etat)) {
     // Rappel du briefing en attente : déjà inscrit au journal quand 19 h a sonné.
-    evenements.push({ type: 'briefing', jour: apresOrdres.etat.jour });
-    return { etat: apresOrdres.etat, evenements };
+    evenements.push({ type: 'briefing', jour: etat.jour });
+    return evenements;
   }
   const dejaJournalises = evenements.length;
 
-  const etat = apresOrdres.etat === etatInitial ? structuredClone(etatInitial) : apresOrdres.etat;
   const tirage = creerTirage(etat.hasard);
   const etaitOuvert = estOuvert(etat);
 
@@ -255,6 +270,6 @@ export function tick(etatInitial: EtatJeu, ordres: readonly Ordre[] = []): Resul
 
   journaliser(etat, evenements.slice(dejaJournalises));
   etat.hasard = tirage.etat();
-  return { etat, evenements };
+  return evenements;
 }
 

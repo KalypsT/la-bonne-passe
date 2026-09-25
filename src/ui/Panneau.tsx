@@ -29,6 +29,7 @@ import { Cadenas } from './Icones';
 import { Jauge } from './Jauge';
 import { JoseeLigne } from './Josee';
 import { texteEvenement } from './journal';
+import { FicheSegment, OngletClientele } from './OngletClientele';
 import { useInterface, type Fiche, type Onglet } from './store';
 
 const t = TEXTES.panneau;
@@ -82,17 +83,20 @@ export function Panneau({ partie }: { partie: EtatJeu }) {
           );
         })}
       </nav>
-      <div className="panneau-corps">
+      <div className="panneau-corps" key={`${onglet}-${fiche?.type ?? ''}-${fiche?.id ?? ''}`}>
         {verrouille && actuel.palier ? (
           <OngletVerrouille nom={TEXTES.onglets[actuel.id]} numero={actuel.palier} atteint={partie.palier >= actuel.palier} />
         ) : fiche?.type === 'employe' ? (
           <FicheEmploye partie={partie} id={fiche.id} />
+        ) : fiche?.type === 'segment' ? (
+          <FicheSegment partie={partie} id={fiche.id} />
         ) : fiche ? (
           <FichePiece partie={partie} fiche={fiche} />
         ) : (
           <>
             {onglet === 'maison' && <OngletMaison partie={partie} />}
             {onglet === 'personnel' && <OngletPersonnel partie={partie} />}
+            {onglet === 'clientele' && <OngletClientele partie={partie} />}
             {onglet === 'finances' && <OngletFinances partie={partie} />}
             {onglet === 'journal' && <OngletJournal partie={partie} />}
           </>
@@ -268,7 +272,7 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
     </button>
   );
 
-  if (fiche.type === 'employe') return retour;
+  if (fiche.type === 'employe' || fiche.type === 'segment') return retour;
   if (fiche.type === 'piece') {
     const piece = trouverPiece(fiche.id);
     const rouvre = palier(2);

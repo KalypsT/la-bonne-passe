@@ -1,11 +1,11 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { Offre } from '../content/clientele';
-import { simuler, type ResumeNuit } from './simulation';
+import { partsDeClientele, simuler, type ResumeNuit } from './simulation';
 
-// Parties simulées d'un joueur actif (voir simulation.ts) : 14 nuits, 5 graines.
+// Parties simulées d'un joueur actif (voir simulation.ts) : 14 nuits, 10 graines.
 // Les cibles viennent des spécifications (« Économie et finances ») et de docs/EQUILIBRAGE.md.
 
-const GRAINES = [1, 2, 3, 4, 5];
+const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const OFFRES: Offre[] = ['classique', 'happy', 'feutree'];
 type Cle = `${Offre}-${number}`;
 const parties = new Map<Cle, { nuits: ResumeNuit[]; moral: number; departs: number }[]>();
@@ -24,7 +24,7 @@ beforeAll(() => {
       }),
     );
   }
-}, 60_000);
+}, 30_000);
 
 const moyenne = (offre: Offre, rdvMax: number, f: (p: { nuits: ResumeNuit[]; moral: number; departs: number }) => number) => {
   const liste = parties.get(`${offre}-${rdvMax}`)!;
@@ -67,5 +67,16 @@ describe('équilibrage, joueur actif', () => {
 
   it('la réputation reste loin du palier 4 (réputation 50) la première semaine', () => {
     for (const liste of parties.values()) for (const p of liste) expect(p.nuits[6]!.reputation).toBeLessThan(50);
+  });
+
+  it('l’offre du soir change la clientèle : qui vient, et qui est content', () => {
+    const parts = (offre: Offre) => partsDeClientele(parties.get(`${offre}-4`)!.flatMap((p) => p.nuits.slice(7)));
+    const satisfaction = (offre: Offre, segment: 'touriste' | 'habitue') => moyenne(offre, 4, (p) => p.nuits[13]!.satisfaction[segment]);
+    // Le happy hour remplit la maison de touristes, la soirée feutrée d'habitués : au moins 10 points d'écart.
+    expect(parts('happy').touriste - parts('feutree').touriste).toBeGreaterThanOrEqual(10);
+    expect(parts('feutree').habitue - parts('happy').habitue).toBeGreaterThanOrEqual(10);
+    // Et chaque offre soigne le segment qu'elle attire.
+    expect(satisfaction('happy', 'touriste')).toBeGreaterThan(satisfaction('classique', 'touriste'));
+    expect(satisfaction('feutree', 'habitue')).toBeGreaterThan(satisfaction('classique', 'habitue'));
   });
 });

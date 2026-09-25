@@ -187,13 +187,15 @@ describe('menace de départ', () => {
     expect(evenements.some((e) => e.type === 'menaceLevee')).toBe(true);
   });
 
-  it('sinon, elle part le jour dit : l’équipe et la réputation en pâtissent', () => {
+  it('sinon, elle part le jour dit : l’équipe et les habitués en pâtissent', () => {
     const etat = modifier(equipe(['mila', 'jonas']), 'mila', { moral: 10, menaceDepart: 4 });
     const { etat: apres, evenements } = matin(etat);
     expect(apres.jour).toBe(4);
     expect(apres.personnel.map((e) => e.id)).toEqual(['sanne', 'jonas']);
     expect(apres.adieux).toEqual(['Mila']);
-    expect(apres.reputation).toBe(etat.reputation - B.DEPART_REPUTATION);
+    expect(apres.clientele.satisfaction.habitue).toBe(etat.clientele.satisfaction.habitue - B.DEPART_SATISFACTION_HABITUES);
+    expect(apres.clientele.satisfaction.touriste).toBe(etat.clientele.satisfaction.touriste);
+    expect(apres.reputation).toBeLessThan(etat.reputation);
     expect(perso(apres, 'jonas').moral).toBeLessThan(perso(etat, 'jonas').moral);
     expect(Object.keys(apres.affinites).some((k) => k.includes('mila'))).toBe(false);
     expect(evenements).toContainEqual({ type: 'depart', prenom: 'Mila' });

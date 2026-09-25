@@ -28,10 +28,11 @@ export const PALIERS: DefinitionPalier[] = [
     numero: 2,
     nom: 'Se faire un nom',
     objectif: 'Atteindre 25 de réputation.',
-    ouvre: 'Clients d’affaires et groupes.',
+    ouvre: 'Clients d’affaires et groupes, onglet Clientèle.',
     details: [
       'Clients d’affaires : gros budgets, peu de patience. Ils veulent de l’audace, de la conversation ou de la discrétion.',
       'Groupes : ils arrivent à plusieurs, font la fête… et du bruit sur le quai. Une Fêtarde les attire.',
+      'Onglet Clientèle : la satisfaction de chaque segment, et ce qui les fait revenir.',
     ],
   },
   {

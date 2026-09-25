@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { trouverAvatar } from '../content/avatars';
-import type { Offre } from '../content/clientele';
+import type { Offre, Segment } from '../content/clientele';
 import { ETAPES_DIDACTICIEL, type AttenteDidacticiel } from '../content/didacticiel';
 import { alertes } from '../engine/alertes';
 import { creerEtatInitial, type EtatJeu, type Nuit } from '../engine/etat';
@@ -16,12 +16,14 @@ export type Onglet = 'maison' | 'personnel' | 'clientele' | 'finances' | 'relati
 export type Fiche =
   | { type: 'chambre'; id: string }
   | { type: 'piece'; id: 'salon' | 'bar' | 'bureau' }
-  | { type: 'employe'; id: string };
+  | { type: 'employe'; id: string }
+  | { type: 'segment'; id: Segment };
 export type Carte =
   | 'briefing'
   | 'bilan'
   | 'dispute'
   | 'palier'
+  | 'nouveautes'
   | 'entretien'
   | 'essai'
   | 'imprevu'
@@ -109,6 +111,7 @@ function carteEnAttente(partie: EtatJeu | null): Carte | null {
   if (!partie) return null;
   if (partie.imprevu) return 'imprevu';
   if (partie.annonces.length > 0) return 'palier';
+  if (partie.nouveautes.length > 0) return 'nouveautes';
   if (partie.adieux.length > 0) return 'adieu';
   if (partie.essaisATrancher.length > 0) return 'essai';
   return null;
@@ -298,9 +301,10 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   ouvrirCarte: (carte) => {
     const { partie, carte: actuelle } = get();
     let suite = carte ?? carteEnAttente(partie);
-    // Fermer une annonce ou un adieu : le moteur les marque comme vus, puis on passe à la suite.
-    if (!carte && (actuelle === 'palier' || actuelle === 'adieu') && partie) {
-      const resultat = appliquerOrdres(partie, [{ type: actuelle === 'palier' ? 'annonceVue' : 'adieuVu' }]);
+    // Fermer une annonce, des nouveautés ou un adieu : le moteur les marque comme vus, puis on passe à la suite.
+    const vus = { palier: 'annonceVue', nouveautes: 'nouveautesVues', adieu: 'adieuVu' } as const;
+    if (!carte && partie && (actuelle === 'palier' || actuelle === 'nouveautes' || actuelle === 'adieu')) {
+      const resultat = appliquerOrdres(partie, [{ type: vus[actuelle] }]);
       set({ partie: resultat.etat });
       suite = carteEnAttente(resultat.etat);
     }
@@ -318,7 +322,8 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   ouvrirEntretienIndividuel: (employeId) => set({ carte: 'entretienIndividuel', employeOuvert: employeId }),
 
   ouvrirFiche: (fiche) => {
-    set(fiche ? { fiche, onglet: fiche.type === 'employe' ? 'personnel' : 'maison' } : { fiche: null });
+    const onglet: Onglet = fiche?.type === 'employe' ? 'personnel' : fiche?.type === 'segment' ? 'clientele' : 'maison';
+    set(fiche ? { fiche, onglet } : { fiche: null });
     if (fiche?.type === 'chambre' && fiche.id === 'boudoir') get().signalerDidacticiel('boudoir');
   },
 

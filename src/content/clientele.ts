@@ -150,6 +150,62 @@ export const CLIENTS: ModeleClient[] = [
   },
 ];
 
+/** Ce que la fiche d'un segment raconte, dans l'onglet Clientèle. */
+export interface InfoSegment {
+  attend: string;
+  sensible: string;
+  /** Ce qui les attire, en plus des offres du soir. */
+  attire?: string;
+  /** Humeur du segment : satisfaction basse, moyenne, haute. */
+  humeurs: [string, string, string];
+}
+
+export const INFOS_SEGMENTS: Record<Segment, InfoSegment> = {
+  touriste: {
+    attend: 'De la conversation, de l’ambiance, un souvenir à raconter sans se ruiner.',
+    sensible: 'Au prix et aux avis en ligne. Sur le quai, ils patientent en photographiant le canal.',
+    humeurs: [
+      'Sur les forums, on te classe entre le musée du fromage et une arnaque aux vélos.',
+      'Les guides en ligne te citent, entre deux coffee shops.',
+      'Les touristes se passent ton adresse comme un secret bien gardé. Enfin, bien gardé…',
+    ],
+  },
+  habitue: {
+    attend: 'Du charme, et retrouver les mêmes visages d’une semaine à l’autre.',
+    sensible: 'Aux départs du personnel et aux changements. Contents, ils reviennent plus souvent que les autres.',
+    humeurs: [
+      'Les habitués passent devant la porte sans ralentir. Ça fait mal.',
+      'Ils reviennent, un peu par habitude, un peu par curiosité.',
+      'Certains ont leur fauteuil au salon. Personne n’ose s’y asseoir.',
+    ],
+  },
+  affaires: {
+    attend: 'De l’efficacité, de l’audace, de la conversation ou de la discrétion.',
+    sensible: 'À l’attente : ils repartent vite, et le racontent deux fois plus fort.',
+    humeurs: [
+      'Dans les halls d’hôtel, ton nom fait lever un sourcil. Pas le bon.',
+      'Quelques cartes de visite glissées sous la porte, sans nom dessus.',
+      'Les concierges des grands hôtels te recommandent à voix basse.',
+    ],
+  },
+  groupe: {
+    attend: 'La fête, de l’audace, du monde autour d’eux.',
+    sensible: 'Au bruit et aux disputes. Pour attendre, en revanche, ils sont patients, surtout en chantant.',
+    attire: 'Une Fêtarde en service les attire.',
+    humeurs: [
+      'Les enterrements de vie de garçon t’évitent. C’est dire.',
+      'Les bandes de copains connaissent le chemin, surtout au retour.',
+      'On chante ton nom sur les bateaux du canal. Juste le refrain.',
+    ],
+  },
+};
+
+/** Segments qui viendront plus tard, affichés verrouillés dans l'onglet Clientèle. */
+export const SEGMENTS_A_VENIR = [
+  { nom: 'VIP', palier: 4 },
+  { nom: 'Couples curieux', palier: 4 },
+];
+
 /** Segments ouverts dès le départ ; les autres s'ouvrent par palier. */
 export const SEGMENTS_DE_DEPART: Segment[] = ['touriste', 'habitue'];
 

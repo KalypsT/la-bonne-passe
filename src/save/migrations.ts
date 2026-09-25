@@ -18,6 +18,7 @@ import {
   suiviDeDepart,
 } from '../engine/etat';
 import { cleAffinite } from '../engine/personnel';
+import { clienteleDeDepart } from '../engine/clientele';
 import { SYSTEMES_PAR_PALIER } from '../engine/paliers';
 import { planifierVisitesScenarisees } from '../engine/recrutement';
 import { PARTIE_PAR_DEFAUT } from '../content/partie';
@@ -140,6 +141,20 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
   },
   // v9 → v10 : étape du didacticiel. Une partie existante n'a pas de didacticiel.
   9: (d) => ({ ...d, version: 10, didacticiel: null }),
+  // v10 → v11 : satisfaction par segment, qui part de la réputation acquise, et onglet Clientèle au palier 2.
+  // Une partie déjà au palier 2 reçoit l'onglet d'un coup, présenté par Josée au chargement.
+  10: (d) => {
+    const reputation = typeof d.reputation === 'number' ? d.reputation : REPUTATION_INITIALE;
+    const deuxieme = typeof d.palier === 'number' && d.palier >= 2;
+    const systemes = { ...(estObjet(d.systemes) ? d.systemes : {}), clientele: deuxieme };
+    return {
+      ...d,
+      version: 11,
+      systemes,
+      clientele: clienteleDeDepart(reputation),
+      nouveautes: deuxieme ? ['clientele'] : [],
+    };
+  },
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -186,6 +201,10 @@ function estEtatValide(d: Donnees): boolean {
     Array.isArray(d.imprevusVus) &&
     Array.isArray(d.adieux) &&
     (d.didacticiel === null || typeof d.didacticiel === 'number') &&
+    estObjet(d.clientele) &&
+    estObjet(d.clientele.satisfaction) &&
+    Array.isArray(d.clientele.historique) &&
+    Array.isArray(d.nouveautes) &&
     estObjet(d.systemes)
   );
 }

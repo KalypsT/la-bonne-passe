@@ -107,7 +107,8 @@ export const AIDE_ONGLETS: Record<string, string> = {
     'Tes chambres, le linge et le ménage. Une chambre sale sous 40 % donne l’alerte, sous 15 % elle ne reçoit plus. Les chambres sous les draps se rénovent.',
   personnel:
     'Ton équipe et tes candidats. Surveille fatigue et moral : sous 20 de moral, on te menace de partir. Un entretien ou une prime, ça aide. Un soir de repos aussi.',
-  clientele: 'Tes clients, segment par segment. Cet onglet n’est pas encore ouvert.',
+  clientele:
+    'Tes clients, segment par segment. Chacun a sa satisfaction : contents, ils reviennent ; ta réputation est leur moyenne. Touche un segment pour voir ce qu’il attend.',
   finances:
     'Ta trésorerie, l’emprunt et la réserve de sécurité. La mensualité tombe le 28 : la réserve paie en premier.',
   relations: 'Le quartier, la mairie, les voisins et les rivales. Pas encore ouvert.',
