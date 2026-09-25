@@ -65,6 +65,24 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return t.finRdv(evenement.client, evenement.avis, formaterEuros(evenement.montant));
     case 'salaires':
       return t.salaires(formaterEuros(evenement.montant));
+    case 'debutTravauxBar':
+      return t.debutTravauxBar(formaterEuros(evenement.montant), formaterHeure(evenement.fin));
+    case 'finTravauxBar':
+      return t.finTravauxBar;
+    case 'equipeBar':
+      return t.equipeBar(evenement.effectif);
+    case 'livraisonBar':
+      return t.livraisonBar(formaterEuros(evenement.montant));
+    case 'barVide':
+      return t.barVide;
+    case 'grossiste':
+      return t.grossiste;
+    case 'avanceFournisseur':
+      return evenement.accepter && evenement.echeance !== null
+        ? t.avanceAcceptee(formaterEuros(evenement.montant), nomDuJour(evenement.echeance))
+        : t.avanceRefusee;
+    case 'remboursementAvance':
+      return t.remboursementAvance(formaterEuros(evenement.montant));
     case 'refuse':
       return t.refuse(evenement.client, CLIENTS.find((c) => c.nom === evenement.client)?.genre === 'f');
     case 'portier':

@@ -304,7 +304,7 @@ export const PRIX_RESSENTI = 0.8;
 /** À ce prix-là, on attend : patience sur le quai × (1 − écart × ce facteur). */
 export const PATIENCE_TARIF = 1;
 
-export type IdFormule = 'court' | 'standard' | 'complete';
+export type IdFormule = 'court' | 'standard' | 'complete' | 'champagne';
 export interface ReglageFormule {
   /** Durée, prix, fatigue, usure du moral et salissure, en multiplicateurs. */
   duree: number;
@@ -322,6 +322,8 @@ export interface ReglageFormule {
 export const FORMULES: Record<IdFormule, ReglageFormule> = {
   court: { duree: 0.6, prix: 0.6, charge: 0.75, affluence: 1.1, attire: { affaires: 1.4 }, fatigue: 0.7, salissure: 0.7, qualite: { affaires: 0.06, touriste: -0.03, habitue: -0.08 } },
   standard: { duree: 1, prix: 1, charge: 1, affluence: 1, attire: {}, fatigue: 1, salissure: 1, qualite: {} },
+  /** Rendez-vous classique avec une bouteille du bar (bar ouvert et servi). */
+  champagne: { duree: 1.1, prix: 1.25, charge: 1, affluence: 1, attire: { affaires: 1.2, groupe: 1.2 }, fatigue: 1.3, salissure: 1, qualite: { affaires: 0.05, groupe: 0.05, touriste: -0.06, habitue: -0.06 } },
   complete: { duree: 1.5, prix: 1.7, charge: 1.5, affluence: 0.8, attire: { affaires: 0.4, habitue: 1.3 }, fatigue: 1.4, salissure: 1.2, qualite: { habitue: 0.1, touriste: 0.06, groupe: 0.03, affaires: -0.1 } },
 };
 
@@ -355,3 +357,35 @@ export const PRIORITE_QUALITE: Record<IdPriorite, Partial<Record<Segment, number
   habitues: { habitue: 0.04 },
   presses: { affaires: 0.04 },
 };
+
+// ——— Bar et équipe Bar (v0.3, palier 2) ———
+
+/** Rouvrir le bar, sous ses draps depuis des années. */
+export const RENOVATION_BAR = { prix: 1200, heures: 8 };
+/** Bouteilles trouvées à la cave le jour de la réouverture. */
+export const BAR_STOCK_REOUVERTURE = 20;
+/** Équipe Bar : salaire par jour et par personne, à midi, et effectif maximal. */
+export const SALAIRE_BAR = 110;
+export const BAR_MAX = 2;
+/** Commande au briefing, livrée à l'ouverture ; livraison express en soirée. Stock en bouteilles. */
+export const COMMANDE_BAR = { bouteilles: 40, prix: 240 };
+export const LIVRAISON_EXPRESS_BAR = { bouteilles: 20, prix: 200 };
+/** Sous ce stock, le bar donne l'alerte. */
+export const SEUIL_BAR = 6;
+/** Chaque client reçu passe au bar : recette (en €, toute à la maison) et bouteilles bues, selon son segment. */
+export const BAR_RECETTE: Record<Segment, number> = { touriste: 14, habitue: 10, affaires: 24, groupe: 30 };
+export const BAR_CONSO: Record<Segment, number> = { touriste: 0.5, habitue: 0.4, affaires: 0.5, groupe: 1.2 };
+/** Un bar qui sert : qualité ressentie en plus selon le segment ; la deuxième personne au bar ajoute BAR_DEUXIEME partout. */
+export const BAR_QUALITE: Record<Segment, number> = { touriste: 0.03, habitue: 0.02, affaires: 0.02, groupe: 0.06 };
+export const BAR_DEUXIEME = 0.02;
+/** Un bar ouvert mais vide : les groupes surtout le prennent mal. */
+export const BAR_VIDE_QUALITE: Partial<Record<Segment, number>> = { groupe: -0.06, touriste: -0.02 };
+/** Sur le quai, on patiente mieux un verre à la main (minutes en plus). */
+export const BAR_PATIENCE = 10;
+/**
+ * Avance fournisseur : le grossiste propose, le lendemain de la réouverture, du stock sans payer,
+ * remboursé avec des intérêts au bout de quelques jours.
+ */
+/** Formule champagne : bouteilles prises au bar par rendez-vous. */
+export const CHAMPAGNE_BOUTEILLES = 1;
+export const AVANCE_FOURNISSEUR = { bouteilles: 250, valeur: 1500, taux: 0.1, jours: 14, heure: 11 * 60 };

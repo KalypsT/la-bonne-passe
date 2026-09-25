@@ -34,6 +34,7 @@ export const PALIERS: DefinitionPalier[] = [
       'Groupes : ils arrivent à plusieurs, font la fête… et du bruit sur le quai. Une Fêtarde les attire.',
       'Onglet Clientèle : la satisfaction de chaque segment, et ce qui les fait revenir.',
       'Règles de la maison : tarif, formule, sélection à l’entrée et priorité d’accueil.',
+      'Le bar peut rouvrir (1 200 €, 8 h de travaux) : une équipe Bar, du stock, la formule champagne.',
     ],
   },
   {

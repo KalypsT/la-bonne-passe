@@ -186,7 +186,7 @@ Chaque personnage porte un arc de 3 à 5 événements, déclenchés par son mora
 | Équipe | Rôle | Coût indicatif | Ouverte au palier |
 | --- | --- | --- | --- |
 | Ménage | Propreté des chambres et du linge | 90 € par jour et par personne | Départ (1 personne) |
-| Bar | Recettes annexes, ambiance du salon | 110 € | 2 |
+| Bar | Recettes annexes, ambiance du salon, patience sur le quai (le bar se rouvre d'abord : 1 200 €, 8 h de travaux) | 110 € | 2 |
 | Accueil | Patience des clients, tri à l'entrée | 100 € | 3 |
 | Sécurité | Prévention et règlement des incidents, discrétion | 130 € | 3 |
 

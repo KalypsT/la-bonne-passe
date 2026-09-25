@@ -30,6 +30,7 @@ import { Cadenas } from './Icones';
 import { Jauge } from './Jauge';
 import { JoseeLigne } from './Josee';
 import { texteEvenement } from './journal';
+import { etatDuBar, FicheBar } from './FicheBar';
 import { FicheRegles, FicheSegment, OngletClientele } from './OngletClientele';
 import { useInterface, type Fiche, type Onglet } from './store';
 
@@ -201,7 +202,7 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
         <Ligne
           key={p.id}
           titre={p.nom}
-          detail={p.id === 'bar' && !partie.systemes.bar ? t.sousDraps : t.ouvert}
+          detail={p.id === 'bar' ? etatDuBar(partie) : t.ouvert}
           fiche={{ type: 'piece', id: p.id }}
         />
       ))}
@@ -278,17 +279,12 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
   if (fiche.type === 'employe' || fiche.type === 'segment' || fiche.type === 'regles') return retour;
   if (fiche.type === 'piece') {
     const piece = trouverPiece(fiche.id);
-    const rouvre = palier(2);
     return (
       <div className="fiche">
         {retour}
         <h2>{piece.nom}</h2>
-        <p className="sous">{piece.description}</p>
-        {fiche.id === 'bar' && !partie.systemes.bar && (
-          <p className="verrou-ligne">
-            <Cadenas /> {partie.palier >= rouvre.numero ? t.barPlusTard : t.barVerrouille(rouvre.numero, rouvre.nom)}
-          </p>
-        )}
+        <p className="sous">{fiche.id === 'bar' && partie.bar.ouvert ? (piece.descriptionOuverte ?? piece.description) : piece.description}</p>
+        {fiche.id === 'bar' && <FicheBar partie={partie} />}
       </div>
     );
   }
@@ -575,6 +571,14 @@ function OngletFinances({ partie }: { partie: EtatJeu }) {
           </div>
         )}
       </dl>
+      {partie.avance.statut === 'acceptee' && partie.avance.echeance !== null && (
+        <dl className="chiffres">
+          <div>
+            <dt>{TEXTES.bar.avance}</dt>
+            <dd>{TEXTES.bar.avanceDetail(formaterEuros(partie.avance.montant), partie.avance.echeance)}</dd>
+          </div>
+        </dl>
+      )}
       <Reserve partie={partie} />
     </>
   );

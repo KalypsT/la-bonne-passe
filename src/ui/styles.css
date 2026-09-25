@@ -1549,3 +1549,14 @@ body {
 .ligne.ligne-regles small {
   text-align: left;
 }
+
+/* Quatre choix : deux par ligne, pour garder des zones tactiles lisibles. */
+.boutons-ligne.quatre {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.choix-court:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

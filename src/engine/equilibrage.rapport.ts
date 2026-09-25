@@ -17,6 +17,8 @@ interface Strategie {
   recruter?: boolean;
   renover?: boolean;
   regles?: Partial<Regles>;
+  equipeBar?: number;
+  avance?: boolean;
 }
 
 const STRATEGIES: Strategie[] = [
@@ -24,6 +26,9 @@ const STRATEGIES: Strategie[] = [
   { nom: 'Classique, 4', offre: 'classique', rdvMax: 4 },
   { nom: 'Happy hour, 4', offre: 'happy', rdvMax: 4 },
   { nom: 'Feutrée, 4', offre: 'feutree', rdvMax: 4 },
+  { nom: 'Classique 3, sans bar', offre: 'classique', rdvMax: 3, equipeBar: 0 },
+  { nom: 'Classique 3, bar à 2, sans avance', offre: 'classique', rdvMax: 3, equipeBar: 2, avance: false },
+  { nom: 'Classique 3, champagne', offre: 'classique', rdvMax: 3, regles: { formule: 'champagne' } },
   { nom: 'Classique 3, tarif −20 %', offre: 'classique', rdvMax: 3, regles: { tarif: 0 } },
   { nom: 'Classique 3, tarif +20 %', offre: 'classique', rdvMax: 3, regles: { tarif: 2 } },
   { nom: 'Classique 3, formule courte', offre: 'classique', rdvMax: 3, regles: { formule: 'court' } },

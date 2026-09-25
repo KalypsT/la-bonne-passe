@@ -22,7 +22,7 @@ import { clienteleDeDepart } from '../engine/clientele';
 import { SYSTEMES_PAR_PALIER } from '../engine/paliers';
 import { planifierVisitesScenarisees } from '../engine/recrutement';
 import { PARTIE_PAR_DEFAUT } from '../content/partie';
-import { reglesDeDepart, VERSION_ETAT, type EtatJeu } from '../engine/etat';
+import { barDeDepart, reglesDeDepart, VERSION_ETAT, type EtatJeu } from '../engine/etat';
 
 type Donnees = Record<string, unknown>;
 
@@ -169,6 +169,16 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     const nouveautes = [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(deuxieme ? ['regles'] : [])];
     return { ...d, version: 12, systemes, personnel, rendezVous, regles: reglesDeDepart(), nouveautes };
   },
+  // v12 → v13 : le bar (à rénover au palier 2), l'équipe Bar, le stock et l'avance du grossiste.
+  // Une nuit en cours compte désormais la recette du bar.
+  12: (d) => {
+    const deuxieme = typeof d.palier === 'number' && d.palier >= 2;
+    const systemes = { ...(estObjet(d.systemes) ? d.systemes : {}), bar: deuxieme };
+    const equipes = { ...(estObjet(d.equipes) ? d.equipes : { menage: 1 }), bar: 0 };
+    const nuit = estObjet(d.nuit) ? { ...d.nuit, bar: 0 } : d.nuit;
+    const nouveautes = [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(deuxieme ? ['bar'] : [])];
+    return { ...d, ...barDeDepart(), version: 13, systemes, equipes, nuit, nouveautes };
+  },
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -221,6 +231,10 @@ function estEtatValide(d: Donnees): boolean {
     Array.isArray(d.nouveautes) &&
     estObjet(d.regles) &&
     typeof d.regles.tarif === 'number' &&
+    estObjet(d.bar) &&
+    estObjet(d.avance) &&
+    estObjet(d.equipes) &&
+    typeof d.equipes.bar === 'number' &&
     estObjet(d.systemes)
   );
 }

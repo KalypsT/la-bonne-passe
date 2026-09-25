@@ -60,7 +60,7 @@ describe('didacticiel : la soirée guidée de Madame Josée', () => {
     etat().choisirVitesse(4); // 4. Le temps
     attendre(5);
     expect(etat().carte).toBe('briefing'); // 5. Le briefing
-    etat().validerBriefing({ offre: 'happy', commanderLinge: false, repos: [], rdvMax: 4 });
+    etat().validerBriefing({ offre: 'happy', commanderLinge: false, commanderBar: false, repos: [], rdvMax: 4 });
     expect(ETAPES_DIDACTICIEL[etape()!]?.attend).toBe('chambreSale');
 
     // 6. La première alerte : on joue jusqu'à la première chambre sale, en tranchant les cartes qui s'ouvrent.

@@ -24,6 +24,15 @@ import {
 
 export { gainReputation, segmentOuvert };
 import {
+  livrerCommandeBar,
+  patienceBar,
+  qualiteBar,
+  rembourserAvance,
+  servirChampagne,
+  venteBar,
+  type EvenementBar,
+} from './bar';
+import {
   chargeFormule,
   demandePrix,
   ecartTarif,
@@ -55,7 +64,8 @@ export type EvenementSoiree =
   | Extract<EvenementRecrutement, { type: 'traitRevele' }>
   | EvenementPersonnel
   | EvenementImprevu
-  | EvenementRegle;
+  | EvenementRegle
+  | EvenementBar;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -82,6 +92,7 @@ function nouvelleNuit(etat: EtatJeu): Nuit {
     pireAvis: null,
     reserve: 0,
     imprevus: 0,
+    bar: 0,
   };
 }
 
@@ -104,6 +115,7 @@ export function ouvrirNuit(etat: EtatJeu, evenements: Sortie): void {
   }
   etat.linge += etat.lingeCommande;
   etat.lingeCommande = 0;
+  livrerCommandeBar(etat);
   ouvrirNuitClientele(etat);
   // Sélection stricte : le portier se paie à l'ouverture.
   const portier = selectionActive(etat).cout;
@@ -163,7 +175,7 @@ function fetardeEnService(etat: EtatJeu): boolean {
 /** Patience d'un client : la sienne, et une Fêtarde en service met l'ambiance. */
 function patienceClient(etat: EtatJeu, modele: ModeleClient): number {
   const base = (modele.patience ?? B.PATIENCE_CLIENT) * patienceTarif(etat);
-  return Math.round(base + (fetardeEnService(etat) ? B.TRAITS_EFFETS.fetardePatience : 0));
+  return Math.round(base + (fetardeEnService(etat) ? B.TRAITS_EFFETS.fetardePatience : 0) + patienceBar(etat));
 }
 
 export function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
@@ -290,7 +302,8 @@ export function qualiteRdv(
     (employe.fatigue > B.SEUIL_FATIGUE ? q.malusFatigue : 0) -
     (employe.moral < B.SEUIL_MORAL_BAS ? B.MALUS_QUALITE_MORAL_BAS : 0) +
     (employe.recadre === etat.jour ? B.ENTRETIEN.recadrer.qualite : 0) +
-    qualiteDesRegles(etat, modele.segment, formule);
+    qualiteDesRegles(etat, modele.segment, formule) +
+    qualiteBar(etat, modele.segment);
   return borner(valeur, 0, 1);
 }
 
@@ -324,6 +337,10 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   etat.linge = Math.max(0, etat.linge - B.LINGE_PAR_RDV);
   chambre.proprete = borner(chambre.proprete - tirage.entre(B.SALISSURE_MIN, B.SALISSURE_MAX) * formule.salissure);
   chambre.etat = borner(chambre.etat - tirage.entre(B.USURE_MIN, B.USURE_MAX));
+
+  // Le client passe au bar ; la formule champagne prend sa bouteille.
+  if (rdv.formule === 'champagne') servirChampagne(etat, evenements);
+  venteBar(etat, modele.segment, evenements);
 
   const liste = ressentie >= 0.75 ? AVIS.excellents : ressentie >= 0.55 ? AVIS.corrects : AVIS.decevants;
   const avis = { client: modele.nom, texte: tirage.choisir(liste), qualite: ressentie };
@@ -429,7 +446,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
 
   // Salaires à midi, charges fixes le lundi matin
   if (etat.minuteDuJour === B.HEURE_SALAIRES) {
-    const montant = etat.equipes.menage * B.SALAIRE_MENAGE;
+    const montant = etat.equipes.menage * B.SALAIRE_MENAGE + etat.equipes.bar * B.SALAIRE_BAR;
     if (montant > 0) {
       depenser(etat, montant);
       evenements.push({ type: 'salaires', montant });
@@ -452,6 +469,7 @@ export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
     depenser(etat, B.CHARGES_FIXES);
     evenements.push({ type: 'charges', montant: B.CHARGES_FIXES });
   }
+  rembourserAvance(etat, evenements);
   if (etat.jour === jourProchaineMensualite(etat)) {
     // La réserve paie en premier, la trésorerie complète.
     const depuisReserve = Math.min(etat.reserve, B.MENSUALITE);

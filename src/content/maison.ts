@@ -23,11 +23,18 @@ export interface DefinitionPiece {
   id: 'salon' | 'bar' | 'bureau';
   nom: string;
   description: string;
+  /** Description une fois la pièce rouverte, si elle change. */
+  descriptionOuverte?: string;
 }
 
 export const PIECES_COMMUNES: DefinitionPiece[] = [
   { id: 'salon', nom: 'Salon', description: 'Là où le personnel attend et où les clients patientent.' },
-  { id: 'bar', nom: 'Bar', description: 'Fermé depuis des années. Les bouteilles aussi.' },
+  {
+    id: 'bar',
+    nom: 'Bar',
+    description: 'Fermé depuis des années. Les bouteilles aussi.',
+    descriptionOuverte: 'Comptoir en laiton, tabourets de velours et une tireuse qui a retrouvé la foi.',
+  },
   { id: 'bureau', nom: 'Bureau', description: 'Ton bureau : un coffre, une lampe et des factures.' },
 ];
 

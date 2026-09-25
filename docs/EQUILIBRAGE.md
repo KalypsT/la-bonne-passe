@@ -120,3 +120,52 @@ Lecture, par rapport à la classique à 3 rendez-vous :
 - Le tarif −20 % ne sert que dans une maison qui n'est pas pleine. Les tendances (partie 4) doivent créer des semaines creuses où il devient utile.
 - La sélection laxiste ne rapporte presque pas d'argent tant que le bar n'existe pas : les groupes devraient y dépenser (partie 3).
 - La priorité d'accueil a des effets faibles, parce que le quai ne tient que 4 personnes.
+
+## Bar et équipe Bar (v0.3, partie 3)
+
+Valeurs dans `balance.ts`, section « Bar et équipe Bar » :
+
+- rénovation 1 200 €, 8 h ; 20 bouteilles trouvées à la cave ;
+- équipe Bar : 0 à 2 personnes à 110 € par jour ; une suffit pour servir, la deuxième ajoute +0,02 de qualité partout ;
+- chaque client reçu passe au bar : recette toute à la maison (touristes 14 €, habitués 10 €, affaires 24 €, groupes 30 €), bouteilles bues (0,4 à 1,2) ;
+- commande au briefing : 40 bouteilles pour 240 € ; livraison express : 20 pour 200 € ; alerte sous 6 bouteilles ;
+- un bar qui sert : qualité +0,02 à +0,06 (les groupes le plus), patience +10 min sur le quai ; un bar vide : groupes −0,06, touristes −0,02 ;
+- avance du grossiste, le lendemain de la réouverture à 11 h : 250 bouteilles (1 500 €) sans payer, 1 650 € remboursés 14 jours plus tard ;
+- formule champagne (bar qui sert) : prix × 1,25, fatigue × 1,3, une bouteille par rendez-vous ; affaires et groupes +0,05, touristes et habitués −0,06 (ils trouvent l'addition salée).
+
+Le joueur simulé rouvre le bar une fois les trois chambres rénovées (vers la nuit 7), avec une personne au comptoir, commande quand le stock passe sous 30 et accepte l'avance.
+
+| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 4 à 6 | 30 / 32 / 33 | 695 € | 1 131 € | 12 343 € | 79 | 0,0 | 26 / 31 / 16 / 28 | 35 / 39 / 16 / 42 |
+| Classique, 4 | 3 à 4 | 32 / 38 / 40 | 937 € | 1 378 € | 18 082 € | 62 | 0,4 | 28 / 29 / 15 / 28 | 42 / 44 / 25 / 47 |
+| Happy hour, 4 | 3 à 3 | 34 / 33 / 29 | 633 € | 1 081 € | 9 106 € | 60 | 1,0 | 39 / 24 / 12 / 25 | 41 / 35 / 4 / 33 |
+| Feutrée, 4 | 3 à 4 | 33 / 42 / 49 | 809 € | 1 249 € | 14 691 € | 72 | 0,0 | 22 / 41 / 12 / 26 | 47 / 60 / 34 / 53 |
+| Classique 3, sans bar | 4 à 6 | 30 / 31 / 33 | 574 € | 900 € | 13 336 € | 76 | 0,0 | 27 / 30 / 15 / 28 | 36 / 39 / 19 / 37 |
+| Classique 3, bar à 2, sans avance | 4 à 6 | 30 / 33 / 32 | 577 € | 1 161 € | 10 894 € | 79 | 0,0 | 26 / 29 / 17 / 28 | 33 / 36 / 16 / 42 |
+| Classique 3, champagne | 4 à 6 | 30 / 30 / 29 | 944 € | 1 380 € | 16 575 € | 74 | 0,3 | 25 / 25 / 18 / 32 | 26 / 27 / 21 / 47 |
+| Classique 3, tarif −20 % | 4 à 6 | 29 / 32 / 34 | 491 € | 928 € | 7 590 € | 75 | 0,0 | 33 / 26 / 13 / 28 | 47 / 37 / 4 / 46 |
+| Classique 3, tarif +20 % | 4 à 6 | 29 / 30 / 29 | 909 € | 1 347 € | 17 379 € | 77 | 0,0 | 21 / 32 / 19 / 28 | 16 / 34 / 31 / 36 |
+| Classique 3, formule courte | 4 à 6 | 32 / 35 / 38 | 663 € | 1 099 € | 12 066 € | 77 | 0,0 | 25 / 28 / 19 / 28 | 38 / 35 / 33 / 49 |
+| Classique 3, soirée complète | 4 à 6 | 29 / 30 / 30 | 697 € | 1 132 € | 13 147 € | 78 | 0,0 | 30 / 38 / 5 / 27 | 32 / 43 / 3 / 38 |
+| Classique 3, sélection laxiste | 4 à 6 | 29 / 29 / 27 | 717 € | 1 153 € | 12 808 € | 76 | 0,0 | 26 / 25 / 14 / 35 | 35 / 25 / 5 / 46 |
+| Classique 3, sélection stricte | 4 à 6 | 31 / 38 / 43 | 633 € | 1 069 € | 11 423 € | 78 | 0,0 | 27 / 38 / 19 / 17 | 42 / 55 / 40 / 31 |
+| Classique 3, habitués d’abord | 4 à 6 | 30 / 33 / 35 | 694 € | 1 130 € | 12 656 € | 77 | 0,0 | 27 / 31 / 14 / 29 | 37 / 43 / 17 / 40 |
+| Classique 3, pressés d’abord | 4 à 6 | 31 / 33 / 34 | 716 € | 1 152 € | 13 180 € | 79 | 0,0 | 25 / 31 / 17 / 27 | 35 / 38 / 21 / 43 |
+| Passif (classique, sans recruter ni rénover) | jamais | 11 / 5 / 2 | 10 € | 231 € | 2 148 € | 46 | 0,0 | 58 / 42 / 0 / 0 | 2 / 1 / 0 / 0 |
+
+Mesures sur 42 nuits (10 graines, classique à 3) :
+
+| Variante | Résultat par jour, semaines 5 et 6 | Avoir après 42 nuits | Réputation nuit 42 |
+| --- | --- | --- | --- |
+| Sans bar | 508 € | 20 450 € | 33 |
+| Bar, une personne | 605 € | 21 170 € | 31 |
+| Bar, formule champagne | 615 € | 24 980 € | 25 |
+
+Lecture :
+
+- **Le bar rapporte environ 100 € de plus par jour** une fois rouvert. Il se rembourse (rénovation, salaires, stock, intérêts de l'avance) en cinq à six semaines. `src/engine/equilibrage-bar.test.ts` le garde.
+- **La deuxième personne au bar ne se paie pas** en argent (110 € par jour pour +0,02 de qualité). Elle achète un peu de réputation.
+- **La sélection laxiste rapporte enfin quelque chose** : les groupes boivent 30 € chacun. Elle passe à +22 € par jour, toujours au prix de −6 de réputation.
+- **La formule champagne** : +250 € par jour au début, mais touristes et habitués décrochent (26 et 27 de satisfaction) et le personnel se fatigue plus vite. En réglant, un poids de 1,15 par rendez-vous faisait tomber un maximum de 3 à 2 rendez-vous par soir et ruinait la formule : attention aux paliers entiers de la charge.
+- **Paradoxe à traiter en partie 6** : la patience en plus sur le quai et la meilleure qualité attirent plus de monde dans une maison déjà pleine, donc plus de clients perdus. D'où la réputation un peu plus basse avec le bar (31 contre 33 sans). La pénalité des clients perdus pèse trop lourd face à la saturation.

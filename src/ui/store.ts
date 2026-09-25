@@ -25,6 +25,7 @@ export type Carte =
   | 'dispute'
   | 'palier'
   | 'nouveautes'
+  | 'grossiste'
   | 'entretien'
   | 'essai'
   | 'imprevu'
@@ -85,7 +86,7 @@ interface EtatInterface {
   choisirVitesse: (vitesse: Vitesse) => void;
   /** Appelée à chaque image avec le temps réel écoulé, en secondes. */
   avancer: (secondes: number) => void;
-  validerBriefing: (choix: { offre: Offre; commanderLinge: boolean; repos: string[]; rdvMax: number }) => void;
+  validerBriefing: (choix: { offre: Offre; commanderLinge: boolean; commanderBar: boolean; repos: string[]; rdvMax: number }) => void;
   /** Envoie un ordre au moteur (nettoyage, linge, repos, dispute), sans faire avancer le temps. */
   ordonner: (ordre: Ordre) => void;
   /** Ouvre une carte ; fermer (null) passe à la carte en attente, comme une annonce de palier. */
@@ -111,6 +112,7 @@ let prochainMontant = 1;
 function carteEnAttente(partie: EtatJeu | null): Carte | null {
   if (!partie) return null;
   if (partie.imprevu) return 'imprevu';
+  if (partie.avance.statut === 'proposee') return 'grossiste';
   if (partie.annonces.length > 0) return 'palier';
   if (partie.nouveautes.length > 0) return 'nouveautes';
   if (partie.adieux.length > 0) return 'adieu';
@@ -124,7 +126,7 @@ function etapeDidacticiel(partie: EtatJeu | null) {
 }
 
 /** Événements qui mettent le jeu en pause et ouvrent une carte. */
-const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai', 'imprevu', 'depart']);
+const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai', 'imprevu', 'depart', 'grossiste']);
 
 /** Traduit les événements en montants flottants et en cartes à ouvrir. Le journal, lui, vit dans la partie. */
 function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
@@ -140,6 +142,7 @@ function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
       candidat = e.candidatId;
     }
     if (e.type === 'imprevu') carte = 'imprevu';
+    if (e.type === 'grossiste') carte = 'grossiste';
     if (e.type === 'depart' && !carte) carte = 'adieu';
     if (e.type === 'finEssai' && !carte) carte = 'essai';
     if (e.type === 'bilan') {
@@ -272,11 +275,11 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     if (bilan) get().sauvegarderPartie();
   },
 
-  validerBriefing: ({ offre, commanderLinge, repos, rdvMax }) => {
+  validerBriefing: ({ offre, commanderLinge, commanderBar, repos, rdvMax }) => {
     const { partie, vitesse } = get();
     if (!partie) return;
     reserveDeTemps = 0;
-    const resultat = appliquerOrdres(partie, [{ type: 'validerBriefing', offre, commanderLinge, repos, rdvMax }]);
+    const resultat = appliquerOrdres(partie, [{ type: 'validerBriefing', offre, commanderLinge, commanderBar, repos, rdvMax }]);
     set({ partie: resultat.etat, carte: null, vitesse: vitesse === 0 ? 1 : vitesse });
     get().signalerDidacticiel('briefing');
     get().sauvegarderPartie();

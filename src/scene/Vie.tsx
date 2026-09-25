@@ -1,7 +1,7 @@
 import { PATIENCE_CLIENT } from '../content/balance';
 import { CLIENTS } from '../content/clientele';
 import { trouverChambre } from '../content/maison';
-import { SILHOUETTE_MENAGE } from '../content/personnel';
+import { SILHOUETTE_MENAGE, SILHOUETTES_BAR } from '../content/personnel';
 import { TEXTES } from '../content/textes';
 import type { Alerte } from '../engine/alertes';
 import type { EtatJeu } from '../engine/etat';
@@ -70,6 +70,15 @@ export function Vie({ partie, alertes, montants, onAlerte }: Props) {
               <Figurine silhouette={e.silhouette} x={place.x} y={place.y} />
             </g>
           );
+        })}
+
+      {/* Équipe Bar, derrière le comptoir */}
+      {enService &&
+        partie.bar.ouvert &&
+        SILHOUETTES_BAR.slice(0, partie.equipes.bar).map((silhouette, i) => {
+          const place = POSITIONS.bar[i];
+          if (!place) return null;
+          return <Figurine key={`bar-${i}`} silhouette={silhouette} x={place.x} y={place.y} hauteur={38} />;
         })}
 
       {/* Ménage */}
@@ -155,6 +164,8 @@ function positionBulle(a: Alerte, partie: EtatJeu) {
     }
     case 'linge':
       return POSITIONS.bulleLinge;
+    case 'barVide':
+      return POSITIONS.bulleBar;
     case 'epuisement': {
       const i = partie.personnel.findIndex((e) => e.id === a.employeId);
       const place = POSITIONS.salon[i];
@@ -187,6 +198,8 @@ function libelle(a: Alerte, partie: EtatJeu): string {
       return t.dispute;
     case 'menace':
       return t.menace(partie.personnel.find((x) => x.id === a.employeId)?.prenom ?? a.employeId);
+    case 'barVide':
+      return t.barVide(a.stock);
   }
 }
 
@@ -195,7 +208,11 @@ function Bulle({ alerte, libelle, x, y, onClick }: { alerte: Alerte; libelle: st
   const R = 11;
   const circonference = 2 * Math.PI * R;
   const part = alerte.type === 'dispute' ? alerte.restant / alerte.total : 1;
-  const urgente = alerte.type === 'dispute' || alerte.type === 'menace' || (alerte.type === 'chambreSale' && alerte.inutilisable);
+  const urgente =
+    alerte.type === 'dispute' ||
+    alerte.type === 'menace' ||
+    (alerte.type === 'chambreSale' && alerte.inutilisable) ||
+    (alerte.type === 'barVide' && alerte.stock <= 0);
   return (
     <g
       className="bulle"
@@ -253,6 +270,14 @@ function Pictogramme({ type }: { type: Alerte['type'] }) {
     case 'dispute':
       // Éclair
       return <path d="M1 -6L-4 1H0L-1 6L4 -1H0Z" fill="#FF4F8B" />;
+    case 'barVide':
+      // Verre vide
+      return (
+        <g>
+          <path d="M-4 -5H4L1 1V5M-2.5 5H2.5M-1 1V5" stroke="#8C2640" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+          <path d="M-3 -4H3" stroke="#D4A64A" strokeWidth="1" />
+        </g>
+      );
     case 'menace':
       // Valise
       return (

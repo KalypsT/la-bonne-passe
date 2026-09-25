@@ -104,7 +104,7 @@ export const TEXTES_DIDACTICIEL = {
 /** Aide courte de chaque onglet, que Josée donne à la demande. */
 export const AIDE_ONGLETS: Record<string, string> = {
   maison:
-    'Tes chambres, le linge et le ménage. Une chambre sale sous 40 % donne l’alerte, sous 15 % elle ne reçoit plus. Les chambres sous les draps se rénovent.',
+    'Tes chambres, le linge et le ménage. Une chambre sale sous 40 % donne l’alerte, sous 15 % elle ne reçoit plus. Les chambres sous les draps se rénovent, et le bar aussi au palier 2.',
   personnel:
     'Ton équipe et tes candidats. Surveille fatigue et moral : sous 20 de moral, on te menace de partir. Un entretien ou une prime, ça aide. Un soir de repos aussi.',
   clientele:

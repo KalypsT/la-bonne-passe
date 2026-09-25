@@ -33,7 +33,7 @@ describe('palier 2 : se faire un nom', () => {
     const avant = { ...soiree(1), minuteDuJour: h(3, 55), reputation: B.REPUTATION_PALIER_2 + 0.5 };
     const { etat, evenements } = tick(avant);
     expect(etat.palier).toBe(2);
-    expect(etat.systemes).toMatchObject({ affaires: true, groupes: true, bar: false, clientele: true });
+    expect(etat.systemes).toMatchObject({ affaires: true, groupes: true, bar: true, clientele: true });
     expect(etat.annonces).toEqual([2]);
     expect(evenements).toContainEqual({ type: 'palier', numero: 2 });
   });
