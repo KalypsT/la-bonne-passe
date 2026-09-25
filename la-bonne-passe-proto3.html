@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>La bonne passe — prototype 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Yellowtail&display=swap" rel="stylesheet">
+<style>
+:root{--night:#0E2229;--night2:#0B1C22;--plum:#241320;--plum2:#301A2A;--velvet:#5C1530;--neon:#FF4F8B;--neon-soft:#FFD3E2;--brass:#D4A64A;--cream:#F4DCC8;--muted:#B99CA6;--line:rgba(212,166,74,.28);--ok:#8FE0BA}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--night:#0E2229;--night2:#0B1C22;--plum:#241320;--plum2:#301A2A;--velvet:#5C1530;--neon:#FF4F8B;--neon-soft:#FFD3E2;--brass:#D4A64A;--cream:#F4DCC8;--muted:#B99CA6;--line:rgba(212,166,74,.28);--ok:#8FE0BA}}
+:root[data-theme="dark"]{--night:#0E2229;--night2:#0B1C22;--plum:#241320;--plum2:#301A2A;--velvet:#5C1530;--neon:#FF4F8B;--neon-soft:#FFD3E2;--brass:#D4A64A;--cream:#F4DCC8;--muted:#B99CA6;--line:rgba(212,166,74,.28);--ok:#8FE0BA}
+:root{box-sizing:border-box;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);background:var(--night)}
+body{height:100%;margin:0;background:var(--night);color:var(--cream);font-family:"Jost",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.35;overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
+.script{font-family:"Yellowtail","Brush Script MT",cursive;font-weight:400}
+#app{height:100%;display:flex;flex-direction:column;position:relative;overflow:hidden}
+
+/* top bar */
+.top{flex:none;height:40px;display:flex;align-items:center;gap:10px;padding:0 10px;background:var(--night2);border-bottom:1px solid var(--line);white-space:nowrap}
+.top .brand{font-size:20px;color:var(--neon-soft);text-shadow:0 0 10px rgba(255,79,139,.6);overflow:hidden;text-overflow:ellipsis;max-width:28%}
+.pill{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid #5FBF95;color:var(--ok)}
+.pill.closed{border-color:var(--muted);color:var(--muted)}
+.pill.open{border-color:var(--neon);color:var(--neon-soft)}
+.sp{flex:1}
+.stat{font-weight:600;font-variant-numeric:tabular-nums}
+.money{color:var(--brass);transition:transform .25s;display:inline-block}
+.money.neg{color:var(--neon)}
+.money.pulse{transform:scale(1.15)}
+.clock b{color:var(--neon-soft);font-size:16px;font-variant-numeric:tabular-nums}
+.clock span{color:var(--muted);font-size:12px;margin-left:4px}
+.speed{display:flex;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.speed button{border:0;background:none;padding:3px 9px;font-size:12.5px;color:var(--muted)}
+.speed button[aria-pressed="true"]{background:var(--velvet);color:var(--cream)}
+
+/* main */
+.main{flex:1;min-height:0;display:flex}
+.scene-wrap{flex:none;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--night)}
+.scene{position:relative;--u:1px}
+.scene>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+#fx{pointer-events:none}
+#hits,#actors,#bubbles,#floaters{position:absolute;inset:0}
+#actors,#floaters,#bubbles{pointer-events:none}
+.bubble{pointer-events:auto}
+.hit{position:absolute;border:0;background:transparent;padding:0;border-radius:calc(3*var(--u))}
+.hit:active,.hit.sel{background:rgba(255,79,139,.10);outline:1px solid rgba(255,79,139,.5)}
+.actor{position:absolute;padding:0;border:0;background:none;transition:left .9s ease-in-out,top .9s ease-in-out,opacity .5s ease}
+.actor svg{width:100%;height:100%;display:block;overflow:visible}
+.actor.tap{pointer-events:auto;cursor:pointer}
+.actor .pat{position:absolute;left:10%;right:10%;top:-9%;height:calc(3*var(--u));border-radius:2px;background:rgba(255,255,255,.18);overflow:hidden}
+.actor .pat i{display:block;height:100%;background:var(--brass)}
+.actor .pat.low i{background:var(--neon)}
+.bubble{position:absolute;transform:translate(-50%,-50%);width:calc(24*var(--u));height:calc(24*var(--u));min-width:26px;min-height:26px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;font-size:calc(12*var(--u));background:conic-gradient(var(--neon) calc(var(--p,1)*360deg),rgba(255,255,255,.18) 0);box-shadow:0 2px 10px rgba(0,0,0,.5);animation:bob 1.6s ease-in-out infinite;z-index:2}
+.bubble span{width:84%;height:84%;border-radius:50%;background:#FFF4EE;display:grid;place-items:center;line-height:1;font-size:max(13px,calc(12*var(--u)))}
+.bubble.calm{background:conic-gradient(var(--brass) 360deg,transparent 0)}
+@keyframes bob{50%{transform:translate(-50%,-62%)}}
+.floater{position:absolute;transform:translate(-50%,0);font-weight:600;color:var(--brass);text-shadow:0 1px 6px rgba(0,0,0,.9);font-size:max(12px,calc(11*var(--u)));animation:floatUp 1.8s ease-out forwards;white-space:nowrap}
+@keyframes floatUp{from{opacity:0;transform:translate(-50%,6px)}15%{opacity:1}to{opacity:0;transform:translate(-50%,-30px)}}
+.neon-off .neon{opacity:.12}
+.neon{transition:opacity .4s}
+.neon.flick{animation:flicker 7s infinite}
+.neon-off .neon.flick{animation:none}
+@keyframes flicker{0%,91%,95%,100%{opacity:1}92%{opacity:.35}93%{opacity:.9}94%{opacity:.25}}
+.wave{animation:drift 6s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateX(-6px)}to{transform:translateX(6px)}}
+.cl,.cr{transform-box:fill-box;transition:transform .8s cubic-bezier(.6,.05,.3,1);transform:scaleX(0)}
+.cl{transform-origin:left center}.cr{transform-origin:right center}
+.cur.closed .cl,.cur.closed .cr{transform:scaleX(1)}
+.cur .plaque,.cur .prog,.cur .progbg{opacity:0;transition:opacity .4s .4s}
+.cur.closed .plaque{opacity:1}
+.cur.svc .prog,.cur.svc .progbg{opacity:1}
+.sheetov{transition:opacity .6s}
+#dayTint,#moon,.nw,#salonDim,#redWin,#facHalo{transition:opacity 1.2s}
+#toasts{position:absolute;left:8px;right:8px;top:6px;display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:none;z-index:5}
+.toast{max-width:96%;background:rgba(36,19,32,.95);border:1px solid var(--line);border-left:3px solid var(--neon);border-radius:10px;padding:6px 10px;font-size:13px;box-shadow:0 6px 18px rgba(0,0,0,.4);animation:tin .3s ease}
+.toast b{color:var(--neon-soft);font-weight:600}.toast em{color:var(--muted)}
+@keyframes tin{from{opacity:0;transform:translateY(-6px)}}
+
+/* panel */
+.panel{flex:1;min-width:0;display:flex;flex-direction:column;background:linear-gradient(var(--plum2),var(--plum) 30%);border-left:1px solid var(--line)}
+.tabs{flex:none;display:flex;gap:2px;padding:4px 4px 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:1;min-width:56px;border:0;background:none;border-radius:10px 10px 0 0;padding:5px 4px 4px;font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:0;position:relative}
+.tabs button .ic{font-size:16px;line-height:1.1}
+.tabs button[aria-pressed="true"]{background:var(--velvet);color:var(--cream)}
+.tabs button.locked{opacity:.4}
+.tabs button.dot::after{content:"";position:absolute;right:8px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--neon)}
+.pbody{flex:1;overflow-y:auto;padding:10px 12px 14px;-webkit-overflow-scrolling:touch}
+.ticker{flex:none;display:block;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:rgba(0,0,0,.2);padding:5px 12px;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticker time{color:var(--brass);margin-right:6px}
+.ticker b{color:var(--cream);font-weight:500}
+h2{margin:0 0 6px;font-size:16px;font-weight:600}
+h3{margin:12px 0 6px;font-size:13.5px;font-weight:600;color:var(--brass)}
+.sub{margin:0 0 8px;color:var(--muted);font-size:12.5px}
+.back{border:0;background:none;color:var(--muted);padding:0 0 6px;font-size:12.5px}
+.palier{border:1px solid var(--neon);border-radius:12px;padding:8px 10px;background:rgba(255,79,139,.08);margin-bottom:10px}
+.palier b{color:var(--neon-soft)}
+.palier .st{margin-top:2px}
+.rule{padding:7px 0;border-top:1px solid rgba(255,255,255,.06)}
+.rule b{font-weight:600;font-size:13px}
+.rule small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+.seg{display:flex;margin-top:5px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{flex:1;border:0;background:none;padding:5px 3px;font-size:12.5px;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--velvet);color:var(--cream);font-weight:500}
+.row{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:0;background:rgba(255,255,255,.045);border-radius:12px;padding:7px 9px;margin-bottom:6px}
+.pt{width:34px;height:38px;flex:none;border-radius:50% 50% 8px 8px;background:radial-gradient(circle at 50% 40%,#5a2a44,#2a1220);overflow:hidden}
+.pt svg{width:100%;height:100%}
+.pt.big{width:54px;height:60px}
+.pt.cand{background:radial-gradient(circle at 50% 40%,#1f4250,#0c1f26)}
+.grow{flex:1;min-width:0}
+.nm{font-weight:600}
+.nm small{font-weight:400;color:var(--muted);margin-left:6px}
+.st{font-size:12px;color:var(--muted)}
+.st.warn{color:var(--neon-soft)}
+.bars{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;align-items:center;font-size:11.5px;color:var(--muted);margin-top:3px}
+.bar{height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--brass)}
+.bar.bad i{background:var(--neon)}
+.team{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(255,255,255,.06)}
+.step{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.step button{border:0;background:none;width:30px;height:28px;font-size:16px}
+.step button:disabled{opacity:.3}
+.step span{min-width:20px;text-align:center;font-weight:600}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin:0;font-size:13px}
+.kv dt{color:var(--muted)}.kv dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.big-money{font-size:24px;font-weight:600;color:var(--brass)}
+.acts{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.act{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:12px;padding:8px 10px;text-align:left;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.act small{color:var(--muted);display:block;font-size:11.5px}
+.act .cost{color:var(--brass);font-weight:600;white-space:nowrap}
+.act:disabled{opacity:.4;cursor:default}
+.act.on{border-color:var(--neon);background:rgba(255,79,139,.12)}
+.pips{display:inline-flex;gap:2px;margin-left:6px;vertical-align:middle}
+.pips i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.15)}
+.pips i.on{background:var(--brass)}
+.traits{display:grid;grid-template-columns:auto auto;justify-content:start;gap:2px 10px;font-size:12px;color:var(--muted);margin-top:6px}
+.tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);margin:2px 4px 0 0}
+.tag.hid{border-style:dashed;color:var(--muted)}
+.log{list-style:none;margin:0;padding:0;font-size:12.5px}
+.log li{padding:4px 0;border-top:1px solid rgba(255,255,255,.05)}
+.log time{color:var(--brass);margin-right:8px}
+.lock{padding:14px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);text-align:center}
+
+/* overlays */
+.modal{position:absolute;inset:0;background:rgba(8,16,20,.74);display:flex;align-items:center;justify-content:center;padding:10px;z-index:30;animation:tin .25s}
+.modal[hidden]{display:none}
+.card{width:100%;max-width:620px;max-height:100%;overflow:auto;background:linear-gradient(160deg,#3a1629,#1f0f1a);border:1px solid var(--brass);border-radius:16px;padding:14px 16px;box-shadow:0 20px 50px rgba(0,0,0,.5),inset 0 0 0 3px rgba(212,166,74,.08)}
+.card.narrow{max-width:440px}
+.card h2.script{font-size:30px;line-height:1.05;margin:0 0 6px;color:var(--neon-soft);text-shadow:0 0 12px rgba(255,79,139,.6);font-weight:400}
+.card p{margin:0 0 10px;font-size:14px;line-height:1.45}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.choices{display:flex;flex-direction:column;gap:6px}
+.choices button{text-align:left;border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:12px;padding:8px 11px}
+.choices button small{display:block;color:var(--muted);font-size:12px}
+.choices button.on{border-color:var(--neon);background:rgba(255,79,139,.12)}
+.btn{border:1px solid var(--neon);background:var(--neon);color:#2A0A17;border-radius:12px;padding:9px 16px;font-weight:600}
+.btn.ghost{background:none;color:var(--cream);border-color:var(--line);font-weight:500}
+.btn:disabled{opacity:.4}
+.btns{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+.josee{display:flex;gap:10px;align-items:flex-start;background:rgba(0,0,0,.25);border-radius:12px;padding:8px 10px;margin:8px 0;font-style:italic;color:var(--neon-soft);font-size:13px}
+.josee .pt{background:radial-gradient(circle at 50% 40%,#4a2a5a,#1e1026)}
+.josee b{display:block;font-style:normal;color:var(--brass);font-size:11.5px;font-weight:600}
+
+/* screens */
+.screen{position:absolute;inset:0;z-index:40;display:flex;background:radial-gradient(ellipse at 30% 30%,#1c3a44,#0a171c 70%);overflow:auto}
+.screen[hidden]{display:none}
+.title-l{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:16px;text-align:center}
+.logo{font-size:clamp(44px,9vw,76px);color:var(--neon-soft);text-shadow:0 0 8px var(--neon),0 0 24px var(--neon),0 0 48px rgba(255,79,139,.5);line-height:1;animation:flicker 7s infinite}
+.tagline{color:var(--muted);margin-top:8px;font-size:13px}
+.title-r{flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:16px 20px 16px 0;max-width:420px}
+.slot{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;padding:9px 11px;background:rgba(36,19,32,.7)}
+.slot .grow b{display:block}
+.slot .st{font-size:12px}
+.slot .btn{padding:6px 12px;font-size:13px}
+.slot .del{border:0;background:none;color:var(--muted);font-size:12px;padding:4px}
+.create{flex:1;display:grid;grid-template-columns:1.1fr 1fr;gap:18px;padding:14px 18px;align-content:center;max-width:860px;margin:0 auto;width:100%}
+.avs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.av{border:1px solid var(--line);border-radius:12px;background:rgba(36,19,32,.7);padding:4px 4px 3px;display:flex;flex-direction:column;align-items:center;font-size:11.5px;color:var(--muted)}
+.av svg{height:min(19vh,90px);width:auto}
+.av[aria-pressed="true"]{border-color:var(--neon);background:rgba(255,79,139,.14);color:var(--cream)}
+.field{display:flex;flex-direction:column;gap:3px;margin-bottom:9px}
+.field label{font-size:12.5px;color:var(--muted)}
+.field input{font:inherit;color:var(--cream);background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:10px;padding:8px 10px;user-select:text}
+.preview{font-size:26px;color:var(--neon-soft);text-shadow:0 0 10px var(--neon);text-align:center;margin:4px 0 8px;min-height:34px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* tutorial */
+#tring{position:absolute;z-index:35;border:2px solid var(--neon);border-radius:12px;box-shadow:0 0 0 9999px rgba(5,10,12,.55),0 0 18px var(--neon);pointer-events:none;transition:all .35s ease}
+#tring[hidden],#tcard[hidden]{display:none}
+#tcard{position:absolute;z-index:36;width:min(340px,46%);bottom:10px;background:linear-gradient(160deg,#3a1629,#1f0f1a);border:1px solid var(--brass);border-radius:14px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#tcard .josee{margin:0 0 6px;background:none;padding:0}
+#tcard .btns{margin-top:6px}
+#tcard .btn{padding:6px 12px;font-size:13px}
+
+#rotate{display:none;position:fixed;inset:0;z-index:100;background:var(--night);color:var(--cream);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:12px}
+#rotate .ic{font-size:48px;animation:rot 2s ease-in-out infinite}
+@keyframes rot{50%{transform:rotate(90deg)}}
+@media (orientation: portrait) and (max-width: 760px){#rotate{display:flex}}
+@media (prefers-reduced-motion: reduce){.neon.flick,.wave,.bubble,.logo,#rotate .ic{animation:none}.actor{transition:opacity .3s}.cl,.cr{transition-duration:.01s}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <span class="brand script" id="brand">La bonne passe</span>
+    <span class="pill">Amsterdam, légal</span>
+    <span class="sp"></span>
+    <span class="stat money" id="money">3 000 €</span>
+    <span class="stat" id="rep">★ 15</span>
+    <span class="clock"><b id="clock">17:00</b><span id="day">Lundi, jour 1</span></span>
+    <span class="pill closed" id="openPill">Fermé</span>
+    <div class="speed" id="speed" role="group" aria-label="Vitesse"></div>
+  </header>
+  <div class="main" id="main">
+    <div class="scene-wrap" id="wrap">
+      <div id="toasts" aria-live="polite"></div>
+      <div class="scene neon-off" id="scene">
+<svg id="bg" viewBox="0 0 600 410" aria-hidden="true">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#081A20"/><stop offset=".75" stop-color="#16323B"/><stop offset="1" stop-color="#1B3A44"/></linearGradient>
+  <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123440"/><stop offset="1" stop-color="#06141A"/></linearGradient>
+  <radialGradient id="redwin" cx=".5" cy=".55" r=".7"><stop offset="0" stop-color="#FF6B7E"/><stop offset=".55" stop-color="#E0213F"/><stop offset="1" stop-color="#6E0A1E"/></radialGradient>
+  <radialGradient id="halo"><stop offset="0" stop-color="#FF4F8B" stop-opacity=".5"/><stop offset="1" stop-color="#FF4F8B" stop-opacity="0"/></radialGradient>
+  <radialGradient id="warm"><stop offset="0" stop-color="#F6C878" stop-opacity=".55"/><stop offset="1" stop-color="#F6C878" stop-opacity="0"/></radialGradient>
+  <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C9D6E2"/><stop offset=".5" stop-color="#6F8497"/><stop offset="1" stop-color="#A9B9C8"/></linearGradient>
+  <pattern id="brick" width="12" height="6" patternUnits="userSpaceOnUse"><rect width="12" height="6" fill="#5E2626"/><path d="M0 5.5H12M6 0V2.8M0 2.8H12M0 2.8V5.5M12 2.8V5.5" stroke="#471B1C" stroke-width=".6"/></pattern>
+  <pattern id="cobble" width="10" height="6" patternUnits="userSpaceOnUse"><rect width="10" height="6" fill="#2E2220"/><rect x=".6" y=".6" width="8.8" height="4.8" rx="2" fill="#3C2D2A"/></pattern>
+  <pattern id="stripes" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#3A1826"/><rect width="4" height="10" fill="#43202F"/></pattern>
+  <pattern id="damask" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#5C1530"/><path d="M7 2L10 7L7 12L4 7Z" fill="#6A1B39"/></pattern>
+  <pattern id="diam" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#243548"/><path d="M6 0L12 6L6 12L0 6Z" fill="none" stroke="#2C4058" stroke-width=".8"/></pattern>
+  <pattern id="dots" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#6B2346"/><circle cx="5" cy="5" r="1.1" fill="#7E2C54"/></pattern>
+  <pattern id="orient" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#1E4A4A"/><path d="M8 1Q12 8 8 15Q4 8 8 1Z" fill="none" stroke="#C9A24A" stroke-width=".6" opacity=".6"/></pattern>
+  <pattern id="wood" width="20" height="6" patternUnits="userSpaceOnUse"><rect width="20" height="6" fill="#3A2418"/><path d="M0 5.5H20" stroke="#2A180F" stroke-width=".8"/></pattern>
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="soft"><feGaussianBlur stdDeviation="2.5"/></filter>
+</defs>
+<rect width="600" height="410" fill="url(#sky)"/>
+<rect id="dayTint" width="600" height="410" fill="#86B6C4" opacity="0"/>
+<g fill="#F4DCC8" opacity=".6"><circle cx="40" cy="30" r=".8"/><circle cx="140" cy="18" r=".6"/><circle cx="470" cy="14" r=".7"/><circle cx="520" cy="60" r=".6"/><circle cx="30" cy="80" r=".6"/><circle cx="430" cy="40" r=".5"/></g>
+<g id="moon"><circle cx="555" cy="36" r="22" fill="url(#warm)" opacity=".5"/><circle cx="555" cy="36" r="11" fill="#F4DCC8" opacity=".9"/><circle cx="560" cy="33" r="10" fill="#0F2830"/></g>
+<!-- neighbours -->
+<path d="M0 410V120H14V104H30V88H48V104H62V120H88V410Z" fill="#17303A"/>
+<g class="nw" fill="#E8B45A" opacity=".55"><rect x="16" y="150" width="10" height="15"/><rect x="50" y="150" width="10" height="15" opacity=".35"/><rect x="16" y="215" width="10" height="15" opacity=".4"/><rect x="50" y="275" width="10" height="15"/></g>
+<path d="M512 410V96H530V80H548V64H566V80H584V96H600V410Z" fill="#1A3640"/>
+<g class="nw" fill="#E8B45A" opacity=".5"><rect x="530" y="130" width="10" height="15"/><rect x="566" y="130" width="10" height="15" opacity=".3"/><rect x="530" y="200" width="10" height="15" opacity=".35"/><rect x="566" y="265" width="10" height="15"/></g>
+<!-- house -->
+<path d="M200 70V52H220V34H240V16H360V34H380V52H400V70Z" fill="url(#brick)"/>
+<g fill="#D9CBB8"><rect x="198" y="50" width="24" height="3"/><rect x="218" y="32" width="24" height="3"/><rect x="238" y="14" width="124" height="3"/><rect x="358" y="32" width="24" height="3"/><rect x="378" y="50" width="24" height="3"/></g>
+<circle cx="300" cy="44" r="11" fill="#D9CBB8"/><circle cx="300" cy="44" r="9" fill="#0E2630"/><circle cx="303" cy="41" r="2.5" fill="#F4DCC8" opacity=".7"/>
+<rect x="295" y="17" width="10" height="7" fill="#2A1A14"/><path d="M300 24V30M297 30Q300 35 303 30" stroke="#2A1A14" stroke-width="1.3" fill="none"/>
+<rect x="88" y="70" width="424" height="302" fill="url(#brick)"/>
+<rect x="84" y="66" width="432" height="5" fill="#D9CBB8"/>
+<!-- slabs -->
+<rect x="88" y="148" width="424" height="8" fill="#2B1812"/>
+<rect x="88" y="228" width="424" height="8" fill="#2B1812"/>
+<rect x="88" y="306" width="424" height="8" fill="#2B1812"/>
+<rect x="298" y="76" width="4" height="152" fill="#2B1812"/>
+<!-- boudoir -->
+<rect x="96" y="76" width="202" height="72" fill="url(#dots)"/>
+<path d="M100 84Q197 102 294 84" stroke="#3A1426" stroke-width=".6" fill="none"/>
+<g fill="#F6C878"><circle cx="118" cy="88" r="1.5"/><circle cx="140" cy="92" r="1.5"/><circle cx="162" cy="95" r="1.5"/><circle cx="232" cy="95" r="1.5"/><circle cx="254" cy="92" r="1.5"/><circle cx="276" cy="88" r="1.5"/></g>
+<circle cx="197" cy="128" r="40" fill="url(#halo)" opacity=".6"/>
+<path d="M165 140A32 28 0 0 1 229 140Z" fill="#C23B6B"/><ellipse cx="197" cy="142" rx="40" ry="6" fill="#F2D2C0"/><path d="M160 142Q197 152 234 142Q226 148 197 148Q168 148 160 142Z" fill="#FF4F8B" opacity=".75"/>
+<text x="101" y="145" font-family="Jost,sans-serif" font-size="6.5" fill="#F4DCC8" opacity=".7">Boudoir</text>
+<!-- orientale -->
+<rect x="302" y="76" width="202" height="72" fill="url(#orient)"/>
+<g fill="#F6C878"><path d="M340 84V92M336 92H344L342 100H338Z"/><path d="M466 84V92M462 92H470L468 100H464Z"/></g>
+<circle cx="340" cy="98" r="12" fill="url(#warm)"/><circle cx="466" cy="98" r="12" fill="url(#warm)"/>
+<rect x="360" y="130" width="90" height="12" rx="4" fill="#C9A24A"/><rect x="364" y="124" width="22" height="9" rx="4" fill="#B0294F"/><rect x="390" y="124" width="22" height="9" rx="4" fill="#2E6E6A"/><rect x="416" y="124" width="22" height="9" rx="4" fill="#7A1F35"/>
+<text x="307" y="145" font-family="Jost,sans-serif" font-size="6.5" fill="#F4DCC8" opacity=".7">Chambre orientale</text>
+<!-- velours -->
+<rect x="96" y="156" width="202" height="72" fill="url(#damask)"/>
+<rect x="182" y="164" width="30" height="18" fill="#2A1218" stroke="#D4A64A" stroke-width="1.5"/><path d="M186 178Q192 168 198 174T208 170" stroke="#FF4F8B" stroke-width="1.2" fill="none"/>
+<circle cx="112" cy="184" r="13" fill="url(#warm)"/><circle cx="282" cy="184" r="13" fill="url(#warm)"/>
+<path d="M160 206V190Q197 180 234 190V206Z" fill="#8A2143"/>
+<rect x="156" y="204" width="82" height="10" rx="3" fill="#F2D2C0"/><rect x="156" y="209" width="82" height="9" rx="2" fill="#B0294F"/>
+<text x="101" y="224" font-family="Jost,sans-serif" font-size="6.5" fill="#F4DCC8" opacity=".7">Suite velours</text>
+<!-- miroirs -->
+<rect x="302" y="156" width="202" height="72" fill="url(#diam)"/>
+<g stroke="#D4A64A" stroke-width="1.1"><ellipse cx="370" cy="178" rx="8" ry="11" fill="url(#silver)"/><ellipse cx="403" cy="173" rx="9" ry="12" fill="url(#silver)"/><ellipse cx="436" cy="178" rx="8" ry="11" fill="url(#silver)"/></g>
+<path d="M364 206V192H442V206Z" fill="#141420"/><rect x="362" y="204" width="82" height="10" rx="3" fill="#F2D2C0"/><rect x="362" y="209" width="82" height="9" rx="2" fill="#FF4F8B" opacity=".85"/>
+<text x="307" y="224" font-family="Jost,sans-serif" font-size="6.5" fill="#F4DCC8" opacity=".7">Chambre miroirs</text>
+<!-- salon -->
+<rect x="96" y="236" width="234" height="70" fill="url(#stripes)"/>
+<rect x="96" y="286" width="234" height="20" fill="#2C1020"/><rect x="96" y="285" width="234" height="1.4" fill="#D4A64A" opacity=".6"/>
+<circle cx="213" cy="252" r="40" fill="url(#warm)" opacity=".8"/>
+<path d="M213 236V244M203 247Q213 255 223 247M206 247V244M213 249V244M220 247V244" stroke="#D4A64A" stroke-width="1.1" fill="none"/>
+<path d="M104 292V282Q106 276 114 276H176Q184 276 186 282V292Z" fill="#7A1F35"/><rect x="100" y="288" width="90" height="12" rx="4" fill="#8C2640"/>
+<text x="101" y="246" font-family="Jost,sans-serif" font-size="6.5" fill="#F4DCC8" opacity=".7">Salon</text>
+<!-- bar -->
+<rect x="334" y="236" width="96" height="70" fill="#2A1520"/>
+<rect x="342" y="244" width="80" height="24" fill="#1A0E14"/><rect x="342" y="256" width="80" height="1.4" fill="#D4A64A"/>
+<g><rect x="346" y="248" width="3" height="8" fill="#5FBF95"/><rect x="352" y="249" width="3" height="7" fill="#E8B45A"/><rect x="358" y="247" width="3" height="9" fill="#8C2640"/><rect x="364" y="248" width="3" height="8" fill="#C9D6E2"/><rect x="400" y="248" width="3" height="8" fill="#E8B45A"/><rect x="408" y="247" width="3" height="9" fill="#FF4F8B"/></g>
+<rect x="338" y="280" width="92" height="26" fill="#2A1812"/><rect x="335" y="277" width="95" height="4" rx="1" fill="#D4A64A"/>
+<text x="338" y="246" font-family="Jost,sans-serif" font-size="6.5" fill="#F4DCC8" opacity=".7">Bar</text>
+<!-- bureau -->
+<rect x="434" y="236" width="70" height="70" fill="url(#wood)"/>
+<rect x="442" y="286" width="54" height="4" fill="#6B4A2B"/><rect x="446" y="290" width="4" height="16" fill="#5A3A22"/><rect x="488" y="290" width="4" height="16" fill="#5A3A22"/>
+<path d="M486 286V276M482 276H490L488 270H484Z" fill="#F2C46A" stroke="#6B4A2B" stroke-width=".6"/><circle cx="486" cy="276" r="10" fill="url(#warm)"/>
+<rect x="440" y="258" width="16" height="18" rx="1" fill="#3A3A40" stroke="#6A6A70" stroke-width=".8"/><circle cx="448" cy="267" r="2.4" fill="none" stroke="#D4A64A" stroke-width=".8"/>
+<text x="438" y="246" font-family="Jost,sans-serif" font-size="6.5" fill="#F4DCC8" opacity=".7">Bureau</text>
+<!-- ground floor -->
+<circle id="facHalo" cx="255" cy="350" r="60" fill="url(#halo)"/>
+<path d="M120 372V336Q135 320 150 336V372Z" fill="#1E3A30" stroke="#D9CBB8" stroke-width="1.4"/><path d="M125 342H145M125 356H145M135 342V372" stroke="#16291F" stroke-width=".9"/><circle cx="146" cy="354" r="1.4" fill="#D4A64A"/>
+<rect id="redWin" x="180" y="336" width="150" height="32" rx="2" fill="url(#redwin)" stroke="#D9CBB8" stroke-width="1.8"/><path d="M230 336V368M280 336V368" stroke="#D9CBB8" stroke-width="1.2"/>
+<path d="M255 368V360M249 360H261L257 353H253Z" fill="#5C0A1C"/>
+<g class="neon flick"><text id="signGlow" x="255" y="331" text-anchor="middle" font-family="Yellowtail,cursive" font-size="17" fill="#FF4F8B" filter="url(#glow)">La bonne passe</text><text id="sign" x="255" y="331" text-anchor="middle" font-family="Yellowtail,cursive" font-size="17" fill="#FFE3EE">La bonne passe</text></g>
+<rect x="370" y="334" width="110" height="30" rx="2" fill="#2A3A40" stroke="#D9CBB8" stroke-width="1.4"/><path d="M425 334V364" stroke="#D9CBB8" stroke-width="1"/><rect x="372" y="358" width="106" height="4" fill="#2F5A3A"/><g fill="#3E7A4A"><circle cx="380" cy="356" r="3"/><circle cx="396" cy="355" r="3.4"/><circle cx="455" cy="356" r="3"/><circle cx="470" cy="355" r="3.4"/></g>
+<!-- quay -->
+<rect x="0" y="372" width="600" height="22" fill="url(#cobble)"/><rect x="114" y="372" width="42" height="4" fill="#8A7A6A"/>
+<rect x="0" y="392" width="600" height="4" fill="#6B5E54"/>
+<circle cx="66" cy="316" r="24" fill="url(#warm)"/><path d="M66 392V320" stroke="#12181A" stroke-width="2"/><path d="M61 310H71L69 322H63Z" fill="#F2C46A"/><path d="M60 310H72" stroke="#12181A" stroke-width="2"/>
+<g stroke="#CFC6BA" stroke-width="1.2" fill="none"><circle cx="530" cy="384" r="6.5"/><circle cx="554" cy="384" r="6.5"/><path d="M530 384L539 374H551L554 384M539 374L541 384H530M550 369V374M547 369H553M537 372H543"/></g>
+<rect x="0" y="396" width="600" height="14" fill="url(#water)"/>
+<g stroke="#F4DCC8" stroke-opacity=".14" stroke-width="1" fill="none"><path class="wave" d="M20 401H90M150 404H250M300 400H380M430 405H520"/></g>
+<g class="neon flick" opacity=".35" filter="url(#soft)"><rect x="200" y="399" width="110" height="5" rx="2" fill="#FF4F8B"/></g>
+</svg>
+        <div id="hits"></div>
+        <div id="actors"></div>
+        <svg id="fx" viewBox="0 0 600 410" aria-hidden="true">
+          <defs><pattern id="velvet" width="8" height="10" patternUnits="userSpaceOnUse"><rect width="8" height="10" fill="#6A0C25"/><rect width="3" height="10" fill="#8C1733"/><rect x="6.4" width="1.2" height="10" fill="#4A0619"/></pattern></defs>
+          <rect id="salonDim" x="96" y="236" width="234" height="70" fill="#05080a" opacity=".5"/>
+          <g id="fxrooms"></g>
+        </svg>
+        <div id="bubbles"></div>
+        <div id="floaters"></div>
+      </div>
+    </div>
+    <aside class="panel" id="panel">
+      <nav class="tabs" id="tabs"></nav>
+      <div class="pbody" id="pbody"></div>
+      <button class="ticker" id="ticker"><time>17:00</time><b>Bienvenue.</b></button>
+    </aside>
+  </div>
+
+  <div class="modal" id="modal" hidden><div class="card" id="card"></div></div>
+  <div id="tring" hidden></div>
+  <div id="tcard" hidden></div>
+
+  <section class="screen" id="titleScreen" hidden></section>
+  <section class="screen" id="createScreen" hidden></section>
+</div>
+<div id="rotate"><div class="ic">📱</div><div class="script" style="font-size:34px;color:var(--neon-soft)">La bonne passe</div><div>Tourne ton téléphone : le jeu se joue en paysage.</div></div>
+
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const rand=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const euro=n=>(n<0?"−":"")+Math.round(Math.abs(n)).toLocaleString("fr-FR")+" €";
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const VB={w:600,h:410},FW=22,FH=44;
+const DAYS=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+const fmt=t=>{t=Math.floor(t)%1440;return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0")};
+
+/* ================= FIGURES ================= */
+function fig(l){
+  const s=l.skin,h=l.hair;let o="";
+  const long=(l.kind==="f"&&!l.short&&!l.afro&&!l.bun)||l.longHair;
+  if(l.afro)o+=`<circle cx="12" cy="7" r="7.2" fill="${h}"/>`;
+  if(l.bun)o+=`<circle cx="12" cy="2.2" r="2.8" fill="${h}"/>`;
+  if(long)o+=`<path d="M6.6 9Q6.4 2 12 2Q17.6 2 17.4 9L18.4 19Q12 21 5.6 19Z" fill="${h}"/>`;
+  if(l.kind==="f")o+=`<path d="M10.2 39L9.8 45.5M13.8 39L14.2 45.5" stroke="${s}" stroke-width="1.7" stroke-linecap="round"/><path d="M8.6 46h2.4M13.2 46h2.4" stroke="${l.accent||"#222"}" stroke-width="1.5" stroke-linecap="round"/>`;
+  else o+=`<path d="M7.4 27H16.6L16 45.5H13L12 31L11 45.5H8Z" fill="${l.pants}"/><path d="M7.4 46h3.4M13 46h3.6" stroke="#15101a" stroke-width="1.6" stroke-linecap="round"/>`;
+  const arm=l.kind==="f"?s:l.outfit;
+  o+=`<path d="M7.6 16L5 28M16.4 16L19 28" stroke="${arm}" stroke-width="${l.kind==="f"?1.8:2.6}" stroke-linecap="round"/><circle cx="4.9" cy="28.6" r="1.1" fill="${s}"/><circle cx="19.1" cy="28.6" r="1.1" fill="${s}"/>`;
+  if(l.mop)o+=`<path d="M19.4 20L21 46" stroke="#8A6A4A" stroke-width=".9"/><path d="M19.6 45.5h3.4" stroke="#DDD" stroke-width="2" stroke-linecap="round"/>`;
+  o+=`<rect x="10.8" y="11.5" width="2.4" height="3.5" fill="${s}"/>`;
+  if(l.kind==="f")o+=`<path d="M8 15Q12 13.8 16 15L15.2 22.5L18.6 40Q12 42 5.4 40L8.8 22.5Z" fill="${l.outfit}" stroke="rgba(255,255,255,.2)" stroke-width=".4"/><path d="M8.8 22.5Q12 23.6 15.2 22.5" stroke="${l.accent||"#D4A64A"}" stroke-width=".7" fill="none"/>`;
+  else{
+    o+=`<path d="M7 15Q12 13.2 17 15L16.6 28H7.4Z" fill="${l.outfit}"/>`;
+    o+=l.tie?`<path d="M12 14.5L11.2 21L12 22.5L12.8 21Z" fill="${l.tie}"/>`:`<path d="M10.4 14.4L12 17.6L13.6 14.4" fill="none" stroke="${s}" stroke-width=".8"/>`;
+    if(l.scarf)o+=`<path d="M9.5 14.2Q12 16 14.5 14.2L14 21" stroke="${l.scarf}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+  }
+  if(l.pearls)o+=`<path d="M10 14.6Q12 16.4 14 14.6" stroke="#F4EFE6" stroke-width="1" stroke-dasharray=".6 .5" fill="none"/>`;
+  o+=`<circle cx="12" cy="8" r="4.6" fill="${s}"/>`;
+  if(l.beard)o+=`<path d="M7.6 8.6Q8 13.6 12 13.8Q16 13.6 16.4 8.6Q15 11 12 11Q9 11 7.6 8.6Z" fill="${h}"/>`;
+  if(l.moustache)o+=`<path d="M10 10.2Q12 9.2 14 10.2Q12 10.8 10 10.2Z" fill="${l.moustache}"/>`;
+  if(l.afro)o+=`<path d="M7.4 7Q8 3.4 12 3.2Q16 3.4 16.6 7Q14.5 5.4 12 5.4Q9.5 5.4 7.4 7Z" fill="${h}"/>`;
+  else if(long)o+=`<path d="M7.3 7.6Q8.6 3 12 3.3Q15.8 3 16.8 7.8Q14.6 5.4 11.4 5.9Q9 6.2 7.3 7.6Z" fill="${h}"/>`;
+  else if(l.bun)o+=`<path d="M7.4 8Q7.6 3.4 12 3.4Q16.4 3.4 16.6 8Q15 5.6 12 5.6Q9 5.6 7.4 8Z" fill="${h}"/>`;
+  else if(l.bald)o+=`<path d="M7.5 8.5Q7.4 6.6 8.2 6.2M16.5 8.5Q16.6 6.6 15.8 6.2" stroke="${h}" stroke-width="1.2" fill="none"/>`;
+  else if(l.kind==="f")o+=`<path d="M7 10Q6.4 2.6 12 2.8Q17.6 2.6 17 10H16.2Q16 6 12 5.6Q8 6 7.8 10Z" fill="${h}"/>`;
+  else o+=`<path d="M7.4 7.6Q7 2.6 12 2.7Q17 2.6 16.6 7.6Q15.2 5 12 5Q8.8 5 7.4 7.6Z" fill="${h}"/>`;
+  if(l.cap)o+=`<path d="M7.2 6.4Q7.6 2.2 12 2.2Q16.4 2.2 16.8 6.4Z" fill="${l.cap}"/><path d="M15.8 6.2L19.6 6.6" stroke="${l.cap}" stroke-width="1.2" stroke-linecap="round"/>`;
+  if(l.hat)o+=`<ellipse cx="12" cy="4.6" rx="6.6" ry="1.3" fill="${l.hat}"/><path d="M8.4 4.6Q8.6 .8 12 .8Q15.4 .8 15.6 4.6Z" fill="${l.hat}"/>`;
+  if(l.glasses==="dark")o+=`<rect x="8.6" y="7.2" width="3" height="1.8" rx=".6" fill="#0a0a0a"/><rect x="12.4" y="7.2" width="3" height="1.8" rx=".6" fill="#0a0a0a"/>`;
+  else if(l.glasses)o+=`<circle cx="10.2" cy="8.2" r="1.3" fill="none" stroke="#1a1a1a" stroke-width=".5"/><circle cx="13.8" cy="8.2" r="1.3" fill="none" stroke="#1a1a1a" stroke-width=".5"/>`;
+  return o;
+}
+const full=l=>`<svg viewBox="0 -2 24 50">${fig(l)}</svg>`;
+const portrait=l=>`<svg viewBox="4 -1 16 20">${fig(l)}</svg>`;
+
+/* ================= DATA ================= */
+const AVATARS=[
+  {id:"a1",label:"L’élégante",f:true,look:{kind:"f",skin:"#F1C7A5",hair:"#2A1712",outfit:"#141418",accent:"#D4A64A"}},
+  {id:"a2",label:"La rousse",f:true,look:{kind:"c",longHair:true,skin:"#F4CFB0",hair:"#B5482A",outfit:"#1F5A4A",pants:"#1A4A3E"}},
+  {id:"a3",label:"L’audacieuse",f:true,look:{kind:"f",afro:true,skin:"#6B4530",hair:"#140C0A",outfit:"#7A1F35",accent:"#D4A64A"}},
+  {id:"a4",label:"Le barbu",f:false,look:{kind:"c",beard:true,skin:"#E8B894",hair:"#3A2618",outfit:"#1C2A44",pants:"#1C2A44",tie:"#D4A64A"}},
+  {id:"a5",label:"Le dandy",f:false,look:{kind:"c",skin:"#D9A07A",hair:"#111",outfit:"#F2E6D8",pants:"#2B2233",scarf:"#FF4F8B"}},
+  {id:"a6",label:"Le parrain",f:false,look:{kind:"c",bald:true,moustache:"#9A9A9A",skin:"#F1C7A5",hair:"#9A9A9A",outfit:"#3A3E47",pants:"#2E3138",tie:"#7A1F35",hat:"#1A1A1A"}}
+];
+const JOSEE={kind:"f",bun:true,skin:"#F1C7A5",hair:"#C9C3C9",outfit:"#5B2A6E",accent:"#E8E0D0",glasses:true,pearls:true};
+const CLEANER={kind:"c",longHair:true,skin:"#D9A07A",hair:"#5A3A22",outfit:"#5FA3A8",pants:"#3E6E72",mop:true};
+const TRAIT_FX={
+  "Mère poule":"Remonte le moral de l’équipe chaque nuit.",
+  "Fidèle":"Loyauté élevée, résiste aux offres des rivales.",
+  "Diva":"Perd du moral tant qu’aucune chambre premium n’est ouverte.",
+  "Ambitieuse":"Gagne du moral quand la réputation monte.",
+  "Solitaire":"Récupère mieux les soirs de repos.",
+  "Tête brûlée":"Ose tout, mais déclenche parfois des disputes.",
+  "Fêtarde":"Met l’ambiance, mais se fatigue plus vite."
+};
+const STAFF_DB={
+  sanne:{name:"Sanne",age:29,line:"Fait rire n’importe qui",tr:{charme:3,conversation:5,audace:2,discretion:3},traits:["Mère poule","Fidèle"],look:{kind:"f",skin:"#F1C7A5",hair:"#C8913E",outfit:"#1F7A5C",accent:"#D4A64A"},f:true},
+  mila:{name:"Mila",age:26,line:"Un regard qui désarme",tr:{charme:5,conversation:2,audace:3,discretion:2},traits:["Diva","Ambitieuse"],look:{kind:"f",skin:"#D9A07A",hair:"#2A1712",outfit:"#FF4F8B",accent:"#2A1712"},f:true,
+    intro:"Mila arrive avec vingt minutes de retard et des lunettes de soleil. Elle vient du Pink Palace, de l’autre côté du canal.",
+    qs:[{q:"« Pourquoi quitter le Pink Palace ? »",a:"« Ils m’ont donné la chambre du fond. Moi. La chambre du fond. »",t:"Diva"},{q:"« Tu te vois où, dans deux ans ? »",a:"« Dans ton fauteuil, peut-être. Sans vouloir te vexer. »",t:"Ambitieuse"}]},
+  jonas:{name:"Jonas",age:28,line:"Le gendre idéal, en mieux",tr:{charme:4,conversation:4,audace:2,discretion:4},traits:["Solitaire","Fidèle"],look:{kind:"m",skin:"#E8B894",hair:"#6B4A2B",outfit:"#F2E6D8",pants:"#2B2233"},f:false,
+    intro:"Jonas se présente en chemise repassée, un bouquet pour Sanne à la main. Il sort d’une maison qui vient de fermer.",
+    qs:[{q:"« Qu’est-ce que tu fais de tes soirs de repos ? »",a:"« Je lis. Seul. Avec un chat. C’est un problème ? »",t:"Solitaire"},{q:"« Pourquoi ta maison a fermé ? »",a:"« Le patron est parti avec la caisse. Moi, je suis resté jusqu’au bout. »",t:"Fidèle"}]},
+  ines:{name:"Inès",age:31,line:"N’a peur de rien, sauf des pigeons",tr:{charme:3,conversation:3,audace:5,discretion:2},traits:["Tête brûlée","Fêtarde"],look:{kind:"f",short:true,skin:"#8D5A3B",hair:"#140C0A",outfit:"#1B1B24",accent:"#D4A64A"},f:true,
+    intro:"Inès entre en poussant la porte du pied, casque de scooter sous le bras. « On m’a dit que vous cherchiez du monde. »",
+    qs:[{q:"« Ta dernière soirée mémorable ? »",a:"« Un karaoké, trois pompiers et une fontaine. Je n’en dirai pas plus. »",t:"Fêtarde"},{q:"« Tu réagis comment face à un client lourd ? »",a:"« Je le raccompagne. Parfois par la fenêtre. Je plaisante. À moitié. »",t:"Tête brûlée"}]}
+};
+const CANDS=[{id:"mila",day:1,h:11},{id:"jonas",day:1,h:15},{id:"ines",day:2,h:11}];
+const SEGS={touriste:"Touristes",habitue:"Habitués",affaires:"Affaires",groupe:"Groupes"};
+const CLIENTS=[
+  {name:"Le touriste égaré",seg:"touriste",q:"C’est bien ici, le musée Van Gogh ?",budget:120,want:"conversation",look:{kind:"c",skin:"#F4CFB0",hair:"#D8B25A",outfit:"#E0703A",pants:"#C9B48A",cap:"#2D6FB0"}},
+  {name:"La touriste curieuse",seg:"touriste",q:"On m’a dit que c’était typique.",budget:140,want:"conversation",look:{kind:"c",longHair:true,skin:"#F1C7A5",hair:"#D8B25A",outfit:"#5FA3A8",pants:"#2E3F55",cap:"#E0703A"}},
+  {name:"L’étudiant qui a économisé",seg:"touriste",q:"Trois mois de pâtes pour ce soir.",budget:90,want:"charme",look:{kind:"c",skin:"#8D5A3B",hair:"#111",outfit:"#3A7A4A",pants:"#2A3A5A"}},
+  {name:"L’influenceur",seg:"touriste",q:"Je peux filmer le couloir ?",budget:180,want:"audace",look:{kind:"c",skin:"#E8B894",hair:"#111",outfit:"#EDEDED",pants:"#222",cap:"#111"}},
+  {name:"L’habitué timide",seg:"habitue",q:"Comme d’habitude… mais en mieux ?",budget:150,want:"charme",look:{kind:"c",skin:"#C68A62",hair:"#3A2618",outfit:"#6B5A45",pants:"#4A3E30",glasses:true}},
+  {name:"Le retraité fidèle",seg:"habitue",q:"Toujours le mardi. Enfin, presque.",budget:140,want:"conversation",look:{kind:"c",skin:"#F1C7A5",hair:"#E6E6E6",outfit:"#7A5A3A",pants:"#4A3A2A",hat:"#5A4632"}},
+  {name:"Le poète fauché",seg:"habitue",q:"J’accepte de payer en alexandrins.",budget:70,want:"charme",look:{kind:"c",skin:"#F1C7A5",hair:"#5A3A22",outfit:"#3A2A3F",pants:"#2A2030",scarf:"#C8913E"}},
+  {name:"Le banquier pressé",seg:"affaires",q:"J’ai une visio à minuit.",budget:260,want:"audace",look:{kind:"c",skin:"#F1C7A5",hair:"#9A9A9A",outfit:"#4A4F5A",pants:"#3A3E47",tie:"#B01E3A"}},
+  {name:"La cheffe d’entreprise",seg:"affaires",q:"Journée atroce. Écoutez-moi.",budget:300,want:"conversation",look:{kind:"c",longHair:true,skin:"#8D5A3B",hair:"#1A100C",outfit:"#2E3F55",pants:"#24324A"}},
+  {name:"Le fêtard du groupe",seg:"groupe",q:"Les copains arrivent, promis.",budget:160,want:"audace",look:{kind:"c",skin:"#EAC0A0",hair:"#B5482A",outfit:"#B01E3A",pants:"#2A2A33"}}
+];
+const REVIEWS={top:["Parfait. Je laisse cinq étoiles et mon parapluie.","Je reviendrai. Avec un meilleur prétexte.","Service impeccable. La déco aussi.","Je n’ai pas vu le temps passer. Mon taxi non plus."],
+  mid:["Correct. L’ambiance était meilleure que le café.","Agréable, mais la chambre sentait le renfermé.","Bien. J’aurais aimé un peu plus de conversation."],
+  low:["Mitigé. Tout le monde avait l’air épuisé, moi compris.","La chambre avait connu des jours meilleurs.","Bof. Au fond, j’étais venu pour Van Gogh."]};
+const ROOMS=[
+  {id:"boudoir",name:"Boudoir",x:96,y:76,w:202,h:72,floor:146,open:true,premium:false},
+  {id:"orientale",name:"Chambre orientale",x:302,y:76,w:202,h:72,floor:146,open:false,premium:false},
+  {id:"velours",name:"Suite velours",x:96,y:156,w:202,h:72,floor:226,open:false,premium:true},
+  {id:"miroirs",name:"Chambre miroirs",x:302,y:156,w:202,h:72,floor:226,open:false,premium:true}
+];
+ROOMS.forEach(r=>r.cx=r.x+r.w/2);
+const HOMES=[118,152,186,220],SALON_Y=304,QSLOTS=[192,218,244,270],QY=392,DOOR=[135,392],DESK=[468,304];
+const RULES={
+  horaires:{l:"Horaires d’ouverture",opts:[{l:"21 h – 2 h",o:21,c:26},{l:"20 h – 4 h",o:20,c:28},{l:"18 h – 6 h",o:18,c:30}],help:["Soirées courtes, personnel frais.","L’horaire classique du quartier.","Le marathon : plus de clients, plus de fatigue."]},
+  maxRdv:{l:"Rendez-vous max par soir et par personne",opts:[{l:"2",n:2},{l:"3",n:3},{l:"4",n:4}],help:["Personnel reposé, recettes limitées.","Raisonnable.","Rentable… jusqu’à l’épuisement."]},
+  selection:{l:"Sélection à l’entrée",opts:[{l:"Laxiste",flow:1.2,inc:2},{l:"Normale",flow:1,inc:1},{l:"Stricte",flow:.78,inc:.35}],help:["Tout le monde entre. Les ennuis aussi.","On filtre les plus éméchés.","Chemise exigée, sourire obligatoire."]},
+  tarif:{l:"Tarifs",opts:[{l:"Bas",m:.8,flow:1.2},{l:"Normaux",m:1,flow:1},{l:"Hauts",m:1.2,flow:.8}],help:["Plus de monde, moins par rendez-vous.","L’équilibre.","Moins de monde, plus par rendez-vous."]}
+};
+const OFFERS={
+  classique:{l:"Soirée classique",d:"Rien de spécial, tout le monde connaît.",flow:1,price:1,q:0},
+  happy:{l:"Happy hour",d:"Prix −20 %, affluence +40 %. Idéal pour se faire connaître.",flow:1.4,price:.8,q:-.03},
+  calme:{l:"Soirée feutrée",d:"Affluence −30 %, satisfaction en hausse.",flow:.7,price:1,q:.1}
+};
+const PALIERS=[
+  {n:"Départ",goal:""},
+  {n:"Rouvrir",goal:"Boucler la première soirée",gets:["Recrutement : des candidats vont se présenter","Rénovation des chambres fermées","Planning du soir au briefing","Réserve de sécurité (Finances)"]},
+  {n:"Se faire un nom",goal:"Atteindre ★ 25 de réputation",gets:["Le bar (à rouvrir) et ses recettes","L’onglet Clientèle et les tarifs","Nouveaux segments : Affaires et Groupes"]},
+  {n:"Tenir la maison",goal:"Payer la première mensualité",gets:["Hors prototype"]}
+];
+
+/* ================= STATE ================= */
+let S=null;              // saved state
+const R={queue:[],busy:{},alerts:[],els:{},clientId:0,modal:false,pdown:false,tab:"maison",view:null,pendingCards:[],lastRender:0};
+function mkStaff(id){const d=STAFF_DB[id];return{id,name:d.name,age:d.age,line:d.line,tr:{...d.tr},traits:[...d.traits],known:[...d.traits],look:d.look,f:d.f,fatigue:10,moral:id==="sanne"?72:78,loyaute:id==="sanne"?80:55,share:.5,works:true,night:0,resting:false}}
+function newState(slot,player){
+  return{v:3,slot,player,t:17*60,money:3000,rep:15,palier:0,speed:1,staff:[mkStaff("sanne")],cands:[],candSeen:{},
+    rooms:ROOMS.map(r=>({id:r.id,open:r.open,p:r.open?60:0,etat:r.open?72:35,reno:0,closed:false})),
+    teams:{menage:1},rules:{horaires:1,maxRdv:1,selection:1,tarif:1},offer:"classique",linge:40,lingeOrder:0,
+    reserve:0,reserveBal:0,bar:{open:false,reno:0,stock:0},briefedDay:-1,nightNo:0,nightsDone:0,nextEvent:0,evDone:{},
+    tuto:0,log:[],seg:{touriste:[0,0],habitue:[0,0],affaires:[0,0],groupe:[0,0]},night:null,nextNoon:36*60,
+    history:[],created:Date.now(),played:Date.now(),protoEnd:false};
+}
+const staffBy=id=>S.staff.find(s=>s.id===id);
+const roomBy=id=>S.rooms.find(r=>r.id===id);
+const RD=id=>ROOMS.find(r=>r.id===id);
+const rule=k=>RULES[k].opts[S.rules[k]];
+const hod=()=>S.t%1440, dayIdx=()=>Math.floor(S.t/1440);
+function isOpen(){const o=rule("horaires"),h=hod(),d=dayIdx();if(h>=o.o*60)return S.briefedDay===d;if(h<(o.c-24)*60)return S.briefedDay===d-1;return false}
+function minsToClose(){const o=rule("horaires");let c=o.c*60-hod();if(c>1440)c-=1440;if(c<0)c+=1440;return c}
+
+/* ================= SAVES ================= */
+const KEY=i=>"lbp-proto3-slot-"+i;
+function readSlot(i){try{const v=localStorage.getItem(KEY(i));return v?JSON.parse(v):null}catch(e){return null}}
+function save(){if(!S)return;try{S.played=Date.now();localStorage.setItem(KEY(S.slot),JSON.stringify(S))}catch(e){}}
+function delSlot(i){try{localStorage.removeItem(KEY(i))}catch(e){}}
+document.addEventListener("visibilitychange",()=>{if(document.hidden)save()});
+
+/* ================= SCENE ================= */
+const wrap=$("#wrap"),scene=$("#scene"),actors=$("#actors"),main=$("#main");
+function fit(){
+  const H=main.clientHeight,W=main.clientWidth;
+  let sw=Math.min(H*VB.w/VB.h,W-Math.max(230,W*.33));sw=Math.max(200,sw);
+  wrap.style.width=sw+"px";scene.style.width=sw+"px";scene.style.height=sw*VB.h/VB.w+"px";scene.style.setProperty("--u",(sw/VB.w)+"px");
+  if(tutoActive())placeTuto();
+}
+addEventListener("resize",fit);if(window.ResizeObserver)new ResizeObserver(fit).observe(main);
+const px=x=>(x/VB.w*100)+"%",py=y=>(y/VB.h*100)+"%";
+(function buildFx(){
+  let g="";
+  ROOMS.forEach(r=>{
+    const cy=r.y+r.h/2,half=r.w/2;let sc="";for(let x=r.x;x<r.x+r.w;x+=8)sc+=`M${x} ${r.y+5}Q${x+4} ${r.y+9} ${x+8} ${r.y+5}`;
+    g+=`<rect id="dirt-${r.id}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="#3a2a10" opacity="0"/>
+    <g class="cur" id="cur-${r.id}">
+      <rect class="cl" x="${r.x}" y="${r.y+4}" width="${half}" height="${r.h-4}" fill="url(#velvet)"/>
+      <rect class="cr" x="${r.x+half}" y="${r.y+4}" width="${half}" height="${r.h-4}" fill="url(#velvet)"/>
+      <g class="plaque"><rect x="${r.cx-22}" y="${cy-7}" width="44" height="13" rx="3" fill="#D4A64A"/><text id="plq-${r.id}" x="${r.cx}" y="${cy+2}" text-anchor="middle" font-family="Jost,sans-serif" font-size="6.5" font-weight="600" fill="#2A1218">♥ Occupé</text></g>
+      <rect class="progbg" x="${r.x+12}" y="${r.y+r.h-7}" width="${r.w-24}" height="2" rx="1" fill="rgba(0,0,0,.4)"/>
+      <rect class="prog" id="prog-${r.id}" x="${r.x+12}" y="${r.y+r.h-7}" width="0" height="2" rx="1" fill="#FF4F8B"/>
+    </g>
+    <g class="sheetov" id="sheet-${r.id}"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="#1c1c22" opacity=".92"/>
+      <path d="M${r.x+40} ${r.y+r.h-4}Q${r.x+45} ${r.y+r.h-30} ${r.cx} ${r.y+r.h-32}Q${r.x+r.w-45} ${r.y+r.h-30} ${r.x+r.w-40} ${r.y+r.h-4}Z" fill="#D8D4CC" opacity=".85"/>
+      <path d="M${r.x+14} ${r.y+r.h-4}Q${r.x+16} ${r.y+r.h-22} ${r.x+28} ${r.y+r.h-22}Q${r.x+36} ${r.y+r.h-20} ${r.x+34} ${r.y+r.h-4}Z" fill="#C8C4BC" opacity=".8"/>
+      <text id="sht-${r.id}" x="${r.cx}" y="${r.y+18}" text-anchor="middle" font-family="Jost,sans-serif" font-size="7" fill="#B9B2AA">${r.name} : fermée</text></g>
+    <rect x="${r.x}" y="${r.y}" width="${r.w}" height="5" fill="#5E0B22"/><rect x="${r.x}" y="${r.y}" width="${r.w}" height="1.2" fill="#D4A64A"/><path d="${sc}" fill="#5E0B22"/>`;
+  });
+  g+=`<g class="sheetov" id="sheet-bar"><rect x="334" y="236" width="96" height="70" fill="#1c1c22" opacity=".92"/><path d="M340 306Q344 276 382 274Q420 276 424 306Z" fill="#D8D4CC" opacity=".85"/><text id="sht-bar" x="382" y="252" text-anchor="middle" font-family="Jost,sans-serif" font-size="7" fill="#B9B2AA">Bar : fermé</text></g>`;
+  $("#fxrooms").innerHTML=g;
+  const hits=$("#hits");
+  const zone=(id,x,y,w,h,label,fn)=>{const b=document.createElement("button");b.className="hit";b.id="hit-"+id;b.setAttribute("aria-label",label);b.style.left=px(x);b.style.top=py(y);b.style.width=(w/VB.w*100)+"%";b.style.height=(h/VB.h*100)+"%";b.onclick=fn;hits.appendChild(b)};
+  ROOMS.forEach(r=>zone(r.id,r.x,r.y,r.w,r.h,r.name,()=>{showView("room",r.id);tutoEvent("room:"+r.id)}));
+  zone("salon",96,236,234,70,"Salon",()=>showTab("maison"));
+  zone("bar",334,236,96,70,"Bar",()=>showView("bar"));
+  zone("bureau",434,236,70,70,"Bureau",()=>showTab("finances"));
+})();
+function place(el,x,y,instant){if(instant)el.style.transition="none";el.style.left=px(x-FW/2);el.style.top=py(y-FH);if(instant){void el.offsetWidth;el.style.transition=""}}
+function mkActor(look,cls){const el=document.createElement("div");el.className="actor "+(cls||"");el.style.width=(FW/VB.w*100)+"%";el.style.height=(FH/VB.h*100)+"%";el.innerHTML=full(look);actors.appendChild(el);return el}
+function staffEl(s){
+  if(R.els[s.id])return R.els[s.id];
+  const el=mkActor(s.look,"tap");el.style.opacity=0;el.onclick=()=>showView("staff",s.id);el.setAttribute("aria-label",s.name);
+  R.els[s.id]=el;return el;
+}
+function homeX(s){return HOMES[S.staff.indexOf(s)]||HOMES[0]}
+let avatarEl=null;const cleanEl=mkActor(CLEANER);cleanEl.style.opacity=0;
+function rebuildActors(){
+  actors.querySelectorAll(".actor").forEach(e=>{if(e!==cleanEl)e.remove()});R.els={};
+  avatarEl=mkActor(AVATARS.find(a=>a.id===S.player.avatar).look,"tap");place(avatarEl,DESK[0],DESK[1],true);avatarEl.onclick=()=>showTab("finances");
+  S.staff.forEach(s=>{const el=staffEl(s);place(el,homeX(s),SALON_Y,true)});
+}
+function setSign(){
+  const n=S.player.maison||"La bonne passe";["sign","signGlow"].forEach(id=>{const t=$("#"+id);t.textContent=n;t.setAttribute("font-size",n.length>16?Math.max(10,17*16/n.length):17)});
+  $("#brand").textContent=n;
+}
+
+/* ================= LOG / TOAST ================= */
+function log(html,toastToo){S.log.unshift({t:S.t,html});if(S.log.length>80)S.log.pop();$("#ticker").innerHTML=`<time>${fmt(S.t)}</time><b>${html}</b>`;if(R.tab!=="journal")R.unread=true;if(toastToo)toast(html);dirty()}
+function toast(html){const d=document.createElement("div");d.className="toast";d.innerHTML=html;$("#toasts").appendChild(d);setTimeout(()=>{d.style.transition="opacity .4s";d.style.opacity=0;setTimeout(()=>d.remove(),400)},3400);const ts=$("#toasts").children;if(ts.length>2)ts[0].remove()}
+function floater(text,x,y,color){const d=document.createElement("div");d.className="floater";d.textContent=text;if(color)d.style.color=color;d.style.left=px(x);d.style.top=py(y);$("#floaters").appendChild(d);setTimeout(()=>d.remove(),1900)}
+function spend(n,label,x,y){S.money-=n;if(S.night)S.night.exp+=n;if(x!=null)floater("−"+euro(n),x,y,"#FF9DBE");if(label)log(label);dirty()}
+function pulse(){const m=$("#money");m.classList.add("pulse");setTimeout(()=>m.classList.remove("pulse"),280)}
+let needRender=true;const dirty=()=>{needRender=true};
+
+/* ================= CLIENTS & SERVICE ================= */
+function openSegs(){return S.palier>=2?["touriste","habitue","affaires","groupe"]:["touriste","habitue"]}
+function arrive(){
+  if(R.queue.length>=QSLOTS.length){S.night.lost++;S.rep=clamp(S.rep-.05,0,100);return}
+  const segs=openSegs(),pool=CLIENTS.filter(c=>segs.includes(c.seg)&&!R.queue.some(q=>q.name===c.name));
+  if(!pool.length)return;
+  const w=pool.map(c=>{let x=1;if(S.offer==="happy"&&c.seg==="touriste")x*=1.6;if(S.offer==="calme"&&c.seg==="habitue")x*=1.5;if(c.seg==="habitue")x*=.6+S.rep/60;return x});
+  let tot=w.reduce((a,b)=>a+b,0),r=Math.random()*tot,tpl=pool[0];for(let i=0;i<pool.length;i++){if((r-=w[i])<=0){tpl=pool[i];break}}
+  const c=Object.assign({},tpl,{id:++R.clientId,pat:55,patMax:55});
+  c.el=mkActor(c.look,"");c.el.insertAdjacentHTML("afterbegin",`<div class="pat"><i></i></div>`);
+  place(c.el,-20,QY,true);R.queue.push(c);requestAnimationFrame(()=>requestAnimationFrame(layoutQueue));
+}
+function layoutQueue(){R.queue.forEach((c,i)=>place(c.el,QSLOTS[i],QY))}
+function leave(c,angry){
+  R.queue=R.queue.filter(x=>x!==c);place(c.el,630,QY);c.el.style.opacity=0;setTimeout(()=>c.el.remove(),1000);
+  if(angry){S.rep=clamp(S.rep-.2,0,100);if(S.night)S.night.lost++;if(Math.random()<.5)log(`<b>${c.name}</b> en a eu assez d’attendre sur le quai.`)}
+  layoutQueue();
+}
+const roomFree=r=>r.open&&!r.closed&&!r.reno&&r.p>=15&&!R.busy[r.id];
+const staffFree=s=>s.works&&!s.resting&&!s.busy&&!s.anim&&s.night<rule("maxRdv").n;
+function dispatch(){
+  let guard=4;
+  while(R.queue.length&&guard--){
+    const c=R.queue[0];
+    const rooms=S.rooms.filter(roomFree);if(!rooms.length)return;
+    const staff=S.staff.filter(staffFree);if(!staff.length)return;
+    const room=rooms.sort((a,b)=>(b.p+b.etat)-(a.p+a.etat))[0];
+    const s=staff.sort((a,b)=>(b.tr[c.want]-b.fatigue/35)-(a.tr[c.want]-a.fatigue/35))[0];
+    startService(c,s,room);
+  }
+}
+function startService(c,s,room){
+  const rd=RD(room.id);
+  R.queue=R.queue.filter(x=>x!==c);layoutQueue();
+  s.busy=true;R.busy[room.id]={client:c,staffId:s.id,start:Infinity,dur:rand(50,75)};
+  const sel=staffEl(s);
+  c.el.querySelector(".pat")?.remove();place(c.el,DOOR[0],DOOR[1]);
+  setTimeout(()=>{c.el.style.opacity=0;sel.style.opacity=0},900);
+  setTimeout(()=>{place(c.el,rd.cx-14,rd.floor,true);place(sel,rd.cx+14,rd.floor,true);c.el.style.opacity=1;sel.style.opacity=1},1400);
+  setTimeout(()=>{setCurtain(room.id);c.el.style.opacity=0;sel.style.opacity=0},2200);
+  setTimeout(()=>{if(R.busy[room.id])R.busy[room.id].start=S.t},2800);
+  setCurtain(room.id);dirty();
+}
+function finish(roomId){
+  const b=R.busy[roomId];delete R.busy[roomId];const room=roomBy(roomId),rd=RD(roomId);const c=b.client,s=staffBy(b.staffId);
+  let q=s.tr[c.want]/5*.45+room.p/100*.2+room.etat/100*.15+(S.linge>0?.12:0)+OFFERS[S.offer].q-(s.fatigue>75?.15:0)+(rd.premium?.06:0);
+  q=clamp(q,0,1);
+  const price=Math.round(c.budget*rule("tarif").m*OFFERS[S.offer].price*(.75+.5*q)/5)*5;
+  const bar=S.bar.open&&S.bar.stock>0?15:0;if(bar)S.bar.stock=Math.max(0,S.bar.stock-4);
+  const house=Math.round(price*(1-s.share))+bar;
+  let res=0;if(S.reserve>0){res=Math.round(house*S.reserve/100);S.reserveBal+=res}
+  S.money+=house-res;S.night.rev+=house;S.night.served++;S.night.staffPaid+=price-Math.round(price*(1-s.share));
+  const before=S.rep;S.rep=clamp(S.rep+(q-.4)*8,0,100);
+  if(s.traits.includes("Ambitieuse")&&S.rep>before)s.moral=clamp(s.moral+1,0,100);
+  S.seg[c.seg][0]+=q;S.seg[c.seg][1]++;
+  s.fatigue=clamp(s.fatigue+rand(12,17)*(s.traits.includes("Fêtarde")?1.25:1),0,100);s.night++;s.busy=false;
+  S.linge=Math.max(0,S.linge-10);
+  room.p=clamp(room.p-rand(18,26),0,100);room.etat=clamp(room.etat-rand(1,2.2),0,100);
+  $("#prog-"+roomId).setAttribute("width",0);setCurtain(roomId);
+  floater("+"+euro(house),rd.cx,rd.y+26);pulse();
+  const tier=q>=.75?"top":q>=.55?"mid":"low",rv=pick(REVIEWS[tier]);
+  if(!S.night.best||q>S.night.best.q)S.night.best={q,t:rv,n:c.name};
+  if(!S.night.worst||q<S.night.worst.q)S.night.worst={q,t:rv,n:c.name};
+  log(`<b>${c.name}</b> <em>« ${rv} »</em>`,Math.random()<.35);
+  s.anim=true;const sel=staffEl(s);
+  place(c.el,DOOR[0],DOOR[1],true);c.el.style.opacity=1;setTimeout(()=>{place(c.el,630,QY);c.el.style.opacity=0},80);setTimeout(()=>c.el.remove(),1200);
+  place(sel,homeX(s),SALON_Y,true);setTimeout(()=>{s.anim=false},600);
+  dirty();
+}
+function setCurtain(roomId){
+  const r=roomBy(roomId),el=$("#cur-"+roomId);const busy=!!R.busy[roomId];
+  const closed=r.open&&(busy||r.closed);
+  el.classList.toggle("closed",closed);el.classList.toggle("svc",busy);
+  $("#plq-"+roomId).textContent=busy?"♥ Occupé":"Fermée";
+}
+
+/* ================= ALERTS ================= */
+const bubbles=$("#bubbles");
+function addAlert(key,type,x,y,opts){
+  if(R.alerts.some(a=>a.key===key))return null;
+  const b=document.createElement("button");b.className="bubble"+(opts&&opts.ttl?"":" calm");b.style.left=px(x);b.style.top=py(y);b.id="al-"+key;
+  const ic={dirty:"🧹",linge:"🧺",fight:"😤",tired:"😩"}[type];b.innerHTML=`<span>${ic}</span>`;
+  b.setAttribute("aria-label",{dirty:"Chambre sale",linge:"Plus de linge",fight:"Dispute",tired:"Personnel épuisé"}[type]);
+  const a=Object.assign({key,type,el:b,born:S.t},opts||{});b.onclick=()=>onAlert(a);bubbles.appendChild(b);R.alerts.push(a);
+  return a;
+}
+function dropAlert(key){const a=R.alerts.find(x=>x.key===key);if(!a)return;a.el.remove();R.alerts=R.alerts.filter(x=>x!==a)}
+function syncAlerts(open){
+  S.rooms.forEach(r=>{const rd=RD(r.id),k="dirty-"+r.id;if(r.open&&!r.reno&&r.p<40){const a=addAlert(k,"dirty",rd.cx,rd.y+26,{room:r.id});if(a&&S.tuto===7)tutoShow()}else if(r.p>=40)dropAlert(k)});
+  if(open&&S.linge<10)addAlert("linge","linge",112,262);else if(S.linge>=10)dropAlert("linge");
+  S.staff.forEach(s=>{const k="tired-"+s.id;if(open&&s.works&&!s.resting&&s.fatigue>80)addAlert(k,"tired",homeX(s),262,{staff:s.id});else dropAlert(k)});
+}
+function updFight(){
+  const a=R.alerts.find(x=>x.type==="fight");if(!a)return;
+  const ttl=a.max-(S.t-a.born);a.el.style.setProperty("--p",clamp(ttl/a.max,0,1));
+  if(ttl<=0){dropAlert("fight");S.rep=clamp(S.rep-2,0,100);spend(120,"La dispute a dégénéré : un fauteuil en moins et une mauvaise réputation.",213,262);toast("La dispute a dégénéré. <em>Casse et réputation en baisse.</em>")}
+}
+function onAlert(a){
+  tutoEvent("alert");
+  if(a.type==="dirty")showView("room",a.room);
+  else if(a.type==="tired")showView("staff",a.staff);
+  else if(a.type==="linge")openCard({title:"Plus de linge propre",text:"Les draps propres sont épuisés. Chaque rendez-vous sans linge frais fait baisser la satisfaction.",choices:[{l:"Livraison express",d:"90 € pour 50 draps, livrés tout de suite",f:()=>{spend(90,"Livraison express de linge.");S.linge+=50;dropAlert("linge")}},{l:"Tant pis pour ce soir",d:"On fait avec",f:()=>{}}]});
+  else if(a.type==="fight")openCard({title:"Dispute sur le quai",text:"Deux clients se disputent la place dans la file. Le ton monte, les voisins ouvrent leurs fenêtres.",choices:[
+    {l:"Offrir un verre aux deux",d:"−40 €, tout le monde se calme",f:()=>{dropAlert("fight");spend(40,"Deux verres offerts ont ramené la paix sur le quai.")}},
+    {l:"Descendre calmer le jeu",d:"Gratuit, mais ça peut mal tourner",f:()=>{dropAlert("fight");if(Math.random()<.65)log(`${esc(S.player.prenom)} a calmé le jeu avec autorité.`,true);else{S.rep=clamp(S.rep-1,0,100);log("Tu as calmé le jeu… en prenant un parapluie dans l’épaule.",true)}}}]});
+}
+
+/* ================= SIMULATION ================= */
+function clean(hrs,open){
+  const n=S.teams.menage;let cap=n*(open?5:16)*hrs;R.cleaning=null;if(!n)return;
+  const rs=S.rooms.filter(r=>r.open&&!R.busy[r.id]&&!r.reno&&r.p<99.5).sort((a,b)=>a.p-b.p);
+  for(const r of rs){if(cap<=0)break;const d=Math.min(cap,100-r.p);r.p+=d;cap-=d;if(!R.cleaning)R.cleaning=r.id}
+}
+function onOpen(){
+  S.nightNo++;S.night={no:S.nightNo,rev:0,exp:0,served:0,lost:0,staffPaid:0,rep0:S.rep,best:null,worst:null,ev:0};
+  S.staff.forEach(s=>s.night=0);
+  if(S.lingeOrder){S.linge+=S.lingeOrder;S.lingeOrder=0}
+  S.nextEvent=S.t+rand(70,120);
+  log("Les néons s’allument. La maison ouvre ses portes.",true);
+  if(S.nightNo===1)R.forceClient=S.t+6;
+  save();
+}
+function onClose(){
+  R.queue.slice().forEach(c=>leave(c,false));
+  S.staff.forEach(s=>{if(s.traits.includes("Mère poule"))S.staff.forEach(o=>{if(o!==s)o.moral=clamp(o.moral+3,0,100)});
+    if(s.traits.includes("Diva")&&!S.rooms.some(r=>r.open&&RD(r.id).premium))s.moral=clamp(s.moral-4,0,100);
+    if(s.resting){s.resting=false;s.moral=clamp(s.moral+6,0,100);if(s.traits.includes("Solitaire"))s.fatigue=clamp(s.fatigue-15,0,100)}});
+  S.nightsDone++;
+  const n=S.night;S.history.push({no:n.no,rev:n.rev,exp:n.exp,served:n.served,lost:n.lost});
+  R.pendingCards.push(()=>bilanCard(n));
+  checkPaliers();
+  if(S.nightsDone>=3&&!S.protoEnd){S.protoEnd=true;R.pendingCards.push(endCard)}
+  S.night=null;save();
+  nextCard();
+}
+function checkPaliers(){
+  if(S.palier===0&&S.nightsDone>=1){S.palier=1;R.pendingCards.push(()=>palierCard(1))}
+  if(S.palier===1&&S.rep>=25){S.palier=2;R.pendingCards.push(()=>palierCard(2))}
+}
+function noon(){
+  const cost=S.teams.menage*90;if(cost)spend(cost,`Midi : salaire de l’équipe de ménage, ${euro(cost)}.`);
+}
+function tick(dm){
+  const open=isOpen();
+  if(open!==R.wasOpen){R.wasOpen=open;if(open)onOpen();else if(S.night)onClose();if(R.modal)return}
+  const h=hod(),d=dayIdx();
+  if(S.t>=S.nextNoon){S.nextNoon+=1440;noon()}
+  // briefing
+  const bh=(rule("horaires").o-1)*60;
+  if(!open&&S.briefedDay!==d&&h>=bh&&h<bh+90&&!R.modal){briefingCard();return}
+  // day visits
+  if(!open&&S.palier>=1){for(const c of CANDS){if(!S.candSeen[c.id]&&(d>c.day||(d===c.day&&h>=c.h*60))&&h<18*60){S.candSeen[c.id]=true;visitCard(c.id);return}}}
+  if(S.bar.reno&&S.t>=S.bar.reno){S.bar.reno=0;S.bar.open=true;S.bar.stock=60;log("Le bar est rouvert. Premières bulles !",true)}
+  S.rooms.forEach(r=>{if(r.reno&&S.t>=r.reno){r.reno=0;r.open=true;r.p=100;r.etat=100;log(`${RD(r.id).name} : travaux terminés, prête à recevoir.`,true);setCurtain(r.id)}});
+  const hrs=dm/60;
+  if(open){
+    const rate=(1+S.rep/100*3.2)*OFFERS[S.offer].flow*rule("selection").flow*rule("tarif").flow;
+    if(R.forceClient&&S.t>=R.forceClient){R.forceClient=0;arrive()}
+    else if(Math.random()<rate*hrs)arrive();
+  }
+  R.queue.slice().forEach(c=>{c.pat-=dm;const p=clamp(c.pat/c.patMax,0,1),bar=c.el.querySelector(".pat");if(bar){bar.firstChild.style.width=(p*100)+"%";bar.classList.toggle("low",p<.3)}if(c.pat<=0)leave(c,true)});
+  if(open&&minsToClose()>45)dispatch();
+  for(const id in R.busy){const b=R.busy[id];if(b.start===Infinity)continue;const p=clamp((S.t-b.start)/b.dur,0,1);const rd=RD(id);$("#prog-"+id).setAttribute("width",(rd.w-24)*p);if(p>=1)finish(id)}
+  clean(hrs,open);
+  S.staff.forEach(s=>{
+    if(!s.busy)s.fatigue=clamp(s.fatigue-(open&&s.works&&!s.resting?1:4)*hrs,0,100);
+    if(s.fatigue>75)s.moral=clamp(s.moral-2*hrs,0,100);else if(s.moral<70)s.moral=clamp(s.moral+.3*hrs,0,100);
+  });
+  if(open&&!R.alerts.some(a=>a.type==="fight")){const tb=S.staff.some(s=>s.traits.includes("Tête brûlée")&&s.works)?1.5:1;if(R.queue.length>=2&&Math.random()<.05*rule("selection").inc*tb*R.queue.length*hrs){addAlert("fight","fight",231,378,{ttl:40,max:40});log("Ça chauffe sur le quai : deux clients se disputent la file.",true)}}
+  syncAlerts(open);updFight();
+  if(open&&S.t>=S.nextEvent&&minsToClose()>30){S.nextEvent=S.t+rand(150,230);fireEvent();return}
+}
+
+/* ================= VISUALS ================= */
+function visuals(){
+  const h=hod()/60,open=!!R.wasOpen;
+  const day=h<6||h>21?0:h<8?(h-6)/2:h<19?1:(21-h)/2;
+  $("#dayTint").setAttribute("opacity",(day*.55).toFixed(2));$("#moon").setAttribute("opacity",(1-day).toFixed(2));
+  document.querySelectorAll(".nw").forEach(g=>g.setAttribute("opacity",((1-day)*.55).toFixed(2)));
+  scene.classList.toggle("neon-off",!open);
+  const prep=h>=18.5||open;
+  $("#salonDim").setAttribute("opacity",prep?0:.45);
+  $("#redWin").setAttribute("opacity",open?1:.25);$("#facHalo").setAttribute("opacity",open?1:0);
+  S.rooms.forEach(r=>{
+    $("#dirt-"+r.id).setAttribute("opacity",r.open?((100-r.p)/100*.55).toFixed(2):0);
+    $("#sheet-"+r.id).setAttribute("opacity",r.open?0:1);
+    $("#sht-"+r.id).textContent=r.reno?`Travaux jusqu’à ${fmt(r.reno)}`:`${RD(r.id).name} : fermée`;
+  });
+  $("#sheet-bar").setAttribute("opacity",S.bar.open?0:1);$("#sht-bar").textContent=S.bar.reno?"Travaux":"Bar : fermé";
+  S.staff.forEach(s=>{const el=staffEl(s);if(!s.busy&&!s.anim)el.style.opacity=(prep&&s.works&&!s.resting)?1:0});
+  if(R.cleaning&&!open){const r=RD(R.cleaning);if(cleanEl.dataset.room!==r.id){cleanEl.dataset.room=r.id;place(cleanEl,r.x+r.w-30,r.floor,cleanEl.style.opacity==="0")}cleanEl.style.opacity=1}else cleanEl.style.opacity=0;
+}
+function hud(){
+  const m=$("#money");m.textContent=euro(S.money);m.classList.toggle("neg",S.money<0);
+  $("#rep").textContent="★ "+Math.floor(S.rep);
+  $("#clock").textContent=fmt(S.t);$("#day").textContent=`${DAYS[dayIdx()%7]}, jour ${dayIdx()+1}`;
+  const p=$("#openPill"),o=!!R.wasOpen;p.textContent=o?"Ouvert":"Fermé";p.className="pill "+(o?"open":"closed");
+}
+function renderSpeed(){$("#speed").innerHTML=[[0,"❚❚"],[1,"×1"],[2,"×2"],[4,"×4"]].map(([v,l])=>`<button data-speed="${v}" aria-pressed="${S&&S.speed===v}" aria-label="${v?"Vitesse "+l:"Pause"}">${l}</button>`).join("")}
+$("#speed").onclick=e=>{const b=e.target.closest("[data-speed]");if(b&&S){S.speed=+b.dataset.speed;renderSpeed()}};
+
+/* ================= PANEL ================= */
+const TABS=[{id:"maison",ic:"🏮",l:"Maison"},{id:"personnel",ic:"💃",l:"Personnel"},{id:"clientele",ic:"🥂",l:"Clientèle",p:2},{id:"finances",ic:"💶",l:"Finances"},{id:"journal",ic:"📜",l:"Journal"}];
+function renderTabs(){$("#tabs").innerHTML=TABS.map(t=>`<button data-tab="${t.id}" aria-pressed="${R.tab===t.id&&!R.view}" class="${t.p&&S.palier<t.p?"locked":""} ${t.id==="journal"&&R.unread?"dot":""}"><span class="ic">${t.p&&S.palier<t.p?"🔒":t.ic}</span>${t.l}</button>`).join("")}
+$("#tabs").onclick=e=>{const b=e.target.closest("[data-tab]");if(b){showTab(b.dataset.tab);tutoEvent("tab:"+b.dataset.tab)}};
+$("#ticker").onclick=()=>showTab("journal");
+function showTab(t){R.tab=t;R.view=null;if(t==="journal")R.unread=false;document.querySelectorAll(".hit.sel").forEach(h=>h.classList.remove("sel"));render(true);$("#pbody").scrollTop=0}
+function showView(kind,id){R.view={kind,id};document.querySelectorAll(".hit.sel").forEach(h=>h.classList.remove("sel"));if(kind==="room")$("#hit-"+id)?.classList.add("sel");render(true);$("#pbody").scrollTop=0}
+const barH=(v,bad)=>`<div class="bar ${bad?"bad":""}"><i style="width:${clamp(v,0,100)}%"></i></div>`;
+const pips=n=>`<span class="pips">${[1,2,3,4,5].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</span>`;
+function staffStatus(s){const e=s.f?"e":"";if(s.busy)return["En rendez-vous",""];if(s.resting)return["Repos ce soir",""];if(s.fatigue>80)return["Épuisé"+e,"warn"];if(s.moral<30)return["Moral en berne","warn"];if(!R.wasOpen)return["Hors service",""];if(s.night>=rule("maxRdv").n)return["Quota atteint",""];return["Disponible",""]}
+function palierBox(){
+  const nx=PALIERS[S.palier+1];if(!nx)return"";
+  let prog="";if(S.palier===1)prog=`<div class="bars"><span>★ ${Math.floor(S.rep)} / 25</span>${barH(S.rep/25*100)}</div>`;
+  return`<div class="palier" id="palierBox"><div class="st">Prochain palier</div><b>${S.palier+1}. ${nx.n}</b><div class="st">${nx.goal}</div>${prog}</div>`;
+}
+function render(force){
+  if(!S)return;if(!force&&R.pdown)return;
+  renderTabs();let h="";
+  if(R.view){
+    const {kind,id}=R.view;h+=`<button class="back" id="vback">‹ Retour</button>`;
+    if(kind==="room"){
+      const r=roomBy(id),rd=RD(id),busy=!!R.busy[id];
+      h+=`<h2>${rd.name}${rd.premium?' <span class="tag">premium</span>':""}</h2>`;
+      if(!r.open){
+        h+=`<p class="sub">${r.reno?`Les ouvriers s’activent. Réouverture prévue à ${fmt(r.reno)}.`:"Meubles sous des draps, papier peint à reprendre. Elle dort depuis le départ de Josée."}</p>`;
+        h+=`<div class="acts"><button class="act" data-act="reopen" ${S.palier<1||r.reno||S.money<900?"disabled":""}><span>Rénover et rouvrir<small>${S.palier<1?"Disponible au palier 1":"8 h de travaux, chambre à neuf"}</small></span><span class="cost">900 €</span></button></div>`;
+      }else{
+        const st=busy?"Un rendez-vous est en cours.":r.closed?"Fermée par tes soins.":r.p<15?"Trop sale pour recevoir qui que ce soit.":"Prête à recevoir.";
+        h+=`<p class="sub">${st}</p><div class="bars" style="font-size:12.5px"><span>Propreté ${Math.round(r.p)} %</span>${barH(r.p,r.p<40)}<span>État ${Math.round(r.etat)} %</span>${barH(r.etat,r.etat<50)}</div>
+        <p class="sub" style="margin-top:6px">Le ménage nettoie surtout la journée. Une chambre sale fait fuir les clients.</p>
+        <div class="acts"><button class="act" data-act="clean" ${busy||r.p>95?"disabled":""}><span>Nettoyage express<small>Remise en état immédiate</small></span><span class="cost">30 €</span></button>
+        <button class="act" data-act="reno" ${busy||r.etat>95||S.palier<1?"disabled":""}><span>Rafraîchir la déco<small>${S.palier<1?"Disponible au palier 1":"État à neuf, chambre fermée 6 h"}</small></span><span class="cost">400 €</span></button>
+        <button class="act ${r.closed?"on":""}" data-act="toggle" ${busy?"disabled":""}><span>${r.closed?"Rouvrir la chambre":"Fermer la chambre"}<small>${r.closed?"Elle reprend du service":"Plus aucun client n’y entre"}</small></span></button></div>`;
+      }
+    }else if(kind==="bar"){
+      h+=`<h2>Le bar</h2>`;
+      if(!S.bar.open){h+=`<p class="sub">${S.bar.reno?"Travaux en cours.":"Le comptoir dort sous un drap. Chaque client y laisserait volontiers quelques euros."}</p><div class="acts"><button class="act" data-act="bar" ${S.palier<2||S.bar.reno||S.money<600?"disabled":""}><span>Rouvrir le bar<small>${S.palier<2?"Disponible au palier 2":"4 h de travaux, stock de départ offert"}</small></span><span class="cost">600 €</span></button></div>`}
+      else h+=`<p class="sub">15 € de plus par client tant qu’il reste du stock.</p><div class="bars"><span>Stock ${Math.round(S.bar.stock)} %</span>${barH(S.bar.stock,S.bar.stock<25)}</div><div class="acts"><button class="act" data-act="barstock" ${S.bar.stock>90?"disabled":""}><span>Faire livrer<small>Stock à 100 %</small></span><span class="cost">${euro(Math.ceil((100-S.bar.stock)*3))}</span></button></div>`;
+    }else if(kind==="staff"){
+      const s=staffBy(id);if(!s){R.view=null;return render(true)}const [st,c]=staffStatus(s);
+      h+=`<div style="display:flex;gap:10px;align-items:center"><div class="pt big">${portrait(s.look)}</div><div class="grow"><div class="nm">${s.name}<small>${s.age} ans</small></div><div class="st" style="font-style:italic;color:var(--neon-soft)">${s.line}</div><div class="st ${c}">${st}</div></div></div>
+      <div class="traits">${Object.keys(s.tr).map(k=>`<span>${k[0].toUpperCase()+k.slice(1).replace("discretion","Discrétion").replace("Discretion","Discrétion")}</span>${pips(s.tr[k])}`).join("")}</div>
+      <div style="margin-top:6px">${s.traits.map(t=>s.known.includes(t)?`<span class="tag" title="${TRAIT_FX[t]}">${t}</span>`:`<span class="tag hid">Trait inconnu</span>`).join("")}</div>
+      <p class="sub" style="margin-top:4px">${s.traits.filter(t=>s.known.includes(t)).map(t=>`${t} : ${TRAIT_FX[t]}`).join("<br>")}</p>
+      <div class="bars" style="font-size:12.5px"><span>Fatigue</span>${barH(s.fatigue,s.fatigue>70)}<span>Moral</span>${barH(s.moral,s.moral<35)}<span>Loyauté</span>${barH(s.loyaute,s.loyaute<35)}</div>
+      <p class="sub" style="margin-top:6px">Rendez-vous ce soir : ${s.night} sur ${rule("maxRdv").n}. Part reversée : ${Math.round(s.share*100)} %.</p>
+      <div class="acts"><button class="act ${s.resting?"on":""}" data-act="rest" ${s.busy?"disabled":""}><span>${s.resting?"Annuler le repos":"Repos ce soir"}<small>Récupère vite, un peu de moral en plus</small></span></button>
+      <button class="act" data-act="bonus" ${S.money<80?"disabled":""}><span>Prime<small>Moral +20</small></span><span class="cost">80 €</span></button></div>`;
+    }else if(kind==="cand"){
+      const d=STAFF_DB[id];h+=`<h2>${d.name}, ${d.age} ans</h2><p class="sub">Candidat${d.f?"e":""} en attente de réponse.</p><div class="acts"><button class="act" data-act="recv"><span>La recevoir de nouveau<small>Reprendre l’entretien</small></span></button></div>`;
+    }
+  }else if(R.tab==="maison"){
+    h+=palierBox()+`<h2>Règles de la maison</h2><p class="sub">La maison les applique seule. Change-les quand tu veux.</p>`;
+    ["horaires","maxRdv","selection"].forEach(k=>{const r=RULES[k];h+=`<div class="rule"><b>${r.l}</b><small>${r.help[S.rules[k]]}</small><div class="seg">${r.opts.map((o,i)=>`<button data-rule="${k}" data-v="${i}" aria-pressed="${S.rules[k]===i}">${o.l}</button>`).join("")}</div></div>`});
+    h+=`<h3>Chambres</h3>`+S.rooms.map(r=>{const rd=RD(r.id);return`<button class="row" data-room="${r.id}"><div class="grow"><div class="nm">${rd.name}</div><div class="st">${!r.open?(r.reno?"En travaux":"Fermée, à rénover"):R.busy[r.id]?"Occupée":r.closed?"Fermée":`Propreté ${Math.round(r.p)} %`}</div></div></button>`}).join("");
+  }else if(R.tab==="personnel"){
+    h+=`<h2>Personnel</h2>`+S.staff.map(s=>{const [st,c]=staffStatus(s);return`<button class="row" data-staff="${s.id}"><div class="pt">${portrait(s.look)}</div><div class="grow"><div class="nm">${s.name}<small>${s.age} ans</small></div><div class="st ${c}">${st}</div><div class="bars"><span>Fatigue</span>${barH(s.fatigue,s.fatigue>70)}<span>Moral</span>${barH(s.moral,s.moral<35)}</div></div></button>`}).join("");
+    h+=`<h3>Candidats</h3>`;
+    if(S.palier<1)h+=`<div class="lock">🔒 Le recrutement s’ouvre au palier 1.</div>`;
+    else if(!S.cands.length)h+=`<p class="sub">Personne en attente. De nouveaux candidats se présentent en journée.</p>`;
+    else h+=S.cands.map(id=>{const d=STAFF_DB[id];return`<button class="row" data-cand="${id}"><div class="pt cand">${portrait(d.look)}</div><div class="grow"><div class="nm">${d.name}<small>${d.age} ans</small></div><div class="st">En attente de ta réponse</div></div></button>`}).join("");
+    h+=`<h3>Équipes</h3><div class="team"><div class="grow"><b>Ménage</b><div class="st">Nettoie les chambres, surtout la journée. 90 € par jour et par personne.</div></div><div class="step"><button data-team="-1" ${S.teams.menage<=0?"disabled":""} aria-label="Retirer">−</button><span>${S.teams.menage}</span><button data-team="1" ${S.teams.menage>=2?"disabled":""} aria-label="Ajouter">+</button></div></div>
+    <div class="lock" style="margin-top:6px">🔒 Bar au palier 2. Accueil et Sécurité au palier 3.</div>`;
+  }else if(R.tab==="clientele"){
+    if(S.palier<2)h+=`<div class="lock">🔒 L’onglet Clientèle s’ouvre au palier 2 : ★ 25 de réputation.</div>`;
+    else{
+      h+=`<h2>Clientèle</h2><p class="sub">La satisfaction de chaque segment nourrit ta réputation auprès de lui.</p>`;
+      h+=Object.keys(SEGS).map(k=>{const [sum,n]=S.seg[k];const v=n?sum/n*100:0;return`<div class="bars" style="font-size:12.5px;grid-template-columns:90px 1fr"><span>${SEGS[k]}${n?"":" (nouveau)"}</span>${barH(v,n&&v<55)}</div>`}).join("");
+      const r=RULES.tarif;h+=`<div class="rule" style="margin-top:8px"><b>${r.l}</b><small>${r.help[S.rules.tarif]}</small><div class="seg">${r.opts.map((o,i)=>`<button data-rule="tarif" data-v="${i}" aria-pressed="${S.rules.tarif===i}">${o.l}</button>`).join("")}</div></div>`;
+    }
+  }else if(R.tab==="finances"){
+    const d=dayIdx(),untilLoan=28-d;
+    h+=`<div class="big-money">${euro(S.money)}</div><p class="sub">Trésorerie disponible</p>
+    <dl class="kv">${S.night?`<dt>Recettes de la nuit</dt><dd>${euro(S.night.rev)}</dd>`:""}
+    <dt>Mensualité de l’emprunt</dt><dd>2 500 € dans ${untilLoan} j</dd>
+    <dt>Salaires du ménage</dt><dd>${euro(S.teams.menage*90)} / jour</dd>
+    <dt>Charges fixes</dt><dd>600 € chaque lundi</dd>
+    <dt>Part du personnel</dt><dd>50 % des rendez-vous</dd>
+    ${S.palier>=1?`<dt>Réserve de sécurité</dt><dd>${euro(S.reserveBal)}</dd>`:""}</dl>`;
+    if(S.palier>=1)h+=`<div class="rule" style="margin-top:8px"><b>Réserve de sécurité</b><small>Part de chaque recette mise de côté pour la mensualité.</small><div class="seg">${[0,10,20].map(v=>`<button data-reserve="${v}" aria-pressed="${S.reserve===v}">${v} %</button>`).join("")}</div></div>`;
+    else h+=`<div class="lock" style="margin-top:8px">🔒 La réserve de sécurité s’ouvre au palier 1.</div>`;
+    if(S.history.length){h+=`<h3>Nuits précédentes</h3><dl class="kv">`+S.history.map(n=>`<dt>Nuit ${n.no}</dt><dd>${euro(n.rev)}, ${n.served} client${n.served>1?"s":""}</dd>`).join("")+`</dl>`}
+  }else if(R.tab==="journal"){
+    h+=`<h2>Journal</h2><ul class="log">${S.log.map(l=>`<li><time>${DAYS[Math.floor(l.t/1440)%7].slice(0,3)}. ${fmt(l.t)}</time>${l.html}</li>`).join("")||"<li>Rien pour l’instant.</li>"}</ul>`;
+  }
+  const pb=$("#pbody"),sc=pb.scrollTop;pb.innerHTML=h;pb.scrollTop=sc;needRender=false;R.lastRender=performance.now();
+}
+$("#pbody").addEventListener("pointerdown",()=>R.pdown=true);addEventListener("pointerup",()=>setTimeout(()=>R.pdown=false,60));
+$("#pbody").addEventListener("click",e=>{
+  if(e.target.closest("#vback")){R.view=null;document.querySelectorAll(".hit.sel").forEach(h=>h.classList.remove("sel"));render(true);return}
+  const rb=e.target.closest("[data-rule]");if(rb){S.rules[rb.dataset.rule]=+rb.dataset.v;tutoEvent("rule");render(true);return}
+  const rs=e.target.closest("[data-reserve]");if(rs){S.reserve=+rs.dataset.reserve;render(true);return}
+  const sb=e.target.closest("[data-staff]");if(sb){showView("staff",sb.dataset.staff);return}
+  const cb=e.target.closest("[data-cand]");if(cb){visitCard(cb.dataset.cand);return}
+  const ro=e.target.closest("[data-room]");if(ro){showView("room",ro.dataset.room);return}
+  const tb=e.target.closest("[data-team]");if(tb){S.teams.menage=clamp(S.teams.menage+ +tb.dataset.team,0,2);log(`Équipe de ménage : ${S.teams.menage} personne${S.teams.menage>1?"s":""}.`);render(true);return}
+  const ab=e.target.closest("[data-act]");if(!ab||ab.disabled)return;const a=ab.dataset.act,v=R.view;
+  if(v&&v.kind==="room"){const r=roomBy(v.id),rd=RD(v.id);
+    if(a==="clean"){spend(30,null,rd.cx,rd.y+30);r.p=100;log(`${rd.name} : nettoyage express, ça brille.`);tutoEvent("clean")}
+    if(a==="reno"){spend(400,null,rd.cx,rd.y+30);r.open=false;r.reno=S.t+360;log(`${rd.name} : on rafraîchit la déco, 6 h de travaux.`)}
+    if(a==="reopen"){spend(900,null,rd.cx,rd.y+30);r.reno=S.t+480;log(`${rd.name} : les ouvriers arrivent pour 8 h de travaux.`,true)}
+    if(a==="toggle"){r.closed=!r.closed;setCurtain(r.id);log(`${rd.name} : ${r.closed?"fermée":"rouverte"}.`)}}
+  if(a==="bar"){spend(600,null,382,262);S.bar.reno=S.t+240;log("Le bar est en travaux pour 4 h.",true)}
+  if(a==="barstock"){const c=Math.ceil((100-S.bar.stock)*3);spend(c,null,382,262);S.bar.stock=100;log("Livraison au bar.")}
+  if(v&&v.kind==="staff"){const s=staffBy(v.id);
+    if(a==="rest"){s.resting=!s.resting;log(`${s.name} ${s.resting?"prend sa soirée.":"reprend le service."}`)}
+    if(a==="bonus"){spend(80);s.moral=clamp(s.moral+20,0,100);s.loyaute=clamp(s.loyaute+3,0,100);log(`${s.name} a reçu une prime. Sourire garanti.`)}}
+  if(v&&v.kind==="cand"&&a==="recv"){visitCard(v.id);return}
+  render(true);
+});
+
+/* ================= CARDS ================= */
+const modal=$("#modal"),card=$("#card");
+function joseeLine(t){return`<div class="josee"><div class="pt">${portrait(JOSEE)}</div><div><b>Madame Josée</b>${t}</div></div>`}
+function openCard(o){
+  R.modal=true;card.className="card"+(o.wide?"":" narrow");
+  card.innerHTML=`${o.title?`<h2 class="script">${o.title}</h2>`:""}${o.html||`<p>${o.text}</p>`}${o.josee?joseeLine(o.josee):""}${o.choices?`<div class="choices">${o.choices.map((c,i)=>`<button data-c="${i}">${c.l}${c.d?`<small>${c.d}</small>`:""}</button>`).join("")}</div>`:""}${o.btn?`<div class="btns"><button class="btn" id="cardOk">${o.btn}</button></div>`:""}`;
+  modal.hidden=false;
+  card.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{closeCard();o.choices[+b.dataset.c].f();dirty();nextCard()});
+  const ok=$("#cardOk");if(ok)ok.onclick=()=>{closeCard();o.onOk&&o.onOk();dirty();nextCard()};
+  if(o.after)o.after();
+}
+function closeCard(){modal.hidden=true;R.modal=false}
+function nextCard(){if(R.modal)return;const f=R.pendingCards.shift();if(f)f()}
+function briefingCard(){
+  const d=dayIdx(),first=S.nightNo===0;
+  let sel=S.offer,orderL=false;const works={};S.staff.forEach(s=>works[s.id]=!s.resting);
+  const draw=()=>{
+    const staffHtml=S.staff.map(s=>{const [st,c]=staffStatus(s);return`<button class="row" data-w="${s.id}" style="${works[s.id]?"":"opacity:.5"}"><div class="pt">${portrait(s.look)}</div><div class="grow"><div class="nm">${s.name}</div><div class="bars"><span>Fatigue</span>${barH(s.fatigue,s.fatigue>70)}<span>Moral</span>${barH(s.moral,s.moral<35)}</div></div><span class="tag">${works[s.id]?"Travaille":"Repos"}</span></button>`}).join("");
+    const nWork=Object.values(works).filter(Boolean).length;
+    card.className="card";card.innerHTML=`<h2 class="script">Briefing de 19 h</h2><p class="sub">${DAYS[d%7]}, jour ${d+1}. Ouverture à ${rule("horaires").o} h.</p>
+    <div class="cols"><div><h3 style="margin-top:0">Qui travaille ce soir ?</h3>${S.palier<1?`<p class="sub">Le planning s’ouvre au palier 1. Ce soir, Sanne est seule.</p>`:""}${staffHtml}
+      <h3>Linge propre</h3><div class="bars"><span>Stock ${S.linge} draps</span>${barH(S.linge,S.linge<20)}</div>
+      <div class="acts" style="margin-top:6px"><button class="act ${orderL?"on":""}" id="bLinge"><span>Commander 50 draps<small>Livrés à l’ouverture</small></span><span class="cost">60 €</span></button></div></div>
+    <div><h3 style="margin-top:0">L’offre du soir</h3><div class="choices">${Object.keys(OFFERS).map(k=>`<button data-o="${k}" class="${sel===k?"on":""}">${OFFERS[k].l}<small>${OFFERS[k].d}</small></button>`).join("")}</div>
+      ${first?joseeLine("Un conseil : un happy hour pour se faire connaître. Et garde un œil sur le Boudoir, c’est ta seule chambre."):S.palier>=1&&S.rooms.filter(r=>r.open).length<2?joseeLine("Une seule chambre, c’est une seule cliente à la fois. Pense à rouvrir les autres."):""}</div></div>
+    <div class="btns"><span class="st" style="margin-right:auto;align-self:center">${nWork===0?"Personne ne travaille ce soir !":""}</span><button class="btn" id="bGo" ${nWork===0?"disabled":""}>Ouvrir la maison</button></div>`;
+    card.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{if(S.palier<1)return;works[b.dataset.w]=!works[b.dataset.w];draw()});
+    card.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{sel=b.dataset.o;draw()});
+    $("#bLinge").onclick=()=>{orderL=!orderL;draw()};
+    $("#bGo").onclick=()=>{S.offer=sel;S.staff.forEach(s=>{s.resting=!works[s.id];s.works=true});if(orderL){spend(60);S.lingeOrder+=50}
+      S.briefedDay=d;closeCard();log(`Briefing : ${OFFERS[sel].l.toLowerCase()} ce soir.`);save();dirty();tutoEvent("briefing");nextCard()};
+  };
+  R.modal=true;modal.hidden=false;draw();
+}
+function visitCard(id){
+  const d=STAFF_DB[id];let asked=null;
+  if(!S.cands.includes(id))S.cands.push(id);
+  const draw=()=>{
+    const full4=S.staff.length>=4;
+    card.className="card";card.innerHTML=`<h2 class="script">Une candidate${d.f?"":", enfin un candidat"}</h2>
+    <div style="display:flex;gap:12px;align-items:flex-start"><div class="pt big cand">${portrait(d.look)}</div><div class="grow"><div class="nm">${d.name}<small>${d.age} ans</small></div><p style="margin:4px 0 6px">${d.intro}</p>
+    <div class="traits">${Object.keys(d.tr).map(k=>`<span>${k==="discretion"?"Discrétion":k[0].toUpperCase()+k.slice(1)}</span>${pips(d.tr[k])}`).join("")}</div></div></div>
+    <h3>Une question avant de décider</h3>
+    ${asked===null?`<div class="choices">${d.qs.map((q,i)=>`<button data-q="${i}">${q.q}</button>`).join("")}</div>`:`<div class="josee" style="color:var(--cream)"><div><b>${d.name}</b>${d.qs[asked].a}</div></div><p class="sub">Trait révélé : <span class="tag">${d.qs[asked].t}</span> ${TRAIT_FX[d.qs[asked].t]}</p>`}
+    <h3>Ta proposition</h3><div class="choices">
+      <button data-h="45" ${asked===null||full4?"disabled":""}>Embaucher à 45 %<small>Elle garde 45 % de chaque rendez-vous. Peut refuser.</small></button>
+      <button data-h="50" ${asked===null||full4?"disabled":""}>Embaucher à 50 %<small>Le tarif du quartier.</small></button>
+      <button data-h="55" ${asked===null||full4?"disabled":""}>Embaucher à 55 %<small>Loyauté en hausse dès le départ.</small></button>
+      <button data-h="later">Réfléchir<small>Reste en attente dans l’onglet Personnel</small></button>
+      <button data-h="no">Refuser poliment</button></div>
+    ${full4?`<p class="sub">La maison ne peut pas accueillir plus de 4 personnes pour l’instant.</p>`:""}`;
+    card.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{asked=+b.dataset.q;draw()});
+    card.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{
+      const v=b.dataset.h;
+      if(v==="later"){closeCard();log(`${d.name} attend ta réponse.`);dirty();nextCard();return}
+      S.cands=S.cands.filter(x=>x!==id);
+      if(v==="no"){closeCard();log(`Tu as refusé ${d.name}.`);dirty();nextCard();return}
+      const share=+v/100;
+      if(share<.5&&Math.random()<.5){closeCard();log(`${d.name} a refusé tes 45 % : « Le Pink Palace paie mieux. »`,true);dirty();nextCard();return}
+      const s=mkStaff(id);s.share=share;s.known=asked!==null?[d.qs[asked].t]:[];if(share>.5)s.loyaute+=15;
+      S.staff.push(s);const el=staffEl(s);place(el,homeX(s),SALON_Y,true);
+      closeCard();log(`${d.name} rejoint la maison à ${v} %.`,true);save();dirty();nextCard();
+    });
+  };
+  R.modal=true;modal.hidden=false;draw();
+}
+function bilanCard(n){
+  const dr=Math.round(S.rep-n.rep0);
+  openCard({wide:true,title:`Fin de la nuit ${n.no}`,html:`<div class="cols"><div><dl class="kv"><dt>Recettes de la maison</dt><dd>${euro(n.rev)}</dd><dt>Part versée au personnel</dt><dd>${euro(n.staffPaid)}</dd><dt>Dépenses de la nuit</dt><dd>${euro(n.exp)}</dd><dt>Clients reçus</dt><dd>${n.served}</dd><dt>Clients perdus</dt><dd>${n.lost}</dd><dt>Réputation</dt><dd>★ ${Math.floor(S.rep)} (${dr>=0?"+":"−"}${Math.abs(dr)})</dd></dl></div>
+    <div>${n.best?`<p class="sub">Meilleur avis</p><p style="font-style:italic;color:var(--neon-soft)">« ${n.best.t} »<br><small style="color:var(--muted);font-style:normal">${n.best.n}</small></p>`:""}
+    ${S.staff.map(s=>`<div class="bars" style="grid-template-columns:60px 1fr"><span>${s.name}</span>${barH(s.fatigue,s.fatigue>70)}</div>`).join("")}<p class="sub">Fatigue en fin de nuit</p></div></div>`,
+    josee:n.lost>n.served?"Plus de clients perdus que reçus. Il te faut plus de bras et plus de chambres.":n.served>=6?"Belle nuit. Ne t’endors pas sur tes lauriers : le Pink Palace, si.":"Correct. On peut faire mieux, et on fera mieux.",btn:"Continuer"});
+}
+function palierCard(p){
+  const P=PALIERS[p];
+  openCard({title:`Palier ${p} : ${P.n}`,html:`<p>Nouveau palier atteint. Voici ce qui s’ouvre :</p><ul style="margin:0 0 8px;padding-left:18px">${P.gets.map(g=>`<li>${g}</li>`).join("")}</ul>`,
+    josee:p===1?"Première nuit bouclée. Demain, des candidats vont passer : Sanne ne peut pas tout porter seule.":"On commence à parler de toi dans le quartier. Le bar attend sous son drap, et de nouveaux clients aussi.",btn:"Parfait",onOk:()=>{render(true);if(S.tuto===9){S.tuto=10;tutoHide()}}});
+}
+function endCard(){
+  openCard({title:"Fin du prototype",text:`Trois soirées jouées. Trésorerie : ${euro(S.money)}, réputation ★ ${Math.floor(S.rep)}, équipe de ${S.staff.length} personne${S.staff.length>1?"s":""}. Tu peux continuer à jouer librement ou revenir à l’écran titre.`,
+    choices:[{l:"Continuer à jouer",d:"Le prototype n’a plus d’objectif, mais la maison tourne toujours",f:()=>{}},{l:"Retour à l’écran titre",f:()=>{save();showTitle()}}]});
+}
+const EVENTS=[
+  {id:"touriste",first:true,title:"Un touriste perdu",text:"Un touriste en short, plan à la main, demande si c’est bien ici le musée Van Gogh.",choices:[
+    {l:"L’orienter gentiment",d:"Réputation en légère hausse",f:()=>{S.rep=clamp(S.rep+1,0,100);log("Le touriste repart avec un plan annoté et un grand sourire.")}},
+    {l:"Lui proposer une autre visite",d:"Il entre peut-être…",f:()=>{if(Math.random()<.6){arrive();log("Finalement, il a décidé de rester. L’art peut attendre.",true)}else log("Il est parti en courant. Vers le musée, on espère.",true)}}]},
+  {id:"pluie",title:"Averse soudaine",text:"Une pluie d’été s’abat sur le canal. Six touristes trempés s’abritent sous ton porche.",choices:[
+    {l:"Les faire entrer au sec",d:"Quelques clients de plus, le salon sent le chien mouillé",f:()=>{arrive();setTimeout(arrive,400);S.linge=Math.max(0,S.linge-5);log("Deux touristes restent après l’averse.")}},
+    {l:"Leur prêter des parapluies",d:"−20 €, réputation en hausse",f:()=>{spend(20);S.rep=clamp(S.rep+1.5,0,100);log("Six parapluies roses dans les rues d’Amsterdam : belle publicité.")}}]},
+  {id:"voisin",title:"Le voisin",text:"Monsieur Van Dijk, le voisin, se plaint de la musique. Il est venu avec un sonomètre et un thermos de café.",choices:[
+    {l:"Lui offrir une bonne bouteille",d:"−40 €",f:()=>spend(40,"Van Dijk repart ravi avec sa bouteille. Il reviendra, c’est certain.")},
+    {l:"Baisser la musique",d:"Ambiance un peu moins festive",f:()=>{S.rep=clamp(S.rep-.5,0,100);log("Musique baissée. Le salon ressemble à une salle d’attente.")}}]},
+  {id:"inspect",title:"Contrôle sanitaire",text:"Une inspectrice de la ville se présente, bloc-notes en main. Elle n’a visiblement jamais souri.",choices:[
+    {l:"Faire la visite complète",d:"Tout dépend de la propreté des chambres ouvertes",f:()=>{const rs=S.rooms.filter(r=>r.open),avg=rs.reduce((a,r)=>a+r.p,0)/rs.length;if(avg>=55){S.rep=clamp(S.rep+2,0,100);log("« Rien à signaler, à part un goût prononcé pour le rose. »",true)}else{spend(250,"Amende pour hygiène insuffisante : 250 €.");toast("Amende de 250 € pour hygiène insuffisante.")}}},
+    {l:"Lui offrir un café d’abord",d:"Risqué",f:()=>{S.rep=clamp(S.rep-1,0,100);spend(150,"Elle ne boit pas en service. Elle a tout noté : 150 € d’amende.")}}]},
+  {id:"sanne",when:()=>staffBy("sanne")&&staffBy("sanne").fatigue>55,title:"Sanne a mal aux pieds",text:"Sanne vient te voir, escarpins à la main : « Je peux finir plus tôt ce soir ? Mes pieds me détestent. »",choices:[
+    {l:"Oui, file te reposer",d:"Elle quitte le service, moral en hausse",f:()=>{const s=staffBy("sanne");s.resting=true;s.moral=clamp(s.moral+10,0,100);log("Sanne rentre plus tôt. Elle t’en sera reconnaissante.")}},
+    {l:"Encore un petit effort",d:"Elle reste, moral en baisse",f:()=>{const s=staffBy("sanne");s.moral=clamp(s.moral-12,0,100);log("Sanne reste, les dents serrées.")}}]},
+  {id:"influ",title:"Proposition de live",text:"Un influenceur propose un live « immersion » depuis le quai. 200 000 abonnés, et un sens très personnel de la discrétion.",choices:[
+    {l:"Accepter",d:"Plus de monde tout de suite, réputation un peu écornée",f:()=>{S.rep=clamp(S.rep-1,0,100);for(let i=0;i<3;i++)setTimeout(arrive,i*500);log("Le live cartonne : du monde arrive sur le quai.",true)}},
+    {l:"Refuser",d:"Les habitués apprécient la discrétion",f:()=>{S.rep=clamp(S.rep+1,0,100);log("Pas de caméra ici. Les habitués apprécient.")}}]}
+];
+function fireEvent(){
+  let e;if(!S.evDone.touriste)e=EVENTS[0];else{const pool=EVENTS.filter(x=>!x.first&&x.id!==R.lastEv&&(!x.when||x.when()));e=pick(pool)}
+  S.evDone[e.id]=true;R.lastEv=e.id;S.night.ev++;
+  openCard({title:e.title,text:e.text,choices:e.choices});
+}
+
+/* ================= TUTORIAL ================= */
+const TUTO=[
+  null,
+  {t:p=>`Alors c’est toi, ${esc(p)} ? La maison est à toi désormais. Enfin, à toi et à la banque. Je te fais visiter.`,next:true},
+  {t:()=>"Une seule chambre en état : le Boudoir. Les trois autres dorment sous des draps depuis mon départ. Touche le Boudoir.",target:"#hit-boudoir",wait:"room:boudoir"},
+  {t:()=>"Propreté, état… Une chambre sale, c’est un client qui ne revient pas. Tout se gère depuis ce panneau.",target:"#panel",next:true},
+  {t:()=>"Et voici ton équipe. Enfin, ton équipe… Touche l’onglet Personnel.",target:'[data-tab="personnel"]',wait:"tab:personnel"},
+  {t:()=>"Sanne tient la maison seule depuis mon départ. Surveille sa fatigue et son moral, et trouve-lui vite des collègues.",target:"#pbody",next:true},
+  {t:()=>"Le temps passe tout seul. Pause, ×1, ×2, ×4 : à toi de voir. À 19 h, on prépare la soirée. Lance le temps.",target:"#speed",next:true,nextL:"C’est parti"},
+  {t:()=>"Ta première alerte ! Une chambre salie ne reçoit plus personne sous 15 %. Touche la bulle.",target:".bubble",wait:"alert"},
+  {t:()=>"Nettoyage express, ou tu attends que le ménage passe demain. Ici, on nettoie.",target:"#pbody",wait:"clean"},
+  {t:()=>"Parfait. Laisse la nuit se dérouler : je repasserai à la fermeture.",next:true,nextL:"Merci Josée"}
+];
+const tring=$("#tring"),tcard=$("#tcard");
+const tutoActive=()=>S&&S.tuto>0&&S.tuto<TUTO.length&&!tcard.hidden;
+function tutoShow(){
+  const st=TUTO[S.tuto];if(!st){tutoHide();return}
+  S.speed=S.tuto===6?S.speed:0;renderSpeed();
+  tcard.innerHTML=`<div class="josee"><div class="pt">${portrait(JOSEE)}</div><div><b>Madame Josée</b>${st.t(S.player.prenom)}</div></div><div class="btns"><button class="btn ghost" id="tSkip">Passer le didacticiel</button>${st.next?`<button class="btn" id="tNext">${st.nextL||"Suivant"}</button>`:""}</div>`;
+  tcard.hidden=false;
+  $("#tSkip").onclick=()=>{S.tuto=99;tutoHide();S.speed=1;renderSpeed()};
+  if(st.next)$("#tNext").onclick=()=>tutoAdvance();
+  requestAnimationFrame(placeTuto);
+}
+function placeTuto(){
+  const st=TUTO[S.tuto];if(!st)return;const app=$("#app").getBoundingClientRect();
+  const tgt=st.target?document.querySelector(st.target):null;
+  if(tgt){const r=tgt.getBoundingClientRect();tring.hidden=false;Object.assign(tring.style,{left:(r.left-app.left-4)+"px",top:(r.top-app.top-4)+"px",width:(r.width+8)+"px",height:(r.height+8)+"px"});
+    const cx=r.left+r.width/2-app.left;tcard.style.left=cx>app.width/2?"10px":"auto";tcard.style.right=cx>app.width/2?"auto":"10px";}
+  else{tring.hidden=true;tcard.style.left="50%";tcard.style.right="auto";tcard.style.transform="translateX(-50%)";return}
+  tcard.style.transform="";
+}
+function tutoHide(){tcard.hidden=true;tring.hidden=true}
+function tutoAdvance(){
+  S.tuto++;
+  if(S.tuto===7){tutoHide();S.speed=1;renderSpeed();return}   // wait for first dirty alert
+  if(S.tuto===9){tutoShow();return}
+  if(S.tuto>=10){tutoHide();S.speed=1;renderSpeed();return}
+  tutoShow();
+}
+function tutoEvent(ev){
+  if(!S||S.tuto<=0||S.tuto>=TUTO.length)return;const st=TUTO[S.tuto];if(tcard.hidden||!st||st.wait!==ev)return;
+  if(S.tuto===8){S.tuto=9;tutoShow();return}
+  tutoAdvance();
+}
+
+/* ================= TITLE & CREATION ================= */
+function slotSummary(s){const av=AVATARS.find(a=>a.id===s.player.avatar);const d=Math.floor(s.t/1440);return{av,txt:`${esc(s.player.prenom)}, ${esc(s.player.maison)}`,sub:`Chapitre 1, jour ${d+1}. ${euro(s.money)}. ★ ${Math.floor(s.rep)}. ${new Date(s.played).toLocaleDateString("fr-FR")}`}}
+function showTitle(){
+  S=null;tutoHide();closeCard();R.queue.forEach(c=>c.el.remove());R.queue=[];R.busy={};R.alerts.forEach(a=>a.el.remove());R.alerts=[];
+  const sc=$("#titleScreen");let h=`<div class="title-l"><div class="logo script">La bonne passe</div><div class="tagline">Une maison close à Amsterdam. Presque vide. Et toute à toi.</div><div class="tagline" style="margin-top:14px">Prototype 3</div></div><div class="title-r"><h2>Parties</h2>`;
+  for(let i=1;i<=3;i++){const s=readSlot(i);
+    if(s){const m=slotSummary(s);h+=`<div class="slot"><div class="pt">${portrait(m.av.look)}</div><div class="grow"><b>${m.txt}</b><div class="st">${m.sub}</div></div><button class="del" data-del="${i}">Supprimer</button><button class="btn" data-load="${i}">Continuer</button></div>`}
+    else h+=`<div class="slot"><div class="pt" style="display:grid;place-items:center;color:var(--muted)">${i}</div><div class="grow"><b>Emplacement libre</b><div class="st">Aucune partie</div></div><button class="btn ghost" data-new="${i}">Nouvelle partie</button></div>`;
+  }
+  h+=`</div>`;sc.innerHTML=h;sc.hidden=false;$("#createScreen").hidden=true;
+  sc.querySelectorAll("[data-new]").forEach(b=>b.onclick=()=>showCreate(+b.dataset.new));
+  sc.querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>{const s=readSlot(+b.dataset.load);if(s)startGame(s)});
+  sc.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{if(b.dataset.confirm){delSlot(+b.dataset.del);showTitle()}else{b.dataset.confirm="1";b.textContent="Confirmer ?";b.style.color="var(--neon)"}});
+}
+function showCreate(slot){
+  const sc=$("#createScreen");let av="a1";
+  sc.innerHTML=`<div class="create"><div><h2>Qui dirige la maison ?</h2><div class="avs">${AVATARS.map(a=>`<button class="av" data-av="${a.id}" aria-pressed="${a.id===av}">${full(a.look)}<span>${a.label}</span></button>`).join("")}</div></div>
+  <div><div class="preview script" id="cPrev">La bonne passe</div>
+    <div class="field"><label for="cPre">Ton prénom</label><input id="cPre" maxlength="20" autocomplete="off" placeholder="Obligatoire"></div>
+    <div class="field"><label for="cMai">Le nom de ta maison (l’enseigne)</label><input id="cMai" maxlength="22" autocomplete="off" value="La bonne passe"></div>
+    <div class="field"><label for="cSoc">Nom de ta société (facultatif)</label><input id="cSoc" maxlength="30" autocomplete="off" placeholder="Pour les courriers de la banque"></div>
+    <div class="btns"><button class="btn ghost" id="cBack">Retour</button><button class="btn" id="cGo" disabled>Reprendre la maison</button></div></div></div>`;
+  sc.hidden=false;$("#titleScreen").hidden=true;
+  const upd=()=>{$("#cGo").disabled=!$("#cPre").value.trim();$("#cPrev").textContent=$("#cMai").value.trim()||"La bonne passe"};
+  ["cPre","cMai","cSoc"].forEach(i=>$("#"+i).addEventListener("input",upd));
+  sc.querySelectorAll("[data-av]").forEach(b=>b.onclick=()=>{av=b.dataset.av;sc.querySelectorAll("[data-av]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.av===av))});
+  $("#cBack").onclick=showTitle;
+  $("#cGo").onclick=()=>{const p={avatar:av,prenom:$("#cPre").value.trim(),maison:$("#cMai").value.trim()||"La bonne passe",societe:$("#cSoc").value.trim()};
+    const s=newState(slot,p);s.tuto=1;startGame(s);save()};
+}
+function startGame(state){
+  S=state;$("#titleScreen").hidden=true;$("#createScreen").hidden=true;
+  R.queue=[];R.busy={};R.alerts.forEach(a=>a.el.remove());R.alerts=[];R.pendingCards=[];R.wasOpen=isOpen();R.view=null;R.tab="maison";
+  S.staff.forEach(s=>{s.busy=false;s.anim=false});
+  if(R.wasOpen&&!S.night)S.night={no:S.nightNo,rev:0,exp:0,served:0,lost:0,staffPaid:0,rep0:S.rep,best:null,worst:null,ev:0};
+  rebuildActors();setSign();S.rooms.forEach(r=>setCurtain(r.id));renderSpeed();fit();render(true);
+  $("#ticker").innerHTML=`<time>${fmt(S.t)}</time><b>${S.log[0]?S.log[0].html:"La maison t’attend."}</b>`;
+  if(S.tuto>0&&S.tuto<7)tutoShow();
+}
+
+/* ================= LOOP ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(100,now-last);last=now;
+  if(S){
+    if(!R.modal&&S.speed>0&&(!tutoActive()||S.tuto===6||S.tuto===9)){
+      const busy=Object.keys(R.busy).length>0,open=!!R.wasOpen;
+      const rate=(open||busy?1.33:20)*S.speed;let dm=dt/1000*rate;
+      while(dm>0&&!R.modal){const step=Math.min(dm,4);S.t+=step;tick(step);dm-=step}
+    }
+    visuals();hud();
+    if(needRender||now-R.lastRender>1000)render();
+    if(tutoActive())placeTuto();
+  }
+  requestAnimationFrame(loop);
+}
+renderSpeed();showTitle();fit();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
