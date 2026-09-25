@@ -113,6 +113,7 @@ export function noterClient(etat: EtatJeu, segment: Segment, issue: 'servis' | '
   // Une partie reprise en pleine soirée (sauvegarde d'avant la v0.3) n'a pas encore sa ligne.
   if (etat.clientele.historique.length === 0) etat.clientele.historique.push({ servis: parSegment(0), perdus: parSegment(0) });
   etat.clientele.historique[0]![issue][segment] += 1;
+  etat.semaine[issue] += 1;
 }
 
 /** Fréquentation cumulée des dernières nuits. */

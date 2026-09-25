@@ -7,7 +7,16 @@ import { appliquerRegle, type OrdreRegle } from './regles';
 import { appliquerBar, avancerTravauxBar, visiteGrossiste, type OrdreBar } from './bar';
 import { trancherImprevu, type EvenementImprevu, type OrdreImprevu } from './imprevus';
 import { appliquerPersonnel, matinDuPersonnel, type EvenementPersonnel, type OrdrePersonnel } from './personnel';
-import { arrivee, depenser, fermerNuit, ouvrirNuit, prelevementsDuMatin, vivre, type EvenementSoiree } from './soiree';
+import {
+  arrivee,
+  depenser,
+  fermerNuit,
+  ouvrirNuit,
+  prelevementsDuMatin,
+  prochainesMensualites,
+  vivre,
+  type EvenementSoiree,
+} from './soiree';
 import {
   appliquerRecrutement,
   arriveeVisites,
@@ -15,7 +24,8 @@ import {
   type EvenementRecrutement,
   type OrdreRecrutement,
 } from './recrutement';
-import { attendBriefing, estOuvert, instant, MINUTES_PAR_JOUR } from './temps';
+import { attendBriefing, estOuvert, instant, jourDeLaSemaine, MINUTES_PAR_JOUR } from './temps';
+import { cloreSemaine, type EvenementSemaine } from './semaine';
 
 /** Ordres envoyés par l'interface au moteur. */
 export type Ordre =
@@ -40,6 +50,8 @@ export type Ordre =
   | { type: 'annonceVue' }
   /** Josée a présenté les nouveautés d'une mise à jour. */
   | { type: 'nouveautesVues' }
+  /** Le bilan du lundi a été lu. */
+  | { type: 'bilanSemaineVu' }
   /** Le didacticiel avance (l'interface décide des étapes, le moteur les garde). */
   | { type: 'didacticiel'; etape: number | null }
   | OrdreRecrutement
@@ -65,7 +77,8 @@ export type EvenementMoteur =
   | EvenementSoiree
   | EvenementRecrutement
   | EvenementPersonnel
-  | EvenementImprevu;
+  | EvenementImprevu
+  | EvenementSemaine;
 
 /** Taille du journal gardé dans la sauvegarde. */
 export const TAILLE_JOURNAL = 50;
@@ -104,11 +117,11 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       etat.briefingJour = etat.jour;
       if (ordre.offre) etat.offre = ordre.offre;
       if (ordre.commanderLinge) {
-        depenser(etat, B.COMMANDE_LINGE.prix);
+        depenser(etat, B.COMMANDE_LINGE.prix, 'linge');
         etat.lingeCommande += B.COMMANDE_LINGE.draps;
       }
       if (ordre.commanderBar && etat.bar.ouvert) {
-        depenser(etat, B.COMMANDE_BAR.prix);
+        depenser(etat, B.COMMANDE_BAR.prix, 'bar');
         etat.bar.commande += B.COMMANDE_BAR.bouteilles;
       }
       if (etat.systemes.planning) {
@@ -124,13 +137,13 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       const chambre = etat.chambres.find((c) => c.id === ordre.chambreId);
       const occupee = etat.rendezVous.some((r) => r.chambreId === ordre.chambreId);
       if (!chambre || !chambre.ouverte || occupee || chambre.proprete >= 100) return;
-      depenser(etat, B.NETTOYAGE_EXPRESS);
+      depenser(etat, B.NETTOYAGE_EXPRESS, 'menage');
       chambre.proprete = 100;
       evenements.push({ type: 'nettoyage', chambreId: chambre.id, montant: B.NETTOYAGE_EXPRESS });
       return;
     }
     case 'livraisonLinge':
-      depenser(etat, B.LIVRAISON_EXPRESS_LINGE.prix);
+      depenser(etat, B.LIVRAISON_EXPRESS_LINGE.prix, 'linge');
       etat.linge += B.LIVRAISON_EXPRESS_LINGE.draps;
       evenements.push({ type: 'livraisonLinge', montant: B.LIVRAISON_EXPRESS_LINGE.prix });
       return;
@@ -146,7 +159,7 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       etat.dispute = null;
       let reussite = true;
       if (ordre.choix === 'verre') {
-        depenser(etat, B.DISPUTE_VERRE_OFFERT);
+        depenser(etat, B.DISPUTE_VERRE_OFFERT, 'incidents');
       } else {
         const tirage = creerTirage(etat.hasard);
         reussite = tirage.chance(B.DISPUTE_CALMER_REUSSITE);
@@ -160,7 +173,7 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       const chambre = etat.chambres.find((c) => c.id === ordre.chambreId);
       if (!etat.systemes.renovation || !chambre || chambre.ouverte || chambre.travaux !== null) return;
       if (etat.tresorerie < B.RENOVATION.prix) return;
-      depenser(etat, B.RENOVATION.prix);
+      depenser(etat, B.RENOVATION.prix, 'travaux');
       chambre.travaux = instant(etat) + B.RENOVATION.heures * 60;
       const fin = (etat.minuteDuJour + B.RENOVATION.heures * 60) % MINUTES_PAR_JOUR;
       evenements.push({ type: 'debutTravaux', chambreId: chambre.id, montant: B.RENOVATION.prix, fin });
@@ -202,6 +215,9 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'livraisonBar':
     case 'avanceFournisseur':
       appliquerBar(etat, ordre, evenements);
+      return;
+    case 'bilanSemaineVu':
+      etat.bilanAVoir = false;
       return;
     case 'nouveautesVues':
       etat.nouveautes = [];
@@ -266,6 +282,8 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
   if (etat.minuteDuJour === B.HEURE_DEBUT_JOURNEE) {
     etat.jour += 1;
     evenements.push({ type: 'nouveauJour', jour: etat.jour });
+    // Le lundi, la semaine écoulée se referme en bilan avant les charges de la nouvelle.
+    if (jourDeLaSemaine(etat.jour) === 0) cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
     prelevementsDuMatin(etat, evenements);
     matinRecrutement(etat, tirage, evenements);
     matinDuPersonnel(etat, evenements);

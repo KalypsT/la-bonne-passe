@@ -20,6 +20,7 @@ import { SANNE, type DefinitionEmploye, type Silhouette, type Talent } from '../
 import { PARTIE_PAR_DEFAUT, type Genre } from '../content/partie';
 import type { EvenementMoteur } from './tick';
 import { clienteleDeDepart, type Clientele } from './clientele';
+import { semaineDeDepart, type BilanSemaine, type Semaine } from './semaine';
 
 /** Drapeaux d'ouverture des systèmes. L'interface masque ou verrouille ce qui est fermé. */
 export interface Systemes {
@@ -41,6 +42,8 @@ export interface Systemes {
   tarifs: boolean;
   /** Sélection à l'entrée et priorité d'accueil (palier 2). */
   porte: boolean;
+  /** Tendances de la semaine (premier lundi après le palier 2). */
+  tendances: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -299,6 +302,12 @@ export interface EtatJeu {
   /** Satisfaction par segment et fréquentation (v0.3). La réputation en est la moyenne pondérée. */
   clientele: Clientele;
   regles: Regles;
+  /** Semaine en cours : comptes par poste, tendances, situation de départ. */
+  semaine: Semaine;
+  /** Bilan de la dernière semaine écoulée. */
+  bilanSemaine: BilanSemaine | null;
+  /** Le bilan du lundi attend d'être lu (carte en pause). */
+  bilanAVoir: boolean;
   /** Nouveautés arrivées avec une mise à jour du jeu, pour un palier déjà atteint : Josée les présente. */
   nouveautes: string[];
   /** Étape du didacticiel de Madame Josée, ou null s'il est fini ou passé. */
@@ -308,7 +317,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 13;
+export const VERSION_ETAT = 14;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -326,6 +335,7 @@ export function systemesDeDepart(): Systemes {
     bar: false,
     tarifs: false,
     porte: false,
+    tendances: false,
   };
 }
 
@@ -456,6 +466,9 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     clientele: clienteleDeDepart(),
     regles: reglesDeDepart(),
     ...barDeDepart(),
+    semaine: semaineDeDepart(),
+    bilanSemaine: null,
+    bilanAVoir: false,
     nouveautes: [],
     didacticiel: options.didacticiel ? 0 : null,
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,

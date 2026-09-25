@@ -1560,3 +1560,76 @@ body {
   opacity: 0.4;
   cursor: default;
 }
+
+/* ——— Bilan du lundi ——— */
+
+.comptes {
+  display: grid;
+  gap: 1px;
+  margin: 0 0 6px;
+  font-size: 12.5px;
+}
+
+.comptes div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.comptes dt {
+  color: var(--attenue);
+}
+
+.comptes dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.comptes .total {
+  padding-top: 2px;
+  border-top: 1px solid var(--ligne);
+  font-weight: 600;
+}
+
+.comptes .total dt {
+  color: var(--creme);
+}
+
+.comptes.resultat {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.comptes.resultat dt {
+  color: var(--laiton);
+}
+
+.tendance {
+  margin-bottom: 6px;
+}
+
+.tendance > b {
+  color: var(--laiton);
+  font-size: 13px;
+}
+
+.encart-tendances {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px dashed var(--laiton);
+  border-radius: 12px;
+}
+
+.encart-tendances b {
+  color: var(--laiton);
+  font-size: 13px;
+}
+
+.encart-tendances span {
+  font-size: 12px;
+  color: var(--attenue);
+}

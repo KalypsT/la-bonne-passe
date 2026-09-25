@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { PATIENCE_CLIENT, PRIX_ECART, PRIX_MIN, SEUILS_HUMEUR } from '../content/balance';
 import { CLIENTS, INFOS_SEGMENTS, OFFRES, SEGMENTS, SEGMENTS_A_VENIR, type Segment } from '../content/clientele';
 import { TALENTS } from '../content/personnel';
+import { trouverTendance } from '../content/tendances';
 import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS, type TexteOption } from '../content/regles';
 import { TEXTES } from '../content/textes';
 import { frequentation, segmentsOuverts } from '../engine/clientele';
@@ -31,6 +32,18 @@ export function OngletClientele({ partie }: { partie: EtatJeu }) {
           <span>{t.regles}</span>
           <small>{resumeRegles(partie)}</small>
         </button>
+      )}
+      {partie.systemes.tendances && (
+        <div className="encart-tendances">
+          <span>{TEXTES.semaine.tendances}</span>
+          {partie.semaine.tendances.length === 0 && <span>{TEXTES.semaine.aucuneTendance}</span>}
+          {partie.semaine.tendances.flatMap((id) => trouverTendance(id) ?? []).map((td) => (
+            <div key={td.id}>
+              <b>{td.nom}</b>
+              <span> · {td.texte}</span>
+            </div>
+          ))}
+        </div>
       )}
       <h3>{t.segments}</h3>
       {segmentsOuverts(partie).map((s) => {

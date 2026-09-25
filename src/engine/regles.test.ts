@@ -4,7 +4,7 @@ import { creerEtatInitial, type EtatJeu } from './etat';
 import { creerTirage } from './hasard';
 import { accorderPalier } from './paliers';
 import { demandePrix, prochainClient, quotaAtteint } from './regles';
-import { arrivee, employeDisponible, facteurDispute, facteurTarif, modeleClient } from './soiree';
+import { arrivee, employeDisponible, facteurDispute, facteurDemande, modeleClient } from './soiree';
 import { appliquerOrdres, tick, type Ordre } from './tick';
 
 const h = (heures: number, minutes = 0) => heures * 60 + minutes;
@@ -45,9 +45,9 @@ describe('tarif général', () => {
     const cher = regle(soiree(2), { type: 'regle', regle: 'tarif', valeur: 2 });
     expect(demandePrix(cher, 'touriste')).toBeCloseTo(1 - B.ELASTICITE_PRIX.touriste * 0.2);
     expect(demandePrix(cher, 'affaires')).toBeGreaterThan(demandePrix(cher, 'touriste'));
-    expect(facteurTarif(cher)).toBeLessThan(1);
+    expect(facteurDemande(cher)).toBeLessThan(1);
     const bradé = regle(soiree(2), { type: 'regle', regle: 'tarif', valeur: 0 });
-    expect(facteurTarif(bradé)).toBeGreaterThan(1);
+    expect(facteurDemande(bradé)).toBeGreaterThan(1);
   });
 
   it('le prix se sent dans la satisfaction des segments sensibles', () => {

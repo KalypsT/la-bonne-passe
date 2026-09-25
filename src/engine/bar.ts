@@ -3,6 +3,7 @@
 
 import * as B from '../content/balance';
 import type { Segment } from '../content/clientele';
+import { depenser, encaisser } from './comptes';
 import type { EtatJeu } from './etat';
 import { instant, MINUTES_PAR_JOUR } from './temps';
 
@@ -26,11 +27,6 @@ interface Sortie {
   push(e: EvenementBar): unknown;
 }
 
-/** Dépense : trésorerie et comptes de la nuit en cours (même règle que soiree.depenser, sans dépendance circulaire). */
-function depenser(etat: EtatJeu, montant: number): void {
-  etat.tresorerie -= montant;
-  if (etat.nuit && etat.nuitsBouclees < etat.nuit.numero) etat.nuit.depenses += montant;
-}
 
 /** Le bar sert : rouvert, avec au moins une personne derrière le comptoir et du stock. */
 export function barSert(etat: EtatJeu): boolean {
@@ -68,7 +64,7 @@ export function venteBar(etat: EtatJeu, segment: Segment, evenements: Sortie): n
   if (!barSert(etat)) return 0;
   const montant = B.BAR_RECETTE[segment];
   retirerStock(etat, B.BAR_CONSO[segment], evenements);
-  etat.tresorerie += montant;
+  encaisser(etat, montant, 'bar');
   if (etat.nuit) {
     etat.nuit.recettes += montant;
     etat.nuit.bar += montant;
@@ -110,7 +106,7 @@ export function visiteGrossiste(etat: EtatJeu, evenements: Sortie): void {
 export function rembourserAvance(etat: EtatJeu, evenements: Sortie): void {
   const a = etat.avance;
   if (a.statut !== 'acceptee' || a.echeance === null || etat.jour < a.echeance) return;
-  depenser(etat, a.montant);
+  depenser(etat, a.montant, 'avance');
   a.statut = 'remboursee';
   evenements.push({ type: 'remboursementAvance', montant: a.montant });
 }
@@ -120,7 +116,7 @@ export function appliquerBar(etat: EtatJeu, ordre: OrdreBar, evenements: Sortie)
     case 'renoverBar': {
       const bar = etat.bar;
       if (!etat.systemes.bar || bar.ouvert || bar.travaux !== null || etat.tresorerie < B.RENOVATION_BAR.prix) return;
-      depenser(etat, B.RENOVATION_BAR.prix);
+      depenser(etat, B.RENOVATION_BAR.prix, 'travaux');
       bar.travaux = instant(etat) + B.RENOVATION_BAR.heures * 60;
       const fin = (etat.minuteDuJour + B.RENOVATION_BAR.heures * 60) % MINUTES_PAR_JOUR;
       evenements.push({ type: 'debutTravauxBar', montant: B.RENOVATION_BAR.prix, fin });
@@ -135,7 +131,7 @@ export function appliquerBar(etat: EtatJeu, ordre: OrdreBar, evenements: Sortie)
     }
     case 'livraisonBar':
       if (!etat.bar.ouvert) return;
-      depenser(etat, B.LIVRAISON_EXPRESS_BAR.prix);
+      depenser(etat, B.LIVRAISON_EXPRESS_BAR.prix, 'bar');
       etat.bar.stock += B.LIVRAISON_EXPRESS_BAR.bouteilles;
       evenements.push({ type: 'livraisonBar', montant: B.LIVRAISON_EXPRESS_BAR.prix });
       return;

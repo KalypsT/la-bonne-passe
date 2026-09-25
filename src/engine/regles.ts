@@ -38,9 +38,14 @@ export function prioriteActive(etat: EtatJeu): B.IdPriorite {
   return etat.systemes.porte ? etat.regles.priorite : 'arrivee';
 }
 
-/** Demande d'un segment au tarif en vigueur : effet inverse du prix, plus ou moins fort selon le segment. */
+/** Écart du prix ressenti au prix normal : le tarif, et ce que la formule ajoute (le champagne se sent sur l'addition). */
+export function ecartPrix(etat: EtatJeu): number {
+  return ecartTarif(etat) + B.FORMULES[formuleActive(etat)].prixRessenti;
+}
+
+/** Demande d'un segment au prix en vigueur : effet inverse du prix, plus ou moins fort selon le segment. */
 export function demandePrix(etat: EtatJeu, segment: Segment): number {
-  return Math.max(B.DEMANDE_PRIX_MIN, 1 - B.ELASTICITE_PRIX[segment] * ecartTarif(etat));
+  return Math.max(B.DEMANDE_PRIX_MIN, 1 - B.ELASTICITE_PRIX[segment] * ecartPrix(etat));
 }
 
 /** Ce que la formule et la sélection ajoutent à la qualité ressentie par un segment. */
@@ -54,12 +59,12 @@ export function qualiteDesRegles(etat: EtatJeu, segment: Segment, formule: B.IdF
 
 /** Le tarif se sent dans l'avis : cher pour un touriste, indifférent pour un banquier. */
 export function prixRessenti(etat: EtatJeu, segment: Segment): number {
-  return -B.ELASTICITE_PRIX[segment] * ecartTarif(etat) * B.PRIX_RESSENTI;
+  return -B.ELASTICITE_PRIX[segment] * ecartPrix(etat) * B.PRIX_RESSENTI;
 }
 
-/** Patience sur le quai multipliée par le tarif : on attend plus volontiers une maison bon marché. */
+/** Patience sur le quai multipliée par le prix : on attend plus volontiers une maison bon marché. */
 export function patienceTarif(etat: EtatJeu): number {
-  return 1 - ecartTarif(etat) * B.PATIENCE_TARIF;
+  return 1 - ecartPrix(etat) * B.PATIENCE_TARIF;
 }
 
 /** Charge qu'ajoute un rendez-vous de la formule en vigueur. */

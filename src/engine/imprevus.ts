@@ -5,6 +5,7 @@ import * as B from '../content/balance';
 import { IMPREVUS, trouverImprevu, type DefinitionImprevu, type EffetImprevu } from '../content/imprevus';
 import type { Employe, EtatJeu, ImprevuEnCours } from './etat';
 import { changerReputationGlobale } from './clientele';
+import { encaisser, noterDepense } from './comptes';
 import type { Tirage } from './hasard';
 import { affinite, changerLoyaute, changerMoral, ajusterAffinite } from './personnel';
 import { ecart, instant } from './temps';
@@ -90,12 +91,14 @@ function appliquerEffet(etat: EtatJeu, effet: EffetImprevu, imprevu: ImprevuEnCo
   if (e2 && effet.moral2) changerMoral(e2, effet.moral2);
   if (e && e2 && effet.affinite) ajusterAffinite(etat, e.id, e2.id, effet.affinite);
   if (effet.reputation) changerReputationGlobale(etat, effet.reputation);
-  if (effet.argent) {
-    etat.tresorerie += effet.argent;
-    if (etat.nuit) {
-      if (effet.argent > 0) etat.nuit.recettes += effet.argent;
-      else etat.nuit.depenses -= effet.argent;
-    }
+  const argent = effet.argent ?? 0;
+  if (argent > 0) {
+    encaisser(etat, argent, 'autres');
+    if (etat.nuit) etat.nuit.recettes += argent;
+  } else if (argent < 0) {
+    etat.tresorerie += argent;
+    noterDepense(etat, -argent, 'incidents');
+    if (etat.nuit) etat.nuit.depenses -= argent;
   }
   for (let i = 0; i < (effet.clients ?? 0); i++) ajouterClient();
 }

@@ -22,7 +22,8 @@ const parties = new Map<string, ResumeNuit[][]>();
 
 beforeAll(() => {
   for (const [nom, regles] of Object.entries(VARIANTES)) {
-    parties.set(nom, GRAINES.map((graine) => simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 21, regles }).nuits));
+    // Sans tendance : on mesure les règles, pas le hasard des semaines.
+    parties.set(nom, GRAINES.map((graine) => simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 21, regles, tendances: [] }).nuits));
   }
 }, 30_000);
 
