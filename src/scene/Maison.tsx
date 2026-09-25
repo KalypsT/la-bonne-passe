@@ -7,6 +7,7 @@ import { formaterHeure } from '../ui/format';
 import type { Alerte } from '../engine/alertes';
 import { Avatar } from './Avatar';
 import { DecorChambre } from './DecorChambres';
+import { DecorTheme } from './DecorTheme';
 import { GEOMETRIE_CHAMBRES, GEOMETRIE_PIECES, type Rect } from './geometrie';
 import { Vie, type Montant } from './Vie';
 
@@ -206,6 +207,9 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
         <circle cx="455" cy="356" r="3" />
         <circle cx="470" cy="355" r="3.4" />
       </g>
+
+      {/* Soirée à thème : le salon s'habille, une affichette dans la vitrine */}
+      {ouvert && partie.themeDuSoir && <DecorTheme id={partie.themeDuSoir} />}
 
       {/* Quai, réverbère, vélo et canal */}
       <rect x="0" y="372" width="600" height="22" fill="url(#paves)" />

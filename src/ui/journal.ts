@@ -2,6 +2,7 @@ import type { IdFormule, IdPriorite, IdSelection } from '../content/balance';
 import { CLIENTS } from '../content/clientele';
 import { trouverImprevu } from '../content/imprevus';
 import { trouverTendance } from '../content/tendances';
+import { trouverTheme } from '../content/themes';
 import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS } from '../content/regles';
 import { JOSEE_RESERVE } from '../content/josee';
 import { trouverChambre } from '../content/maison';
@@ -79,6 +80,10 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
     case 'bilanSemaine': {
       const b = partie.bilanSemaine;
       return b && b.numero === evenement.numero ? t.bilanSemaine(b.numero, formaterEuros(b.resultat)) : null;
+    }
+    case 'theme': {
+      const theme = trouverTheme(evenement.id);
+      return theme ? t.theme(theme.annonce, formaterEuros(evenement.montant)) : null;
     }
     case 'tendance': {
       const tendance = trouverTendance(evenement.id);

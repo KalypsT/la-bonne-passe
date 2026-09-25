@@ -15,6 +15,17 @@ import { ecart, instant } from './temps';
 import { depenser, encaisser, noterDepense } from './comptes';
 import { demandeTendance, disputeTendance } from './semaine';
 import {
+  affluenceTheme,
+  attraitTheme,
+  boucheTheme,
+  disputeTheme,
+  fatigueTheme,
+  patienceTheme,
+  prixTheme,
+  qualiteTheme,
+  type EvenementTheme,
+} from './themes';
+import {
   attraitSegment,
   changerReputationGlobale,
   changerSatisfaction,
@@ -67,7 +78,8 @@ export type EvenementSoiree =
   | EvenementPersonnel
   | EvenementImprevu
   | EvenementRegle
-  | EvenementBar;
+  | EvenementBar
+  | EvenementTheme;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -115,6 +127,12 @@ export function ouvrirNuit(etat: EtatJeu, evenements: Sortie): void {
   etat.lingeCommande = 0;
   livrerCommandeBar(etat);
   ouvrirNuitClientele(etat);
+  if (etat.themeDuSoir) {
+    // Payé au briefing, le thème compte dans les dépenses de sa nuit (la trésorerie, elle, est déjà débitée).
+    const cout = B.THEMES[etat.themeDuSoir]?.cout ?? 0;
+    if (etat.nuit) etat.nuit.depenses += cout;
+    evenements.push({ type: 'theme', id: etat.themeDuSoir, montant: cout });
+  }
   // Sélection stricte : le portier se paie à l'ouverture.
   const portier = selectionActive(etat).cout;
   if (portier > 0) {
@@ -173,7 +191,7 @@ function fetardeEnService(etat: EtatJeu): boolean {
 /** Patience d'un client : la sienne, et une Fêtarde en service met l'ambiance. */
 function patienceClient(etat: EtatJeu, modele: ModeleClient): number {
   const base = (modele.patience ?? B.PATIENCE_CLIENT) * patienceTarif(etat);
-  return Math.round(base + (fetardeEnService(etat) ? B.TRAITS_EFFETS.fetardePatience : 0) + patienceBar(etat));
+  return Math.round(base + (fetardeEnService(etat) ? B.TRAITS_EFFETS.fetardePatience : 0) + patienceBar(etat) + patienceTheme(etat));
 }
 
 export function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
@@ -219,7 +237,8 @@ function poidsSegment(etat: EtatJeu, segment: Segment): number {
     B.POIDS_SEGMENTS[segment] *
     attraitSegment(etat, segment) *
     (selectionActive(etat).attire[segment] ?? 1) *
-    (B.FORMULES[formuleActive(etat)].attire[segment] ?? 1);
+    (B.FORMULES[formuleActive(etat)].attire[segment] ?? 1) *
+    attraitTheme(etat, segment);
   if (segment === 'groupe' && fetardeEnService(etat)) p *= B.FETARDE_ATTIRE_GROUPES;
   return p;
 }
@@ -306,7 +325,8 @@ export function qualiteRdv(
     (employe.moral < B.SEUIL_MORAL_BAS ? B.MALUS_QUALITE_MORAL_BAS : 0) +
     (employe.recadre === etat.jour ? B.ENTRETIEN.recadrer.qualite : 0) +
     qualiteDesRegles(etat, modele.segment, formule) +
-    qualiteBar(etat, modele.segment);
+    qualiteBar(etat, modele.segment) +
+    qualiteTheme(etat, modele.segment);
   return borner(valeur, 0, 1);
 }
 
@@ -321,18 +341,18 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   const qualite = qualiteRdv(etat, chambreId, employe.id, rdv.modele, rdv.formule);
   // Le client paie selon la qualité ; il juge aussi le prix, surtout s'il y est sensible.
   const ressentie = borner(qualite + prixRessenti(etat, modele.segment), 0, 1);
-  const tarif = trouverOffre(etat.offre).prix * (1 + ecartTarif(etat)) * formule.prix;
+  const tarif = trouverOffre(etat.offre).prix * (1 + ecartTarif(etat)) * formule.prix * prixTheme(etat);
   const prix = Math.round((modele.budget * tarif * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
   const maison = Math.round(prix * (1 - employe.part));
   encaisser(etat, maison, 'rendezVous');
   const gain = gainReputation(etat.clientele.satisfaction[modele.segment], ressentie);
-  const effet = gain > 0 ? gain * trouverOffre(etat.offre).reputation : gain;
+  const effet = gain > 0 ? gain * trouverOffre(etat.offre).reputation * boucheTheme(etat) : gain;
   changerSatisfaction(etat, modele.segment, effet * B.SATISFACTION_PAR_CLIENT);
   noterClient(etat, modele.segment, 'servis');
 
   const fatigue = tirage.entre(B.FATIGUE_PAR_RDV_MIN, B.FATIGUE_PAR_RDV_MAX);
   employe.fatigue = borner(
-    employe.fatigue + fatigue * formule.fatigue * (aTrait(employe, 'Fêtarde') ? B.TRAITS_EFFETS.fetardeFatigue : 1),
+    employe.fatigue + fatigue * formule.fatigue * fatigueTheme(etat) * (aTrait(employe, 'Fêtarde') ? B.TRAITS_EFFETS.fetardeFatigue : 1),
   );
   employe.rdvCeSoir += 1;
   employe.chargeCeSoir += chargeFormule(rdv.formule);
@@ -362,7 +382,7 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
 export function facteurDispute(etat: EtatJeu): number {
   const n = etat.personnel.filter((e) => e.enServiceCeSoir && !e.repos && aTrait(e, 'Tête brûlée')).length;
   const groupes = etat.file.filter((c) => modeleClient(c.modele).segment === 'groupe').length;
-  return Math.pow(B.TRAITS_EFFETS.teteBruleeDispute, n) * Math.pow(B.GROUPE_DISPUTE, groupes) * selectionActive(etat).dispute * disputeTendance(etat);
+  return Math.pow(B.TRAITS_EFFETS.teteBruleeDispute, n) * Math.pow(B.GROUPE_DISPUTE, groupes) * selectionActive(etat).dispute * disputeTendance(etat) * disputeTheme(etat);
 }
 
 /** Un pas de 5 minutes de la vie de la maison. */
@@ -395,6 +415,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
       trouverOffre(etat.offre).affluence *
       selectionActive(etat).affluence *
       B.FORMULES[formuleActive(etat)].affluence *
+      affluenceTheme(etat) *
       facteurDemande(etat);
     if (premierClientGaranti || tirage.chance(parHeure * heures)) arrivee(etat, tirage, evenements);
 

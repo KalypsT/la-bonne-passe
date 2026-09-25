@@ -35,13 +35,14 @@ export const PALIERS: DefinitionPalier[] = [
       'Onglet Clientèle : la satisfaction de chaque segment, et ce qui les fait revenir.',
       'Règles de la maison : tarif, formule, sélection à l’entrée et priorité d’accueil.',
       'Le bar peut rouvrir (1 200 €, 8 h de travaux) : une équipe Bar, du stock, la formule champagne.',
+      'Dès lundi : les tendances de la semaine en ville, et les soirées à thème au briefing.',
     ],
   },
   {
     numero: 3,
     nom: 'Tenir la maison',
     objectif: 'Payer la première mensualité.',
-    ouvre: 'Accueil et sécurité, soirées à thème, onglet Relations, emprunt, assurance.',
+    ouvre: 'Accueil et sécurité, onglet Relations, emprunt, assurance.',
   },
   {
     numero: 4,

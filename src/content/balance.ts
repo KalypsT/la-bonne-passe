@@ -80,8 +80,8 @@ export const REPUTATION_PAR_RDV = 2.0;
  * Les pertes, elles, tombent en entier. Cible : avec Sanne seule, réputation 25 au mieux vers la nuit 4 ou 5 (voir paliers.test.ts).
  */
 export const REPUTATION_FREIN = 2;
-export const REPUTATION_CLIENT_PERDU = 0.15;
-export const REPUTATION_FILE_PLEINE = 0.05;
+export const REPUTATION_CLIENT_PERDU = 0.1;
+export const REPUTATION_FILE_PLEINE = 0;
 
 /** Poids de la qualité d'un rendez-vous (0 à 1). */
 export const QUALITE = {
@@ -413,3 +413,81 @@ export const TENDANCES_EFFETS: Record<string, { demande: Partial<Record<Segment,
 };
 /** Projection du bilan du lundi : sur combien de semaines. */
 export const SEMAINES_PROJETEES = 4;
+
+// ——— Soirées à thème (v0.3, palier 2, au premier lundi) ———
+
+export interface ReglageTheme {
+  /** Prix de la soirée (décor, musiciens, costumes), payé au briefing. */
+  cout: number;
+  /** Supplément payé par chaque client ce soir-là (droit d'entrée, costume) : prix multiplié. */
+  prix: number;
+  /** Arrivées multipliées. */
+  affluence: number;
+  /** Poids de certains segments dans les arrivées. */
+  attire: Partial<Record<Segment, number>>;
+  /** Qualité ressentie selon le segment. */
+  qualite: Partial<Record<Segment, number>>;
+  /** Fatigue par rendez-vous multipliée. */
+  fatigue: number;
+  /** Chance de dispute multipliée. */
+  dispute: number;
+  /** Recette et consommation du bar multipliées. */
+  bar: number;
+  /** Minutes de patience en plus sur le quai : on attend volontiers en profitant du spectacle. */
+  patience: number;
+  /** Bouche-à-oreille : gains de satisfaction de la soirée multipliés. */
+  bouche: number;
+}
+
+export const THEMES: Record<string, ReglageTheme> = {
+  masquee: {
+    cout: 100,
+    prix: 1.1,
+    affluence: 1.05,
+    attire: { affaires: 1.8, habitue: 1.2 },
+    qualite: { affaires: 0.08, habitue: 0.04, touriste: 0.02 },
+    fatigue: 1,
+    dispute: 0.9,
+    bar: 1.1,
+    patience: 0,
+    bouche: 1,
+  },
+  burlesque: {
+    cout: 120,
+    prix: 1.15,
+    affluence: 1.2,
+    attire: { touriste: 1.5, groupe: 1.5 },
+    qualite: { groupe: 0.12, touriste: 0.1, habitue: -0.03 },
+    fatigue: 1.2,
+    dispute: 1,
+    bar: 1.3,
+    patience: 20,
+    bouche: 1.5,
+  },
+  jazz: {
+    cout: 80,
+    prix: 1.1,
+    affluence: 1,
+    attire: { habitue: 1.6, touriste: 1.1 },
+    qualite: { habitue: 0.08, affaires: 0.03, touriste: 0.02 },
+    fatigue: 0.85,
+    dispute: 0.7,
+    bar: 1,
+    patience: 10,
+    bouche: 1,
+  },
+  anneesFolles: {
+    cout: 150,
+    prix: 1.15,
+    affluence: 1.15,
+    attire: { groupe: 1.3, touriste: 1.2, affaires: 1.2 },
+    qualite: { groupe: 0.07, touriste: 0.06, affaires: 0.05, habitue: 0.02 },
+    fatigue: 1.3,
+    dispute: 1.1,
+    bar: 1.8,
+    patience: 15,
+    bouche: 1,
+  },
+};
+/** Un même thème répété dans la semaine lasse : ses effets sont multipliés par ce facteur à chaque reprise. */
+export const THEME_LASSITUDE = 0.5;

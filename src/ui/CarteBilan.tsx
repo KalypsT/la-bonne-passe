@@ -1,4 +1,5 @@
 import { SEGMENTS } from '../content/clientele';
+import { trouverTheme } from '../content/themes';
 import { TEXTES } from '../content/textes';
 import { segmentsOuverts } from '../engine/clientele';
 import type { EtatJeu } from '../engine/etat';
@@ -45,6 +46,12 @@ export function CarteBilan({ partie }: { partie: EtatJeu }) {
               <div>
                 <dt>{t.reserve}</dt>
                 <dd>{formaterEuros(bilan.reserve)}</dd>
+              </div>
+            )}
+            {partie.themeDuSoir && (
+              <div>
+                <dt>{t.theme}</dt>
+                <dd>{trouverTheme(partie.themeDuSoir)?.nom}</dd>
               </div>
             )}
             <div>

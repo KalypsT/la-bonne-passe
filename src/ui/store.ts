@@ -87,7 +87,14 @@ interface EtatInterface {
   choisirVitesse: (vitesse: Vitesse) => void;
   /** Appelée à chaque image avec le temps réel écoulé, en secondes. */
   avancer: (secondes: number) => void;
-  validerBriefing: (choix: { offre: Offre; commanderLinge: boolean; commanderBar: boolean; repos: string[]; rdvMax: number }) => void;
+  validerBriefing: (choix: {
+    offre: Offre;
+    commanderLinge: boolean;
+    commanderBar: boolean;
+    repos: string[];
+    rdvMax: number;
+    theme: string | null;
+  }) => void;
   /** Envoie un ordre au moteur (nettoyage, linge, repos, dispute), sans faire avancer le temps. */
   ordonner: (ordre: Ordre) => void;
   /** Ouvre une carte ; fermer (null) passe à la carte en attente, comme une annonce de palier. */
@@ -278,11 +285,11 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     if (bilan) get().sauvegarderPartie();
   },
 
-  validerBriefing: ({ offre, commanderLinge, commanderBar, repos, rdvMax }) => {
+  validerBriefing: ({ offre, commanderLinge, commanderBar, repos, rdvMax, theme }) => {
     const { partie, vitesse } = get();
     if (!partie) return;
     reserveDeTemps = 0;
-    const resultat = appliquerOrdres(partie, [{ type: 'validerBriefing', offre, commanderLinge, commanderBar, repos, rdvMax }]);
+    const resultat = appliquerOrdres(partie, [{ type: 'validerBriefing', offre, commanderLinge, commanderBar, repos, rdvMax, theme }]);
     set({ partie: resultat.etat, carte: null, vitesse: vitesse === 0 ? 1 : vitesse });
     get().signalerDidacticiel('briefing');
     get().sauvegarderPartie();

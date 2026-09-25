@@ -43,6 +43,8 @@ export interface OptionsSimulation {
   equipeBar?: number;
   /** Accepter l'avance du grossiste. */
   avance?: boolean;
+  /** Soirée à thème programmée au briefing, dès qu'elles sont ouvertes (fixe, ou choisie selon la partie). */
+  theme?: string | null | ((etat: EtatJeu) => string | null);
   /** Pour les mesures : ces tendances toutes les semaines, dès qu'elles sont ouvertes. */
   tendances?: string[];
 }
@@ -149,7 +151,8 @@ export function simuler(options: OptionsSimulation): { nuits: ResumeNuit[]; etat
       const offre = typeof options.offre === 'function' ? options.offre(etat) : options.offre;
       const repos = etat.personnel.filter((e) => e.fatigue > 55 || e.promesseRepos !== null).map((e) => e.id);
       const commanderBar = etat.bar.ouvert && etat.equipes.bar > 0 && etat.bar.stock < (etat.regles.formule === 'champagne' ? 50 : 30);
-      jouer([{ type: 'validerBriefing', offre, commanderLinge: etat.linge < 40, commanderBar, repos, rdvMax }]);
+      const theme = typeof options.theme === 'function' ? options.theme(etat) : (options.theme ?? null);
+      jouer([{ type: 'validerBriefing', offre, commanderLinge: etat.linge < 40, commanderBar, repos, rdvMax, theme }]);
     }
   }
   return { nuits: resumes, etat, departs, bilans };
@@ -168,17 +171,26 @@ export function partsDeClientele(nuits: ResumeNuit[]): Record<Segment, number> {
  * Le joueur qui lit les tendances du lundi et adapte son offre et ses règles.
  * Sert à vérifier que l'offre change vraiment la partie (voir equilibrage-semaine.test.ts).
  */
-export function choixAdaptatif(etat: EtatJeu): { offre: Offre; regles: Partial<Regles> } {
+export function choixAdaptatif(etat: EtatJeu): { offre: Offre; regles: Partial<Regles>; theme: string | null } {
   const t = new Set(etat.semaine.tendances);
   const barPlein = etat.bar.ouvert && etat.equipes.bar > 0 && etat.bar.stock > 20;
   const base: Partial<Regles> = { tarif: 1, formule: 'standard', selection: 'normale', priorite: 'arrivee' };
-  // Les notes de frais en ville : les prix montent, les pressés passent devant.
-  if (t.has('congres') || t.has('salon')) return { offre: 'classique', regles: { ...base, tarif: 2, priorite: 'presses' } };
+  // Deux soirs à thème par semaine (vendredi et samedi), pour ne pas lasser.
+  const soirDeFete = [4, 5].includes((etat.jour - 1) % 7);
+  const theme = (id: string) => (soirDeFete ? id : null);
+  // Les notes de frais en ville : les prix montent, les pressés passent devant, les masques tombent.
+  if (t.has('congres') || t.has('salon')) {
+    return { offre: 'classique', regles: { ...base, tarif: 2, priorite: 'presses' }, theme: theme('masquee') };
+  }
   // Les bandes de copains ou la foule : un portier garde la maison vivable.
-  if (t.has('match') || t.has('evg') || t.has('hauteSaison')) return { offre: 'classique', regles: { ...base, selection: 'stricte' } };
+  if (t.has('match') || t.has('evg') || t.has('hauteSaison')) {
+    return { offre: 'classique', regles: { ...base, selection: 'stricte' }, theme: theme('burlesque') };
+  }
   // Semaine creuse : on ne brade pas, on vend plus à ceux qui viennent.
-  if (t.has('greve') || t.has('controles')) return { offre: 'classique', regles: { ...base, formule: barPlein ? 'champagne' : 'complete' } };
+  if (t.has('greve') || t.has('controles')) {
+    return { offre: 'classique', regles: { ...base, formule: barPlein ? 'champagne' : 'complete' }, theme: theme(barPlein ? 'anneesFolles' : 'masquee') };
+  }
   // Les habitués reviennent : on les choie.
-  if (t.has('pluie') || t.has('paie')) return { offre: 'feutree', regles: { ...base, priorite: 'habitues' } };
-  return { offre: 'classique', regles: base };
+  if (t.has('pluie') || t.has('paie')) return { offre: 'feutree', regles: { ...base, priorite: 'habitues' }, theme: null };
+  return { offre: 'classique', regles: base, theme: theme('jazz') };
 }

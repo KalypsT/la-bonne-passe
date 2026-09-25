@@ -14,6 +14,8 @@ export interface Semaine {
   comptes: Comptes;
   /** Tendances en cours (identifiants de src/content/tendances.ts). */
   tendances: string[];
+  /** Thèmes programmés cette semaine, dans l'ordre (pour la lassitude). */
+  themes: string[];
   reputationDebut: number;
   satisfactionDebut: ParSegment;
   servis: number;
@@ -54,6 +56,7 @@ export function nouvelleSemaine(etat: Pick<EtatJeu, 'reputation' | 'clientele'>,
     numero,
     comptes: comptesVides(),
     tendances,
+    themes: [],
     reputationDebut: etat.reputation,
     satisfactionDebut: { ...etat.clientele.satisfaction },
     servis: 0,
@@ -66,6 +69,7 @@ export function semaineDeDepart(reputation: number = B.REPUTATION_INITIALE): Sem
     numero: 1,
     comptes: comptesVides(),
     tendances: [],
+    themes: [],
     reputationDebut: reputation,
     satisfactionDebut: parSegment(reputation),
     servis: 0,
@@ -136,8 +140,10 @@ export function cloreSemaine(etat: EtatJeu, prochainesMensualites: number[], tir
   const resultatCourant = recettes - (depenses - exceptionnel);
 
   let premieresTendances = false;
+  // Au premier lundi après le palier 2 : les tendances, et les soirées à thème pour y répondre.
   if (etat.palier >= 2 && !etat.systemes.tendances) {
     etat.systemes.tendances = true;
+    etat.systemes.themes = true;
     premieresTendances = true;
   }
   const tendances = etat.systemes.tendances ? tirerTendances(etat, tirage) : [];

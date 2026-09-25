@@ -18,6 +18,7 @@ interface Strategie {
   renover?: boolean;
   regles?: Partial<Regles> | ((etat: EtatJeu) => Partial<Regles>);
   offreSelon?: (etat: EtatJeu) => Offre;
+  theme?: (etat: EtatJeu) => string | null;
   equipeBar?: number;
   avance?: boolean;
 }
@@ -27,7 +28,7 @@ const STRATEGIES: Strategie[] = [
   { nom: 'Classique, 4', offre: 'classique', rdvMax: 4 },
   { nom: 'Happy hour, 4', offre: 'happy', rdvMax: 4 },
   { nom: 'Feutrée, 4', offre: 'feutree', rdvMax: 4 },
-  { nom: 'Adaptatif (suit les tendances), 3', offre: 'classique', rdvMax: 3, regles: (e) => choixAdaptatif(e).regles, offreSelon: (e) => choixAdaptatif(e).offre },
+  { nom: 'Adaptatif (suit les tendances), 3', offre: 'classique', rdvMax: 3, regles: (e) => choixAdaptatif(e).regles, offreSelon: (e) => choixAdaptatif(e).offre, theme: (e) => choixAdaptatif(e).theme },
   { nom: 'Classique 3, sans bar', offre: 'classique', rdvMax: 3, equipeBar: 0 },
   { nom: 'Classique 3, bar à 2, sans avance', offre: 'classique', rdvMax: 3, equipeBar: 2, avance: false },
   { nom: 'Classique 3, champagne', offre: 'classique', rdvMax: 3, regles: { formule: 'champagne' } },
