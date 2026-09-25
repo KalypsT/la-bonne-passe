@@ -1,0 +1,161 @@
+:root {
+  --nuit: #0e2229;
+  --nuit-2: #0b1c22;
+  --velours: #5c1530;
+  --neon: #ff4f8b;
+  --neon-doux: #ffd3e2;
+  --laiton: #d4a64a;
+  --creme: #f4dcc8;
+  --attenue: #b99ca6;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--nuit);
+  color: var(--creme);
+  font-family: 'Jost', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  overscroll-behavior: none;
+}
+
+.jeu {
+  height: 100%;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+
+/* Écran titre provisoire */
+.ecran-titre {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px;
+  background: radial-gradient(ellipse at 50% 45%, rgba(92, 21, 48, 0.55), transparent 65%), var(--nuit);
+}
+
+.enseigne {
+  width: min(78vw, 560px);
+  max-height: 52vh;
+}
+
+.enseigne-cadre {
+  fill: rgba(11, 28, 34, 0.6);
+  stroke: var(--laiton);
+  stroke-width: 3;
+  stroke-opacity: 0.55;
+}
+
+.enseigne-texte {
+  font-family: 'Yellowtail', 'Brush Script MT', 'Segoe Script', cursive;
+  font-size: 92px;
+  fill: var(--neon-doux);
+  stroke: var(--neon);
+  stroke-width: 1.5;
+  animation: gresille 7s infinite;
+}
+
+@keyframes gresille {
+  0%, 18%, 22%, 62%, 64%, 100% { opacity: 1; }
+  20% { opacity: 0.35; }
+  63% { opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enseigne-texte {
+    animation: none;
+  }
+}
+
+.sous-titre {
+  margin: 8px 0 0;
+  color: var(--laiton);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.mention {
+  margin: 4px 0 0;
+  color: var(--attenue);
+  font-size: 12px;
+}
+
+/* Écran « tourne ton téléphone », visible seulement en portrait */
+.tourne-telephone {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  .jeu {
+    display: none;
+  }
+
+  .tourne-telephone {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 24px;
+    text-align: center;
+    background: var(--nuit);
+  }
+
+  .tourne-telephone h1 {
+    margin: 12px 0 0;
+    font-family: 'Yellowtail', 'Brush Script MT', cursive;
+    font-weight: 400;
+    font-size: 38px;
+    color: var(--neon-doux);
+    text-shadow: 0 0 12px rgba(255, 79, 139, 0.7);
+  }
+
+  .tourne-telephone p {
+    margin: 0;
+    color: var(--attenue);
+  }
+}
+
+.tourne-icone {
+  width: 110px;
+  height: 110px;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tourne-tel {
+  stroke: var(--creme);
+  stroke-width: 4;
+  transform-origin: 60px 60px;
+  animation: pivote 2.4s ease-in-out infinite;
+}
+
+.tourne-fleche {
+  stroke: var(--neon);
+  stroke-width: 4;
+}
+
+@keyframes pivote {
+  0%, 25% { transform: rotate(0deg); }
+  55%, 100% { transform: rotate(-90deg); }
+}

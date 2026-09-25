@@ -1,0 +1,16 @@
+{
+  "name": "La bonne passe",
+  "short_name": "Bonne passe",
+  "description": "Jeu de gestion : dirige une maison close à Amsterdam.",
+  "lang": "fr",
+  "start_url": "/la-bonne-passe/",
+  "scope": "/la-bonne-passe/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0E2229",
+  "theme_color": "#0E2229",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
