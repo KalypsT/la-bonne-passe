@@ -19,6 +19,8 @@ export interface TexteAlerte {
   manquee: string;
   /** Pour les actions risquées : ce qui arrive quand ça rate. */
   rate?: string;
+  /** Au journal, quand l'équipe Accueil ou Sécurité l'a réglée seule (v0.5). */
+  reglee?: string;
 }
 
 export const TEXTES_ALERTES: Record<IdAlerte, TexteAlerte> = {
@@ -32,6 +34,7 @@ export const TEXTES_ALERTES: Record<IdAlerte, TexteAlerte> = {
     journal: 'Un client d’affaires s’impatiente sur le quai.',
     traitee: ['Le client pressé passe devant. Les autres soupirent.', 'Un verre à la main, le client pressé se détend un peu.'],
     manquee: 'Le client pressé est parti en claquant la porte. Il le racontera à ses collègues.',
+    reglee: 'L’accueil installe le client pressé au salon, un café à la main : il passe devant sans que personne ne s’en aperçoive.',
   },
   bruit: {
     titre: 'Du bruit sur le quai',
@@ -43,6 +46,7 @@ export const TEXTES_ALERTES: Record<IdAlerte, TexteAlerte> = {
     journal: 'Le groupe sur le quai fait monter le ton.',
     traitee: ['Le groupe rentre au salon. Le quai retrouve un peu de calme.', 'Un verre offert, et le groupe chante à l’intérieur.'],
     manquee: 'Les chants ont duré. Tout le voisinage les a entendus.',
+    reglee: 'L’accueil fait rentrer le groupe au salon avant le deuxième couplet.',
   },
   ivre: {
     titre: 'Un client éméché',
@@ -54,6 +58,7 @@ export const TEXTES_ALERTES: Record<IdAlerte, TexteAlerte> = {
     journal: 'Un client éméché s’agite au bar.',
     traitee: ['Un café serré, un verre d’eau, et le client se calme.', 'Le taxi emporte le client éméché, qui chante encore.'],
     manquee: 'Le client éméché a fini par provoquer tout le quai.',
+    reglee: 'La sécurité raccompagne le client éméché jusqu’à un taxi, avec une bouteille d’eau et beaucoup de tact.',
     rate: 'Le café n’a pas suffi : le client éméché cherche querelle sur le quai.',
   },
   bouteille: {
@@ -74,6 +79,7 @@ export const TEXTES_ALERTES: Record<IdAlerte, TexteAlerte> = {
     journal: 'Un photographe rôde sur le quai.',
     traitee: ['Tu te plantes devant l’objectif, bras croisés. Le photographe range son matériel.', 'Le photographe empoche le billet et se découvre une passion pour les péniches.'],
     manquee: 'Le photographe a mitraillé la porte toute la soirée. Les clients discrets ne reviendront pas de sitôt.',
+    reglee: 'La sécurité se plante devant le téléobjectif. Le photographe va chercher ses sujets plus loin.',
     rate: 'Le photographe recule de dix mètres, et continue.',
   },
   sabotage: {
@@ -86,6 +92,7 @@ export const TEXTES_ALERTES: Record<IdAlerte, TexteAlerte> = {
     journal: 'Un faux client fait un scandale sur le quai.',
     traitee: ['Tu raccompagnes l’homme au bout du quai, un bras amical autour des épaules. Il ne revient pas.', 'L’homme empoche les billets et file, en direction du Chat Noir.'],
     manquee: 'Le scandale a duré une heure : police, badauds, et un journaliste. Le Chat Noir a gagné sa soirée.',
+    reglee: 'La sécurité reconnaît le faux client dès le quai et le raccompagne poliment vers le Chat Noir.',
     rate: 'L’homme se débat et renverse une table. La dispute gagne le quai.',
   },
   pause: {

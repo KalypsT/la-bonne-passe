@@ -1,4 +1,5 @@
 import { ACTIONS_RIVALE, TEXTES_RIVALE } from '../content/rivale';
+import { TEXTES_EQUIPES } from '../content/equipes';
 import { remplir } from './modeles';
 import { SEGMENTS } from '../content/clientele';
 import { trouverTendance } from '../content/tendances';
@@ -105,6 +106,12 @@ export function CarteSemaine({ partie }: { partie: EtatJeu }) {
             <JoseeLigne texte={passeSousZero ? t.joseeProjection : t.joseeResultat(b.resultat >= 0)} />
             <DefisDuLundi partie={partie} />
             <RivaleDuLundi partie={partie} />
+            {b.ouvertures?.includes('assurance') && (
+              <div className="defi-bilan">
+                <h3>{TEXTES_EQUIPES.assurance.ouverture}</h3>
+                <JoseeLigne texte={TEXTES_EQUIPES.assurance.ouvertureJosee} />
+              </div>
+            )}
             {(tendances.length > 0 || b.premieresTendances) && (
               <>
                 <h3>{t.tendances}</h3>

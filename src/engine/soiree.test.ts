@@ -98,7 +98,7 @@ describe('clients et rendez-vous', () => {
     const chambres = creerEtatInitial().chambres.map((c) =>
       c.id === 'boudoir' ? { ...c, proprete: B.SEUIL_CHAMBRE_INUTILISABLE - 5 } : c,
     );
-    const { etat } = tick(partieA(h(21), { chambres, equipes: { menage: 0, bar: 0 }, file: [{ id: 3, modele: 'etudiant', patience: 50 }] }));
+    const { etat } = tick(partieA(h(21), { chambres, equipes: { menage: 0, bar: 0, accueil: 0, securite: 0 }, file: [{ id: 3, modele: 'etudiant', patience: 50 }] }));
     expect(etat.rendezVous).toHaveLength(0);
     expect(etat.file.map((c) => c.id)).toContain(3);
   });

@@ -791,3 +791,39 @@ export const RIVALE_ARGENT = {
   primeDiscrete: 150,
   contreOffre: 300,
 };
+
+// ——— v0.5 : équipes Accueil et Sécurité, assurance (palier 3) ———
+
+/**
+ * Équipes Accueil et Sécurité (palier 3), au niveau 1 (les formations viendront au palier 4).
+ * Chaque personne règle seule une part des alertes de son domaine, dès leur apparition : de l'argent contre de l'attention.
+ */
+export const EQUIPES = {
+  accueil: {
+    salaire: 100,
+    max: 2,
+    /** Minutes de patience en plus sur le quai, par personne à l'accueil. */
+    patience: 12,
+    /** Part des alertes « client pressé » et « bruit sur le quai » réglées seules, par personne. */
+    regle: 0.3,
+  },
+  securite: {
+    salaire: 130,
+    max: 2,
+    /** Chance de dispute multipliée par (1 − ce facteur × effectif). */
+    dispute: 0.2,
+    /** Qualité ressentie en plus pour les clients d'affaires (la discrétion), par personne. */
+    qualiteAffaires: 0.02,
+    /** Part des alertes « client éméché », « photographe » et « faux client » réglées seules, et des disputes, par personne. */
+    regle: 0.3,
+    /** Avec la sécurité, la sélection stricte ne demande plus de portier payé à la soirée. */
+    portierInclus: true,
+  },
+};
+
+/** Assurance (palier 3, au premier lundi) : prime chaque lundi, part des sinistres remboursée. */
+export const ASSURANCES = [
+  { prime: 0, casse: 0, amendes: 0 },
+  { prime: 80, casse: 0.7, amendes: 0 },
+  { prime: 200, casse: 1, amendes: 1 },
+] as const;

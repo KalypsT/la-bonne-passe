@@ -42,13 +42,15 @@ export const PALIERS: DefinitionPalier[] = [
     numero: 3,
     nom: 'Tenir la maison',
     objectif: 'Payer la première mensualité.',
-    ouvre: 'Onglet Relations : voisins, mairie, presse et police ; le Chat Noir, maison rivale.',
+    ouvre: 'Onglet Relations et maison rivale, équipes Accueil et Sécurité, assurance.',
     details: [
       'Onglet Relations : les voisins, la mairie, la presse et la police, chacun avec sa jauge, de −100 à +100.',
       'En bons termes (au-dessus de +40), ils rendent service ; en mauvais termes (sous −40), les ennuis commencent.',
       'Une action par semaine et par acteur pour soigner la relation : une bouteille, un don, un déjeuner, un tournoi.',
       'Le quartier se manifeste : fête des voisins, pétition, inspection, portrait, fuite, contrôle.',
       'Le Chat Noir, la maison chic d’en face : dès lundi, Colette Vos réagit à ce que tu lui prends. Tu peux lui répondre.',
+      'Équipes Accueil et Sécurité, dans l’onglet Personnel : elles règlent seules une partie des alertes du quai.',
+      'Dès lundi, l’assurance, dans l’onglet Finances.',
     ],
   },
   {

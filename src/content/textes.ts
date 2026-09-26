@@ -476,7 +476,7 @@ export const TEXTES = {
     recettes: 'Recettes',
     depenses: 'Dépenses',
     resultat: 'Résultat de la semaine',
-    postesRecettes: { rendezVous: 'Rendez-vous (part de la maison)', bar: 'Bar', autres: 'Divers' },
+    postesRecettes: { rendezVous: 'Rendez-vous (part de la maison)', bar: 'Bar', autres: 'Divers', assurance: 'Remboursements de l’assurance' },
     postesDepenses: {
       salaires: 'Salaires des équipes',
       charges: 'Charges fixes',
@@ -488,6 +488,7 @@ export const TEXTES = {
       portier: 'Portier',
       themes: 'Soirées à thème',
       relations: 'Relations avec le quartier',
+      assurance: 'Assurance',
       incidents: 'Casse et imprévus',
       mensualite: 'Mensualité',
       avance: 'Remboursement du grossiste',

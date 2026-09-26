@@ -30,6 +30,7 @@ import { avancerIntrigues, matinDesIntrigues, trancherIntrigue, type EvenementIn
 import { matinDuQuartier } from './quartier';
 import { agirRelation, matinDesRelations, type EvenementRelation, type OrdreRelation } from './relations';
 import { lundiDeLaRivale, repondreRivale, type EvenementRivale, type OrdreRivale } from './rivale';
+import { changerAssurance, changerEquipe, type EvenementEquipe, type OrdreEquipe } from './equipes';
 import { traiterAlerte, type OrdreMinuterie } from './minuteries';
 
 /** Ordres envoyés par l'interface au moteur. */
@@ -71,7 +72,8 @@ export type Ordre =
   | OrdreRegle
   | OrdreBar
   | OrdreRelation
-  | OrdreRivale;
+  | OrdreRivale
+  | OrdreEquipe;
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -94,7 +96,8 @@ export type EvenementMoteur =
   | EvenementIntrigue
   | EvenementSemaine
   | EvenementRelation
-  | EvenementRivale;
+  | EvenementRivale
+  | EvenementEquipe;
 
 /** Taille du journal gardé dans la sauvegarde. */
 export const TAILLE_JOURNAL = 50;
@@ -271,6 +274,12 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'actionRelation':
       agirRelation(etat, ordre.action, evenements);
       return;
+    case 'equipeQuartier':
+      changerEquipe(etat, ordre.equipe, ordre.effectif, evenements);
+      return;
+    case 'assurance':
+      changerAssurance(etat, ordre.niveau, evenements);
+      return;
     case 'reponseRivale':
       repondreRivale(etat, ordre.reponse, evenements);
       return;
@@ -329,6 +338,11 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     // Le lundi, la semaine écoulée se referme en bilan avant les charges de la nouvelle.
     if (jourDeLaSemaine(etat.jour) === 0) {
       cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
+      // Le premier lundi après le palier 3 : l'assurance s'ouvre, présentée au bilan du lundi.
+      if (etat.palier >= 3 && !etat.systemes.assurance) {
+        etat.systemes.assurance = true;
+        if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'assurance'];
+      }
       // Le Chat Noir fait ses comptes, lui aussi, et décide de sa semaine.
       lundiDeLaRivale(etat, evenements);
     }

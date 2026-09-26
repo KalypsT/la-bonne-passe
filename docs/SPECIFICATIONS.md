@@ -192,6 +192,8 @@ Chaque personnage porte un arc de 3 à 5 événements, déclenchés par son mora
 
 Chaque équipe a un effectif et un niveau (1 à 3), qui augmente par la formation. L'effectif fixe la capacité, le niveau la qualité. Le ménage nettoie environ trois fois plus vite quand la maison est fermée.
 
+En v0.5, Accueil et Sécurité s'ouvrent au palier 3, au niveau 1 (les formations viendront au palier 4), de 0 à 2 personnes chacune, dans l'onglet Personnel. Chaque personne règle seule, dès son apparition, environ 30 % des alertes de son domaine : clients pressés et groupes bruyants pour l'Accueil ; clients éméchés, photographes, faux clients et disputes pour la Sécurité. L'Accueil ajoute 12 minutes de patience sur le quai par personne ; la Sécurité fait baisser le ton (−20 % de disputes par personne), rassure les clients d'affaires et tient la porte stricte à la place du portier. De l'argent contre de l'attention, sans vider la soirée.
+
 ### Départ
 
 Le joueur démarre avec Sanne seule (29 ans, Conversation 5, traits Mère poule et Fidèle), la dernière hôtesse de Madame Josée. Les premiers candidats scénarisés se présentent pendant la première semaine, et le joueur choisit qui embaucher et dans quel ordre :
@@ -324,7 +326,7 @@ Cibles : une soirée correcte rapporte 600 à 1 000 € net à la maison (recett
 | Tarifs et formules | 3 crans de tarif général, une formule | ±20 % de recette par rendez-vous, effet inverse sur la demande selon le segment | 2 |
 | Avance fournisseur | accepter ou refuser une offre du grossiste | 1 500 € de stock du bar sans payer, remboursés +10 % sous 2 semaines | 2 |
 | Nouvel emprunt | montant par tranches de 5 000 € (jusqu'à 40 000 €), durée 6, 12 ou 24 mois | Taux de 4 à 9 % selon la réputation et les retards passés | 3 |
-| Assurance | aucune, casse, ou casse + amendes | 80 à 200 € par semaine ; rembourse 70 à 100 % des sinistres couverts | 3 |
+| Assurance | aucune, casse, ou casse + amendes | 80 à 200 € par semaine ; rembourse 70 à 100 % des sinistres couverts (casse : 70 % à 80 €, casse et amendes : 100 % à 200 €) | 3, au premier lundi |
 | Placement de l'excédent | une somme bloquée 4 semaines, prudent ou risqué | +2 % sûr, ou −5 à +8 % selon les contextes de la semaine | 4 |
 
 ### Règles automatiques

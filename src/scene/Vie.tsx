@@ -1,7 +1,7 @@
 import { PATIENCE_CLIENT } from '../content/balance';
 import { CLIENTS } from '../content/clientele';
 import { trouverChambre } from '../content/maison';
-import { SILHOUETTE_MENAGE, SILHOUETTES_BAR } from '../content/personnel';
+import { SILHOUETTE_MENAGE, SILHOUETTES_ACCUEIL, SILHOUETTES_BAR, SILHOUETTES_SECURITE } from '../content/personnel';
 import { TEXTES } from '../content/textes';
 import type { Alerte } from '../engine/alertes';
 import { TEXTES_ALERTES, type IdAlerte } from '../content/alertes';
@@ -81,6 +81,18 @@ export function Vie({ partie, alertes, montants, onAlerte }: Props) {
           const place = POSITIONS.bar[i];
           if (!place) return null;
           return <Figurine key={`bar-${i}`} silhouette={silhouette} x={place.x} y={place.y} hauteur={38} />;
+        })}
+
+      {/* Accueil et Sécurité, de part et d'autre de la porte */}
+      {enService &&
+        SILHOUETTES_ACCUEIL.slice(0, partie.equipes.accueil).map((silhouette, i) => {
+          const place = POSITIONS.accueil[i];
+          return place ? <Figurine key={`accueil-${i}`} silhouette={silhouette} x={place.x} y={place.y} hauteur={40} /> : null;
+        })}
+      {enService &&
+        SILHOUETTES_SECURITE.slice(0, partie.equipes.securite).map((silhouette, i) => {
+          const place = POSITIONS.securite[i];
+          return place ? <Figurine key={`securite-${i}`} silhouette={silhouette} x={place.x} y={place.y} hauteur={44} /> : null;
         })}
 
       {/* Ménage */}

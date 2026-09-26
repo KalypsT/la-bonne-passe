@@ -56,6 +56,8 @@ export interface EffetCarte {
   avance?: number;
   /** La personne rembourse l'avance que l'intrigue garde en mémoire. */
   rembourser?: boolean;
+  /** Sinistre couvert par l'assurance (v0.5) : l'argent perdu est une casse ou une amende. */
+  sinistre?: 'casse' | 'amende';
   /** Frais de justice (amende, arrangement) : une personne Juriste dans l'équipe les réduit. */
   juridique?: boolean;
   /** Points gardés en mémoire par l'intrigue : ses étapes suivantes peuvent les exiger (dénouement selon les choix). */

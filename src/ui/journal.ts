@@ -12,6 +12,7 @@ import { trouverChambre } from '../content/maison';
 import { PALIERS } from '../content/paliers';
 import { TEXTES_ACTIONS_RELATIONS, TEXTES_SEUILS_RELATIONS } from '../content/relations';
 import { TEXTES_JOURNAL_RIVALE, TEXTES_REPONSES_RIVALE } from '../content/rivale';
+import { TEXTES_EQUIPES } from '../content/equipes';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu, Regles } from '../engine/etat';
 import { jourDeLaSemaine } from '../engine/temps';
@@ -236,6 +237,18 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
               : (def.rate ?? '');
       return texte ? remplir(texte, partie, p) : null;
     }
+    case 'alerteReglee':
+      return TEXTES_ALERTES[evenement.id].reglee ?? null;
+    case 'disputeEvitee':
+      return TEXTES_EQUIPES.journal.disputeEvitee;
+    case 'equipeQuartier':
+      return TEXTES_EQUIPES.journal.effectif(evenement.equipe, evenement.effectif);
+    case 'assurance':
+      return TEXTES_EQUIPES.journal.assurance(evenement.niveau);
+    case 'primeAssurance':
+      return TEXTES_EQUIPES.journal.prime(formaterEuros(evenement.montant));
+    case 'indemnisation':
+      return TEXTES_EQUIPES.journal.indemnisation(formaterEuros(evenement.montant), evenement.sinistre);
     case 'defi': {
       const def = trouverDefi(evenement.id);
       return def ? t.defi(def.titre) : null;

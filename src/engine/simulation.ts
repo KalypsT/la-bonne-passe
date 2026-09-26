@@ -100,6 +100,10 @@ export interface OptionsSimulation {
    * « riposte » (lance une rumeur chaque semaine où elle a agi).
    */
   rivale?: 'aucune' | 'treve' | 'riposte';
+  /** Équipes Accueil et Sécurité engagées dès le palier 3 (v0.5), et niveau d'assurance dès qu'elle s'ouvre. */
+  accueil?: number;
+  securite?: number;
+  assurance?: number;
 }
 
 const ORDRE_RENOVATION = ['orientale', 'velours', 'miroirs'];
@@ -302,6 +306,15 @@ export function simuler(options: OptionsSimulation): {
             actionsRelations += 1;
           }
         }
+      }
+      if (etat.systemes.accueil && options.accueil !== undefined && etat.equipes.accueil !== options.accueil) {
+        jouer([{ type: 'equipeQuartier', equipe: 'accueil', effectif: options.accueil }]);
+      }
+      if (etat.systemes.securite && options.securite !== undefined && etat.equipes.securite !== options.securite) {
+        jouer([{ type: 'equipeQuartier', equipe: 'securite', effectif: options.securite }]);
+      }
+      if (etat.systemes.assurance && options.assurance !== undefined && etat.assurance !== options.assurance) {
+        jouer([{ type: 'assurance', niveau: options.assurance }]);
       }
       if (options.rivale === 'treve' && etat.systemes.rivale && etat.rivale.agressivite >= 40 && reponsePossible(etat, 'treve') && etat.tresorerie > 1500) {
         jouer([{ type: 'reponseRivale', reponse: 'treve' }]);

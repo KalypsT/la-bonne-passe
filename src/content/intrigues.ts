@@ -199,7 +199,7 @@ export const INTRIGUES_PRINCIPALES: DefinitionIntrigue[] = [
             effet: { relations: { voisins: -3 } },
             journal: 'Tu ranges la lettre dans un tiroir. Et tu attends.',
             suite: { fin: 'bluff' },
-            echec: { argent: -B.VOISIN.amende, reputation: -3, juridique: true, relations: { voisins: -10, presse: -5, mairie: -3 } },
+            echec: { argent: -B.VOISIN.amende, reputation: -3, juridique: true, sinistre: 'amende', relations: { voisins: -10, presse: -5, mairie: -3 } },
             journalEchec: `Le tribunal donne raison à monsieur Bakker : ${euros(B.VOISIN.amende)} d’amende.`,
             suiteEchec: { fin: 'condamne' },
           },
