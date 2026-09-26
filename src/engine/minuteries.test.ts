@@ -164,6 +164,23 @@ describe('réagir, ou laisser filer', () => {
     expect(traiter(billet, cle, 1).etat.tresorerie).toBe(5_000 - B.ALERTES.photographe.billet);
   });
 
+  it('le photographe chassé revient parfois : une nouvelle bulle, avec la moitié du délai', () => {
+    let revenu = 0;
+    for (let graine = 1; graine <= 40; graine++) {
+      const etat = { ...soiree(), hasard: graine };
+      etat.minuteries = [];
+      const cle = poser(etat, 'photographe', null, 5);
+      const apres = traiter(etat, cle, 0).etat;
+      const a = apres.minuteries.find((m) => m.cle === cle);
+      if (!a) continue;
+      revenu += 1;
+      // Le compte à rebours repart de maintenant, pour la bulle comme pour le joueur simulé.
+      expect(a.debut).toBe(instant(apres));
+      expect(a.expire - a.debut).toBe(Math.round(B.ALERTES.photographe.delai / 2));
+    }
+    expect(revenu).toBeGreaterThan(0);
+  });
+
   it('une pause accordée : vingt minutes sans rendez-vous, moins de fatigue ; refusée ou oubliée, du moral en moins', () => {
     const etat = soiree();
     const mila = etat.personnel.find((e) => e.id === 'mila')!;

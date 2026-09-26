@@ -1,6 +1,6 @@
 # La bonne passe — Spécifications v2
 
-Source de vérité du projet. Version du 25 septembre 2026.
+Source de vérité du projet. Version du 26 septembre 2026.
 
 ## Vision
 
@@ -43,7 +43,7 @@ Un filtre simple empêche les noms injurieux sur l'enseigne. Le nom de la maison
 
 ## Boucle de jeu
 
-Le temps s'écoule en continu, avec pause et trois vitesses. À ×1, une soirée dure environ 6 minutes réelles ; ×2 (3 min) et ×4 (1 min 30) servent à accélérer. Un rendez-vous obligatoire rythme chaque journée : le briefing de 19 h, en pause.
+Le temps s'écoule en continu, avec pause et trois vitesses. À ×1, une soirée dure environ 3 minutes réelles ; ×2 (1 min 30) et ×4 (45 s) servent à accélérer. La soirée est courte et intense : tout ce que le joueur doit faire à temps (alertes, disputes) lui laisse 10 à 30 secondes réelles à ×1, comme avant. Un rendez-vous obligatoire rythme chaque journée : le briefing de 19 h, en pause.
 
 ```mermaid
 flowchart LR
@@ -61,7 +61,7 @@ Chaque lundi arrivent le bilan de la semaine et les décisions financières. Cha
 | --- | --- | --- |
 | Journée (5 h – 19 h) | environ 45 s | Recrutements, entretiens, travaux, livraisons. Les rendez-vous de la journée (candidats, fournisseurs, visiteurs) mettent en pause. |
 | Briefing (19 h) | en pause | Planning du soir, offre du soir, demandes en attente, achats. 3 à 5 décisions. |
-| Soirée (ouverture – fermeture) | environ 6 min | Surveiller, réagir aux alertes, trancher les imprévus, ajuster les règles. |
+| Soirée (ouverture – fermeture) | environ 3 min | Surveiller, réagir aux alertes, trancher les imprévus, ajuster les règles. |
 | Fermeture | en pause, 1 écran | Bilan de la nuit : recettes, avis marquants, incidents, état du personnel. |
 
 ### Ce qui rend la soirée active
@@ -478,7 +478,7 @@ Après la v1.0 : chapitres 2 à 4, chaleur, gérantes multi-maisons, Grand Gala 
 
 ## Questions ouvertes
 
-- [ ] Rythme : 6 minutes par soirée à ×1 convient-il ? À confirmer au test de la v0.1.
+- [x] Rythme : 6 minutes par soirée à ×1 convient-il ? Non, trop long au téléphone : la soirée passe à 3 minutes en v0.5, avec le même nombre d'alertes et d'imprévus, et le même temps de réaction réel pour chacun.
 - [ ] Seuils des paliers (réputation 25, 50, 70) : à équilibrer en jeu.
 - [ ] Durées visées des chapitres (6 à 8 h pour le premier) : réalistes pour des sessions de 15 à 20 minutes ?
 - [ ] Pays des chapitres 2 à 4 : la liste proposée convient-elle ?

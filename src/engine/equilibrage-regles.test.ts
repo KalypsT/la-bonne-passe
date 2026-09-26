@@ -4,9 +4,11 @@ import type { Regles } from './etat';
 import { partsDeClientele, simuler, type ResumeNuit } from './simulation';
 
 // Règles de la maison (palier 2) : chaque choix doit rapporter quelque chose et coûter autre chose.
-// Parties du joueur actif, soirée classique à 3 rendez-vous, 21 nuits, 10 graines. Voir docs/EQUILIBRAGE.md.
+// Parties du joueur actif, soirée classique à 3 rendez-vous, 21 nuits, 20 graines. Voir docs/EQUILIBRAGE.md.
+// v0.5 : 20 graines au lieu de 10. Avec la soirée de 3 minutes, une dispute laissée à elle-même occupe le quai deux fois
+// plus longtemps en minutes de jeu : il en éclate un peu moins, et les écarts entre règles se resserrent d'autant.
 
-const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const GRAINES = Array.from({ length: 20 }, (_, i) => i + 1);
 const VARIANTES: Record<string, Partial<Regles>> = {
   base: {},
   tarifBas: { tarif: 0 },
@@ -25,7 +27,7 @@ beforeAll(() => {
     // Sans tendance ni carte : on mesure les règles, pas le hasard des semaines, des imprévus ni du voisin (gardés à part).
     parties.set(nom, GRAINES.map((graine) => simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 21, regles, tendances: [], cartes: false }).nuits));
   }
-}, 30_000);
+}, 90_000);
 
 const moyenne = (nom: string, f: (nuits: ResumeNuit[]) => number) => {
   const liste = parties.get(nom)!;

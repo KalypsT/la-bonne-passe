@@ -12,7 +12,7 @@ import { creerTirage } from './hasard';
 import { trouverImprevu } from '../content/imprevus';
 import { INTRIGUES } from '../content/intrigues';
 import { choixPossibles, etapeCourante, type IntrigueFinie } from './intrigues';
-import { estOuvert, instant } from './temps';
+import { estOuvert } from './temps';
 import { TEXTES_ALERTES } from '../content/alertes';
 
 export interface ResumeNuit {
@@ -42,7 +42,7 @@ export interface ResumeNuit {
   intrigues: string[];
   /** Cartes d'intrigue sorties pendant la soirée. */
   intriguesSoiree: number;
-  /** Alertes apparues pendant la soirée (une par apparition), par type. */
+  /** Alertes apparues pendant la soirée (une par apparition), par type ; les alertes minutées sous leur identifiant (presse, bruit…). */
   alertes: Record<string, number>;
   /** Décisions significatives de la soirée : imprévus, cartes d'intrigue et alertes apparues. */
   decisions: number;
@@ -114,6 +114,7 @@ export function simuler(options: OptionsSimulation): {
   let intriguesSoiree = 0;
   let alertesNuit: Record<string, number> = {};
   let alertesAvant = new Set<string>();
+  const bullesVues = new Set<string>();
   const hasard = creerTirage((graine * 7919) | 0);
   const trancher = (possibles: boolean[]): number => {
     const indices = possibles.flatMap((ok, i) => (ok ? [i] : []));
@@ -144,7 +145,10 @@ export function simuler(options: OptionsSimulation): {
     }
     tresorerieMin = Math.min(tresorerieMin, etat.tresorerie);
     const ouvert = estOuvert(etat);
-    const alertesMaintenant = new Set(ouvert ? alertes(etat).map((a) => `${a.type}|${'chambreId' in a ? a.chambreId : 'employeId' in a ? a.employeId : ''}`) : []);
+    // Une alerte minutée compte sous son propre type (client pressé, bruit…), et chacune à part, même simultanées.
+    const cleAlerte = (a: ReturnType<typeof alertes>[number]) =>
+      a.type === 'minuterie' ? `${a.id}|${a.cle}` : `${a.type}|${'chambreId' in a ? a.chambreId : 'employeId' in a ? a.employeId : ''}`;
+    const alertesMaintenant = new Set(ouvert ? alertes(etat).map(cleAlerte) : []);
     for (const cle of alertesMaintenant) {
       if (alertesAvant.has(cle)) continue;
       const type = cle.split('|')[0]!;
@@ -213,7 +217,10 @@ export function simuler(options: OptionsSimulation): {
     if (etat.dispute && !sansCartes) jouer([{ type: 'regleDispute', choix: options.politique === 'hasard' && hasard.chance(0.5) ? 'calmer' : 'verre' }]);
     // Alertes minutées : le joueur prudent répond aussitôt par la première action ; au hasard, il en laisse filer une sur quatre.
     for (const a of [...etat.minuteries]) {
-      if (a.debut !== instant(etat)) continue;
+      // Chaque bulle une seule fois, dès qu'elle apparaît (le photographe qui revient est une nouvelle bulle).
+      const bulle = `${a.cle}@${a.debut}@${a.expire}`;
+      if (bullesVues.has(bulle)) continue;
+      bullesVues.add(bulle);
       const n = TEXTES_ALERTES[a.id].actions.length;
       if (options.politique === 'hasard') {
         if (hasard.chance(0.25)) continue;

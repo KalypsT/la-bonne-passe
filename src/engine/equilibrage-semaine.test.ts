@@ -5,8 +5,9 @@ import { choixAdaptatif, simuler, type ResumeNuit } from './simulation';
 
 // « L'offre change-t-elle vraiment la partie ? » La bonne réponse dépend de la semaine,
 // et un joueur qui suit les tendances fait mieux que celui qui ne touche à rien.
+// v0.5 : 20 graines au lieu de 12 (voir equilibrage-regles.test.ts : les disputes laissées à elles-mêmes resserrent les écarts).
 
-const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const GRAINES = Array.from({ length: 20 }, (_, i) => i + 1);
 type Partie = { nuits: ResumeNuit[]; avoir: number };
 const parties = new Map<string, Partie[]>();
 
@@ -45,7 +46,7 @@ beforeAll(() => {
   jouer('sans-doux', 'classique', { tarif: 0 }, []);
   jouer('match-stricte', 'classique', { selection: 'stricte' }, ['match']);
   jouer('match-laxiste', 'classique', { selection: 'laxiste' }, ['match']);
-}, 30_000);
+}, 90_000);
 
 const moyenne = (nom: string, f: (p: Partie) => number) => {
   const liste = parties.get(nom)!;

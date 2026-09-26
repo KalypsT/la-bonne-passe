@@ -876,3 +876,103 @@ Nouvelle partie à ×4, rénovations et choix au hasard, jusqu'au bilan du mois 
 - Répétitions : « Un client pressé » (16) et les demandes de pause (13 pour Sanne) sont les plus fréquentes.
 
 `npm test` : 365 tests passent.
+
+
+## Rythme : la soirée passe à 3 minutes (v0.5, partie 1)
+
+Au téléphone, 6 minutes par soirée à ×1, c'était trop long. `SECONDES_REELLES_SOIREE` passe de 360 à 180 : 3 minutes à ×1, 1 min 30 à ×2, 45 s à ×4. La journée (5 h – 19 h) ne change pas : 45 s à ×1.
+
+### Ce que le joueur doit faire à temps
+
+Tout est compté en minutes de jeu : pour garder le même temps de réaction réel, ces délais doublent.
+
+| Réaction | v0.4 | v0.5 | Secondes réelles à ×1 |
+| --- | --- | --- | --- |
+| Groupe bruyant (`ALERTES.bruit.delai`) | 30 min | 60 min | 22,5 |
+| Pause demandée (`ALERTES.pause.delai`) | 30 min | 60 min | 22,5 |
+| Client éméché (`ALERTES.ivre.delai`) | 25 min | 50 min | 18,75 |
+| Photographe (`ALERTES.photographe.delai`, sa relance à moitié) | 25 min | 50 min | 18,75 |
+| Bouteille à servir (`ALERTES.bouteille.delai`) | 20 min | 40 min | 15 |
+| Client pressé (`ALERTES.presse.seuilPatience`) | 15 min | 30 min | 11,25 au plus |
+| Dispute sur le quai (`DISPUTE_DELAI`) | 40 min | 80 min | 30 |
+
+Ne changent pas, parce que ce sont des durées de simulation ou des fréquences : la patience des clients, la durée des rendez-vous et de la pause (20 min), la patience gagnée avec un verre, les chances d'alerte et d'imprévu par heure de jeu, l'écart entre deux imprévus, la fenêtre sans nouvelle alerte (30 dernières minutes). Les imprévus et les cartes d'intrigue mettent le jeu en pause : pas de délai. Chambre sale, linge et bar vide suivent le rythme des rendez-vous : le joueur a deux fois moins de temps réel entre deux rendez-vous, c'est voulu. Le test « rythme en temps réel » (`tick.test.ts`) vérifie la durée de la soirée et le temps de réaction réel de chaque alerte.
+
+Une alerte encore active à la fermeture s'éteint sans conséquence, comme en v0.4 ; une dispute aussi. J'ai essayé de faire dégénérer à la fermeture une dispute non réglée : le joueur qui laisse tout filer perdait 3 points de réputation de plus en un mois (40 graines), c'était trop dur.
+
+### Ce que la mesure a révélé
+
+- **Une erreur de comptage** : la simulation comptait comme une seule deux alertes minutées présentes en même temps. Corrigée (`simulation.ts`) ; la v0.4 remesurée donne 6,1 alertes par soirée en classique au lieu de 5,5.
+- **Le photographe qui revient** (chassé, il revient une fois sur trois) gardait l'heure de sa première apparition : le joueur simulé ne le voyait jamais et le laissait filer. La relance est désormais une nouvelle bulle, avec son propre compte à rebours (la bulle se remplit de nouveau à l'écran). Le joueur simulé y répond, la satisfaction des clients d'affaires monte (17 → 32 à la nuit 28 en classique) et la réputation avec (43 → 48). C'est la mesure qui change, pas le jeu d'un humain attentif.
+- **Grève et contrôles la même semaine** : le changement de rythme a décalé le hasard, et une partie de la garde du premier mois est tombée sur les deux tendances creuses ensemble : sept soirs presque vides, −3 136 € au plus bas. Le tirage n'en autorise plus qu'une par semaine (`tendanceCreuse` dans `semaine.ts`, avec son test).
+- **Les disputes laissées à elles-mêmes** : une dispute occupe le quai deux fois plus longtemps en minutes de jeu, il en éclate donc un peu moins pour le joueur simulé des gardes de mécanique (`cartes: false`), qui ne les règle jamais. Les écarts entre règles se resserrent un peu (soir de match : le portier gagne 10,0 points de réputation sur la porte normale, contre 13,6 en v0.4, sur 40 graines). Pour un humain qui règle ses disputes, rien ne change.
+
+### Le même nombre d'alertes ?
+
+Oui. Joueur qui tranche au hasard et laisse filer une alerte sur quatre, 40 graines, 28 nuits :
+
+| Par soirée | v0.4 | v0.5 |
+| --- | --- | --- |
+| Alertes, classique | 5,6 | 5,0 |
+| Alertes, porte laxiste | 5,1 | 5,7 |
+| Alertes, porte stricte | 3,4 | 3,1 |
+| Alertes, soirée feutrée | 3,0 | 3,2 |
+| Décisions, classique / stricte | 7,1 / 5,0 | 6,5 / 4,7 |
+| Imprévus, classique | 1,3 | 1,3 |
+
+Les écarts vont dans les deux sens et restent dans le bruit de la mesure. Une alerte ignorée bloque son type (une seule bulle de chaque sorte à la fois) pendant le même temps réel, donc deux fois plus de minutes de jeu : un joueur distrait voit un peu moins de bulles, un joueur attentif autant. Joueur attentif (répond à tout), 40 graines, semaines 2 à 4 : 7,7 alertes en classique (7,1 en v0.4), 4,2 en porte stricte (4,3).
+
+### Gardes revues
+
+- `equilibrage-regles.test.ts` (10 → 20 graines), `equilibrage-semaine.test.ts` (12 → 20) et `equilibrage-renouvellement.test.ts` (10 → 20) : les écarts resserrés passaient sous le bruit de 10 graines. Sur 10 graines, la v0.4 remesurée montait déjà à 8,2 alertes en classique, au-dessus de la garde.
+- Soirées calmes avec la porte stricte : 34 % en v0.4, 36 % aujourd'hui (40 graines). La garde tolère 40 % pour elle seule, en attendant les cartes du quartier (partie 5) qui doivent la ramener sous un tiers.
+
+`npm run rapport` affiche désormais un troisième tableau : les alertes par soirée, selon leur type.
+
+### Mesures (10 graines, 28 nuits)
+
+| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 4 à 5 | 30 / 39 / 48 | 233 € | 906 € | 3 945 € | 22 % | 89 | 0,0 | 29 / 27 / 16 / 29 | 67 / 46 / 32 / 47 |
+| Classique, 4 | 3 à 4 | 31 / 41 / 53 | 377 € | 1 043 € | 5 909 € | 8 % | 87 | 0,0 | 26 / 27 / 13 / 34 | 71 / 51 / 36 / 52 |
+| Happy hour, 4 | 3 à 3 | 35 / 43 / 52 | 376 € | 1 006 € | 3 513 € | 26 % | 83 | 0,2 | 40 / 20 / 16 / 24 | 72 / 51 / 35 / 51 |
+| Feutrée, 4 | 3 à 4 | 33 / 44 / 55 | 181 € | 818 € | 3 437 € | 1 % | 87 | 0,0 | 26 / 33 / 12 / 29 | 69 / 56 / 36 / 56 |
+| Adaptatif (suit les tendances), 3 | 4 à 5 | 30 / 40 / 52 | 263 € | 911 € | 3 670 € | 12 % | 92 | 0,0 | 23 / 35 / 20 / 22 | 63 / 54 / 41 / 48 |
+| Classique 3, sans bar | 4 à 5 | 30 / 39 / 46 | 293 € | 755 € | 4 919 € | 23 % | 89 | 0,0 | 27 / 28 / 17 / 28 | 63 / 43 / 33 / 44 |
+| Classique 3, bar à 2, sans avance | 4 à 5 | 30 / 39 / 49 | 116 € | 911 € | 2 402 € | 22 % | 88 | 0,0 | 29 / 27 / 16 / 29 | 67 / 47 / 33 / 47 |
+| Classique 3, champagne | 4 à 5 | 30 / 37 / 42 | 333 € | 1 007 € | 5 809 € | 19 % | 90 | 0,0 | 28 / 25 / 19 / 28 | 51 / 38 / 36 / 44 |
+| Classique 3, tarif −20 % | 4 à 5 | 32 / 41 / 52 | -10 € | 491 € | -17 € | 29 % | 89 | 0,0 | 28 / 25 / 12 / 35 | 73 / 49 / 32 / 51 |
+| Classique 3, tarif +20 % | 4 à 5 | 29 / 35 / 41 | 458 € | 1 083 € | 6 234 € | 13 % | 92 | 0,0 | 22 / 27 / 22 / 30 | 47 / 40 / 35 / 39 |
+| Classique 3, formule courte | 4 à 5 | 31 / 40 / 51 | -5 € | 574 € | 85 € | 10 % | 93 | 0,0 | 26 / 25 / 19 / 30 | 67 / 43 / 41 / 52 |
+| Classique 3, soirée complète | 4 à 5 | 29 / 37 / 45 | 323 € | 950 € | 5 417 € | 25 % | 89 | 0,0 | 28 / 38 / 5 / 30 | 61 / 48 / 23 / 44 |
+| Classique 3, sélection laxiste | 4 à 5 | 31 / 38 / 47 | 222 € | 852 € | 2 527 € | 22 % | 91 | 0,0 | 29 / 19 / 13 / 39 | 67 / 42 / 31 / 50 |
+| Classique 3, sélection stricte | 4 à 5 | 31 / 39 / 50 | 3 € | 575 € | 1 505 € | 7 % | 92 | 0,0 | 25 / 36 / 22 / 17 | 61 / 53 / 41 / 41 |
+| Classique 3, habitués d’abord | 4 à 5 | 30 / 39 / 49 | 241 € | 915 € | 3 158 € | 22 % | 91 | 0,0 | 28 / 27 / 17 / 29 | 66 / 48 / 32 / 47 |
+| Classique 3, pressés d’abord | 4 à 5 | 30 / 39 / 49 | 260 € | 937 € | 3 904 € | 21 % | 88 | 0,0 | 28 / 24 / 18 / 30 | 68 / 46 / 35 / 47 |
+| Passif (classique, sans recruter ni rénover) | 16 à 99 | 21 / 22 / 23 | -126 € | 198 € | -1 558 € | 60 % | 50 | 0,0 | 49 / 51 / 0 / 0 | 26 / 22 / 16 / 18 |
+
+| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) | Défis réussis | Objectif du mois 1 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 6,1 | 27 % | 4,6 | 1,3 | 14,7 | 4,0 | 0 % | 15,3 | 5 sur 10, nuit 16 | 9 sur 20 | 7 sur 10 |
+| Feutrée, 4 | 4,7 | 40 % | 3,2 | 1,3 | 15,0 | 3,9 | 0 % | 14,1 | 0 sur 10 | 5 sur 20 | 10 sur 10 |
+| Adaptatif (suit les tendances), 3 | 6,0 | 20 % | 4,4 | 1,5 | 18,0 | 4,0 | 0 % | 14,4 | 1 sur 10, nuit 24 | 15 sur 20 | 6 sur 10 |
+| Classique 3, sélection laxiste | 7,0 | 24 % | 5,4 | 1,4 | 15,8 | 4,0 | 0 % | 14,9 | 9 sur 10, nuit 12 | 12 sur 20 | 5 sur 10 |
+| Classique 3, sélection stricte | 4,9 | 35 % | 3,3 | 1,4 | 15,2 | 4,0 | 0 % | 13,5 | 0 sur 10 | 11 sur 20 | 5 sur 10 |
+
+| Stratégie | presse | bruit | ivre | bouteille | photographe | pause | dispute | chambreSale | linge | barVide | epuisement |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 0,3 | 0,2 | 0,5 | 0,6 | 0,6 | 0,4 | 0,3 | 0,8 | 0,9 | 0,0 | 0,0 |
+| Feutrée, 4 | 0,0 | 0,0 | 0,1 | 0,5 | 0,5 | 0,4 | 0,1 | 0,7 | 0,8 | 0,0 | 0,0 |
+| Adaptatif (suit les tendances), 3 | 0,2 | 0,1 | 0,3 | 0,8 | 0,7 | 0,4 | 0,2 | 0,7 | 1,0 | 0,0 | 0,0 |
+| Classique 3, sélection laxiste | 0,3 | 0,5 | 0,6 | 0,5 | 0,6 | 0,5 | 0,6 | 0,8 | 0,9 | 0,0 | 0,0 |
+| Classique 3, sélection stricte | 0,2 | 0,0 | 0,1 | 0,3 | 0,6 | 0,3 | 0,1 | 0,6 | 0,9 | 0,0 | 0,0 |
+
+### Dans le navigateur (vite preview, 844 × 390 et 667 × 375)
+
+Une partie de la nuit 16 (porte laxiste, bar ouvert), rechargée depuis une sauvegarde, jouée à ×1 en laissant filer les bulles : de 20 h à 4 h, **178,7 secondes** de soirée hors pauses. Bulles laissées filer : photographe 18,6 s, pause d'Inès 22,2 s, client éméché 15,1 s (les autres se sont éteintes plus tôt, le client étant reçu). La carte d'alerte reste lisible aux deux tailles ; elle annonce « Encore 50 minutes de jeu » (le délai en temps de jeu). Aucune erreur dans la console (hors polices bloquées par le réseau du bac à sable).
+
+### À surveiller au téléphone
+
+- **Le rythme** : 5 à 7 décisions en 3 minutes. Intense, voulu ; à juger en main.
+- **Chambre sale et linge** n'ont pas de délai, mais arrivent deux fois plus vite en temps réel.
+- **« Encore 50 minutes de jeu »** sur la carte d'alerte : le chiffre a doublé alors que le temps réel est le même. S'il trompe, afficher plutôt une jauge ou des secondes.

@@ -104,9 +104,18 @@ export function disputeTendance(etat: EtatJeu): number {
   return etat.semaine.tendances.reduce((m, id) => m * (B.TENDANCES_EFFETS[id]?.dispute ?? 1), 1);
 }
 
-/** Tire 1 ou 2 tendances parmi celles dont les segments sont ouverts. */
+/** Une tendance qui creuse la demande de tous les segments (grève, contrôles de police). */
+export function tendanceCreuse(id: string): boolean {
+  const effets = B.TENDANCES_EFFETS[id];
+  return !!effets && Object.values(effets.demande).every((m) => m <= 1);
+}
+
+/**
+ * Tire 1 ou 2 tendances parmi celles dont les segments sont ouverts.
+ * Jamais deux tendances creuses la même semaine : grève et contrôles ensemble vidaient la maison sept soirs de suite.
+ */
 export function tirerTendances(etat: EtatJeu, tirage: Tirage): string[] {
-  const possibles = Object.entries(B.TENDANCES_EFFETS)
+  let possibles = Object.entries(B.TENDANCES_EFFETS)
     .filter(([, e]) => e.segments.every((s) => segmentOuvert(etat, s)))
     .map(([id]) => id);
   const choisies: string[] = [];
@@ -114,7 +123,7 @@ export function tirerTendances(etat: EtatJeu, tirage: Tirage): string[] {
   for (let i = 0; i < nombre && possibles.length > 0; i++) {
     const id = tirage.choisir(possibles);
     choisies.push(id);
-    possibles.splice(possibles.indexOf(id), 1);
+    possibles = possibles.filter((x) => x !== id && !(tendanceCreuse(id) && tendanceCreuse(x)));
   }
   return choisies;
 }
