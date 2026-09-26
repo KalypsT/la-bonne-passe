@@ -15,6 +15,7 @@ import { ecart, instant } from './temps';
 import { depenser, encaisser, noterDepense } from './comptes';
 import { demandeTendance, disputeTendance } from './semaine';
 import { bruitDuSoir, changerTapage } from './quartier';
+import { enPause, fermerMinuteries, vivreMinuteries, type EvenementMinuterie } from './minuteries';
 import {
   affluenceTheme,
   attraitTheme,
@@ -80,7 +81,8 @@ export type EvenementSoiree =
   | EvenementImprevu
   | EvenementRegle
   | EvenementBar
-  | EvenementTheme;
+  | EvenementTheme
+  | EvenementMinuterie;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -148,6 +150,7 @@ export function fermerNuit(etat: EtatJeu, tirage: Tirage, evenements: Sortie): v
   etat.file = [];
   etat.dispute = null;
   etat.imprevu = null;
+  fermerMinuteries(etat);
   nuitDuPersonnel(etat, etat.nuit?.reputationDebut ?? etat.reputation, tirage, evenements);
   revelerTraits(etat, evenements);
   for (const e of etat.personnel) e.repos = false;
@@ -177,7 +180,7 @@ function occupes(etat: EtatJeu) {
 
 export function employeDisponible(etat: EtatJeu, id: string): boolean {
   const e = etat.personnel.find((x) => x.id === id);
-  return !!e && !e.repos && !quotaAtteint(etat, e) && !occupes(etat).employes.has(id);
+  return !!e && !e.repos && !quotaAtteint(etat, e) && !occupes(etat).employes.has(id) && !enPause(etat, id);
 }
 
 export function chambreDisponible(etat: EtatJeu, id: string): boolean {
@@ -447,6 +450,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
     }
 
     bruitDuSoir(etat, heures);
+    vivreMinuteries(etat, evenements);
     declencherImprevu(etat, tirage, evenements);
 
     // Répartition des clients, sauf juste avant la fermeture

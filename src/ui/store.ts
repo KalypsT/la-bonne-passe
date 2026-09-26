@@ -31,6 +31,7 @@ export type Carte =
   | 'essai'
   | 'imprevu'
   | 'intrigue'
+  | 'alerte'
   | 'entretienIndividuel'
   | 'adieu'
   | 'aide';
@@ -71,6 +72,8 @@ interface EtatInterface {
   candidatOuvert: string | null;
   /** Personne reçue en entretien individuel. */
   employeOuvert: string | null;
+  /** Alerte minutée ouverte (sa clé). */
+  alerteOuverte: string | null;
   /** Comptes de la dernière nuit, affichés dans la carte de bilan. */
   bilan: Nuit | null;
   montants: MontantFlottant[];
@@ -105,6 +108,8 @@ interface EtatInterface {
   ouvrirEntretien: (candidatId: string) => void;
   /** Reçoit une personne de l'équipe en entretien individuel (carte en pause). */
   ouvrirEntretienIndividuel: (employeId: string) => void;
+  /** Ouvre la carte d'une alerte minutée (en pause). */
+  ouvrirAlerte: (cle: string) => void;
   /** Signale au didacticiel une action du joueur ; l'étape avance si c'est celle qu'elle attendait. */
   signalerDidacticiel: (attente: AttenteDidacticiel) => void;
   passerDidacticiel: () => void;
@@ -185,6 +190,7 @@ const etatDeJeuInitial = {
   fiche: null,
   candidatOuvert: null,
   employeOuvert: null,
+  alerteOuverte: null,
   bilan: null,
   montants: [],
 };
@@ -337,6 +343,8 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   ouvrirEntretien: (candidatId) => set({ carte: 'entretien', candidatOuvert: candidatId }),
 
   ouvrirEntretienIndividuel: (employeId) => set({ carte: 'entretienIndividuel', employeOuvert: employeId }),
+
+  ouvrirAlerte: (cle) => set({ carte: 'alerte', alerteOuverte: cle }),
 
   ouvrirFiche: (fiche) => {
     const onglet: Onglet = fiche?.type === 'employe' ? 'personnel' : fiche?.type === 'segment' || fiche?.type === 'regles' ? 'clientele' : 'maison';

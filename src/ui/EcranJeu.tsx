@@ -4,6 +4,7 @@ import { BarreHaut } from './BarreHaut';
 import { CarteBilan } from './CarteBilan';
 import { CarteBriefing } from './CarteBriefing';
 import { CarteDispute } from './CarteDispute';
+import { CarteAlerte } from './CarteAlerte';
 import { CarteAdieu } from './CarteAdieu';
 import { CarteEntretien } from './CarteEntretien';
 import { CarteEntretienIndividuel } from './CarteEntretienIndividuel';
@@ -37,6 +38,7 @@ export function EcranJeu() {
   const choisirOnglet = useInterface((s) => s.choisirOnglet);
   const ouvrirCarte = useInterface((s) => s.ouvrirCarte);
   const signalerDidacticiel = useInterface((s) => s.signalerDidacticiel);
+  const ouvrirAlerte = useInterface((s) => s.ouvrirAlerte);
   useBoucle();
   if (!partie) return null;
 
@@ -58,6 +60,9 @@ export function EcranJeu() {
         break;
       case 'barVide':
         ouvrirFiche({ type: 'piece', id: 'bar' });
+        break;
+      case 'minuterie':
+        ouvrirAlerte(alerte.cle);
         break;
     }
   };
@@ -81,6 +86,7 @@ export function EcranJeu() {
       {carte === 'briefing' && <CarteBriefing partie={partie} />}
       {carte === 'bilan' && <CarteBilan partie={partie} />}
       {carte === 'dispute' && <CarteDispute />}
+      {carte === 'alerte' && <CarteAlerte partie={partie} />}
       {carte === 'palier' && <CartePalier partie={partie} />}
       {carte === 'nouveautes' && <CarteNouveautes partie={partie} />}
       {carte === 'grossiste' && <CarteGrossiste />}

@@ -28,6 +28,7 @@ import { attendBriefing, estOuvert, instant, jourDeLaSemaine, MINUTES_PAR_JOUR }
 import { cloreSemaine, type EvenementSemaine } from './semaine';
 import { avancerIntrigues, matinDesIntrigues, trancherIntrigue, type EvenementIntrigue, type OrdreIntrigue } from './intrigues';
 import { matinDuQuartier } from './quartier';
+import { traiterAlerte, type OrdreMinuterie } from './minuteries';
 
 /** Ordres envoyés par l'interface au moteur. */
 export type Ordre =
@@ -62,6 +63,7 @@ export type Ordre =
   | OrdrePersonnel
   | OrdreImprevu
   | OrdreIntrigue
+  | OrdreMinuterie
   | OrdreRegle
   | OrdreBar;
 
@@ -246,6 +248,12 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'choixImprevu': {
       const tirage = creerTirage(etat.hasard);
       trancherImprevu(etat, ordre.choix, tirage, (segment) => arrivee(etat, tirage, evenements, segment), evenements);
+      etat.hasard = tirage.etat();
+      return;
+    }
+    case 'traiterAlerte': {
+      const tirage = creerTirage(etat.hasard);
+      traiterAlerte(etat, ordre.cle, ordre.action, tirage, evenements);
       etat.hasard = tirage.etat();
       return;
     }
