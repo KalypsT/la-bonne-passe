@@ -27,6 +27,8 @@ import { PARTIE_PAR_DEFAUT } from '../content/partie';
 import { barDeDepart, reglesDeDepart, VERSION_ETAT, type EtatJeu } from '../engine/etat';
 import { intriguesDeDepart } from '../engine/intrigues';
 import { quartierDeDepart } from '../engine/quartier';
+import { relationsDeDepart } from '../engine/relations';
+import { RELATIONS, TAPAGE } from '../content/balance';
 import { moisDeDepart, prochainObjectif, statsDeDepart } from '../engine/bilans';
 
 type Donnees = Record<string, unknown>;
@@ -258,7 +260,43 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       nouveautes,
     };
   },
+  // v20 → v21 : les relations avec le quartier et le palier 3 (première mensualité payée).
+  // Les voisins se souviennent de l'intrigue du voisin du dessus et du tapage de la dernière nuit. Une partie qui a déjà
+  // payé sa mensualité (et passé le palier 2) reçoit le palier 3, présenté par Josée au chargement.
+  20: (d) => {
+    const relations = relationsDeDepart();
+    const intrigues = estObjet(d.intrigues) ? d.intrigues : {};
+    const finies = Array.isArray(intrigues.finies) ? intrigues.finies : [];
+    const finVoisin = finies.find((f) => estObjet(f) && f.id === 'voisin') as Donnees | undefined;
+    relations.jauges.voisins += RELATIONS.souvenirDuVoisin[String(finVoisin?.fin)] ?? 0;
+    const tapage = estObjet(d.quartier) && typeof d.quartier.tapage === 'number' ? d.quartier.tapage : 0;
+    if (tapage > TAPAGE.recidive) relations.jauges.voisins -= Math.round((tapage - TAPAGE.recidive) * RELATIONS.voisins.pente);
+    relations.lundi = { ...relations.jauges };
+
+    const avecPoste = (c: unknown) =>
+      estObjet(c) && estObjet(c.depenses) ? { ...c, depenses: { ...c.depenses, relations: 0 } } : c;
+    const semaine = estObjet(d.semaine) ? { ...d.semaine, comptes: avecPoste(d.semaine.comptes) } : d.semaine;
+    const bilanSemaine = estObjet(d.bilanSemaine) ? { ...d.bilanSemaine, comptes: avecPoste(d.bilanSemaine.comptes) } : d.bilanSemaine;
+
+    const palier = typeof d.palier === 'number' ? d.palier : 0;
+    const payees = typeof d.mensualitesPayees === 'number' ? d.mensualitesPayees : 0;
+    const palier3 = palier === 2 && payees >= 1;
+    const systemes = { ...(estObjet(d.systemes) ? d.systemes : {}), relations: palier3 || palier >= 3 };
+    const annonces = [...(Array.isArray(d.annonces) ? d.annonces : []), ...(palier3 ? [3] : [])];
+    return {
+      ...d,
+      version: 21,
+      palier: palier3 ? 3 : palier,
+      systemes,
+      annonces,
+      semaine,
+      bilanSemaine,
+      relations,
+      hasardQuartier: (typeof d.hasard === 'number' ? d.hasard * 31 + 7 : 7) | 0,
+    };
+  },
 };
+
 
 /** Ambition d'une personne d'une ancienne sauvegarde : celle du contenu si elle est scénarisée. */
 function ambitionConnue(id: string): string {
@@ -335,6 +373,9 @@ function estEtatValide(d: Donnees): boolean {
     Array.isArray(d.intrigues.finies) &&
     estObjet(d.quartier) &&
     typeof d.quartier.tapage === 'number' &&
+    estObjet(d.relations) &&
+    estObjet(d.relations.jauges) &&
+    typeof d.hasardQuartier === 'number' &&
     estObjet(d.systemes)
   );
 }

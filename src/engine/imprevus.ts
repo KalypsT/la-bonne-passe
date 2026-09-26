@@ -12,6 +12,8 @@ import { CLIENTS } from '../content/clientele';
 import { demarrerSuite } from './intrigues';
 import { candidatVedette, type EvenementRecrutement } from './recrutement';
 import type { Segment } from '../content/clientele';
+import type { IdActeur } from '../content/relations';
+import type { EvenementRelation } from './relations';
 import { affinite, type EvenementPersonnel } from './personnel';
 import { ecart, instant } from './temps';
 
@@ -27,7 +29,7 @@ interface Sortie {
 
 /** Trancher un imprévu peut aussi faire partir quelqu'un, ou entrer une candidate. */
 interface SortieChoix {
-  push(e: EvenementImprevu | EvenementPersonnel | EvenementRecrutement): unknown;
+  push(e: EvenementImprevu | EvenementPersonnel | EvenementRecrutement | EvenementRelation): unknown;
 }
 
 function disponible(etat: EtatJeu, e: Employe): boolean {
@@ -55,7 +57,9 @@ export function circonstances(etat: EtatJeu, c: ConditionImprevu): boolean {
     (c.tarifMin === undefined || (etat.systemes.tarifs && etat.regles.tarif >= c.tarifMin)) &&
     (c.segment === undefined || segmentOuvert(etat, c.segment)) &&
     (c.segmentPresent === undefined || segmentPresent(etat, c.segmentPresent)) &&
-    (!c.placeLibre || (etat.systemes.recrutement && etat.personnel.length < B.PERSONNEL_MAX))
+    (!c.placeLibre || (etat.systemes.recrutement && etat.personnel.length < B.PERSONNEL_MAX)) &&
+    (!etat.systemes.relations ||
+      Object.entries(c.relationMax ?? {}).every(([a, v]) => etat.relations.jauges[a as IdActeur] <= (v ?? 0)))
   );
 }
 

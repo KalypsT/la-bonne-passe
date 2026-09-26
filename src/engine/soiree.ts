@@ -8,6 +8,14 @@ import { trouverChambre } from '../content/maison';
 import type { EtatJeu, Nuit } from './etat';
 import type { Tirage } from './hasard';
 import { verifierPaliers, type EvenementPalier } from './paliers';
+import {
+  affluenceRelations,
+  changerRelations,
+  demandeRelations,
+  disputeSansReputation,
+  relationsOuvertes,
+  type EvenementRelation,
+} from './relations';
 import { declencherImprevu, type EvenementImprevu } from './imprevus';
 import { aTrait, nuitDuPersonnel, type EvenementPersonnel } from './personnel';
 import { revelerTraits, type EvenementRecrutement } from './recrutement';
@@ -84,7 +92,8 @@ export type EvenementSoiree =
   | EvenementBar
   | EvenementTheme
   | EvenementMinuterie
-  | EvenementBilan;
+  | EvenementBilan
+  | EvenementRelation;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -260,7 +269,7 @@ export function poidsSegment(etat: EtatJeu, segment: Segment): number {
 
 /** Demande d'un segment : l'effet inverse du tarif, et les tendances de la semaine. */
 function demandeSegment(etat: EtatJeu, segment: Segment): number {
-  return demandePrix(etat, segment) * demandeTendance(etat, segment);
+  return demandePrix(etat, segment) * demandeTendance(etat, segment) * demandeRelations(etat, segment);
 }
 
 /**
@@ -431,6 +440,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
       selectionActive(etat).affluence *
       B.FORMULES[formuleActive(etat)].affluence *
       affluenceTheme(etat) *
+      affluenceRelations(etat) *
       facteurDemande(etat);
     if (premierClientGaranti || tirage.chance(parHeure * heures)) arrivee(etat, tirage, evenements);
 
@@ -439,7 +449,9 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
     if (etat.dispute && maintenant >= etat.dispute.expire) {
       etat.dispute = null;
       depenser(etat, B.DISPUTE_CASSE, 'incidents');
-      changerReputationGlobale(etat, -B.DISPUTE_REPUTATION);
+      // La police en bons termes se contente d'un avertissement.
+      if (!disputeSansReputation(etat)) changerReputationGlobale(etat, -B.DISPUTE_REPUTATION);
+      if (relationsOuvertes(etat)) changerRelations(etat, B.RELATIONS.dispute, evenements);
       changerTapage(etat, B.TAPAGE.dispute * (etat.quartier.insonorise ? B.TAPAGE.insonorise : 1));
       evenements.push({ type: 'disputeDegeneree', montant: B.DISPUTE_CASSE });
     } else if (
@@ -536,5 +548,7 @@ export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
       restantes: NOMBRE_MENSUALITES - etat.mensualitesPayees,
     });
     conclureMois(etat, depuisReserve, etat.mensualitesPayees < NOMBRE_MENSUALITES, evenements);
+    // La première mensualité payée ouvre le palier 3, présenté après le bilan du mois.
+    verifierPaliers(etat, evenements);
   }
 }

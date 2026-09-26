@@ -6,6 +6,7 @@ import type { IdFormule, IdSelection } from './balance';
 import type { Offre, Segment } from './clientele';
 import * as B from './balance';
 import type { EffetCarte } from './effets';
+import type { IdActeur } from './relations';
 
 const A = B.IMPREVU_ARGENT;
 const euros = (n: number) => `${n.toLocaleString('fr-FR')}\u00a0€`;
@@ -57,6 +58,8 @@ export interface ConditionImprevu {
   segmentPresent?: Segment;
   /** Il reste une place dans l'équipe, et le recrutement est ouvert. */
   placeLibre?: boolean;
+  /** Relations avec le quartier (v0.5) : au plus, pour chaque acteur cité (une mairie amie n'envoie pas d'inspecteur). */
+  relationMax?: Partial<Record<IdActeur, number>>;
 }
 
 /** Ce qui rend un imprévu plus probable, sans l'exiger : une tendance, un thème, une règle. */
@@ -231,15 +234,15 @@ export const IMPREVUS: DefinitionImprevu[] = [
     id: 'inspection',
     titre: 'Inspection sanitaire',
     texte: 'Un inspecteur de la santé publique, blouse beige et stylo quatre couleurs, demande à « jeter un œil » aux chambres. Maintenant.',
-    condition: { palierMin: 2 },
+    condition: { palierMin: 2, relationMax: { mairie: B.RELATIONS.bons - 1 } },
     choix: [
       {
         texte: 'Lui faire visiter, tout de suite',
         detail: `Rien à craindre si tout est en ordre. Sinon, ${euros(A.inspectionAmende)} d’amende`,
         chance: 0.7,
-        effet: { reputation: 0.5 },
+        effet: { reputation: 0.5, relations: { mairie: 3 } },
         journal: 'L’inspecteur coche toutes les cases et repart en complimentant les draps.',
-        echec: { argent: -A.inspectionAmende, reputation: -1 },
+        echec: { argent: -A.inspectionAmende, reputation: -1, relations: { mairie: -4 } },
         journalEchec: `Une tache suspecte derrière une porte : ${euros(A.inspectionAmende)} d’amende.`,
       },
       {
@@ -251,7 +254,7 @@ export const IMPREVUS: DefinitionImprevu[] = [
       {
         texte: 'Payer une mise aux normes sur-le-champ',
         detail: `−${euros(A.inspectionNormes)}, et plus aucun souci`,
-        effet: { argent: -A.inspectionNormes, reputation: 0.5 },
+        effet: { argent: -A.inspectionNormes, reputation: 0.5, relations: { mairie: 4 } },
         journal: 'Tu signes pour des détecteurs neufs et un savon antibactérien. L’inspecteur repart ravi.',
       },
     ],
@@ -267,7 +270,7 @@ export const IMPREVUS: DefinitionImprevu[] = [
       {
         texte: 'Oui, en direct',
         detail: 'Les touristes adorent ; les clients discrets, beaucoup moins',
-        effet: { reputation: 1, satisfaction: { touriste: 4, affaires: -5, habitue: -2 }, suite: { id: 'video', delai: 3 } },
+        effet: { reputation: 1, satisfaction: { touriste: 4, affaires: -5, habitue: -2 }, relations: { presse: 4 }, suite: { id: 'video', delai: 3 } },
         journal: 'Le live dure vingt minutes. Les cœurs pleuvent sur l’écran.',
       },
       {
@@ -295,7 +298,7 @@ export const IMPREVUS: DefinitionImprevu[] = [
       {
         texte: 'Les faire entrer',
         detail: 'Trois clients de plus ; le quartier va les entendre',
-        effet: { clients: 3, clientsSegment: 'groupe', tapage: 10 },
+        effet: { clients: 3, clientsSegment: 'groupe', tapage: 10, relations: { voisins: -2 } },
         journal: 'Le homard et sa cour envahissent le quai. Deux étages plus haut, une lampe s’allume.',
       },
       {
@@ -420,7 +423,7 @@ export const IMPREVUS: DefinitionImprevu[] = [
       {
         texte: 'Allumer la télé',
         detail: 'Deux clients de plus et du bruit ; les habitués soupirent',
-        effet: { clients: 2, clientsSegment: 'groupe', tapage: 8, satisfaction: { habitue: -3, groupe: 3 } },
+        effet: { clients: 2, clientsSegment: 'groupe', tapage: 8, satisfaction: { habitue: -3, groupe: 3 }, relations: { voisins: -2 } },
         journal: 'But à la cent-dix-huitième minute. Le salon explose, et les vitres avec.',
       },
       {
@@ -448,7 +451,7 @@ export const IMPREVUS: DefinitionImprevu[] = [
       {
         texte: 'Le raccompagner discrètement',
         detail: 'Il s’en souviendra',
-        effet: { satisfaction: { affaires: 2 }, suite: { id: 'echevin', delai: 5 } },
+        effet: { satisfaction: { affaires: 2 }, relations: { mairie: 3 }, suite: { id: 'echevin', delai: 5 } },
         journal: 'Tu tends un loup neuf à l’échevin et l’escortes jusqu’à un taxi. Il te serre la main un peu trop longtemps.',
       },
       {
@@ -585,13 +588,13 @@ export const IMPREVUS: DefinitionImprevu[] = [
       {
         texte: 'Baisser le son',
         detail: 'Un peu de calme, un peu de grogne',
-        effet: { satisfaction: { groupe: -1 }, tapage: -5 },
+        effet: { satisfaction: { groupe: -1 }, tapage: -5, relations: { voisins: 2 } },
         journal: 'Le volume baisse d’un cran. Les basses aussi, à peine.',
       },
       {
         texte: 'Laisser la fête continuer',
         detail: 'Les groupes adorent ; le voisinage, non',
-        effet: { satisfaction: { groupe: 3 }, tapage: 15 },
+        effet: { satisfaction: { groupe: 3 }, tapage: 15, relations: { voisins: -5 } },
         journal: 'Le quai se transforme en piste de danse. Deux étages plus haut, un rideau s’agite.',
       },
       {
@@ -662,7 +665,7 @@ export const IMPREVUS: DefinitionImprevu[] = [
         texte: 'Envoyer {prenom} à sa poursuite',
         detail: '{prenom} court vite. Pas forcément assez',
         chance: 0.5,
-        effet: { fatigue: 10, moral: 5, reputation: 1, satisfaction: { touriste: 4 } },
+        effet: { fatigue: 10, moral: 5, reputation: 1, satisfaction: { touriste: 4 }, relations: { police: 2 } },
         journal: '{prenom} rattrape le voleur au pont. La touriste l’embrasse sur les deux joues.',
         echec: { fatigue: 10 },
         journalEchec: '{prenom} revient bredouille, essoufflé{e}. Le voleur court encore.',
@@ -676,7 +679,7 @@ export const IMPREVUS: DefinitionImprevu[] = [
       {
         texte: 'Appeler la police',
         detail: 'Des uniformes sur le quai : les clients discrets s’éclipsent',
-        effet: { satisfaction: { touriste: 2, affaires: -3 } },
+        effet: { satisfaction: { touriste: 2, affaires: -3 }, relations: { police: 5 } },
         journal: 'Deux agents prennent la déposition sur le quai. Un client d’affaires remonte son col et disparaît.',
       },
     ],

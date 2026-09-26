@@ -10,6 +10,7 @@ import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS } f
 import { JOSEE_RESERVE } from '../content/josee';
 import { trouverChambre } from '../content/maison';
 import { PALIERS } from '../content/paliers';
+import { TEXTES_ACTIONS_RELATIONS, TEXTES_SEUILS_RELATIONS } from '../content/relations';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu, Regles } from '../engine/etat';
 import { jourDeLaSemaine } from '../engine/temps';
@@ -248,6 +249,13 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return t.candidatVedette(evenement.prenom);
     case 'remboursement':
       return t.remboursement(evenement.prenom, formaterEuros(evenement.montant));
+    case 'actionRelation': {
+      const def = TEXTES_ACTIONS_RELATIONS[evenement.action];
+      const texte = def && (evenement.reussite ? def.journal : (def.journalEchec ?? def.journal));
+      return texte ? remplir(texte, partie) : null;
+    }
+    case 'seuilRelation':
+      return remplir(TEXTES_SEUILS_RELATIONS[evenement.acteur][evenement.termes], partie);
     case 'bilan':
       return null;
     default:

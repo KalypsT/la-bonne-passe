@@ -40,6 +40,7 @@ import { texteEvenement } from './journal';
 import { remplir } from './modeles';
 import { etatDuBar, FicheBar } from './FicheBar';
 import { FicheRegles, FicheSegment, OngletClientele } from './OngletClientele';
+import { FicheActeur, OngletRelations } from './OngletRelations';
 import { useInterface, type Fiche, type Onglet } from './store';
 
 const t = TEXTES.panneau;
@@ -102,6 +103,8 @@ export function Panneau({ partie }: { partie: EtatJeu }) {
           <FicheSegment partie={partie} id={fiche.id} />
         ) : fiche?.type === 'regles' ? (
           <FicheRegles partie={partie} />
+        ) : fiche?.type === 'acteur' ? (
+          <FicheActeur partie={partie} id={fiche.id} />
         ) : fiche ? (
           <FichePiece partie={partie} fiche={fiche} />
         ) : (
@@ -110,6 +113,7 @@ export function Panneau({ partie }: { partie: EtatJeu }) {
             {onglet === 'personnel' && <OngletPersonnel partie={partie} />}
             {onglet === 'clientele' && <OngletClientele partie={partie} />}
             {onglet === 'finances' && <OngletFinances partie={partie} />}
+            {onglet === 'relations' && <OngletRelations partie={partie} />}
             {onglet === 'journal' && <OngletJournal partie={partie} />}
           </>
         )}
@@ -142,8 +146,6 @@ function OngletVerrouille({ nom, numero, atteint }: { nom: string; numero: numbe
 function ProchainPalier({ partie }: { partie: EtatJeu }) {
   const suivant = PALIERS.find((p) => p.numero === partie.palier + 1);
   if (!suivant) return null;
-  // Le palier 3 viendra en v0.5 : une fois la première mensualité payée, on le dit.
-  const aVenir = suivant.numero === 3 && partie.mensualitesPayees >= 1;
   return (
     <div className="palier">
       <span className="palier-titre">{t.prochainPalier}</span>
@@ -151,7 +153,7 @@ function ProchainPalier({ partie }: { partie: EtatJeu }) {
         {suivant.numero}. {suivant.nom}
       </b>
       <span>{suivant.objectif}</span>
-      <span className="palier-ouvre">{aVenir ? TEXTES.bilanMois.palierAVenir : suivant.ouvre}</span>
+      <span className="palier-ouvre">{suivant.ouvre}</span>
     </div>
   );
 }

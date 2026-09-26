@@ -4,6 +4,8 @@
 import * as B from '../content/balance';
 import { INTRIGUES, trouverIntrigue, type ConditionIntrigue, type EtapeIntrigue, type Issue } from '../content/intrigues';
 import type { Segment } from '../content/clientele';
+import type { IdActeur } from '../content/relations';
+import type { EvenementRelation } from './relations';
 import type { EtatJeu } from './etat';
 import { appliquerEffet, effetPossible } from './effets';
 import type { Tirage } from './hasard';
@@ -53,7 +55,7 @@ export type EvenementIntrigue =
 export type OrdreIntrigue = { type: 'choixIntrigue'; choix: number };
 
 interface Sortie {
-  push(e: EvenementIntrigue | EvenementPersonnel): unknown;
+  push(e: EvenementIntrigue | EvenementPersonnel | EvenementRelation): unknown;
 }
 
 /** Instant absolu d'une heure de l'horloge, un jour donné (le jour commence à 5 h). */
@@ -84,7 +86,9 @@ export function conditionRemplie(etat: EtatJeu, c: ConditionIntrigue | undefined
     (c.tapageMin === undefined || etat.quartier.tapage >= c.tapageMin) &&
     (c.tapageMax === undefined || etat.quartier.tapage <= c.tapageMax) &&
     (c.employe === undefined || etat.personnel.some((e) => e.id === c.employe)) &&
-    (c.jourMin === undefined || etat.jour >= c.jourMin)
+    (c.jourMin === undefined || etat.jour >= c.jourMin) &&
+    Object.entries(c.relationMin ?? {}).every(([a, v]) => etat.relations.jauges[a as IdActeur] >= (v ?? 0)) &&
+    Object.entries(c.relationMax ?? {}).every(([a, v]) => etat.relations.jauges[a as IdActeur] <= (v ?? 0))
   );
 }
 
