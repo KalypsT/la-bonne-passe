@@ -438,6 +438,26 @@ describe('migrations', () => {
     expect(migrer({ ...etat, version: 21, systemes, semaine })).toBeNull();
   });
 
+  it('migre une sauvegarde v21 : le Chat Noir, présenté par Josée à une partie déjà au palier 3', () => {
+    const base = creerEtatInitial();
+    const { rivale: _r, hasardRivale: _h, ...etat } = base;
+    const { rivale: _s, ...systemes } = base.systemes;
+    const avant = migrer({ ...etat, version: 21, systemes, palier: 2 });
+    expect(avant?.version).toBe(VERSION_ETAT);
+    expect(avant?.systemes.rivale).toBe(false);
+    expect(avant?.rivale.derniereAction).toBeNull();
+    expect(typeof avant?.hasardRivale).toBe('number');
+    expect(avant?.nouveautes).toEqual([]);
+    const apres = migrer({ ...etat, version: 21, systemes: { ...systemes, relations: true }, palier: 3, annonces: [] });
+    expect(apres?.systemes.rivale).toBe(true);
+    expect(apres?.nouveautes).toEqual(['rivale']);
+    expect(trouverNouveaute('rivale')?.palier).toBe(3);
+    // Le palier 3 encore à annoncer : sa carte présente déjà le Chat Noir.
+    const annonce = migrer({ ...etat, version: 21, systemes, palier: 3, annonces: [3] });
+    expect(annonce?.nouveautes).toEqual([]);
+    expect(migrer({ ...etat, version: 22, systemes })).toBeNull();
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

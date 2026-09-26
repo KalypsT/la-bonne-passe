@@ -11,6 +11,7 @@ import * as B from './balance';
 import type { EffetCarte } from './effets';
 import { SUITES } from './suites';
 import { EVENEMENTS_QUARTIER } from './quartier';
+import { CARTES_RIVALE, INTRIGUE_CHAT_NOIR } from './rivale';
 import type { IdActeur } from './relations';
 
 const euros = (n: number) => `${n.toLocaleString('fr-FR')} €`;
@@ -37,6 +38,10 @@ export interface ConditionIntrigue {
   /** Relations avec le quartier (v0.5) : au moins ou au plus, pour chaque acteur cité. */
   relationMin?: Partial<Record<IdActeur, number>>;
   relationMax?: Partial<Record<IdActeur, number>>;
+  /** Vos rapports avec la rivale, au moins (v0.5). */
+  rivaleRelationMin?: number;
+  /** La personne concernée a le moral ou la loyauté en berne (seuils RIVALE.moralFragile et loyauteFragile). */
+  fragile?: boolean;
 }
 
 /** Ce qui suit un choix : une autre étape dans tant de jours, ou la fin de l'intrigue. */
@@ -501,7 +506,7 @@ export const INTRIGUES_PRINCIPALES: DefinitionIntrigue[] = [
 ];
 
 /** Toutes les intrigues, et les suites différées des imprévus. */
-export const INTRIGUES: DefinitionIntrigue[] = [...INTRIGUES_PRINCIPALES, ...SUITES, ...EVENEMENTS_QUARTIER];
+export const INTRIGUES: DefinitionIntrigue[] = [...INTRIGUES_PRINCIPALES, INTRIGUE_CHAT_NOIR, ...SUITES, ...EVENEMENTS_QUARTIER, ...CARTES_RIVALE];
 
 export function trouverIntrigue(id: string): DefinitionIntrigue | undefined {
   return INTRIGUES.find((i) => i.id === id);

@@ -265,6 +265,7 @@ export const AVIS = {
     'Je reviendrai. Avec un meilleur prétexte.',
     'Service impeccable. La déco aussi.',
     'Je n’ai pas vu le temps passer. Mon taxi non plus.',
+    'Mieux qu’au Chat Noir, et on ne m’a pas regardé comme un portefeuille.',
   ],
   corrects: [
     'Correct. L’ambiance était meilleure que le café.',
@@ -275,5 +276,6 @@ export const AVIS = {
     'Mitigé. Tout le monde avait l’air épuisé, moi compris.',
     'La chambre avait connu des jours meilleurs.',
     'Bof. Au fond, j’étais venu pour Van Gogh.',
+    'Au Chat Noir, en face, au moins, le champagne est frais.',
   ],
 };

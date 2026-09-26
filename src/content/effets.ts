@@ -64,6 +64,14 @@ export interface EffetCarte {
   relations?: Partial<Record<IdActeur, number>>;
   /** Les arrivées de la soirée en cours sont multipliées par ce facteur (un contrôle devant la porte). */
   affluenceSoir?: number;
+  /** La rivale (v0.5) : son agressivité et vos rapports. */
+  rivale?: { agressivite?: number; relation?: number };
+  /** Demande des habitués et des clients d'affaires multipliée jusqu'au lundi suivant (la rivale casse ses prix). */
+  concurrence?: number;
+  /** Une recrue débauchée au Chat Noir attend au salon. */
+  candidatRival?: boolean;
+  /** La personne concernée part au Chat Noir (avec `depart`) : la rivale s'en souvient. */
+  transfuge?: boolean;
   /** Démarre une suite différée (une intrigue courte), dans tant de jours, avec la même personne. */
   suite?: { id: string; delai: number };
 }

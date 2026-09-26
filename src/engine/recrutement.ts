@@ -5,6 +5,7 @@ import * as B from '../content/balance';
 import {
   ACCROCHES,
   INTROS,
+  INTRO_DEBAUCHAGE,
   INTRO_VEDETTE,
   AGE_MAX,
   AGE_MIN,
@@ -192,6 +193,20 @@ export function candidatVedette(etat: EtatJeu, tirage: Tirage, evenements: Sorti
   c.partMin = B.CANDIDAT_VEDETTE.partMin;
   c.source = 'boucheAOreille';
   c.intro = INTRO_VEDETTE(c.prenom, c.genre);
+  etat.candidats.push(c);
+  evenements.push({ type: 'candidatVedette', candidatId: c.id, prenom: c.prenom });
+}
+
+/** Une recrue débauchée au Chat Noir (v0.5) : douée, habituée à être bien payée. */
+export function candidatRival(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
+  if (!etat.systemes.recrutement) return;
+  const c = genererCandidat(etat, tirage, etat.jour + B.JOURS_REFLEXION);
+  const [fort, second] = [...TALENTS_LISTE].sort((a, b) => c.talents[b] - c.talents[a]);
+  c.talents[fort!] = B.CANDIDAT_VEDETTE.talentFort;
+  c.talents[second!] = Math.max(c.talents[second!], B.CANDIDAT_VEDETTE.talentSecond);
+  c.partMin = B.CANDIDAT_VEDETTE.partMin;
+  c.source = 'debauchage';
+  c.intro = INTRO_DEBAUCHAGE(c.prenom, c.genre);
   etat.candidats.push(c);
   evenements.push({ type: 'candidatVedette', candidatId: c.id, prenom: c.prenom });
 }

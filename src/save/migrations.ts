@@ -28,6 +28,7 @@ import { barDeDepart, reglesDeDepart, VERSION_ETAT, type EtatJeu } from '../engi
 import { intriguesDeDepart } from '../engine/intrigues';
 import { quartierDeDepart } from '../engine/quartier';
 import { relationsDeDepart } from '../engine/relations';
+import { rivaleDeDepart } from '../engine/rivale';
 import { RELATIONS, TAPAGE } from '../content/balance';
 import { moisDeDepart, prochainObjectif, statsDeDepart } from '../engine/bilans';
 
@@ -295,6 +296,24 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       hasardQuartier: (typeof d.hasard === 'number' ? d.hasard * 31 + 7 : 7) | 0,
     };
   },
+  // v21 → v22 : la maison rivale, le Chat Noir. Ouverte avec le palier 3 ; elle se présentera au prochain lundi.
+  // Une partie déjà au palier 3, dont l'annonce a été vue, la découvre par Josée au chargement.
+  21: (d) => {
+    const palier = typeof d.palier === 'number' ? d.palier : 0;
+    const annonces = Array.isArray(d.annonces) ? d.annonces : [];
+    const nouveautes = [
+      ...(Array.isArray(d.nouveautes) ? d.nouveautes : []),
+      ...(palier >= 3 && !annonces.includes(3) ? ['rivale'] : []),
+    ];
+    return {
+      ...d,
+      version: 22,
+      systemes: { ...(estObjet(d.systemes) ? d.systemes : {}), rivale: palier >= 3 },
+      rivale: rivaleDeDepart(),
+      hasardRivale: (typeof d.hasard === 'number' ? d.hasard * 17 + 3 : 3) | 0,
+      nouveautes,
+    };
+  },
 };
 
 
@@ -376,6 +395,8 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(d.relations) &&
     estObjet(d.relations.jauges) &&
     typeof d.hasardQuartier === 'number' &&
+    estObjet(d.rivale) &&
+    typeof d.hasardRivale === 'number' &&
     estObjet(d.systemes)
   );
 }

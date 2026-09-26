@@ -54,7 +54,7 @@ function renouvellement(): { lignes: string[]; types: string[] } {
   ];
   const noms = ['Classique, 3', 'Feutrée, 4', 'Adaptatif (suit les tendances), 3', 'Classique 3, sélection laxiste', 'Classique 3, sélection stricte'];
   const virgule = (x: number, d = 1) => x.toFixed(d).replace('.', ',');
-  const TYPES = ['presse', 'bruit', 'ivre', 'bouteille', 'photographe', 'pause', 'dispute', 'chambreSale', 'linge', 'barVide', 'epuisement'];
+  const TYPES = ['presse', 'bruit', 'ivre', 'bouteille', 'photographe', 'pause', 'sabotage', 'dispute', 'chambreSale', 'linge', 'barVide', 'epuisement'];
   const types = [
     `| Stratégie | ${TYPES.join(' | ')} |`,
     `| --- | ${TYPES.map(() => '---').join(' | ')} |`,
@@ -112,6 +112,38 @@ function quartier(): string[] {
   return lignes;
 }
 
+/** La rivale (v0.5) : son humeur au bout de deux mois, ses coups du deuxième mois, et les réponses du joueur. */
+function rivale(): string[] {
+  const lignes = [
+    '| Stratégie (56 nuits) | Agressivité, nuit 56 | Rapports | Coups par partie, mois 2 (total sur les parties) | Faux clients par partie | Débauchages (dénouements) | Avoir, nuit 56 |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+  ];
+  const variantes: { nom: string; options: Partial<OptionsSimulation> }[] = [
+    { nom: 'Classique, 3', options: {} },
+    { nom: 'Classique 3, sélection laxiste', options: { regles: { selection: 'laxiste' } } },
+    { nom: 'Classique 3, sélection stricte', options: { regles: { selection: 'stricte' } } },
+    { nom: 'Feutrée, 4', options: { offre: 'feutree', rdvMax: 4 } },
+    { nom: 'Classique 3, trêve dès que possible', options: { rivale: 'treve' } },
+    { nom: 'Classique 3, riposte par rumeur', options: { rivale: 'riposte' } },
+  ];
+  const virgule = (x: number) => x.toFixed(1).replace('.', ',');
+  for (const v of variantes) {
+    const parties = GRAINES.map((graine) => simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 56, politique: 'hasard', ...v.options }));
+    const moy = (f: (p: (typeof parties)[number]) => number) => parties.reduce((t, p) => t + f(p), 0) / parties.length;
+    const coups = parties.flatMap((p) => p.nuits.slice(28).flatMap((n) => n.rivale.actions)).filter((a) => a !== 'visite');
+    const parType = [...new Set(coups)].map((id) => `${id} ${coups.filter((x) => x === id).length}`).join(', ');
+    const fins = parties.flatMap((p) => p.intrigues.filter((f) => f.id === 'offreChatNoir').map((f) => f.fin));
+    lignes.push(
+      `| ${v.nom} | ${moy((p) => p.nuits[55]?.rivale.agressivite ?? 0).toFixed(0)} | ${moy((p) => p.nuits[55]?.rivale.relation ?? 0).toFixed(0)} | ` +
+        `${virgule(coups.length / parties.length)}${parType ? ` (${parType})` : ''} | ` +
+        `${virgule(moy((p) => p.nuits.slice(28).reduce((t, n) => t + (n.alertes.sabotage ?? 0), 0)))} | ` +
+        `${fins.length}${fins.length ? ` (${[...new Set(fins)].map((f) => `${f} ${fins.filter((x) => x === f).length}`).join(', ')})` : ''} | ` +
+        `${arrondi(moy((p) => p.etat.tresorerie + p.etat.reserve))} € |`,
+    );
+  }
+  return lignes;
+}
+
 it('rapport d’équilibrage', () => {
   const lignes = [
     '| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |',
@@ -143,5 +175,6 @@ it('rapport d’équilibrage', () => {
   const r = renouvellement();
   console.log(`\nRenouvellement des soirées : ${GRAINES.length} graines, ${NUITS} nuits (cartes tranchées au hasard)\n\n${r.lignes.join('\n')}\n`);
   console.log(`\nAlertes par soirée, selon leur type (mêmes parties)\n\n${r.types.join('\n')}\n`);
+  console.log(`\nLa rivale : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${rivale().join('\n')}\n`);
   console.log(`\nLe quartier : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard ; événements sur 10 parties)\n\n${quartier().join('\n')}\n`);
 }, 300_000);

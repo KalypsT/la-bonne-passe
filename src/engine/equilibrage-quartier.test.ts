@@ -4,6 +4,7 @@ import { ACTEURS, ACTEURS_ORDRE } from '../content/relations';
 import { simuler, type OptionsSimulation } from './simulation';
 
 // Le quartier vit-il ? (v0.5) Les relations réagissent au style de la maison, et les soigner coûte, mais rapporte.
+// La rivale frappe plus fort la maison qui lui prend sa clientèle, et une trêve la calme.
 // Joueur actif, classique à 3 rendez-vous, 56 nuits (le palier 3 tombe le jour 28), 10 graines.
 
 const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -27,6 +28,8 @@ beforeAll(() => {
   jouer('laxiste', { regles: { selection: 'laxiste' } });
   jouer('stricte', { regles: { selection: 'stricte' } });
   jouer('soigneur', { relations: 'entretien', cibleRelations: 45 });
+  jouer('feutree', { offre: 'feutree', rdvMax: 4 });
+  jouer('treve', { rivale: 'treve' });
 }, 60_000);
 
 describe('le quartier réagit au style de la maison', () => {
@@ -71,5 +74,28 @@ describe('soigner ses relations coûte, mais ouvre des portes', () => {
       expect(v, a).toBeGreaterThan(B.RELATIONS.mauvais);
       expect(v, a).toBeLessThan(B.RELATIONS.bons);
     }
+  });
+});
+
+describe('le Chat Noir', () => {
+  const coups = (p: Partie) => p.nuits.slice(28).flatMap((n) => n.rivale.actions).filter((a) => a !== 'visite').length;
+
+  it('se présente dans chaque partie, puis frappe deux à trois fois au deuxième mois', () => {
+    for (const p of parties.get('classique')!) expect(p.nuits.some((n) => n.rivale.actions.includes('visite'))).toBe(true);
+    const c = moyenne('classique', coups);
+    console.log('coups au mois 2', ['classique', 'laxiste', 'stricte', 'feutree', 'treve'].map((n) => `${n} ${moyenne(n, coups).toFixed(1)}`).join(', '));
+    expect(c).toBeGreaterThanOrEqual(1.5);
+    expect(c).toBeLessThanOrEqual(4);
+  });
+
+  it('en veut surtout à la maison qui lui prend ses habitués', () => {
+    const agressivite = (nom: string) => moyenne(nom, (p) => fin(p).rivale.agressivite);
+    console.log('agressivité', ['classique', 'laxiste', 'stricte', 'feutree', 'treve'].map((n) => `${n} ${agressivite(n).toFixed(0)}`).join(', '));
+    expect(agressivite('feutree')).toBeGreaterThan(agressivite('laxiste') + 15);
+  });
+
+  it('une trêve la calme, et limite ses coups', () => {
+    expect(moyenne('treve', (p) => fin(p).rivale.agressivite)).toBeLessThan(moyenne('classique', (p) => fin(p).rivale.agressivite) - 5);
+    expect(moyenne('treve', coups)).toBeLessThan(moyenne('classique', coups));
   });
 });

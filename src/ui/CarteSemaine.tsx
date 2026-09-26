@@ -1,3 +1,5 @@
+import { ACTIONS_RIVALE, TEXTES_RIVALE } from '../content/rivale';
+import { remplir } from './modeles';
 import { SEGMENTS } from '../content/clientele';
 import { trouverTendance } from '../content/tendances';
 import { TEXTES } from '../content/textes';
@@ -102,6 +104,7 @@ export function CarteSemaine({ partie }: { partie: EtatJeu }) {
             <p className="sous">{t.projectionDetail}</p>
             <JoseeLigne texte={passeSousZero ? t.joseeProjection : t.joseeResultat(b.resultat >= 0)} />
             <DefisDuLundi partie={partie} />
+            <RivaleDuLundi partie={partie} />
             {(tendances.length > 0 || b.premieresTendances) && (
               <>
                 <h3>{t.tendances}</h3>
@@ -123,6 +126,21 @@ export function CarteSemaine({ partie }: { partie: EtatJeu }) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Au bilan du lundi : ce que le Chat Noir a décidé pour la semaine qui commence (hors débauchage, qui se découvre). */
+function RivaleDuLundi({ partie }: { partie: EtatJeu }) {
+  const a = partie.rivale.derniereAction;
+  if (!partie.systemes.rivale || !a || a.jour !== partie.jour || a.id === 'debauchage') return null;
+  const def = ACTIONS_RIVALE[a.id];
+  if (!def) return null;
+  return (
+    <div className="defi-bilan">
+      <h3>{TEXTES_RIVALE.bilan}</h3>
+      <b>{def.nom}</b>
+      <p className="sous">{remplir(def.texte, partie)}</p>
     </div>
   );
 }

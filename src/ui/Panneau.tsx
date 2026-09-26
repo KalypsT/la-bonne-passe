@@ -40,7 +40,7 @@ import { texteEvenement } from './journal';
 import { remplir } from './modeles';
 import { etatDuBar, FicheBar } from './FicheBar';
 import { FicheRegles, FicheSegment, OngletClientele } from './OngletClientele';
-import { FicheActeur, OngletRelations } from './OngletRelations';
+import { FicheActeur, FicheRivale, OngletRelations } from './OngletRelations';
 import { useInterface, type Fiche, type Onglet } from './store';
 
 const t = TEXTES.panneau;
@@ -105,6 +105,8 @@ export function Panneau({ partie }: { partie: EtatJeu }) {
           <FicheRegles partie={partie} />
         ) : fiche?.type === 'acteur' ? (
           <FicheActeur partie={partie} id={fiche.id} />
+        ) : fiche?.type === 'rivale' ? (
+          <FicheRivale partie={partie} />
         ) : fiche ? (
           <FichePiece partie={partie} fiche={fiche} />
         ) : (

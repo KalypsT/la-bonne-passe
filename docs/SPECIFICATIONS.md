@@ -275,6 +275,13 @@ La maison vit dans un quartier : chaque acteur extérieur a une jauge de relatio
 - Elles réagissent au joueur : baisse de prix, débauchage, rumeurs, voire sabotage (un faux client qui provoque un incident).
 - Le joueur peut répondre : débaucher à son tour, lancer une rumeur, s'allier, ou racheter une rivale en difficulté.
 
+### Le Chat Noir (v0.5)
+
+- **La première rivale d'Amsterdam** : Le Chat Noir, maison chic de l'autre côté du canal, tenue par Colette Vos (54 ans, ancienne meneuse de revue). Elle vise les habitués et les clients d'affaires. Son enseigne apparaît sur la façade voisine au palier 3 ; au palier 2, quelques clients en parlent déjà.
+- **Chaque lundi**, à partir du premier lundi après le palier 3 (où elle se présente par une carte de visite), son agressivité (0 à 100) se rapproche d'une cible qui monte avec la réputation de la maison et sa part d'habitués et de clients d'affaires. Plus elle est agressive, plus elle agit : prix cassés (habitués et clients d'affaires viennent moins jusqu'au lundi suivant), rumeur, faux client qui fait un scandale un soir (une alerte), débauchage (l'intrigue « L'offre du Chat Noir »). En bons rapports avec toi, elle propose parfois un échange de bons procédés.
+- **Tes réponses**, une par semaine, dans sa fiche de l'onglet Relations : débaucher chez elle (une recrue douée et exigeante attend au salon), lancer une rumeur (ses clients viennent chez toi cette semaine, ou la presse s'en mêle), proposer une trêve (deux semaines de paix, acceptée plus volontiers quand vos rapports sont bons). Le rachat d'une rivale en difficulté viendra avec le deuxième établissement.
+- Le bilan du lundi dit ce qu'elle prépare, sauf un débauchage, qui se découvre.
+
 ### Actions de relations
 
 Invitations, cadeaux, dons à une association du quartier, contributions « discrètes » là où elles se pratiquent, services rendus à un VIP. Chaque action a un coût et un risque, surtout en pays non légal.
@@ -356,6 +363,8 @@ Les événements suivent la montée en puissance : au départ, ils concernent Sa
 - **Un ton décalé**, avec le prénom du joueur et le nom de sa maison dans les textes.
 
 ### Exemple d'intrigue : « L'offre du Chat Noir »
+
+En v0.5, la rivale la déclenche en visant la personne la plus douée et la moins attachée de l'équipe (confirmée, et pas Mila tant que son propre arc n'est pas fini, sa carte rappelle alors son passage au Pink Palace). La demande de part est de cinq points de plus. Une personne partie au Chat Noir reste dans la mémoire de la rivale.
 
 1. Mila est vue en train de boire un verre avec la patronne du Chat Noir.
 2. Au briefing, elle demande 55 % de part. Accepter, refuser, ou lui parler.

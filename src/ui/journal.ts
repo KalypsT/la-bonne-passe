@@ -11,6 +11,7 @@ import { JOSEE_RESERVE } from '../content/josee';
 import { trouverChambre } from '../content/maison';
 import { PALIERS } from '../content/paliers';
 import { TEXTES_ACTIONS_RELATIONS, TEXTES_SEUILS_RELATIONS } from '../content/relations';
+import { TEXTES_JOURNAL_RIVALE, TEXTES_REPONSES_RIVALE } from '../content/rivale';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu, Regles } from '../engine/etat';
 import { jourDeLaSemaine } from '../engine/temps';
@@ -254,6 +255,17 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       const texte = def && (evenement.reussite ? def.journal : (def.journalEchec ?? def.journal));
       return texte ? remplir(texte, partie) : null;
     }
+    case 'rivaleHumeur':
+      return remplir(TEXTES_JOURNAL_RIVALE.humeur(evenement.humeur), partie);
+    case 'reponseRivale': {
+      const def = TEXTES_REPONSES_RIVALE[evenement.reponse];
+      return remplir(evenement.reussite ? def.journal : (def.journalEchec ?? def.journal), partie);
+    }
+    case 'treveFinie':
+      return TEXTES_JOURNAL_RIVALE.treveFinie;
+    case 'rivaleAgit':
+      // La carte de la rivale raconte elle-même ; un sabotage ou un débauchage se découvrent plus tard.
+      return null;
     case 'seuilRelation':
       return remplir(TEXTES_SEUILS_RELATIONS[evenement.acteur][evenement.termes], partie);
     case 'bilan':

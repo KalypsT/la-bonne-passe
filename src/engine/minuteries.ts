@@ -8,7 +8,7 @@ import { CLIENTS, type Segment } from '../content/clientele';
 import type { EtatJeu } from './etat';
 import { creerTirage, type Tirage } from './hasard';
 import { barSert } from './bar';
-import { changerSatisfaction } from './clientele';
+import { changerReputationGlobale, changerSatisfaction } from './clientele';
 import { depenser, encaisser } from './comptes';
 import { changerLoyaute, changerMoral } from './personnel';
 import { changerTapage } from './quartier';
@@ -89,6 +89,10 @@ function manquer(etat: EtatJeu, a: AlerteMinutee, evenements: Sortie): void {
     case 'photographe':
       changerSatisfaction(etat, 'affaires', -A.photographe.satisfactionManquee);
       if (relationsOuvertes(etat)) changerRelations(etat, B.RELATIONS.photographeManque, evenements);
+      break;
+    case 'sabotage':
+      changerReputationGlobale(etat, -A.sabotage.reputation);
+      changerRelations(etat, { presse: A.sabotage.presse, police: A.sabotage.police }, evenements);
       break;
     case 'pause': {
       const e = etat.personnel.find((x) => x.id === a.cible);
@@ -177,6 +181,12 @@ function naissances(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
     ajouter(etat, 'photographe', null, A.photographe.delai, evenements);
   }
 
+  // Le faux client du Chat Noir, décidé le lundi par la rivale.
+  if (etat.rivale.sabotage && !active('sabotage') && tirage.chance(B.RIVALE.sabotageChanceParHeure * heures)) {
+    etat.rivale.sabotage = false;
+    ajouter(etat, 'sabotage', null, A.sabotage.delai, evenements);
+  }
+
   if (!active('pause') && tirage.chance(A.pause.chance * heures)) {
     const occupes = new Set(etat.rendezVous.map((r) => r.employeId));
     const fatiguee = etat.personnel.find(
@@ -257,6 +267,15 @@ export function traiterAlerte(etat: EtatJeu, cle: string, action: number, tirage
         }
       } else if (action === 1) {
         depenser(etat, A.photographe.billet, 'incidents');
+      } else return;
+      break;
+    }
+    case 'sabotage': {
+      if (action === 0) {
+        reussite = tirage.chance(A.sabotage.reussite);
+        if (!reussite) demarrerDispute(etat, evenements);
+      } else if (action === 1) {
+        depenser(etat, A.sabotage.remboursement, 'incidents');
       } else return;
       break;
     }

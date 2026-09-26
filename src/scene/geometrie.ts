@@ -36,4 +36,5 @@ export const POSITIONS = {
   bulleQuai: { x: 300, y: 350 },
   bulleBouteille: { x: 360, y: 262 },
   bullePhotographe: { x: 520, y: 356 },
+  bulleSabotage: { x: 170, y: 352 },
 };

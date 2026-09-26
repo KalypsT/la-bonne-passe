@@ -1739,3 +1739,12 @@ body {
 .ligne.ligne-relation {
   min-height: 44px;
 }
+
+/* La rivale : son agressivité, en laiton, puis en néon quand elle passe à l'offensive. */
+.jauge-barre.rivale i {
+  background: var(--laiton);
+}
+
+.jauge-barre.rivale.basse i {
+  background: var(--neon);
+}
