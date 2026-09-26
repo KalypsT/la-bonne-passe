@@ -58,6 +58,8 @@ import { personnelMax } from '../engine/agrandir';
 import { departsRecents, exigenceDuQuartier } from '../engine/recrutement';
 import { DeuxiemeMaison, FicheVoisin, Gerance, statutVoisin } from './Agrandir';
 import { statutMaison2 } from './Maison2';
+import { TEXTES_FIN } from '../content/fin';
+import { FIN_CHAPITRE } from '../content/balance';
 import { TEXTES_AGRANDIR } from '../content/agrandir';
 
 const t = TEXTES.panneau;
@@ -164,7 +166,19 @@ function OngletVerrouille({ nom, numero, atteint }: { nom: string; numero: numbe
 
 function ProchainPalier({ partie }: { partie: EtatJeu }) {
   const suivant = PALIERS.find((p) => p.numero === partie.palier + 1);
-  if (!suivant) return null;
+  // Au palier 5 : l'objectif du chapitre, jusqu'à ce qu'il soit bouclé (v1.0).
+  if (!suivant) {
+    if (partie.finChapitre) return null;
+    const o = TEXTES_FIN.objectif;
+    return (
+      <div className="palier">
+        <span className="palier-titre">{o.titre}</span>
+        <b>{o.nom}</b>
+        <span>{o.texte(FIN_CHAPITRE.reputation)}</span>
+        <span className="palier-ouvre">{o.detail(Math.floor(partie.reputation))}</span>
+      </div>
+    );
+  }
   return (
     <div className="palier">
       <span className="palier-titre">{t.prochainPalier}</span>

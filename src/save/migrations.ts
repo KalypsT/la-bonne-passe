@@ -37,6 +37,12 @@ import { fiscDeDepart } from '../engine/fisc';
 import { annexesDeDepart } from '../engine/amenagement';
 import { hasardPlacementDeDepart, niveauxDeDepart } from '../engine/gamme';
 import { hasardMaison2DeDepart, maison2DeDepart } from '../engine/maison2';
+import { chroniqueDeDepart, type Moment } from '../engine/chronique';
+import { INTRIGUES_PRINCIPALES } from '../content/intrigues';
+import { INTRIGUE_CHAT_NOIR } from '../content/rivale';
+
+/** Les histoires retenues par la chronique (v36), comme dans engine/chronique.ts. */
+const HISTOIRES_MIGRATION = new Set([...INTRIGUES_PRINCIPALES, INTRIGUE_CHAT_NOIR].map((d) => d.id));
 import { agrandissementDeDepart, etablissementDeDepart, hasardEtablissementDeDepart, permisDeDepart } from '../engine/agrandir';
 
 type Donnees = Record<string, unknown>;
@@ -634,6 +640,26 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       hasardMaison2: hasardMaison2DeDepart(typeof d.hasard === 'number' ? d.hasard : 0),
     };
   },
+  // v35 → v36 : la chronique de la partie et la fin du chapitre (v1.0, partie 2). Le passé ne se recompte pas :
+  // Josée tient la chronique à partir d'aujourd'hui, en retrouvant les histoires terminées et le permis accordé.
+  35: (d) => {
+    const jour = typeof d.jour === 'number' ? d.jour : 1;
+    const chronique = chroniqueDeDepart(jour);
+    const intrigues = estObjet(d.intrigues) && Array.isArray(d.intrigues.finies) ? d.intrigues.finies : [];
+    const moments: Moment[] = [];
+    for (const f of intrigues) {
+      if (estObjet(f) && typeof f.id === 'string' && typeof f.fin === 'string' && typeof f.jour === 'number' && f.fin !== 'ecartee' && f.jour > 0 && HISTOIRES_MIGRATION.has(f.id)) {
+        moments.push({ jour: f.jour, type: 'intrigue', id: f.id, fin: f.fin });
+      }
+    }
+    if (estObjet(d.permis) && d.permis.statut === 'accorde' && typeof d.permis.jour === 'number') {
+      moments.push({ jour: d.permis.jour, type: 'palier', numero: 5 });
+    }
+    chronique.moments = moments.sort((a, b) => a.jour - b.jour);
+    // Josée présente la chronique et l'objectif du chapitre au chargement.
+    const nouveautes = [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), 'chronique'];
+    return { ...d, version: 36, chronique, finChapitre: null, finChapitreAVoir: false, nouveautes };
+  },
 };
 
 
@@ -739,6 +765,10 @@ function estEtatValide(d: Donnees): boolean {
     Array.isArray(d.maison2.bilans) &&
     Array.isArray(d.maison2.annonces) &&
     typeof d.hasardMaison2 === 'number' &&
+    estObjet(d.chronique) &&
+    Array.isArray(d.chronique.moments) &&
+    (d.finChapitre === null || estObjet(d.finChapitre)) &&
+    typeof d.finChapitreAVoir === 'boolean' &&
     typeof d.gestionJosee === 'boolean' &&
     estObjet(d.systemes)
   );

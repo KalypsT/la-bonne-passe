@@ -647,6 +647,9 @@ export interface Progression {
   faillites: number;
   /** v1.0 : jour de l'inauguration de la deuxième maison, par partie (0 : jamais). */
   inaugurations: number[];
+  /** v1.0, partie 2 : jour de la fin du chapitre 1 (0 : jamais), et le titre obtenu, par partie. */
+  finsChapitre: number[];
+  titres: string[];
   /** Résultat moyen par semaine pleine de la deuxième maison, par partie ouverte, et ce qu'elle a coûté (achat, travaux, inauguration). */
   maison2: { resultatSemaine: number; cout: number; total: number }[];
 }
@@ -676,6 +679,8 @@ export function mesurerProgression(graines: number[], options: Omit<OptionsSimul
     investissementsParSemaine: compter(ORDRES_INVESTISSEMENT),
     faillites: parties.filter((p) => p.etat.finDePartie).length,
     inaugurations: parties.map((p) => p.etat.maison2.inauguration ?? 0),
+    finsChapitre: parties.map((p) => p.etat.finChapitre?.jour ?? 0),
+    titres: parties.flatMap((p) => (p.etat.finChapitre ? [p.etat.finChapitre.titre] : [])),
     maison2: parties
       .filter((p) => p.etat.maison2.bilans.length > 0)
       .map((p) => {

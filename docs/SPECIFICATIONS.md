@@ -100,7 +100,7 @@ La campagne se découpe en 4 chapitres, un par pays, et se termine par une vraie
 
 | Chapitre | Lieu | Objectif de fin de chapitre | Durée visée |
 | --- | --- | --- | --- |
-| 1. Les débuts | Amsterdam, imposé | Maison d'origine à réputation 70 et deuxième établissement ouvert | 6 à 8 h de jeu |
+| 1. Les débuts | Amsterdam, imposé | Deuxième établissement ouvert, et la maison d'origine à 70 de réputation au moins le soir où l'on vérifie (v1.0 : à chaque fermeture, une fois la deuxième maison inaugurée) | 6 à 8 h de jeu |
 | 2. L'expansion | Pays toléré, au choix | Une maison rentable 4 semaines d'affilée | 4 à 5 h |
 | 3. La discrétion | Pays à client pénalisé, au choix | Clientèle VIP fidélisée sans scandale | 4 à 5 h |
 | 4. Le grand saut | Pays interdit, au choix | Tenir 8 semaines sous la barre de chaleur 70 | 5 à 6 h |
@@ -116,6 +116,14 @@ La campagne s'achève quand les 4 chapitres sont bouclés et l'emprunt de rachat
 Le joueur peut continuer la même partie sans nouveau chapitre. Des objectifs simplifiés tournent chaque semaine, tirés au sort : une recette à atteindre, une semaine sans incident, un segment à reconquérir, un record à battre. Les intrigues continuent, mais plus aucun palier ne s'ouvre.
 
 En version 1.0, seul le chapitre 1 est jouable, avec sa propre fin de chapitre et le mode libre.
+
+### La fin du chapitre 1 (v1.0)
+
+- **La condition** : le soir, à la fermeture, la deuxième maison est ouverte (inaugurée, avec sa gérante) et la maison d'origine a au moins 70 de réputation. Le palier 5 en demande 80 : ce plancher pardonne une baisse pendant les mois chers de l'agrandissement, sans être acquis d'avance. Si la réputation est retombée, le chapitre se boucle le premier soir où elle remonte. Au palier 5, l'onglet Maison affiche cet objectif à la place du prochain palier.
+- **La chronique** : pendant toute la partie, Josée retient ce qui compte (paliers, arrivées et départs, chambres rouvertes, bar, emprunts, mensualités impayées, sursis, dénouements des intrigues des personnages et du Chat Noir, agrandissement, gérance, achat et inauguration de la deuxième maison), les soirées par offre et par thème, les recettes de chaque semaine et le temps réel passé dans la partie (compté par l'interface, pauses comprises). Une partie d'avant la v1.0 commence sa chronique au chargement, avec les histoires déjà terminées ; Josée la présente.
+- **L'écran de fin**, après le bilan de la nuit, raconté par Josée : la durée (jours de jeu et temps réel), les recettes totales, la réputation, les personnes restées fidèles (au moins 28 nuits, et la gérante de la deuxième maison si elle vient de l'équipe), celles parties en route, sept moments marquants (les grands tournants d'abord, dans l'ordre des jours), et un **titre selon le style de jeu**, accordé : Reine ou Roi de la discrétion (une majorité de soirées feutrées), Impératrice ou Empereur des nuits blanches (happy hours et thèmes), Bâtisseuse ou Bâtisseur du canal (le bâtiment voisin et six personnes), Mère ou Père de la maison (aucun départ), Funambule du découvert (une mensualité impayée), Baronne ou Baron du velours (90 de réputation), sinon Patronne ou Patron du quartier.
+- **L'avertissement** : l'écran rappelle que tout est fiction, lois, lieux et personnages simplifiés ou inventés, et que chaque personne du jeu travaille librement. Une ligne le dit aussi en bas de l'écran titre.
+- Le jeu continue ensuite dans la même partie (voir le mode libre). L'écran titre affiche « Chapitre 1 bouclé ».
 
 ## Montée en puissance
 

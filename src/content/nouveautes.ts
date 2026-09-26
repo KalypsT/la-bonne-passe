@@ -18,6 +18,12 @@ export const NOUVEAUTES: Nouveaute[] = [
       'L’entretien se voit dans la caisse : une chambre défraîchie (sous 30 % d’état) se paie 15 % de moins, et un client sans linge propre aussi, à tes frais. Les packs de linge baissent (50, 90 et 160 €), et les chambres s’usent deux fois moins vite. Autre chose : quand quelqu’un part, le quartier en parle pendant un mois. Moins de candidatures, et plus exigeantes.',
   },
   {
+    id: 'chronique',
+    palier: 0,
+    texte:
+      'Je tiens désormais la chronique de ta maison : les arrivées, les départs, les grandes histoires. Le chapitre se boucle le soir où une deuxième maison est ouverte, avec au moins 70 de réputation ici. Ce soir-là, je te raconterai tout.',
+  },
+  {
     id: 'amenagement',
     palier: 1,
     texte: 'Dans la fiche de chaque chambre ouverte : rafraîchir la déco, changer de décor (chacun plaît à sa clientèle), ou la fermer pour un soir.',

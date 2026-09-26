@@ -43,7 +43,8 @@ export type Carte =
   | 'entretienIndividuel'
   | 'adieu'
   | 'aide'
-  | 'maison';
+  | 'maison'
+  | 'finChapitre';
 
 export interface ChoixCreation {
   prenom: string;
@@ -131,6 +132,16 @@ type Modifier = (fn: (s: EtatInterface) => Partial<EtatInterface>) => void;
 
 /** Temps réel accumulé en attente du prochain pas du moteur. Hors de l'état : il ne doit pas redessiner. */
 let reserveDeTemps = 0;
+/** Temps réel passé dans la partie, pas encore reporté dans sa chronique (v1.0). */
+let tempsNonCompte = 0;
+
+/** Reporte le temps réel passé dans la chronique de la partie. */
+function compterTemps(partie: EtatJeu): EtatJeu {
+  if (tempsNonCompte < 1) return partie;
+  const secondes = Math.round(tempsNonCompte);
+  tempsNonCompte -= secondes;
+  return appliquerOrdres(partie, [{ type: 'tempsJoue', secondes }]).etat;
+}
 let prochainMontant = 1;
 
 /** Carte qui attend son tour une fois la carte courante fermée. */
@@ -142,6 +153,7 @@ function carteEnAttente(partie: EtatJeu | null): Carte | null {
   if (partie.avance.statut === 'proposee') return 'grossiste';
   if (partie.bilanMoisAVoir) return 'mois';
   if (partie.bilanAVoir) return 'semaine';
+  if (partie.finChapitreAVoir) return 'finChapitre';
   if (partie.annonces.length > 0) return 'palier';
   if (partie.nouveautes.length > 0) return 'nouveautes';
   if (partie.maison2.annonces.length > 0) return 'maison';
@@ -255,8 +267,11 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   },
 
   sauvegarderPartie: () => {
-    const { emplacementActif, partie } = get();
-    if (emplacementActif !== null && partie) sauvegarder(emplacementActif, partie, Date.now());
+    const { emplacementActif, partie: avant } = get();
+    if (emplacementActif === null || !avant) return;
+    const partie = compterTemps(avant);
+    if (partie !== avant) set({ partie });
+    sauvegarder(emplacementActif, partie, Date.now());
   },
 
   retourTitre: () => {
@@ -271,6 +286,8 @@ export const useInterface = create<EtatInterface>((set, get) => ({
 
   avancer: (secondes) => {
     const { partie, vitesse, carte } = get();
+    // Le temps passé dans la partie compte, même en pause ou devant une carte (au plus un quart d'heure d'un coup).
+    if (partie) tempsNonCompte = Math.min(tempsNonCompte + secondes, 900);
     if (!partie || vitesse === 0 || carte) return;
     // Josée parle : le temps attend.
     if (etapeDidacticiel(partie)?.pause) return;
@@ -292,6 +309,8 @@ export const useInterface = create<EtatInterface>((set, get) => ({
       }
     }
     if (reserveDeTemps > 5) reserveDeTemps = 0;
+    // Un pas du moteur a eu lieu : on y reporte le temps passé, toutes les minutes environ.
+    if (courante !== partie && tempsNonCompte >= 60) courante = compterTemps(courante);
     if (courante === partie && evenements.length === 0) return;
     // Didacticiel : à la première chambre sale et libre (pour pouvoir la nettoyer), le jeu se met en pause.
     const saleEtLibre = (c: EtatJeu) =>
@@ -343,11 +362,11 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     const { partie, carte: actuelle } = get();
     let suite = carte ?? carteEnAttente(partie);
     // Fermer une annonce, des nouveautés ou un adieu : le moteur les marque comme vus, puis on passe à la suite.
-    const vus = { palier: 'annonceVue', nouveautes: 'nouveautesVues', adieu: 'adieuVu', semaine: 'bilanSemaineVu', mois: 'bilanMoisVu', maison: 'annonceMaisonVue' } as const;
+    const vus = { palier: 'annonceVue', nouveautes: 'nouveautesVues', adieu: 'adieuVu', semaine: 'bilanSemaineVu', mois: 'bilanMoisVu', maison: 'annonceMaisonVue', finChapitre: 'finChapitreVue' } as const;
     if (
       !carte &&
       partie &&
-      (actuelle === 'palier' || actuelle === 'nouveautes' || actuelle === 'adieu' || actuelle === 'semaine' || actuelle === 'mois' || actuelle === 'maison')
+      (actuelle === 'palier' || actuelle === 'nouveautes' || actuelle === 'adieu' || actuelle === 'semaine' || actuelle === 'mois' || actuelle === 'maison' || actuelle === 'finChapitre')
     ) {
       const resultat = appliquerOrdres(partie, [{ type: vus[actuelle] }]);
       set({ partie: resultat.etat });

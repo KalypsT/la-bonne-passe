@@ -23,6 +23,8 @@ export interface ResumePartie {
   dernierePartie: number;
   /** Jour de la faillite, si la partie s'est finie ainsi (v0.6). */
   faillite?: number;
+  /** Le chapitre en cours est bouclé (v1.0). */
+  chapitreFini?: boolean;
 }
 
 export type Emplacement =
@@ -44,6 +46,7 @@ export function resumer(etat: EtatJeu, dernierePartie: number): ResumePartie {
     tresorerie: etat.tresorerie,
     dernierePartie,
     ...(etat.finDePartie ? { faillite: etat.finDePartie.jour } : {}),
+    ...(etat.finChapitre ? { chapitreFini: true } : {}),
   };
 }
 
