@@ -19,6 +19,7 @@ import { CarteGrossiste } from './CarteGrossiste';
 import { CarteSemaine } from './CarteSemaine';
 import { CarteMois } from './CarteMois';
 import { Didacticiel } from './Didacticiel';
+import { CarteMaison } from './Maison2';
 import { Panneau } from './Panneau';
 import { useInterface, type Fiche } from './store';
 import { useBoucle } from './useBoucle';
@@ -104,6 +105,7 @@ export function EcranJeu() {
       {carte === 'entretienIndividuel' && <CarteEntretienIndividuel partie={partie} />}
       {carte === 'adieu' && <CarteAdieu partie={partie} />}
       {carte === 'aide' && <CarteAide />}
+      {carte === 'maison' && <CarteMaison partie={partie} />}
       {carte === 'faillite' && <CarteFaillite partie={partie} />}
       <Didacticiel partie={partie} />
     </div>

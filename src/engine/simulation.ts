@@ -27,6 +27,7 @@ import { gagneNuit } from './comptes';
 import { detteTotale, valeurNette } from './banque';
 import { prixFormation, prochainConfort } from './gamme';
 import { accepteGerance, optionsAgrandissement, peutDemanderPermis, peutPromouvoir } from './agrandir';
+import { peutConfier, peutEngagerExterne } from './maison2';
 
 const moyenne = (l: number[]) => (l.length ? l.reduce((a, b) => a + b, 0) / l.length : 0);
 
@@ -162,6 +163,9 @@ export interface OptionsSimulation {
   agrandir?: 'etages' | 'batiment';
   gerante?: boolean;
   etablissement?: boolean;
+  /** v1.0 : ouvrir la deuxième maison une fois prête, confiée à une personne de l'équipe (la plus loyale qui accepte) ou à la gérante venue d'ailleurs, avec cette consigne. */
+  maison2?: 'equipe' | 'externe';
+  consigneMaison?: B.IdConsigne;
   /** Pour racheter chez le voisin, signer ce nouvel emprunt si la caisse ne suffit pas (v0.6). */
   empruntAgrandir?: { montant: number; duree: number };
   /** Embaucher aussi les candidats du marché tant que l'équipe compte moins de personnes (v0.6 ; 4 par défaut, pour remplacer qui part). */
@@ -432,6 +436,18 @@ export function simuler(options: OptionsSimulation): {
         if (m.statut === 'offres' && moinsCher && payer(moinsCher.achat + moinsCher.travaux)) jouer([{ type: 'signerLieu', lieu: moinsCher.id }]);
         if (m.statut === 'signe' && payer(m.offres.find((o) => o.id === m.lieu)?.travaux ?? 0)) jouer([{ type: 'lancerTravauxEtablissement' }]);
       }
+      if (options.maison2 && etat.systemes.maison2 && etat.etablissement.statut === 'pret') {
+        if (!etat.maison2.gerante) {
+          // Margot partie ne revient pas : on se tourne alors vers l'équipe.
+          const externe = options.maison2 === 'externe' && peutEngagerExterne(etat);
+          const choix = externe
+            ? undefined
+            : [...etat.personnel].filter((e) => peutConfier(etat, e.id) && accepteGerance(e)).sort((a, b) => b.loyaute - a.loyaute)[0];
+          if (externe || choix) jouer([{ type: 'confierMaison', employeId: choix?.id ?? 'externe' }]);
+        }
+        if (etat.maison2.gerante && (etat.maison2.inauguration !== null || payer(B.MAISON2.inauguration))) jouer([{ type: 'inaugurer' }]);
+        if (options.consigneMaison && etat.maison2.consigne !== options.consigneMaison) jouer([{ type: 'consigneMaison', consigne: options.consigneMaison }]);
+      }
       if (options.gestionJosee && etat.systemes.reserve && !etat.gestionJosee) jouer([{ type: 'gestionJosee', active: true }]);
       if (etat.systemes.reserve && etat.tauxReserve === 0) jouer([{ type: 'tauxReserve', taux: 0.1 }]);
       if (options.relations === 'entretien' && etat.systemes.relations) {
@@ -615,6 +631,7 @@ const ORDRES_INVESTISSEMENT = new Set([
   'agrandir',
   'signerLieu',
   'lancerTravauxEtablissement',
+  'inaugurer',
 ]);
 
 export interface Progression {
@@ -628,6 +645,10 @@ export interface Progression {
   financesParSemaine: number;
   investissementsParSemaine: number;
   faillites: number;
+  /** v1.0 : jour de l'inauguration de la deuxième maison, par partie (0 : jamais). */
+  inaugurations: number[];
+  /** Résultat moyen par semaine pleine de la deuxième maison, par partie ouverte, et ce qu'elle a coûté (achat, travaux, inauguration). */
+  maison2: { resultatSemaine: number; cout: number; total: number }[];
 }
 
 /** Joue une stratégie sur plusieurs mois et en tire la progression : paliers, systèmes ouverts, argent et dette, décisions. */
@@ -654,5 +675,17 @@ export function mesurerProgression(graines: number[], options: Omit<OptionsSimul
     financesParSemaine: compter(ORDRES_FINANCES),
     investissementsParSemaine: compter(ORDRES_INVESTISSEMENT),
     faillites: parties.filter((p) => p.etat.finDePartie).length,
+    inaugurations: parties.map((p) => p.etat.maison2.inauguration ?? 0),
+    maison2: parties
+      .filter((p) => p.etat.maison2.bilans.length > 0)
+      .map((p) => {
+        const pleines = p.etat.maison2.bilans.filter((b) => b.nuits === 7);
+        const offre = p.etat.etablissement.offres.find((o) => o.id === p.etat.etablissement.lieu);
+        return {
+          resultatSemaine: pleines.reduce((t, b) => t + b.resultat, 0) / Math.max(1, pleines.length),
+          cout: (offre?.achat ?? 0) + (offre?.travaux ?? 0) + B.MAISON2.inauguration,
+          total: p.etat.maison2.total,
+        };
+      }),
   };
 }

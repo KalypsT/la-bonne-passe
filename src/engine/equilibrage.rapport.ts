@@ -294,6 +294,62 @@ function progression(): string[] {
   return [...paliers, '', ...semaines, '', ...argent];
 }
 
+/**
+ * La fin du chapitre 1 (v1.0) : quand la deuxième maison ouvre-t-elle, selon les stratégies, et que rapporte-t-elle ?
+ * Le joueur achète le lieu le moins cher dès que la caisse le permet, puis l'inaugure.
+ */
+function deuxiemeMaison(): string[] {
+  const NUITS_CHAPITRE = 336;
+  const base = { nuits: NUITS_CHAPITRE, permis: true, etablissement: true, maison2: 'externe' as const };
+  const complet: Omit<OptionsSimulation, 'graine'> = {
+    ...base,
+    offre: 'classique',
+    rdvMax: 3,
+    relations: 'entretien',
+    buanderie: true,
+    loges: true,
+    confort: true,
+    former: true,
+    placer: true,
+    agrandir: 'batiment',
+    empruntAgrandir: { montant: 20000, duree: 24 },
+    recruterJusqua: 8,
+    gerante: true,
+  };
+  const strategies: [string, Omit<OptionsSimulation, 'graine'>][] = [
+    ['Classique 3', { ...base, offre: 'classique', rdvMax: 3 }],
+    ['Classique 4', { ...base, offre: 'classique', rdvMax: 4 }],
+    ['Feutrée 4', { ...base, offre: 'feutree', rdvMax: 4 }],
+    ['Classique 4, gérante de l’équipe', { ...base, offre: 'classique', rdvMax: 4, maison2: 'equipe' }],
+    ['Classique 4, consigne ambitieuse', { ...base, offre: 'classique', rdvMax: 4, consigneMaison: 'ambitieuse' }],
+    ['Classique 4, consigne prudente', { ...base, offre: 'classique', rdvMax: 4, consigneMaison: 'prudente' }],
+    ['Complet (bâtiment à crédit)', complet],
+    ['Complet, cartes au hasard', { ...complet, politique: 'hasard' }],
+  ];
+  const lignes = [
+    `| Stratégie (${NUITS_CHAPITRE} nuits) | Palier 5 | Inauguration (jour) | Résultat par semaine pleine | Coût du lieu | Remboursé en (semaines) | Rapporté à la fin | Faillites |`,
+    '| --- | --- | --- | --- | --- | --- | --- | --- |',
+  ];
+  for (const [nom, o] of strategies) {
+    const p = mesurerProgression(GRAINES, o);
+    const jours = (liste: number[]) => {
+      const j = liste.filter((x) => x > 0);
+      if (!j.length) return 'jamais';
+      const m = Math.round(j.reduce((a, b) => a + b, 0) / j.length);
+      return `${m} (${Math.min(...j)} à ${Math.max(...j)})${j.length < GRAINES.length ? `, ${j.length} sur ${GRAINES.length}` : ''}`;
+    };
+    const m2 = p.maison2;
+    const moy = (f: (x: (typeof m2)[number]) => number) => (m2.length ? m2.reduce((t, x) => t + f(x), 0) / m2.length : 0);
+    const semaine = moy((x) => x.resultatSemaine);
+    lignes.push(
+      `| ${nom} | ${jours(p.paliers.map((x) => x[4]!))} | ${jours(p.inaugurations)} | ${m2.length ? `${arrondi(semaine)} €` : '—'} | ${m2.length ? `${arrondi(moy((x) => x.cout))} €` : '—'} | ${
+        semaine > 0 ? Math.round(moy((x) => x.cout) / semaine) : '—'
+      } | ${m2.length ? `${arrondi(moy((x) => x.total))} €` : '—'} | ${p.faillites} |`,
+    );
+  }
+  return lignes;
+}
+
 it('rapport d’équilibrage', () => {
   const lignes = [
     '| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |',
@@ -330,5 +386,6 @@ it('rapport d’équilibrage', () => {
   console.log(`\nLes soirées du deuxième mois : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${deuxiemeMois().join('\n')}\n`);
   console.log(`\nÉquipes et assurance : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${equipes().join('\n')}\n`);
   console.log(`\nLa progression sur six mois : ${GRAINES.length} graines, 168 nuits (jours d'atteinte des paliers : moyenne, puis extrêmes)\n\n${progression().join('\n')}\n`);
+  console.log(`\nLa deuxième maison et la fin du chapitre 1 : ${GRAINES.length} graines, 336 nuits\n\n${deuxiemeMaison().join('\n')}\n`);
   console.log(`\nLe quartier : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard ; événements sur 10 parties)\n\n${quartier().join('\n')}\n`);
 }, 1_800_000);

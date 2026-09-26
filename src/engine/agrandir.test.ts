@@ -209,6 +209,9 @@ describe('la deuxième maison', () => {
     expect(travaux.etablissement.fin).toBe(travaux.jour + offre.jours);
     const pret = attendre(travaux, offre.jours * 24);
     expect(pret.etablissement.statut).toBe('pret');
+    // v1.0 : la maison attend sa gérante, et Josée le dit.
+    expect(pret.systemes.maison2).toBe(true);
+    expect(pret.maison2.annonces).toEqual([{ id: 'prete' }]);
   });
 
   it('pas d’achat sans la caisse ; l’achat ne réduit pas l’impôt', () => {

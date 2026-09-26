@@ -3,7 +3,7 @@
 
 import type { EtatJeu } from './etat';
 
-export type PosteRecette = 'rendezVous' | 'bar' | 'autres' | 'assurance' | 'placement';
+export type PosteRecette = 'rendezVous' | 'bar' | 'autres' | 'assurance' | 'placement' | 'maison2';
 export type PosteDepense =
   | 'partPersonnel'
   | 'salaires'
@@ -28,10 +28,11 @@ export type PosteDepense =
   | 'placement'
   | 'etablissement'
   | 'caisse'
+  | 'maison2'
   | 'agios'
   | 'avance';
 
-export const POSTES_RECETTES: PosteRecette[] = ['rendezVous', 'bar', 'autres', 'assurance', 'placement'];
+export const POSTES_RECETTES: PosteRecette[] = ['rendezVous', 'bar', 'autres', 'assurance', 'placement', 'maison2'];
 export const POSTES_DEPENSES: PosteDepense[] = [
   'partPersonnel',
   'salaires',
@@ -56,6 +57,7 @@ export const POSTES_DEPENSES: PosteDepense[] = [
   'placement',
   'etablissement',
   'caisse',
+  'maison2',
   'agios',
   'avance',
 ];

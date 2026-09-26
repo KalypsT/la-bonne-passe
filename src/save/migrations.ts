@@ -36,6 +36,7 @@ import { banqueDeDepart } from '../engine/banque';
 import { fiscDeDepart } from '../engine/fisc';
 import { annexesDeDepart } from '../engine/amenagement';
 import { hasardPlacementDeDepart, niveauxDeDepart } from '../engine/gamme';
+import { hasardMaison2DeDepart, maison2DeDepart } from '../engine/maison2';
 import { agrandissementDeDepart, etablissementDeDepart, hasardEtablissementDeDepart, permisDeDepart } from '../engine/agrandir';
 
 type Donnees = Record<string, unknown>;
@@ -609,6 +610,30 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
   // v33 → v34 : les départs récents (le quartier en parle), vides : on ne sait plus quand les anciens sont partis.
   // Josée présente les nouvelles règles d'entretien (chambres défraîchies, linge, départs).
   33: (d) => ({ ...d, version: 34, departsRecents: [], nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), 'entretien'] }),
+  // v34 → v35 : la deuxième maison ouvre (v1.0). Deux postes de comptes de plus, sa gérante, ses bilans et son hasard.
+  // Une maison déjà prête attend sa gérante : Josée le dit au chargement.
+  34: (d) => {
+    const avecPostes = (c: unknown) =>
+      estObjet(c) && estObjet(c.depenses) && estObjet(c.recettes)
+        ? { ...c, recettes: { maison2: 0, ...c.recettes }, depenses: { maison2: 0, ...c.depenses } }
+        : c;
+    const avecComptes = (x: unknown) => (estObjet(x) ? { ...x, comptes: avecPostes(x.comptes) } : x);
+    const systemes = estObjet(d.systemes) ? d.systemes : {};
+    const prete = estObjet(d.etablissement) && d.etablissement.statut === 'pret';
+    const maison2 = maison2DeDepart();
+    if (prete) maison2.annonces.push({ id: 'prete' });
+    return {
+      ...d,
+      version: 35,
+      journee: avecComptes(d.journee),
+      nuit: avecComptes(d.nuit),
+      semaine: avecComptes(d.semaine),
+      bilanSemaine: avecComptes(d.bilanSemaine),
+      systemes: { ...systemes, maison2: prete },
+      maison2,
+      hasardMaison2: hasardMaison2DeDepart(typeof d.hasard === 'number' ? d.hasard : 0),
+    };
+  },
 };
 
 
@@ -710,6 +735,10 @@ function estEtatValide(d: Donnees): boolean {
     (d.gerante === null || typeof d.gerante === 'string') &&
     estObjet(d.etablissement) &&
     typeof d.hasardEtablissement === 'number' &&
+    estObjet(d.maison2) &&
+    Array.isArray(d.maison2.bilans) &&
+    Array.isArray(d.maison2.annonces) &&
+    typeof d.hasardMaison2 === 'number' &&
     typeof d.gestionJosee === 'boolean' &&
     estObjet(d.systemes)
   );

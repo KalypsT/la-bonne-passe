@@ -335,6 +335,62 @@ export const GERANTE = {
  */
 export const ETABLISSEMENT = { offres: 3, variation: 0.1 };
 
+/**
+ * La deuxième maison ouverte (v1.0, partie 1) : elle tourne seule, tenue par sa gérante, et fait ses comptes
+ * chaque lundi. Pas de scène : un bilan résumé, et une consigne par semaine.
+ *
+ * Rendez-vous d'une semaine = chambres × `rdvParChambre` × nuits × occupation, avec
+ * occupation = (`occupationBase` + `occupationReputation` × réputation / 100) × affluence de la consigne, à ±`alea` près.
+ * Recette = rendez-vous × `prixMoyen` × rendement du lieu × (1 − `partPersonnel`) × facteur de la gérante,
+ * où le facteur vaut 0,8 + 0,05 × la moyenne de ses talents (0,85 à 1,05).
+ * Frais = `charges` (pour 7 nuits) + salaire de la gérante par nuit + incident éventuel + caisse si elle est peu loyale.
+ * Cible : l'achat, les travaux et l'inauguration remboursés en 6 à 9 mois. Mesuré (equilibrage-maison2.test.ts) : 29 à 33 semaines
+ * selon le lieu, la réputation partant de 30 (prix moyen 160 € : 34 à 44 semaines, trop lent).
+ */
+export const MAISON2 = {
+  /** Soirée d'inauguration : champagne, presse et voisins invités. Une seule fois. */
+  inauguration: 1500,
+  /** Réputation à l'ouverture, et bonus si la presse est en bons termes avec la maison. */
+  reputationOuverture: 30,
+  bonusPresse: 10,
+  rdvParChambre: 2,
+  occupationBase: 0.35,
+  occupationReputation: 0.55,
+  prixMoyen: 175,
+  partPersonnel: 0.5,
+  /** Charges d'une semaine pleine : énergie, licence, ménage. */
+  charges: 600,
+  /** La gérante venue d'ailleurs : salaire par jour et loyauté de départ. Une personne de l'équipe garde son salaire de gérante (GERANTE.salaire). */
+  salaireExterne: 150,
+  loyauteExterne: 45,
+  /** Loyauté en plus pour qui rêvait de gérer une maison. */
+  loyauteAmbition: 10,
+  /** Moral perdu par qui est rappelé·e au salon. */
+  moralRappel: -10,
+  /** La réputation de la maison suit chaque semaine une part de l'écart à sa cible : `partReputationOrigine` × celle de la maison d'origine, plus 5 par point de talent moyen au-dessus de 3, plus la consigne. */
+  suiviReputation: 0.3,
+  partReputationOrigine: 0.8,
+  talentReputation: 5,
+  /** Un incident coûte de la réputation et de l'argent (entre les deux bornes). */
+  incidentReputation: 4,
+  incidentCout: [300, 700] as const,
+  /** Sous la loyauté « honnête » (GERANTE.loyauteHonnete), la caisse perd cette part de la recette. */
+  caisse: 0.05,
+  /** Sous cette loyauté, la gérante s'en va au lundi. */
+  loyauteDemission: 20,
+  alea: 0.1,
+  /** Bilans hebdomadaires gardés dans la sauvegarde. */
+  bilansGardes: 8,
+  /** Ce que rapporte une chambre selon le lieu : les adresses chères rapportent plus, pour un remboursement comparable. */
+  rendement: { pension: 1, entrepot: 1, 'salon-the': 1.4, club: 1.1, hotel: 1.6 } as Record<string, number>,
+  consignes: {
+    prudente: { affluence: 0.85, incident: 0.05, reputation: 5, loyaute: 2 },
+    equilibree: { affluence: 1, incident: 0.15, reputation: 0, loyaute: 1 },
+    ambitieuse: { affluence: 1.2, incident: 0.35, reputation: -5, loyaute: -2 },
+  },
+};
+export type IdConsigne = keyof typeof MAISON2.consignes;
+
 // Le linge se compte en parures (draps, housse, serviettes) : une par rendez-vous.
 export const LINGE_INITIAL = 4;
 export const LINGE_PAR_RDV = 1;

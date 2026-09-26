@@ -134,7 +134,6 @@ export const TEXTES_AGRANDIR = {
     lancer: (travaux: string, jours: number) => `Lancer les travaux (${travaux}, ${jours} jours)`,
     signe: (nom: string, quartier: string) => `${nom}, ${quartier} : l’acte est signé.`,
     enTravaux: (jour: number) => `Travaux en cours jusqu’au jour ${jour}.`,
-    pret: 'Les travaux sont finis. La maison attend sa gérante et son ouverture, qui viendra avec le prochain chapitre.',
     tropCher: 'Pas assez en caisse.',
     clientele: {
       touriste: 'Les touristes s’y presseraient.',
@@ -160,7 +159,7 @@ export const TEXTES_AGRANDIR = {
     caisse: (montant: string) => `La caisse ne tombe pas juste : il manque ${montant}.`,
     achat: (nom: string, quartier: string, montant: string) => `${nom}, ${quartier} : acte signé (${montant}).`,
     travaux: (montant: string, jour: number) => `Travaux de la deuxième maison lancés (${montant}), jusqu’au jour ${jour}.`,
-    pret: 'La deuxième maison est prête. Il lui manque une gérante et une enseigne.',
+    pret: 'La deuxième maison est prête. Il lui manque quelqu’un pour la tenir.',
   },
   scene: {
     versVoisin: 'Chez le voisin ›',
