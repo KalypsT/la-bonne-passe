@@ -3,14 +3,14 @@ import type { Segment } from '../content/clientele';
 import { simuler, type ResumeNuit } from './simulation';
 
 // Soirées à thème, programmées le vendredi et le samedi : chacune soigne son monde.
-// Joueur actif, classique à 3 rendez-vous, 35 nuits, 10 graines.
+// Joueur actif, classique à 3 rendez-vous, 35 nuits, 10 graines. Sans intrigue : le voisin, que le burlesque réveille, est gardé à part.
 
 const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const parties = new Map<string, ResumeNuit[][]>();
 const vendrediSamedi = (theme: string | null) => (e: { jour: number }) => ([4, 5].includes((e.jour - 1) % 7) ? theme : null);
 
 function jouer(nom: string, theme: string | null, tendances: string[] = []) {
-  parties.set(nom, GRAINES.map((graine) => simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 35, tendances, theme: vendrediSamedi(theme) }).nuits));
+  parties.set(nom, GRAINES.map((graine) => simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 35, tendances, theme: vendrediSamedi(theme), intrigues: false }).nuits));
 }
 
 beforeAll(() => {

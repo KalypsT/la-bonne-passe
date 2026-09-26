@@ -348,3 +348,84 @@ Oui, et les gardes le vérifient :
 - les effets des thèmes restent modestes : à juger au téléphone.
 
 Partie jouée de bout en bout dans le navigateur (nouvelle partie, didacticiel passé, ×4 jusqu'au jour 15, sans erreur) : palier 1 à la première nuit, palier 2 vers la nuit 4, bar rouvert le jour 4, grossiste le jour 6. La semaine 2 finit à +10 € ; le bilan du lundi annonce la caisse sous zéro dans deux semaines (mensualité et remboursement du grossiste), et Josée prévient. Ce test a aussi fait apparaître une projection trop optimiste (les charges fixes absentes de la première semaine), corrigée.
+
+## Intrigues et renouvellement des soirées (v0.4, partie 1)
+
+### Le moteur d'intrigues
+
+Une intrigue est une chaîne de cartes sur plusieurs jours, décrite dans `src/content/intrigues.ts` : un déclencheur (vérifié chaque matin), des étapes à heure fixe (une heure de soirée attend l'ouverture), des délais en jours, et à chaque échéance une condition qui peut dénouer l'histoire sans carte (« le quai s'est calmé »). Une « suite » est une intrigue courte, démarrée par un choix quelques jours plus tard : c'est le mécanisme des conséquences différées, commun aux imprévus et aux intrigues. Valeurs dans `balance.ts` : `INTRIGUES_MAX_ACTIVES` = 2 (les suites ne comptent pas), `INTRIGUES_ECART_JOURS` = 2.
+
+Premières cartes :
+
+- **« Le voisin du dessus »** (palier 2) : plainte, sonomètre, lettre d'avocate, sept dénouements (apaisé, invité, insonorisé, fou rire, arrangement, bluff, condamnation). Coûts dans `VOISIN` : bouteille 40 €, insonorisation 900 €, arrangement 350 €, amende 800 €.
+- **« L'homme au costume »** : suite de l'imprévu du client généreux, quand la maison refuse. Il revient trois jours plus tard, pour la même personne.
+
+### Le tapage du quartier
+
+Nouvelle jauge cachée, de 0 à 100 (`TAPAGE`), affichée en trois mots dans l'onglet Maison (calme, agacé, excédé) à partir du palier 2 :
+
+- chaque client d'un groupe présent (quai ou chambre) ajoute 2 par heure, les autres 0,3 ;
+- porte laxiste × 1,4, stricte × 0,6 ; burlesque × 1,5, années folles × 1,3, masquée × 0,9, jazz × 0,6 ; une maison insonorisée × 0,5 ;
+- une dispute qui dégénère : +8 ;
+- chaque matin, × 0,6.
+
+Le voisin descend le matin qui suit une nuit à 45 ou plus (`plainte`, lu avant la baisse du matin : il se plaint de la nuit passée) ; il revient tant que le tapage reste à 25 ou plus (`recidive`).
+
+Réglage : avec le seuil lu après la baisse du matin, le voisin ne descendait que dans 2 parties sur 10 chez le joueur classique. Lu avant, au seuil 45 :
+
+| Joueur (28 nuits, 10 graines) | Tapage moyen à la fermeture, nuits 7 / 14 / 21 / 28 | Le voisin sonne |
+| --- | --- | --- |
+| Classique, 3 | 27 / 31 / 32 / 32 | 9 parties sur 10, vers la nuit 15 |
+| Adaptatif | 27 / 19 / 23 / 29 | 5 sur 10 (il met un portier les semaines chargées) |
+| Sélection laxiste | 46 / 58 / 62 / 61 | 10 sur 10, vers la nuit 9 |
+| Sélection stricte | 11 / 11 / 14 / 12 | jamais |
+| Match toutes les semaines, burlesque le week-end | 27 / 60 / 72 / 67 | 10 sur 10, vers la nuit 10 |
+
+Le voisin devient un coût de la porte laxiste et des thèmes bruyants : sur 30 graines, une semaine de match, le burlesque rapportait +2 de réputation au joueur prudent ; avec le voisin (bouteille puis arrangement), cet avantage disparaît (24,2 contre 24,8). Comme pour les tendances, les gardes qui mesurent une mécanique seule (`equilibrage-regles.test.ts`, `equilibrage-themes.test.ts`) jouent sans intrigue (option `intrigues: false` de la simulation). Le voisin a ses propres gardes (`equilibrage-renouvellement.test.ts`) : porte laxiste → plainte avant la nuit 14 dans au moins 8 parties sur 10, porte stricte → jamais, joueur classique → au moins 6 parties sur 10 dans le mois, au moins 3 dénouements atteints en tranchant au hasard.
+
+### La mesure du renouvellement
+
+La simulation compte désormais, nuit par nuit : les imprévus tirés, les cartes d'intrigue, les alertes apparues pendant la soirée (une par apparition) et les **décisions significatives** (imprévus + cartes d'intrigue en soirée + alertes). Elle peut trancher les cartes au hasard (`politique: 'hasard'`, graine à part) pour parcourir toutes les issues. `mesurerRenouvellement` résume une partie ; `npm run rapport` affiche un second tableau.
+
+Mesure de départ de la v0.4 (cartes tranchées au hasard) :
+
+| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 3,9 | 49 % | 2,1 | 1,6 | 5,4 | 15,8 | 87 % | 5,2 | 9 sur 10, nuit 15 |
+| Feutrée, 4 | 3,5 | 55 % | 1,7 | 1,6 | 5,6 | 15,6 | 86 % | 4,0 | 1 sur 10, nuit 23 |
+| Adaptatif (suit les tendances), 3 | 3,5 | 53 % | 1,8 | 1,6 | 5,5 | 15,1 | 87 % | 3,6 | 5 sur 10, nuit 18 |
+| Classique 3, sélection laxiste | 4,4 | 33 % | 2,7 | 1,6 | 5,7 | 15,0 | 87 % | 5,0 | 10 sur 10, nuit 9 |
+| Classique 3, sélection stricte | 3,4 | 54 % | 1,6 | 1,7 | 5,4 | 15,9 | 88 % | 2,9 | 0 sur 10 |
+
+Lecture : c'est le point de départ que la v0.4 doit corriger.
+
+- **3,5 à 4,4 décisions par soirée**, pour une cible de 6 à 10 ; une soirée sur deux en compte moins de 4.
+- **Les imprévus tournent en rond** : 5 à 6 cartes différentes sur le mois, la plus fréquente revient environ 15 fois, et 87 % des imprévus ont déjà été vus dans les 7 nuits précédentes.
+- **Environ 2 alertes par soirée** (linge surtout, puis chambres sales), pour une cible de 4 à 8.
+- La porte laxiste donne déjà plus de décisions (4,4) : plus de disputes, et le voisin.
+
+Tableau d'équilibrage après la partie 1 (le voisin compris) : peu de changements, l'argent bouge de quelques centaines d'euros selon les dénouements.
+
+| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 3 à 4 | 31 / 32 / 34 | 260 € | 883 € | 2 688 € | 26 % | 79 | 0,0 | 21 / 30 / 19 / 30 | 32 / 39 / 21 / 42 |
+| Classique, 4 | 3 à 4 | 33 / 36 / 40 | 441 € | 1 063 € | 5 608 € | 14 % | 75 | 0,3 | 23 / 28 / 17 / 32 | 40 / 45 / 27 / 46 |
+| Happy hour, 4 | 3 à 3 | 37 / 39 / 33 | 188 € | 817 € | 1 160 € | 26 % | 58 | 0,9 | 35 / 25 / 16 / 25 | 41 / 37 / 15 / 36 |
+| Feutrée, 4 | 3 à 4 | 33 / 41 / 49 | 260 € | 920 € | 2 852 € | 4 % | 80 | 0,0 | 19 / 43 / 13 / 25 | 44 / 60 / 35 / 53 |
+| Adaptatif (suit les tendances), 3 | 3 à 4 | 31 / 35 / 43 | 347 € | 968 € | 3 547 € | 21 % | 82 | 0,0 | 19 / 34 / 23 / 24 | 38 / 53 / 40 / 40 |
+| Classique 3, sans bar | 3 à 4 | 31 / 32 / 35 | 232 € | 709 € | 4 078 € | 27 % | 78 | 0,0 | 22 / 31 / 17 / 30 | 34 / 41 / 22 / 41 |
+| Classique 3, bar à 2, sans avance | 3 à 4 | 31 / 33 / 37 | 106 € | 867 € | 1 379 € | 25 % | 79 | 0,0 | 23 / 31 / 17 / 29 | 37 / 42 / 24 / 42 |
+| Classique 3, champagne | 3 à 4 | 31 / 32 / 28 | 365 € | 987 € | 5 409 € | 15 % | 82 | 0,1 | 18 / 29 / 22 / 31 | 12 / 31 / 31 / 40 |
+| Classique 3, tarif −20 % | 3 à 4 | 32 / 33 / 31 | 57 € | 614 € | -295 € | 35 % | 77 | 0,0 | 28 / 31 / 13 / 29 | 43 / 32 / 6 / 44 |
+| Classique 3, tarif +20 % | 3 à 4 | 29 / 30 / 29 | 391 € | 1 004 € | 6 297 € | 14 % | 80 | 0,0 | 17 / 28 / 25 / 29 | 10 / 38 / 36 / 30 |
+| Classique 3, formule courte | 3 à 4 | 32 / 37 / 43 | 116 € | 734 € | 1 122 € | 12 % | 82 | 0,0 | 20 / 26 / 30 / 24 | 39 / 41 / 46 / 48 |
+| Classique 3, soirée complète | 3 à 4 | 30 / 31 / 32 | 385 € | 992 € | 5 552 € | 29 % | 77 | 0,0 | 22 / 43 / 7 / 28 | 31 / 46 / 10 / 38 |
+| Classique 3, sélection laxiste | 3 à 4 | 29 / 28 / 26 | 207 € | 799 € | 2 601 € | 24 % | 77 | 0,0 | 30 / 26 / 13 / 32 | 33 / 22 / 6 / 45 |
+| Classique 3, sélection stricte | 3 à 4 | 31 / 37 / 43 | 66 € | 654 € | 1 022 € | 8 % | 81 | 0,0 | 17 / 43 / 22 / 18 | 37 / 55 / 41 / 34 |
+| Classique 3, habitués d’abord | 3 à 4 | 31 / 32 / 36 | 210 € | 828 € | 3 137 € | 26 % | 77 | 0,0 | 22 / 33 / 16 / 29 | 33 / 44 / 21 / 42 |
+| Classique 3, pressés d’abord | 3 à 4 | 31 / 33 / 34 | 258 € | 881 € | 2 999 € | 26 % | 76 | 0,0 | 21 / 31 / 19 / 29 | 33 / 38 / 23 / 41 |
+| Passif (classique, sans recruter ni rénover) | jamais | 15 / 9 / 6 | -154 € | 192 € | -1 614 € | 71 % | 42 | 0,0 | 56 / 44 / 0 / 0 | 7 / 4 / 0 / 0 |
+
+Partie jouée dans le navigateur (version compilée, 844 × 390 et 667 × 375) : une sauvegarde du jour 6, au palier 2, après une nuit bruyante. Le voisin sonne le lendemain à 11 h, la carte affiche l'issue du choix puis le dénouement ; le sonomètre tombe deux jours plus tard à 23 h, maison ouverte ; l'onglet Journal montre l'intrigue en cours, l'onglet Maison l'humeur du voisinage. Aucune erreur.
+
+`npm test` : 302 tests en 14 secondes environ.

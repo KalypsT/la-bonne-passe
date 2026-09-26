@@ -14,6 +14,7 @@ import { revelerTraits, type EvenementRecrutement } from './recrutement';
 import { ecart, instant } from './temps';
 import { depenser, encaisser, noterDepense } from './comptes';
 import { demandeTendance, disputeTendance } from './semaine';
+import { bruitDuSoir, changerTapage } from './quartier';
 import {
   affluenceTheme,
   attraitTheme,
@@ -425,6 +426,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
       etat.dispute = null;
       depenser(etat, B.DISPUTE_CASSE, 'incidents');
       changerReputationGlobale(etat, -B.DISPUTE_REPUTATION);
+      changerTapage(etat, B.TAPAGE.dispute * (etat.quartier.insonorise ? B.TAPAGE.insonorise : 1));
       evenements.push({ type: 'disputeDegeneree', montant: B.DISPUTE_CASSE });
     } else if (
       !etat.dispute &&
@@ -435,6 +437,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
       evenements.push({ type: 'dispute' });
     }
 
+    bruitDuSoir(etat, heures);
     declencherImprevu(etat, tirage, evenements);
 
     // Répartition des clients, sauf juste avant la fermeture

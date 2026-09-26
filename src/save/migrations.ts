@@ -24,6 +24,8 @@ import { SYSTEMES_PAR_PALIER } from '../engine/paliers';
 import { planifierVisitesScenarisees } from '../engine/recrutement';
 import { PARTIE_PAR_DEFAUT } from '../content/partie';
 import { barDeDepart, reglesDeDepart, VERSION_ETAT, type EtatJeu } from '../engine/etat';
+import { intriguesDeDepart } from '../engine/intrigues';
+import { quartierDeDepart } from '../engine/quartier';
 
 type Donnees = Record<string, unknown>;
 
@@ -201,6 +203,8 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     const nouveautes = [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(ouvertes ? ['themes'] : [])];
     return { ...d, version: 15, systemes, semaine, bilanSemaine, themeDuSoir: null, nouveautes };
   },
+  // v15 → v16 : les intrigues et le tapage du quartier. Le quartier part calme.
+  15: (d) => ({ ...d, version: 16, intrigues: intriguesDeDepart(), quartier: quartierDeDepart() }),
 };
 
 function estObjet(v: unknown): v is Donnees {
@@ -260,6 +264,11 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(d.semaine) &&
     typeof d.bilanAVoir === 'boolean' &&
     (d.themeDuSoir === null || typeof d.themeDuSoir === 'string') &&
+    estObjet(d.intrigues) &&
+    Array.isArray(d.intrigues.actives) &&
+    Array.isArray(d.intrigues.finies) &&
+    estObjet(d.quartier) &&
+    typeof d.quartier.tapage === 'number' &&
     estObjet(d.systemes)
   );
 }

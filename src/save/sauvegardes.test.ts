@@ -338,6 +338,16 @@ describe('migrations', () => {
     expect(avant?.nouveautes).toEqual([]);
   });
 
+  it('migre une sauvegarde v15 : aucune intrigue en cours, quartier calme', () => {
+    const { intrigues: _i, quartier: _q, ...etat } = creerEtatInitial();
+    const migre = migrer({ ...etat, version: 15, palier: 2 });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.intrigues).toEqual({ actives: [], finies: [], carte: null });
+    expect(migre?.quartier).toEqual({ tapage: 0, insonorise: false });
+    // Une sauvegarde v16 sans intrigues est abîmée.
+    expect(migrer({ ...etat, version: 16 })).toBeNull();
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

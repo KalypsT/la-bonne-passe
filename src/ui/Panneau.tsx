@@ -13,7 +13,9 @@ import {
   SEUIL_CHAMBRE_INUTILISABLE,
   SEUIL_EPUISEMENT,
   SEUIL_LINGE,
+  TAPAGE,
 } from '../content/balance';
+import { trouverIntrigue } from '../content/intrigues';
 import { PIECES_COMMUNES, trouverChambre, trouverPiece } from '../content/maison';
 import { JOSEE_RESERVE } from '../content/josee';
 import { PALIERS } from '../content/paliers';
@@ -31,6 +33,7 @@ import { Cadenas } from './Icones';
 import { Jauge } from './Jauge';
 import { JoseeLigne } from './Josee';
 import { texteEvenement } from './journal';
+import { remplir } from './modeles';
 import { etatDuBar, FicheBar } from './FicheBar';
 import { FicheRegles, FicheSegment, OngletClientele } from './OngletClientele';
 import { useInterface, type Fiche, type Onglet } from './store';
@@ -207,6 +210,24 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
           fiche={{ type: 'piece', id: p.id }}
         />
       ))}
+      <Voisinage partie={partie} />
+    </>
+  );
+}
+
+/** Humeur du voisinage, à partir du palier 2 (quand les groupes arrivent). */
+function Voisinage({ partie }: { partie: EtatJeu }) {
+  if (partie.palier < 2) return null;
+  const v = TEXTES.voisinage;
+  const tapage = partie.quartier.tapage;
+  const niveau = tapage >= TAPAGE.plainte ? 2 : tapage >= TAPAGE.recidive ? 1 : 0;
+  return (
+    <>
+      <h3>{v.titre}</h3>
+      <p className={niveau === 2 ? 'sous negatif' : 'sous'}>
+        {v.niveaux[niveau]}
+        {partie.quartier.insonorise ? ` · ${v.insonorise}` : ''}
+      </p>
     </>
   );
 }
@@ -654,19 +675,45 @@ function lignesJournal(partie: EtatJeu) {
   });
 }
 
+/** Les intrigues en cours, et où en est chacune. Les suites courtes restent une surprise. */
+function IntriguesEnCours({ partie }: { partie: EtatJeu }) {
+  const enCours = partie.intrigues.actives.flatMap((a) => {
+    const def = trouverIntrigue(a.id);
+    const etape = def?.etapes[a.etape];
+    if (!def || !etape || def.genre !== 'intrigue') return [];
+    const e = partie.personnel.find((x) => x.id === a.employeId);
+    return [{ id: a.id, titre: remplir(def.titre, partie, e), texte: remplir(etape.enCours, partie, e) }];
+  });
+  if (enCours.length === 0) return null;
+  return (
+    <>
+      <h3>{TEXTES.intrigue.enCours}</h3>
+      {enCours.map((i) => (
+        <p key={i.id} className="intrigue-en-cours">
+          <strong>{i.titre}</strong>
+          {i.texte}
+        </p>
+      ))}
+    </>
+  );
+}
+
 function OngletJournal({ partie }: { partie: EtatJeu }) {
   const journal = lignesJournal(partie);
   if (journal.length === 0) return <p className="sous">{t.journalVide}</p>;
   return (
-    <ol className="journal">
-      {journal.map((e, i) => (
-        <li key={i}>
-          <span>
-            {TEXTES.jours[jourDeLaSemaine(e.jour)]?.slice(0, 3)}. {formaterHeure(e.minuteDuJour)}
-          </span>
-          {e.texte}
-        </li>
-      ))}
-    </ol>
+    <>
+      <IntriguesEnCours partie={partie} />
+      <ol className="journal">
+        {journal.map((e, i) => (
+          <li key={i}>
+            <span>
+              {TEXTES.jours[jourDeLaSemaine(e.jour)]?.slice(0, 3)}. {formaterHeure(e.minuteDuJour)}
+            </span>
+            {e.texte}
+          </li>
+        ))}
+      </ol>
+    </>
   );
 }

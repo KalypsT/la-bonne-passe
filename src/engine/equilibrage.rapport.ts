@@ -4,7 +4,7 @@
 import { it } from 'vitest';
 import type { Offre, Segment } from '../content/clientele';
 import type { EtatJeu, Regles } from './etat';
-import { choixAdaptatif, partsDeClientele, simuler, type ResumeNuit } from './simulation';
+import { choixAdaptatif, mesurerRenouvellement, partsDeClientele, simuler, type Renouvellement, type ResumeNuit } from './simulation';
 
 const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const NUITS = 28;
@@ -45,6 +45,29 @@ const STRATEGIES: Strategie[] = [
 
 const arrondi = (n: number) => Math.round(n).toLocaleString('fr-FR');
 
+/** Les soirées se renouvellent-elles ? Une ligne par stratégie, cartes tranchées au hasard pour voir toutes les issues. */
+function renouvellement(): string[] {
+  const lignes = [
+    '| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+  ];
+  const noms = ['Classique, 3', 'Feutrée, 4', 'Adaptatif (suit les tendances), 3', 'Classique 3, sélection laxiste', 'Classique 3, sélection stricte'];
+  const virgule = (x: number, d = 1) => x.toFixed(d).replace('.', ',');
+  for (const s of STRATEGIES.filter((x) => noms.includes(x.nom))) {
+    const parties = GRAINES.map((graine) => simuler({ graine, nuits: NUITS, ...s, offre: s.offreSelon ?? s.offre, politique: 'hasard' }));
+    const mesures = parties.map((p) => mesurerRenouvellement(p.nuits));
+    const moy = (f: (m: Renouvellement) => number) => mesures.reduce((t, m) => t + f(m), 0) / mesures.length;
+    const voisin = parties.map((p) => p.nuits.find((n) => n.intrigues.includes('voisin:plainte'))?.numero).filter((x): x is number => x !== undefined);
+    lignes.push(
+      `| ${s.nom} | ${virgule(moy((m) => m.decisions))} | ${(moy((m) => m.soireesCalmes) * 100).toFixed(0)} % | ${virgule(moy((m) => m.alertes))} | ` +
+        `${virgule(moy((m) => m.imprevus))} | ${virgule(moy((m) => m.imprevusDifferents))} | ${virgule(moy((m) => m.repetitionMax))} | ` +
+        `${(moy((m) => m.dejaVus7) * 100).toFixed(0)} % | ${virgule(moy((m) => m.cartesIntrigue))} | ` +
+        `${voisin.length} sur ${parties.length}${voisin.length ? `, nuit ${(voisin.reduce((a, b) => a + b, 0) / voisin.length).toFixed(0)}` : ''} |`,
+    );
+  }
+  return lignes;
+}
+
 it('rapport d’équilibrage', () => {
   const lignes = [
     '| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |',
@@ -73,4 +96,5 @@ it('rapport d’équilibrage', () => {
     );
   }
   console.log(`\nRapport d'équilibrage : ${GRAINES.length} graines, ${NUITS} nuits\n\n${lignes.join('\n')}\n`);
+  console.log(`\nRenouvellement des soirées : ${GRAINES.length} graines, ${NUITS} nuits (cartes tranchées au hasard)\n\n${renouvellement().join('\n')}\n`);
 }, 120_000);

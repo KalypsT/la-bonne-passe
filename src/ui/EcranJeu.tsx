@@ -8,6 +8,7 @@ import { CarteAdieu } from './CarteAdieu';
 import { CarteEntretien } from './CarteEntretien';
 import { CarteEntretienIndividuel } from './CarteEntretienIndividuel';
 import { CarteImprevu } from './CarteImprevu';
+import { CarteIntrigue } from './CarteIntrigue';
 import { CarteEssai } from './CarteEssai';
 import { CarteAide } from './CarteAide';
 import { CartePalier } from './CartePalier';
@@ -87,6 +88,7 @@ export function EcranJeu() {
       {carte === 'entretien' && <CarteEntretien partie={partie} />}
       {carte === 'essai' && <CarteEssai partie={partie} />}
       {carte === 'imprevu' && <CarteImprevu partie={partie} />}
+      {carte === 'intrigue' && <CarteIntrigue partie={partie} />}
       {carte === 'entretienIndividuel' && <CarteEntretienIndividuel partie={partie} />}
       {carte === 'adieu' && <CarteAdieu partie={partie} />}
       {carte === 'aide' && <CarteAide />}

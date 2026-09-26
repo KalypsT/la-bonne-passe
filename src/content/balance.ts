@@ -493,3 +493,46 @@ export const THEMES: Record<string, ReglageTheme> = {
 };
 /** Un même thème répété dans la semaine lasse : ses effets sont multipliés par ce facteur à chaque reprise. */
 export const THEME_LASSITUDE = 0.5;
+
+// ——— v0.4 : intrigues et quartier ———
+
+/** Intrigues : chaînes de cartes sur plusieurs jours. Au plus tant d'intrigues à la fois (les suites courtes ne comptent pas). */
+export const INTRIGUES_MAX_ACTIVES = 2;
+/** Jours de calme, au moins, entre la fin d'une intrigue et le début d'une autre. */
+export const INTRIGUES_ECART_JOURS = 2;
+
+/**
+ * Tapage du quartier, de 0 à 100 : les groupes sur le quai et dans les chambres, la porte laxiste, les thèmes bruyants, les disputes.
+ * Il retombe chaque matin. Au-dessus du seuil de plainte, le voisin du dessus descend.
+ */
+export const TAPAGE = {
+  /** Par client d'un groupe présent (quai ou chambre), par heure d'ouverture. */
+  parGroupeParHeure: 2,
+  /** Par client d'un autre segment présent, par heure : un fond sonore. */
+  parClientParHeure: 0.3,
+  /** Selon la sélection à l'entrée. */
+  selection: { laxiste: 1.4, normale: 1, stricte: 0.6 } as Record<string, number>,
+  /** Selon le thème de la soirée. */
+  themes: { burlesque: 1.5, anneesFolles: 1.3, jazz: 0.6, masquee: 0.9 } as Record<string, number>,
+  /** Une dispute qui dégénère sur le quai. */
+  dispute: 8,
+  /** Chaque matin, le tapage est multiplié par ce facteur. */
+  decroissance: 0.6,
+  /** Une maison insonorisée ne laisse passer que cette part du bruit. */
+  insonorise: 0.5,
+  /** Le voisin du dessus se plaint une première fois. */
+  plainte: 45,
+  /** Le voisin revient si le tapage reste au-dessus de ce seuil. */
+  recidive: 25,
+};
+
+/** L'intrigue du voisin du dessus : ce que coûtent les issues. */
+export const VOISIN = {
+  bouteille: 40,
+  insonorisation: 900,
+  arrangement: 350,
+  amende: 800,
+};
+
+/** Suite de l'imprévu du client généreux : le pourboire, s'il revient et que tout se passe bien. */
+export const COSTUME_POURBOIRE = 120;

@@ -6,6 +6,12 @@ import type { ParSegment } from './clientele';
 import { creerEtatInitial, type EtatJeu, type Regles } from './etat';
 import type { BilanSemaine } from './semaine';
 import { appliquerOrdresSurPlace, tickSurPlace, type Ordre } from './tick';
+import { alertes } from './alertes';
+import { creerTirage } from './hasard';
+import { trouverImprevu } from '../content/imprevus';
+import { INTRIGUES } from '../content/intrigues';
+import { choixPossibles, etapeCourante, type IntrigueFinie } from './intrigues';
+import { estOuvert } from './temps';
 
 export interface ResumeNuit {
   numero: number;
@@ -26,7 +32,22 @@ export interface ResumeNuit {
   personnel: number;
   chambres: number;
   palier: number;
+  /** Tapage du quartier à la fermeture. */
+  tapage: number;
+  /** Imprévus tirés ce soir, dans l'ordre. */
+  imprevus: string[];
+  /** Cartes d'intrigue sorties depuis la nuit précédente (journée et soirée). */
+  intrigues: string[];
+  /** Cartes d'intrigue sorties pendant la soirée. */
+  intriguesSoiree: number;
+  /** Alertes apparues pendant la soirée (une par apparition), par type. */
+  alertes: Record<string, number>;
+  /** Décisions significatives de la soirée : imprévus, cartes d'intrigue et alertes apparues. */
+  decisions: number;
 }
+
+/** Comment le joueur simulé tranche les cartes : le premier choix possible, ou au hasard (graine à part). */
+export type Politique = 'prudente' | 'hasard';
 
 export interface OptionsSimulation {
   graine: number;
@@ -47,6 +68,10 @@ export interface OptionsSimulation {
   theme?: string | null | ((etat: EtatJeu) => string | null);
   /** Pour les mesures : ces tendances toutes les semaines, dès qu'elles sont ouvertes. */
   tendances?: string[];
+  /** Façon de trancher les imprévus et les intrigues (prudente par défaut). */
+  politique?: Politique;
+  /** Faux : aucune intrigue ne démarre (pour mesurer une mécanique seule, comme sans tendance). */
+  intrigues?: boolean;
 }
 
 const ORDRE_RENOVATION = ['orientale', 'velours', 'miroirs'];
@@ -59,14 +84,31 @@ export function simuler(options: OptionsSimulation): {
   bilans: BilanSemaine[];
   /** Point le plus bas de la trésorerie pendant la partie. */
   tresorerieMin: number;
+  /** Intrigues et suites terminées, avec leur dénouement. */
+  intrigues: IntrigueFinie[];
 } {
   const { graine, nuits, recruter = true, renover = true, rdvMax = 3, equipeBar = 1, avance = true } = options;
   const etat = creerEtatInitial({ graine });
+  if (options.intrigues === false) {
+    etat.intrigues.finies = INTRIGUES.filter((d) => d.genre === 'intrigue').map((d) => ({ id: d.id, fin: 'ecartee', jour: 0 }));
+  }
   const resumes: ResumeNuit[] = [];
   let departs = 0;
   const bilans: BilanSemaine[] = [];
   let tresorerieMin = etat.tresorerie;
   let avoirPrecedent = etat.tresorerie + etat.reserve;
+  // Compteurs de la nuit en cours, pour mesurer le renouvellement des soirées.
+  let imprevusNuit: string[] = [];
+  let intriguesNuit: string[] = [];
+  let intriguesSoiree = 0;
+  let alertesNuit: Record<string, number> = {};
+  let alertesAvant = new Set<string>();
+  const hasard = creerTirage((graine * 7919) | 0);
+  const trancher = (possibles: boolean[]): number => {
+    const indices = possibles.flatMap((ok, i) => (ok ? [i] : []));
+    if (indices.length === 0) return 0;
+    return options.politique === 'hasard' ? hasard.choisir(indices) : indices[0]!;
+  };
   // La simulation travaille sur sa propre copie de l'état, modifiée sur place : bien plus rapide.
   const jouer = (ordres: Ordre[]) => {
     appliquerOrdresSurPlace(etat, ordres);
@@ -81,7 +123,20 @@ export function simuler(options: OptionsSimulation): {
     }
     const r = { evenements: tickSurPlace(etat, ordres) };
     tresorerieMin = Math.min(tresorerieMin, etat.tresorerie);
+    const ouvert = estOuvert(etat);
+    const alertesMaintenant = new Set(ouvert ? alertes(etat).map((a) => `${a.type}|${'chambreId' in a ? a.chambreId : 'employeId' in a ? a.employeId : ''}`) : []);
+    for (const cle of alertesMaintenant) {
+      if (alertesAvant.has(cle)) continue;
+      const type = cle.split('|')[0]!;
+      alertesNuit[type] = (alertesNuit[type] ?? 0) + 1;
+    }
+    alertesAvant = alertesMaintenant;
     for (const e of r.evenements) {
+      if (e.type === 'imprevu') imprevusNuit.push(e.id);
+      if (e.type === 'intrigue') {
+        intriguesNuit.push(`${e.id}:${e.etape}`);
+        if (ouvert) intriguesSoiree += 1;
+      }
       if (e.type === 'depart') departs += 1;
       if (e.type === 'bilanSemaine' && etat.bilanSemaine) bilans.push(structuredClone(etat.bilanSemaine));
       if (e.type === 'bilan') {
@@ -99,8 +154,18 @@ export function simuler(options: OptionsSimulation): {
           personnel: etat.personnel.length,
           chambres: etat.chambres.filter((c) => c.ouverte).length,
           palier: etat.palier,
+          tapage: etat.quartier.tapage,
+          imprevus: imprevusNuit,
+          intrigues: intriguesNuit,
+          intriguesSoiree,
+          alertes: alertesNuit,
+          decisions: imprevusNuit.length + intriguesSoiree + Object.values(alertesNuit).reduce((a, b) => a + b, 0),
         });
         avoirPrecedent = etat.tresorerie + etat.reserve;
+        imprevusNuit = [];
+        intriguesNuit = [];
+        intriguesSoiree = 0;
+        alertesNuit = {};
       }
     }
 
@@ -118,7 +183,11 @@ export function simuler(options: OptionsSimulation): {
     }
 
     // Cartes en attente, tranchées comme le ferait un joueur prudent.
-    if (etat.imprevu) jouer([{ type: 'choixImprevu', choix: 0 }]);
+    if (etat.imprevu) {
+      const n = trouverImprevu(etat.imprevu.id)?.choix.length ?? 1;
+      jouer([{ type: 'choixImprevu', choix: trancher(Array.from({ length: n }, () => true)) }]);
+    }
+    if (etat.intrigues.carte && etapeCourante(etat, etat.intrigues.carte)) jouer([{ type: 'choixIntrigue', choix: trancher(choixPossibles(etat)) }]);
     if (etat.avance.statut === 'proposee') jouer([{ type: 'avanceFournisseur', accepter: avance }]);
     while (etat.annonces.length) jouer([{ type: 'annonceVue' }]);
     while (etat.adieux.length) jouer([{ type: 'adieuVu' }]);
@@ -164,7 +233,7 @@ export function simuler(options: OptionsSimulation): {
       jouer([{ type: 'validerBriefing', offre, commanderLinge: etat.linge < 40, commanderBar, repos, rdvMax, theme }]);
     }
   }
-  return { nuits: resumes, etat, departs, bilans, tresorerieMin };
+  return { nuits: resumes, etat, departs, bilans, tresorerieMin, intrigues: etat.intrigues.finies };
 }
 
 /** Part de chaque segment parmi les clients servis sur un ensemble de nuits, en %. */
@@ -202,4 +271,48 @@ export function choixAdaptatif(etat: EtatJeu): { offre: Offre; regles: Partial<R
   // Les habitués reviennent : on les choie.
   if (t.has('pluie') || t.has('paie')) return { offre: 'feutree', regles: { ...base, priorite: 'habitues' }, theme: null };
   return { offre: 'classique', regles: base, theme: theme('jazz') };
+}
+
+/** Mesures du renouvellement des soirées sur une partie (v0.4) : décisions, variété et répétitions des cartes. */
+export interface Renouvellement {
+  /** Décisions significatives par soirée, en moyenne. */
+  decisions: number;
+  /** Part des soirées avec moins de 4 décisions. */
+  soireesCalmes: number;
+  alertes: number;
+  imprevus: number;
+  /** Imprévus différents vus dans la partie. */
+  imprevusDifferents: number;
+  /** Apparitions de l'imprévu le plus fréquent. */
+  repetitionMax: number;
+  /** Part des imprévus déjà vus dans les 7 nuits précédentes. */
+  dejaVus7: number;
+  /** Cartes d'intrigue (journée et soirée). */
+  cartesIntrigue: number;
+}
+
+export function mesurerRenouvellement(nuits: ResumeNuit[]): Renouvellement {
+  const n = Math.max(1, nuits.length);
+  const somme = (f: (x: ResumeNuit) => number) => nuits.reduce((t, x) => t + f(x), 0);
+  const compte = new Map<string, number>();
+  let dejaVus = 0;
+  let total = 0;
+  nuits.forEach((nuit, i) => {
+    const recents = new Set(nuits.slice(Math.max(0, i - 7), i).flatMap((x) => x.imprevus));
+    for (const id of nuit.imprevus) {
+      total += 1;
+      if (recents.has(id)) dejaVus += 1;
+      compte.set(id, (compte.get(id) ?? 0) + 1);
+    }
+  });
+  return {
+    decisions: somme((x) => x.decisions) / n,
+    soireesCalmes: nuits.filter((x) => x.decisions < 4).length / n,
+    alertes: somme((x) => Object.values(x.alertes).reduce((a, b) => a + b, 0)) / n,
+    imprevus: total / n,
+    imprevusDifferents: compte.size,
+    repetitionMax: Math.max(0, ...compte.values()),
+    dejaVus7: total > 0 ? dejaVus / total : 0,
+    cartesIntrigue: somme((x) => x.intrigues.length),
+  };
 }
