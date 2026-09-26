@@ -561,7 +561,8 @@ export const ARC_MILA = {
 
 /** Arc de Jonas, « Les examens » : ce que coûtent les choix. */
 export const ARC_JONAS = {
-  nuits: 6,
+  /** Plus tard que Mila : les deux arcs ne prennent pas ensemble les deux places d'intrigue, et le mois reste rythmé. */
+  nuits: 14,
   inscription: 600,
   champagne: 60,
   reinscription: 300,
@@ -597,4 +598,23 @@ export const IMPREVU_ARGENT = {
   afficheArticle: 60,
   bridgeTable: 120,
   galaTenue: 80,
+};
+
+/**
+ * Alertes minutées de la soirée (v0.4) : une bulle, un délai, une ou deux actions, une conséquence si on l'ignore.
+ * `chance` : probabilité par heure d'ouverture quand la condition est remplie ; `delai` : minutes pour réagir.
+ */
+export const ALERTES = {
+  /** Client d'affaires sur le quai, à bout de patience : la bulle apparaît sous ce seuil (minutes). */
+  presse: { seuilPatience: 20, patienceAutres: 5, verre: 10, patienceVerre: 20, satisfactionManquee: 3 },
+  /** Groupe bruyant sur le quai, quand le quartier commence à s'agacer. */
+  bruit: { seuilTapage: 25, chance: 0.8, delai: 30, rentrer: 1.5, groupe: 0.3, verre: 10, tapageVerre: 1, tapageManque: 8 },
+  /** Client éméché au bar (bar qui sert) : ignoré, il déclenche une dispute. */
+  ivre: { chance: 0.7, delai: 25, cafeReussite: 0.7, taxi: 20, tapageManque: 5 },
+  /** Un client veut offrir une bouteille (bar qui sert) : une recette, si quelqu'un la sert à temps. */
+  bouteille: { chance: 0.35, delai: 20, prix: 40 },
+  /** Une personne fatiguée demande une pause. */
+  /** Un photographe rôde sur le quai (palier 2, réputation assez haute, un client d'affaires présent). */
+  photographe: { reputationMin: 30, chance: 0.5, delai: 25, billet: 20, satisfactionManquee: 3 },
+  pause: { fatigueMin: 50, chance: 0.9, delai: 30, minutes: 20, fatigue: 10, moral: 3, refus: 3, moralManque: 6, loyauteManque: 2 },
 };

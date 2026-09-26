@@ -32,4 +32,8 @@ export const POSITIONS = {
   /** Derrière le comptoir du bar. */
   bar: [{ x: 366, y: 290 }, { x: 392, y: 290 }],
   bulleDispute: { x: 231, y: 356 },
+  /** Alertes minutées : le quai (bruit), le bar (une bouteille à servir). */
+  bulleQuai: { x: 300, y: 350 },
+  bulleBouteille: { x: 360, y: 262 },
+  bullePhotographe: { x: 520, y: 356 },
 };

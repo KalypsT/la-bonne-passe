@@ -93,6 +93,21 @@ describe('les imprévus se renouvellent', () => {
   });
 });
 
+describe('des soirées actives', () => {
+  it('4 à 8 alertes et au moins 5 décisions par soirée, peu de soirées creuses', () => {
+    const lignes: string[] = [];
+    for (const nom of ['classique', 'laxiste', 'stricte']) {
+      const mesures = parties.get(nom)!.map((p) => mesurerRenouvellement(p.nuits.slice(7)));
+      const moy = (f: (m: Renouvellement) => number) => mesures.reduce((t, m) => t + f(m), 0) / mesures.length;
+      lignes.push(`${nom} ${moy((m) => m.alertes).toFixed(1)} ${moy((m) => m.decisions).toFixed(1)} ${moy((m) => m.soireesCalmes).toFixed(2)}`);
+      expect(moy((m) => m.alertes), nom).toBeGreaterThanOrEqual(3.5);
+      expect(moy((m) => m.alertes), nom).toBeLessThanOrEqual(8);
+      expect(moy((m) => m.decisions), nom).toBeGreaterThanOrEqual(5);
+      expect(moy((m) => m.soireesCalmes), nom).toBeLessThanOrEqual(0.3);
+    }
+  });
+});
+
 describe('la mesure du renouvellement', () => {
   it('chaque nuit compte ses décisions : imprévus, cartes d’intrigue en soirée et alertes apparues', () => {
     for (const p of parties.get('classique')!) {

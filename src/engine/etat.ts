@@ -23,6 +23,7 @@ import { clienteleDeDepart, type Clientele } from './clientele';
 import { semaineDeDepart, type BilanSemaine, type Semaine } from './semaine';
 import { intriguesDeDepart, type Intrigues } from './intrigues';
 import { quartierDeDepart, type Quartier } from './quartier';
+import type { AlerteMinutee } from './minuteries';
 
 /** Drapeaux d'ouverture des systèmes. L'interface masque ou verrouille ce qui est fermé. */
 export interface Systemes {
@@ -160,6 +161,8 @@ export interface Employe extends Identite {
   promesseRepos: number | null;
   /** Jour où la personne a été recadrée : plus concentrée ce soir-là. */
   recadre: number;
+  /** En pause jusqu'à cet instant (minutes absolues) : pas de rendez-vous (v0.4). */
+  pauseJusqua?: number;
 }
 
 export interface Candidat extends Identite {
@@ -187,6 +190,10 @@ export interface ClientEnFile {
   modele: string;
   /** Patience restante, en minutes. */
   patience: number;
+  /** Une alerte le concerne déjà (client pressé, client éméché) : pas deux fois. */
+  alerte?: boolean;
+  /** Passé devant les autres (alerte du client pressé). */
+  prioritaire?: boolean;
 }
 
 export interface RendezVous {
@@ -320,6 +327,10 @@ export interface EtatJeu {
   themeDuSoir: string | null;
   /** Nouveautés arrivées avec une mise à jour du jeu, pour un palier déjà atteint : Josée les présente. */
   nouveautes: string[];
+  /** Alertes minutées de la soirée en cours (v0.4). */
+  minuteries: AlerteMinutee[];
+  /** Générateur à part pour la naissance des alertes : elles ne décalent pas le reste du hasard de la soirée. */
+  hasardAlertes: number;
   /** Intrigues en cours et terminées, et la carte qui attend ta décision (v0.4). */
   intrigues: Intrigues;
   /** Le quartier : tapage, insonorisation (v0.4). */
@@ -331,7 +342,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 18;
+export const VERSION_ETAT = 19;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -488,6 +499,8 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     bilanAVoir: false,
     themeDuSoir: null,
     nouveautes: [],
+    minuteries: [],
+    hasardAlertes: ((options.graine ?? GRAINE_PAR_DEFAUT) * 7 + 13) | 0,
     intrigues: intriguesDeDepart(),
     quartier: quartierDeDepart(),
     didacticiel: options.didacticiel ? 0 : null,

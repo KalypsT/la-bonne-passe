@@ -406,6 +406,10 @@ export const TEXTES = {
     calmerDetail: 'Gratuit, mais ça peut mal tourner.',
     plusTard: 'Laisser faire pour l’instant',
   },
+  alerteCarte: {
+    restant: (minutes: number) => `Encore ${minutes} minutes de jeu avant qu’il soit trop tard.`,
+    plusTard: 'Plus tard',
+  },
   alertes: {
     chambreSale: (chambre: string) => `${chambre} : chambre sale`,
     linge: 'Plus de linge propre',

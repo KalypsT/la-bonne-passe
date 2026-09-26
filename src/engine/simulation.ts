@@ -11,7 +11,8 @@ import { creerTirage } from './hasard';
 import { trouverImprevu } from '../content/imprevus';
 import { INTRIGUES } from '../content/intrigues';
 import { choixPossibles, etapeCourante, type IntrigueFinie } from './intrigues';
-import { estOuvert } from './temps';
+import { estOuvert, instant } from './temps';
+import { TEXTES_ALERTES } from '../content/alertes';
 
 export interface ResumeNuit {
   numero: number;
@@ -72,7 +73,10 @@ export interface OptionsSimulation {
   politique?: Politique;
   /** Faux : aucune intrigue ne démarre (pour mesurer une mécanique seule, comme sans tendance). */
   intrigues?: boolean;
-  /** Faux : ni imprévu ni intrigue (pour mesurer une mécanique seule, sans le bruit des cartes). */
+  /**
+   * Faux : ni imprévu, ni intrigue, ni alerte minutée, et les disputes laissées à elles-mêmes, comme le joueur
+   * simulé de la v0.3 (pour mesurer une mécanique seule, sans le bruit des cartes).
+   */
   cartes?: boolean;
 }
 
@@ -128,6 +132,7 @@ export function simuler(options: OptionsSimulation): {
     // Sans cartes : l'imprévu suivant est repoussé indéfiniment.
     if (sansCartes) etat.prochainImprevu = Number.MAX_SAFE_INTEGER;
     const r = { evenements: tickSurPlace(etat, ordres) };
+    if (sansCartes) etat.minuteries = [];
     tresorerieMin = Math.min(tresorerieMin, etat.tresorerie);
     const ouvert = estOuvert(etat);
     const alertesMaintenant = new Set(ouvert ? alertes(etat).map((a) => `${a.type}|${'chambreId' in a ? a.chambreId : 'employeId' in a ? a.employeId : ''}`) : []);
@@ -194,6 +199,17 @@ export function simuler(options: OptionsSimulation): {
       jouer([{ type: 'choixImprevu', choix: trancher(Array.from({ length: n }, () => true)) }]);
     }
     if (etat.intrigues.carte && etapeCourante(etat, etat.intrigues.carte)) jouer([{ type: 'choixIntrigue', choix: trancher(choixPossibles(etat)) }]);
+    // Une dispute sur le quai : le joueur prudent offre un verre, l'autre tente de calmer.
+    if (etat.dispute && !sansCartes) jouer([{ type: 'regleDispute', choix: options.politique === 'hasard' && hasard.chance(0.5) ? 'calmer' : 'verre' }]);
+    // Alertes minutées : le joueur prudent répond aussitôt par la première action ; au hasard, il en laisse filer une sur quatre.
+    for (const a of [...etat.minuteries]) {
+      if (a.debut !== instant(etat)) continue;
+      const n = TEXTES_ALERTES[a.id].actions.length;
+      if (options.politique === 'hasard') {
+        if (hasard.chance(0.25)) continue;
+        jouer([{ type: 'traiterAlerte', cle: a.cle, action: hasard.choisir(Array.from({ length: n }, (_, i) => i)) }]);
+      } else jouer([{ type: 'traiterAlerte', cle: a.cle, action: 0 }]);
+    }
     if (etat.avance.statut === 'proposee') jouer([{ type: 'avanceFournisseur', accepter: avance }]);
     while (etat.annonces.length) jouer([{ type: 'annonceVue' }]);
     while (etat.adieux.length) jouer([{ type: 'adieuVu' }]);

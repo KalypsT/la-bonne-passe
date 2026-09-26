@@ -379,6 +379,15 @@ describe('migrations', () => {
     expect(migrer({ ...etat, version: 18 })).toBeNull();
   });
 
+  it('migre une sauvegarde v18 : aucune alerte minutée, un générateur à part pour elles', () => {
+    const { minuteries: _m, hasardAlertes: _h, ...etat } = creerEtatInitial();
+    const migre = migrer({ ...etat, version: 18, hasard: 5 });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.minuteries).toEqual([]);
+    expect(migre?.hasardAlertes).toBe(48);
+    expect(migrer({ ...etat, version: 19 })).toBeNull();
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

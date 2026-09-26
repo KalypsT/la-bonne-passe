@@ -590,3 +590,80 @@ Le prix à payer : 1,3 à 1,5 imprévu par soirée au lieu de 1,6, donc 3,2 à 3
 Partie jouée dans le navigateur (version compilée, 844 × 390) : quatre soirées depuis une sauvegarde du jour 9, 9 imprévus et 9 cartes différentes (averse, client généreux, chat, critique, live, querelle, tireuse, enterrement de vie de garçon, voleur), sans erreur. Les cartes les plus longues (soirée privée, critique, candidate remarquable) tiennent en 667 × 375 ; la candidate apparaît dans l'onglet Personnel.
 
 `npm test` : 337 tests en 12 secondes environ.
+
+## Alertes minutées (v0.4, partie 4)
+
+### Six nouvelles alertes
+
+Chacune est une bulle sur la maison, avec un anneau qui se vide. On la touche pour ouvrir sa carte (en pause), qui propose une ou deux actions ou « Plus tard ». Ignorée, elle a une conséquence. Textes dans `src/content/alertes.ts`, valeurs dans `ALERTES` (`balance.ts`).
+
+| Alerte | Quand | Actions | Si on l'ignore |
+| --- | --- | --- | --- |
+| Un client pressé | un client d'affaires sur le quai à 20 minutes de patience ou moins (une fois par client) | le faire passer devant (les autres attendent 5 minutes de plus) ; un verre (10 € ou une bouteille du bar, +20 minutes) | il part, et les affaires perdent 3 de satisfaction en plus |
+| Du bruit sur le quai | un groupe sur le quai et un tapage de 25 ou plus | faire entrer le groupe (tapage −1,5, groupes un peu vexés) ; un verre à l'intérieur (tapage −1) | tapage +8 |
+| Un client éméché | le bar sert, un groupe ou une touriste sur le quai | café et eau (réussit 7 fois sur 10, sinon dispute) ; un taxi (20 €, il rentre) | dispute sur le quai, tapage +5 |
+| Une bouteille à servir | le bar sert, un habitué ou un client d'affaires présent | la servir (+40 € au bar) | rien, sinon la recette perdue |
+| Un photographe sur le quai | palier 2, réputation 30 ou plus, un client d'affaires présent | le faire déguerpir (7 fois sur 10 ; sinon il revient) ; un billet (20 €) | les affaires perdent 3 de satisfaction |
+| {prenom} demande une pause | une personne en service, libre, fatiguée (50 à 80) | accorder 20 minutes (indisponible, fatigue −10, moral +3) ; pas maintenant (moral −3) | moral −6, loyauté −2 |
+
+Une alerte s'éteint sans conséquence quand elle perd son objet (le client pressé est reçu, le client éméché monte en chambre) et à la fermeture. Sauvegarde en version 19.
+
+### Deux choix de conception
+
+- **Un générateur à part** (`etat.hasardAlertes`) pour la naissance des alertes. Sans lui, chaque alerte tirée décalait tout le hasard de la soirée : les parties bifurquaient, et les gardes qui comparent deux stratégies à un ou deux points près basculaient au moindre réglage. Avec lui, les gardes de mécanique (`cartes: false`, désormais sans alertes minutées ni règlement des disputes, comme le joueur simulé de la v0.3) retrouvent exactement leurs résultats de la partie 3.
+- **Le joueur simulé réagit** : prudent, il prend la première action de chaque alerte dès qu'elle apparaît et offre un verre à chaque dispute (jusqu'ici, il ignorait les disputes). Au hasard, il laisse filer une alerte sur quatre et choisit l'action au hasard.
+
+### Réglages
+
+- **Bouteille** : 0,6 chance par heure à 60 € faisait gagner 4 500 € au mois (plus de 4 000 € de cible). Désormais 0,35 par heure, 40 €.
+- **Bruit** : faire entrer le groupe coûtait 1 de satisfaction aux groupes à chaque fois. Un soir de match au burlesque, la réputation perdait 7 points. Désormais 0,3 de satisfaction.
+- **Le voisin ne venait plus** : le joueur prudent calmait chaque bruit aussitôt (tapage −4 puis −2), et le voisin ne descendait plus que dans 2 parties sur 10. Faire entrer le groupe ne retire plus que 1,5 de tapage : l'alerte ménage le voisin sans l'effacer.
+- **L'arc de Jonas démarre plus tard** (après 14 nuits travaillées au lieu de 6, vers la nuit 16) : Mila et lui prenaient ensemble les deux places d'intrigue dès la nuit 10, et le voisin attendait la nuit 23. Les histoires s'étalent mieux sur le mois (Mila vers la nuit 10, Jonas vers la 16).
+
+### Des soirées actives
+
+| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 7,1 | 19 % | 5,6 | 1,4 | 14,8 | 4,0 | 0 % | 15,2 | 8 sur 10, nuit 16 |
+| Feutrée, 4 | 4,1 | 50 % | 2,6 | 1,3 | 14,5 | 3,9 | 0 % | 14,2 | 0 sur 10 |
+| Adaptatif (suit les tendances), 3 | 5,9 | 24 % | 4,3 | 1,5 | 18,0 | 4,0 | 0 % | 15,1 | 3 sur 10, nuit 14 |
+| Classique 3, sélection laxiste | 7,2 | 25 % | 5,6 | 1,4 | 15,6 | 4,0 | 0 % | 16,0 | 10 sur 10, nuit 9 |
+| Classique 3, sélection stricte | 5,0 | 32 % | 3,5 | 1,4 | 15,3 | 4,0 | 0 % | 14,7 | 0 sur 10 |
+
+| Par soirée | Partie 1 | Partie 3 | Partie 4 |
+| --- | --- | --- | --- |
+| Alertes (classique) | 2,1 | 2,2 | 5,6 |
+| Décisions (classique) | 3,9 | 3,7 | 7,1 |
+| Soirées sous 4 décisions (classique) | 49 % | 50 % | 19 % |
+
+Nouvelle garde (`equilibrage-renouvellement.test.ts`, semaines 2 à 4) : pour le joueur classique, avec la porte laxiste ou stricte, 3,5 à 8 alertes et au moins 5 décisions par soirée, moins de 30 % de soirées sous 4 décisions. La soirée feutrée reste la plus calme (4,1 décisions) : peu de clients, peu d'alertes. C'est son caractère.
+
+### À surveiller
+
+- **La réputation monte encore** : 54 à la nuit 28 en classique (49 en partie 3, 35 en v0.3), 60 en soirée feutrée. Les disputes réglées ne coûtent plus leurs 2 points de réputation, et les alertes récompensent un joueur attentif. **C'est le premier chantier de la partie 6** : le palier 4 (réputation 50) arriverait vers la nuit 20 pour un bon joueur. Le happy hour atteint parfois le palier 2 dès la nuit 2 (hors garde, qui joue sans cartes).
+- **L'argent** : 3 440 € après la mensualité en classique, dans la cible (0 à 4 000 €) mais en haut de la fourchette.
+- **Le joueur passif** finit à −850 € et atteint le palier 2 dans quelques parties (nuit 6 à 25) : ses alertes aussi sont réglées aussitôt.
+
+| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 3 à 4 | 35 / 45 / 54 | 161 € | 773 € | 3 443 € | 17 % | 88 | 0,0 | 28 / 24 / 13 / 35 | 76 / 55 / 23 / 59 |
+| Classique, 4 | 3 à 4 | 35 / 47 / 58 | 580 € | 1 168 € | 8 506 € | 9 % | 81 | 0,0 | 28 / 28 / 14 / 30 | 81 / 61 / 24 / 63 |
+| Happy hour, 4 | 2 à 3 | 42 / 53 / 58 | 265 € | 881 € | 3 829 € | 15 % | 80 | 0,3 | 34 / 28 / 14 / 24 | 85 / 62 / 21 / 61 |
+| Feutrée, 4 | 3 à 4 | 36 / 48 / 60 | 183 € | 786 € | 3 595 € | 1 % | 85 | 0,0 | 21 / 35 / 13 / 31 | 76 / 66 / 29 / 65 |
+| Adaptatif (suit les tendances), 3 | 3 à 4 | 35 / 47 / 57 | 151 € | 718 € | 2 644 € | 13 % | 90 | 0,0 | 27 / 29 / 12 / 31 | 72 / 63 / 30 / 58 |
+| Classique 3, sans bar | 3 à 4 | 35 / 45 / 51 | 199 € | 642 € | 3 970 € | 20 % | 88 | 0,0 | 28 / 24 / 14 / 35 | 72 / 53 / 21 / 56 |
+| Classique 3, bar à 2, sans avance | 3 à 4 | 35 / 45 / 54 | 54 € | 775 € | 1 644 € | 18 % | 89 | 0,0 | 28 / 25 / 13 / 35 | 76 / 55 / 25 / 59 |
+| Classique 3, champagne | 3 à 4 | 35 / 43 / 47 | 270 € | 884 € | 5 448 € | 15 % | 90 | 0,0 | 24 / 25 / 15 / 36 | 59 / 47 / 26 / 57 |
+| Classique 3, tarif −20 % | 3 à 4 | 37 / 49 / 58 | 39 € | 619 € | 535 € | 32 % | 88 | 0,0 | 33 / 26 / 14 / 28 | 85 / 61 / 19 / 63 |
+| Classique 3, tarif +20 % | 3 à 4 | 32 / 40 / 44 | 225 € | 832 € | 5 550 € | 4 % | 91 | 0,0 | 20 / 30 / 17 / 32 | 50 / 50 / 29 / 45 |
+| Classique 3, formule courte | 3 à 4 | 35 / 47 / 56 | 15 € | 542 € | 735 € | 9 % | 89 | 0,0 | 26 / 30 / 16 / 28 | 75 / 53 / 34 / 61 |
+| Classique 3, soirée complète | 3 à 4 | 34 / 43 / 51 | 531 € | 1 112 € | 6 667 € | 31 % | 87 | 0,0 | 27 / 35 / 7 / 31 | 72 / 59 / 16 / 52 |
+| Classique 3, sélection laxiste | 3 à 4 | 35 / 46 / 53 | 144 € | 798 € | 2 745 € | 20 % | 87 | 0,0 | 29 / 24 / 13 / 35 | 77 / 53 / 19 / 61 |
+| Classique 3, sélection stricte | 3 à 4 | 35 / 46 / 54 | 83 € | 660 € | 1 716 € | 14 % | 89 | 0,0 | 26 / 36 / 18 / 20 | 70 / 64 / 29 / 48 |
+| Classique 3, habitués d’abord | 3 à 4 | 35 / 45 / 54 | 133 € | 767 € | 2 159 € | 21 % | 89 | 0,0 | 25 / 29 / 10 / 36 | 73 / 59 / 23 / 58 |
+| Classique 3, pressés d’abord | 3 à 4 | 35 / 46 / 54 | 166 € | 780 € | 3 548 € | 20 % | 89 | 0,0 | 27 / 25 / 13 / 35 | 73 / 55 / 27 / 58 |
+| Passif (classique, sans recruter ni rénover) | 6 à 25 | 24 / 25 / 27 | -109 € | 193 € | -848 € | 61 % | 49 | 0,0 | 45 / 46 / 4 / 5 | 36 / 27 / 18 / 25 |
+
+Partie jouée dans le navigateur (version compilée) : six alertes en même temps sur une sauvegarde préparée, en 844 × 390 et 667 × 375 (bulles bien placées, carte lisible, pause accordée), puis trois soirées en ×4 depuis le jour 9 avec des alertes touchées au hasard, sans erreur.
+
+`npm test` : 352 tests en 14 secondes environ.

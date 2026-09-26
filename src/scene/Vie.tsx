@@ -4,6 +4,8 @@ import { trouverChambre } from '../content/maison';
 import { SILHOUETTE_MENAGE, SILHOUETTES_BAR } from '../content/personnel';
 import { TEXTES } from '../content/textes';
 import type { Alerte } from '../engine/alertes';
+import { TEXTES_ALERTES, type IdAlerte } from '../content/alertes';
+import { remplir } from '../ui/modeles';
 import type { EtatJeu } from '../engine/etat';
 import { estOuvert, momentDeLaJournee } from '../engine/temps';
 import { Figurine } from './Figurine';
@@ -151,6 +153,8 @@ export function cleAlerte(a: Alerte): string {
       return `epuisement-${a.employeId}`;
     case 'menace':
       return `menace-${a.employeId}`;
+    case 'minuterie':
+      return `minuterie-${a.cle}`;
     default:
       return a.type;
   }
@@ -179,6 +183,32 @@ function positionBulle(a: Alerte, partie: EtatJeu) {
       const place = POSITIONS.salon[i];
       return place ? { x: place.x + 14, y: place.y - 56 } : null;
     }
+    case 'minuterie':
+      return positionMinuterie(a, partie);
+  }
+}
+
+/** Où flotte une alerte minutée : au-dessus du client, de la personne, du bar ou du quai. */
+function positionMinuterie(a: Extract<Alerte, { type: 'minuterie' }>, partie: EtatJeu) {
+  switch (a.id) {
+    case 'presse':
+    case 'ivre': {
+      // Au-dessus du client ; le client éméché plus haut, pour que deux bulles voisines ne se touchent pas.
+      const i = partie.file.findIndex((c) => String(c.id) === a.cible);
+      const place = POSITIONS.file[i];
+      return place ? { x: place.x, y: place.y - (a.id === 'ivre' ? 76 : 50) } : POSITIONS.bulleQuai;
+    }
+    case 'bruit':
+      return POSITIONS.bulleQuai;
+    case 'photographe':
+      return POSITIONS.bullePhotographe;
+    case 'bouteille':
+      return POSITIONS.bulleBouteille;
+    case 'pause': {
+      const i = partie.personnel.findIndex((e) => e.id === a.cible);
+      const place = POSITIONS.salon[i];
+      return place ? { x: place.x - 14, y: place.y - 56 } : null;
+    }
   }
 }
 
@@ -200,6 +230,10 @@ function libelle(a: Alerte, partie: EtatJeu): string {
       return t.menace(partie.personnel.find((x) => x.id === a.employeId)?.prenom ?? a.employeId);
     case 'barVide':
       return t.barVide(a.stock);
+    case 'minuterie': {
+      const e = partie.personnel.find((x) => x.id === a.cible);
+      return remplir(TEXTES_ALERTES[a.id].titre, partie, e);
+    }
   }
 }
 
@@ -207,9 +241,10 @@ function libelle(a: Alerte, partie: EtatJeu): string {
 function Bulle({ alerte, libelle, x, y, onClick }: { alerte: Alerte; libelle: string; x: number; y: number; onClick: () => void }) {
   const R = 11;
   const circonference = 2 * Math.PI * R;
-  const part = alerte.type === 'dispute' ? alerte.restant / alerte.total : 1;
+  const part = alerte.type === 'dispute' || alerte.type === 'minuterie' ? alerte.restant / Math.max(1, alerte.total) : 1;
   const urgente =
     alerte.type === 'dispute' ||
+    (alerte.type === 'minuterie' && alerte.id !== 'bouteille') ||
     alerte.type === 'menace' ||
     (alerte.type === 'chambreSale' && alerte.inutilisable) ||
     (alerte.type === 'barVide' && alerte.stock <= 0);
@@ -223,7 +258,7 @@ function Bulle({ alerte, libelle, x, y, onClick }: { alerte: Alerte; libelle: st
       data-tuto={alerte.type === 'chambreSale' ? 'bulle-sale' : undefined}
     >
       <circle r="24" fill="transparent" />
-      <g className="bulle-flotte">
+      <g className={alerte.type === 'minuterie' && alerte.id === 'bouteille' ? 'bulle-flotte opportunite' : 'bulle-flotte'}>
         <circle r={R} fill="rgba(255,255,255,.18)" />
         <circle
           r={R}
@@ -234,13 +269,69 @@ function Bulle({ alerte, libelle, x, y, onClick }: { alerte: Alerte; libelle: st
           transform="rotate(-90)"
         />
         <circle r={R - 2} fill="#FFF4EE" />
-        <Pictogramme type={alerte.type} />
+        {alerte.type === 'minuterie' ? <PictoMinuterie id={alerte.id} /> : <Pictogramme type={alerte.type} />}
       </g>
     </g>
   );
 }
 
-function Pictogramme({ type }: { type: Alerte['type'] }) {
+function PictoMinuterie({ id }: { id: IdAlerte }) {
+  switch (id) {
+    case 'presse':
+      // Montre
+      return (
+        <g>
+          <circle r="5" fill="none" stroke="#1C2A44" strokeWidth="1.3" />
+          <path d="M0 -3V0L2.5 1.5" stroke="#8C2640" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+        </g>
+      );
+    case 'bruit':
+      // Note de musique
+      return (
+        <g fill="#5C1530">
+          <path d="M-1 4V-5L4 -6V2" stroke="#5C1530" strokeWidth="1.2" fill="none" />
+          <circle cx="-2.5" cy="4" r="2" />
+          <circle cx="2.5" cy="2.5" r="2" />
+        </g>
+      );
+    case 'ivre':
+      // Verre penché
+      return (
+        <g transform="rotate(20)">
+          <path d="M-4 -5H4L1 1V5M-2.5 5H2.5M-1 1V5" stroke="#8C2640" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+          <path d="M-3 -3H3L0.5 0H-0.5Z" fill="#D4A64A" />
+        </g>
+      );
+    case 'bouteille':
+      // Bouteille de champagne
+      return (
+        <g>
+          <path d="M-1.5 -6H1.5V-3L3 -1V6H-3V-1L-1.5 -3Z" fill="#1F7A5C" />
+          <rect x="-1.5" y="-6.5" width="3" height="1.5" fill="#D4A64A" />
+        </g>
+      );
+    case 'photographe':
+      // Appareil photo
+      return (
+        <g>
+          <rect x="-5.5" y="-3" width="11" height="8" rx="1.5" fill="#1C1C22" />
+          <rect x="-2" y="-5" width="4" height="2" fill="#1C1C22" />
+          <circle cy="1" r="2.4" fill="#5FA3A8" />
+        </g>
+      );
+    case 'pause':
+      // Tasse
+      return (
+        <g>
+          <path d="M-4.5 -2H3V3Q3 5 1 5H-2.5Q-4.5 5 -4.5 3Z" fill="#8A5A2B" />
+          <path d="M3 -0.5Q5.5 -0.5 5.5 1.5Q5.5 3 3 3" stroke="#8A5A2B" strokeWidth="1.1" fill="none" />
+          <path d="M-2 -4Q-1 -5 -2 -6M0.5 -4Q1.5 -5 0.5 -6" stroke="#B6B6C2" strokeWidth=".8" fill="none" />
+        </g>
+      );
+  }
+}
+
+function Pictogramme({ type }: { type: Exclude<Alerte['type'], 'minuterie'> }) {
   switch (type) {
     case 'chambreSale':
       // Balai

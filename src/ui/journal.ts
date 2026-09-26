@@ -2,6 +2,7 @@ import type { IdFormule, IdPriorite, IdSelection } from '../content/balance';
 import { CLIENTS } from '../content/clientele';
 import { trouverImprevu } from '../content/imprevus';
 import { trouverIntrigue } from '../content/intrigues';
+import { TEXTES_ALERTES } from '../content/alertes';
 import { trouverTendance } from '../content/tendances';
 import { trouverTheme } from '../content/themes';
 import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS } from '../content/regles';
@@ -215,6 +216,21 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
     case 'intrigueFinie': {
       const texte = trouverIntrigue(evenement.id)?.fins[evenement.fin]?.texte;
       const p = evenement.prenom ? { prenom: evenement.prenom, genre: genreDe(partie, evenement.prenom) } : undefined;
+      return texte ? remplir(texte, partie, p) : null;
+    }
+    case 'alerteMinutee':
+    case 'alerteTraitee':
+    case 'alerteManquee': {
+      const def = TEXTES_ALERTES[evenement.id];
+      const p = evenement.prenom ? { prenom: evenement.prenom, genre: genreDe(partie, evenement.prenom) } : undefined;
+      const texte =
+        evenement.type === 'alerteMinutee'
+          ? def.journal
+          : evenement.type === 'alerteManquee'
+            ? def.manquee
+            : evenement.reussite
+              ? (def.traitee[evenement.action] ?? '')
+              : (def.rate ?? '');
       return texte ? remplir(texte, partie, p) : null;
     }
     case 'candidatVedette':

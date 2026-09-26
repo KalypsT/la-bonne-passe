@@ -83,6 +83,9 @@ export function quotaAtteint(etat: EtatJeu, e: Employe): boolean {
  */
 export function prochainClient(etat: EtatJeu, segmentDe: (c: ClientEnFile) => Segment): ClientEnFile | undefined {
   const file = etat.file;
+  // Un client qu'on a fait passer devant (alerte du client pressé) est reçu le premier.
+  const prioritaire = file.find((c) => c.prioritaire);
+  if (prioritaire) return prioritaire;
   switch (prioriteActive(etat)) {
     case 'habitues':
       return file.find((c) => segmentDe(c) === 'habitue') ?? file[0];
