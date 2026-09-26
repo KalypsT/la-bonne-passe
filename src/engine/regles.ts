@@ -10,7 +10,8 @@ export type OrdreRegle =
   | { type: 'regle'; regle: 'tarif'; valeur: number }
   | { type: 'regle'; regle: 'formule'; valeur: B.IdFormule }
   | { type: 'regle'; regle: 'selection'; valeur: B.IdSelection }
-  | { type: 'regle'; regle: 'priorite'; valeur: B.IdPriorite };
+  | { type: 'regle'; regle: 'priorite'; valeur: B.IdPriorite }
+  | { type: 'regle'; regle: 'visibilite'; valeur: B.IdVisibilite };
 
 export type EvenementRegle =
   | { type: 'regle'; regle: keyof Regles; valeur: number | string }
@@ -34,6 +35,11 @@ export function selectionActive(etat: EtatJeu): B.ReglageSelection {
   return B.SELECTIONS[etat.systemes.porte ? etat.regles.selection : 'normale'];
 }
 
+/** La visibilité en vigueur (bouche-à-oreille tant qu'elle n'est pas ouverte). */
+export function visibiliteActive(etat: EtatJeu): B.ReglageVisibilite {
+  return B.VISIBILITES[etat.systemes.visibilite ? etat.regles.visibilite : 'bouche'];
+}
+
 export function prioriteActive(etat: EtatJeu): B.IdPriorite {
   return etat.systemes.porte ? etat.regles.priorite : 'arrivee';
 }
@@ -53,7 +59,8 @@ export function qualiteDesRegles(etat: EtatJeu, segment: Segment, formule: B.IdF
   return (
     (B.FORMULES[formule].qualite[segment] ?? 0) +
     (selectionActive(etat).qualite[segment] ?? 0) +
-    (B.PRIORITE_QUALITE[prioriteActive(etat)][segment] ?? 0)
+    (B.PRIORITE_QUALITE[prioriteActive(etat)][segment] ?? 0) +
+    (visibiliteActive(etat).qualite[segment] ?? 0)
   );
 }
 
@@ -116,6 +123,10 @@ export function appliquerRegle(etat: EtatJeu, ordre: OrdreRegle, evenements: { p
     case 'priorite':
       if (!etat.systemes.porte || !PRIORITES.includes(ordre.valeur) || r.priorite === ordre.valeur) return;
       r.priorite = ordre.valeur;
+      break;
+    case 'visibilite':
+      if (!etat.systemes.visibilite || !(ordre.valeur in B.VISIBILITES) || r.visibilite === ordre.valeur) return;
+      r.visibilite = ordre.valeur;
       break;
   }
   evenements.push({ type: 'regle', regle: ordre.regle, valeur: ordre.valeur });

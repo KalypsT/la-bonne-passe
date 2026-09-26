@@ -104,6 +104,8 @@ export interface OptionsSimulation {
   accueil?: number;
   securite?: number;
   assurance?: number;
+  /** Visibilité choisie dès qu'elle s'ouvre (v0.5). */
+  visibilite?: B.IdVisibilite;
 }
 
 const ORDRE_RENOVATION = ['orientale', 'velours', 'miroirs'];
@@ -315,6 +317,9 @@ export function simuler(options: OptionsSimulation): {
       }
       if (etat.systemes.assurance && options.assurance !== undefined && etat.assurance !== options.assurance) {
         jouer([{ type: 'assurance', niveau: options.assurance }]);
+      }
+      if (etat.systemes.visibilite && options.visibilite && etat.regles.visibilite !== options.visibilite) {
+        jouer([{ type: 'regle', regle: 'visibilite', valeur: options.visibilite }]);
       }
       if (options.rivale === 'treve' && etat.systemes.rivale && etat.rivale.agressivite >= 40 && reponsePossible(etat, 'treve') && etat.tresorerie > 1500) {
         jouer([{ type: 'reponseRivale', reponse: 'treve' }]);

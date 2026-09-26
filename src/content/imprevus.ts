@@ -2,11 +2,12 @@
 // Les textes acceptent {prenom}, {prenom2} (une seconde personne), {joueur} et {maison},
 // et des accords : {e} (« e » si la personne est une femme), {Il} (« Elle » ou « Il »), {e2} pour la seconde.
 
-import type { IdFormule, IdSelection } from './balance';
+import type { IdFormule, IdSelection, IdVisibilite } from './balance';
 import type { Offre, Segment } from './clientele';
 import * as B from './balance';
 import type { EffetCarte } from './effets';
 import type { IdActeur } from './relations';
+import { IMPREVUS_QUARTIER } from './imprevusQuartier';
 
 const A = B.IMPREVU_ARGENT;
 const euros = (n: number) => `${n.toLocaleString('fr-FR')}\u00a0€`;
@@ -60,6 +61,14 @@ export interface ConditionImprevu {
   placeLibre?: boolean;
   /** Relations avec le quartier (v0.5) : au plus, pour chaque acteur cité (une mairie amie n'envoie pas d'inspecteur). */
   relationMax?: Partial<Record<IdActeur, number>>;
+  /** Relations avec le quartier (v0.5) : au moins. */
+  relationMin?: Partial<Record<IdActeur, number>>;
+  /** Ce système est ouvert (v0.5 : relations, rivale…). */
+  systeme?: 'relations' | 'rivale' | 'visibilite' | 'securite';
+  /** Tapage du quartier, au moins. */
+  tapageMin?: number;
+  /** La visibilité en vigueur est l'une de celles-ci. */
+  visibilite?: IdVisibilite[];
 }
 
 /** Ce qui rend un imprévu plus probable, sans l'exiger : une tendance, un thème, une règle. */
@@ -67,6 +76,8 @@ export interface BonusImprevu {
   tendance?: string[];
   theme?: string[];
   selection?: IdSelection[];
+  /** L'offre du soir (v0.5 : les soirées feutrées attirent certaines cartes). */
+  offre?: Offre[];
 }
 
 export interface DefinitionImprevu {
@@ -705,6 +716,8 @@ export const IMPREVUS: DefinitionImprevu[] = [
       },
     ],
   },
+  // v0.5 : les imprévus du quartier.
+  ...IMPREVUS_QUARTIER,
 ];
 
 export function trouverImprevu(id: string): DefinitionImprevu | undefined {

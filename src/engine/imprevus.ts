@@ -61,7 +61,12 @@ export function circonstances(etat: EtatJeu, c: ConditionImprevu): boolean {
     (c.segmentPresent === undefined || segmentPresent(etat, c.segmentPresent)) &&
     (!c.placeLibre || (etat.systemes.recrutement && etat.personnel.length < B.PERSONNEL_MAX)) &&
     (!etat.systemes.relations ||
-      Object.entries(c.relationMax ?? {}).every(([a, v]) => etat.relations.jauges[a as IdActeur] <= (v ?? 0)))
+      Object.entries(c.relationMax ?? {}).every(([a, v]) => etat.relations.jauges[a as IdActeur] <= (v ?? 0))) &&
+    (c.relationMin === undefined ||
+      (etat.systemes.relations && Object.entries(c.relationMin).every(([a, v]) => etat.relations.jauges[a as IdActeur] >= (v ?? 0)))) &&
+    (c.systeme === undefined || etat.systemes[c.systeme]) &&
+    (c.tapageMin === undefined || etat.quartier.tapage >= c.tapageMin) &&
+    (c.visibilite === undefined || (etat.systemes.visibilite && c.visibilite.includes(etat.regles.visibilite)))
   );
 }
 
@@ -73,7 +78,8 @@ export function favorise(etat: EtatJeu, def: DefinitionImprevu): boolean {
   return (
     (b.tendance?.some((t) => tendances.includes(t)) ?? false) ||
     (etat.themeDuSoir !== null && (b.theme?.includes(etat.themeDuSoir) ?? false)) ||
-    (etat.systemes.porte && (b.selection?.includes(etat.regles.selection) ?? false))
+    (etat.systemes.porte && (b.selection?.includes(etat.regles.selection) ?? false)) ||
+    (b.offre?.includes(etat.offre) ?? false)
   );
 }
 

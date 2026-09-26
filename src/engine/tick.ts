@@ -338,7 +338,11 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     // Le lundi, la semaine écoulée se referme en bilan avant les charges de la nouvelle.
     if (jourDeLaSemaine(etat.jour) === 0) {
       cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
-      // Le premier lundi après le palier 3 : l'assurance s'ouvre, présentée au bilan du lundi.
+      // Le deuxième lundi après le palier 3 : la visibilité ; le premier : l'assurance. Présentées au bilan du lundi.
+      if (etat.systemes.assurance && !etat.systemes.visibilite) {
+        etat.systemes.visibilite = true;
+        if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'visibilite'];
+      }
       if (etat.palier >= 3 && !etat.systemes.assurance) {
         etat.systemes.assurance = true;
         if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'assurance'];

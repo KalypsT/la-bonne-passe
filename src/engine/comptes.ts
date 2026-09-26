@@ -13,6 +13,7 @@ export type PosteDepense =
   | 'menage'
   | 'personnel'
   | 'portier'
+  | 'visibilite'
   | 'themes'
   | 'relations'
   | 'assurance'
@@ -30,6 +31,7 @@ export const POSTES_DEPENSES: PosteDepense[] = [
   'menage',
   'personnel',
   'portier',
+  'visibilite',
   'themes',
   'relations',
   'assurance',

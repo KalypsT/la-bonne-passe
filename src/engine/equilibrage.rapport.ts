@@ -54,7 +54,7 @@ function renouvellement(): { lignes: string[]; types: string[] } {
   ];
   const noms = ['Classique, 3', 'Feutrée, 4', 'Adaptatif (suit les tendances), 3', 'Classique 3, sélection laxiste', 'Classique 3, sélection stricte'];
   const virgule = (x: number, d = 1) => x.toFixed(d).replace('.', ',');
-  const TYPES = ['presse', 'bruit', 'ivre', 'bouteille', 'photographe', 'pause', 'sabotage', 'dispute', 'chambreSale', 'linge', 'barVide', 'epuisement'];
+  const TYPES = ['presse', 'bruit', 'ivre', 'bouteille', 'photographe', 'pause', 'sabotage', 'journaliste', 'fenetre', 'dispute', 'chambreSale', 'linge', 'barVide', 'epuisement'];
   const types = [
     `| Stratégie | ${TYPES.join(' | ')} |`,
     `| --- | ${TYPES.map(() => '---').join(' | ')} |`,
@@ -177,6 +177,36 @@ function equipes(): string[] {
   return lignes;
 }
 
+/** Les soirées du deuxième mois (v0.5) : imprévus, alertes et décisions des nuits 36 à 56, selon l'offre et la visibilité. */
+function deuxiemeMois(): string[] {
+  const lignes = [
+    '| Stratégie (nuits 36 à 56) | Imprévus par soirée | Alertes par soirée | Décisions par soirée | Soirées sous 4 décisions | Imprévus différents (mois 2) | Presse / voisins, nuit 56 | Avoir, nuit 56 |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- |',
+  ];
+  const variantes: { nom: string; options: Partial<OptionsSimulation> }[] = [
+    { nom: 'Classique, 3', options: {} },
+    { nom: 'Feutrée, 4', options: { offre: 'feutree', rdvMax: 4 } },
+    { nom: 'Classique 3, sélection stricte', options: { regles: { selection: 'stricte' } } },
+    { nom: 'Classique 3, sélection laxiste', options: { regles: { selection: 'laxiste' } } },
+    { nom: 'Classique 3, site discret', options: { visibilite: 'site' } },
+    { nom: 'Classique 3, concierges d’hôtel', options: { visibilite: 'concierges' } },
+    { nom: 'Classique 3, influenceurs', options: { visibilite: 'influenceurs' } },
+  ];
+  const virgule = (x: number, d = 1) => x.toFixed(d).replace('.', ',');
+  for (const v of variantes) {
+    const parties = GRAINES.map((graine) => simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 56, politique: 'hasard', ...v.options }));
+    const moy = (f: (p: (typeof parties)[number]) => number) => parties.reduce((t, p) => t + f(p), 0) / parties.length;
+    const mesures = parties.map((p) => mesurerRenouvellement(p.nuits.slice(35)));
+    const m = (f: (x: Renouvellement) => number) => mesures.reduce((t, x) => t + f(x), 0) / mesures.length;
+    lignes.push(
+      `| ${v.nom} | ${virgule(m((x) => x.imprevus), 2)} | ${virgule(m((x) => x.alertes))} | ${virgule(m((x) => x.decisions))} | ${(m((x) => x.soireesCalmes) * 100).toFixed(0)} % | ` +
+        `${virgule(moy((p) => mesurerRenouvellement(p.nuits.slice(28)).imprevusDifferents))} | ` +
+        `${moy((p) => p.nuits[55]?.relations.presse ?? 0).toFixed(0)} / ${moy((p) => p.nuits[55]?.relations.voisins ?? 0).toFixed(0)} | ${arrondi(moy((p) => p.etat.tresorerie + p.etat.reserve))} € |`,
+    );
+  }
+  return lignes;
+}
+
 it('rapport d’équilibrage', () => {
   const lignes = [
     '| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |',
@@ -209,6 +239,7 @@ it('rapport d’équilibrage', () => {
   console.log(`\nRenouvellement des soirées : ${GRAINES.length} graines, ${NUITS} nuits (cartes tranchées au hasard)\n\n${r.lignes.join('\n')}\n`);
   console.log(`\nAlertes par soirée, selon leur type (mêmes parties)\n\n${r.types.join('\n')}\n`);
   console.log(`\nLa rivale : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${rivale().join('\n')}\n`);
+  console.log(`\nLes soirées du deuxième mois : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${deuxiemeMois().join('\n')}\n`);
   console.log(`\nÉquipes et assurance : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${equipes().join('\n')}\n`);
   console.log(`\nLe quartier : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard ; événements sur 10 parties)\n\n${quartier().join('\n')}\n`);
 }, 600_000);

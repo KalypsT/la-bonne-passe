@@ -12,6 +12,7 @@ import { changerReputationGlobale, changerSatisfaction } from './clientele';
 import { depenser, encaisser } from './comptes';
 import { changerLoyaute, changerMoral } from './personnel';
 import { changerTapage } from './quartier';
+import { visibiliteActive } from './regles';
 import { equipeDe, partReglee, type EvenementEquipe } from './equipes';
 import { changerRelations, relationsOuvertes, type EvenementRelation } from './relations';
 import { ecart, instant } from './temps';
@@ -91,8 +92,12 @@ function reglerSeule(etat: EtatJeu, a: AlerteMinutee): void {
       // La sécurité raccompagne le client éméché jusqu'à un taxi.
       etat.file = etat.file.filter((c) => c.id !== Number(a.cible));
       break;
+    case 'fenetre':
+      changerTapage(etat, -B.ALERTES_QUARTIER.fenetre.baisser);
+      break;
     case 'photographe':
     case 'sabotage':
+    case 'journaliste':
       break;
   }
 }
@@ -125,6 +130,15 @@ function manquer(etat: EtatJeu, a: AlerteMinutee, evenements: Sortie): void {
       changerSatisfaction(etat, 'affaires', -A.photographe.satisfactionManquee);
       if (relationsOuvertes(etat)) changerRelations(etat, B.RELATIONS.photographeManque, evenements);
       break;
+    case 'journaliste':
+      if (relationsOuvertes(etat)) changerRelations(etat, { presse: B.ALERTES_QUARTIER.journaliste.presseManque }, evenements);
+      changerSatisfaction(etat, 'affaires', -2);
+      break;
+    case 'fenetre': {
+      const F = B.ALERTES_QUARTIER.fenetre;
+      if (relationsOuvertes(etat)) changerRelations(etat, { voisins: F.voisinsManque, police: F.policeManque }, evenements);
+      break;
+    }
     case 'sabotage':
       changerReputationGlobale(etat, -A.sabotage.reputation);
       changerRelations(etat, { presse: A.sabotage.presse, police: A.sabotage.police }, evenements);
@@ -212,8 +226,25 @@ function naissances(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
   }
 
   const affaires = etat.file.some((c) => segmentDe(c.modele) === 'affaires') || etat.rendezVous.some((r) => segmentDe(r.modele) === 'affaires');
-  if (!active('photographe') && affaires && etat.reputation >= A.photographe.reputationMin && tirage.chance(A.photographe.chance * heures)) {
+  if (!active('photographe') && affaires && etat.reputation >= A.photographe.reputationMin && tirage.chance(A.photographe.chance * visibiliteActive(etat).photographe * heures)) {
     ajouter(etat, 'photographe', null, A.photographe.delai, evenements, tirage);
+  }
+
+  // Le quartier (palier 3) : une journaliste, attirée par les maisons chic ; un voisin à sa fenêtre, les soirs de bruit.
+  if (relationsOuvertes(etat)) {
+    const Q = B.ALERTES_QUARTIER;
+    const chic = etat.offre === 'feutree' || (etat.systemes.porte && etat.regles.selection === 'stricte');
+    if (!active('journaliste') && tirage.chance(Q.journaliste.chance * (chic ? Q.journaliste.chic : 1) * heures)) {
+      ajouter(etat, 'journaliste', null, Q.journaliste.delai, evenements, tirage);
+    }
+    if (
+      !active('fenetre') &&
+      etat.quartier.tapage >= Q.fenetre.seuilTapage &&
+      etat.relations.jauges.voisins <= Q.fenetre.voisinsMax &&
+      tirage.chance(Q.fenetre.chance * heures)
+    ) {
+      ajouter(etat, 'fenetre', null, Q.fenetre.delai, evenements, tirage);
+    }
   }
 
   // Le faux client du Chat Noir, décidé le lundi par la rivale.
@@ -302,6 +333,27 @@ export function traiterAlerte(etat: EtatJeu, cle: string, action: number, tirage
         }
       } else if (action === 1) {
         depenser(etat, A.photographe.billet, 'incidents');
+      } else return;
+      break;
+    }
+    case 'journaliste': {
+      const Q = B.ALERTES_QUARTIER.journaliste;
+      if (action === 0) {
+        changerRelations(etat, { presse: Q.presse }, evenements);
+        changerSatisfaction(etat, 'affaires', Q.affairesCharme);
+      } else if (action === 1) {
+        payerVerre(etat, Q.verre);
+        changerRelations(etat, { presse: Q.presseVerre }, evenements);
+      } else return;
+      break;
+    }
+    case 'fenetre': {
+      const F = B.ALERTES_QUARTIER.fenetre;
+      if (action === 0) {
+        changerTapage(etat, -F.baisser);
+        changerSatisfaction(etat, 'groupe', -F.groupe);
+      } else if (action === 1) {
+        changerRelations(etat, { voisins: F.excuses }, evenements);
       } else return;
       break;
     }

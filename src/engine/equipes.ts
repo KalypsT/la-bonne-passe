@@ -30,6 +30,8 @@ const DOMAINES: Partial<Record<IdAlerte, EquipeQuartier>> = {
   ivre: 'securite',
   photographe: 'securite',
   sabotage: 'securite',
+  journaliste: 'accueil',
+  fenetre: 'accueil',
 };
 
 export function equipeDe(id: IdAlerte): EquipeQuartier | undefined {

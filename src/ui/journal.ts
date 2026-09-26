@@ -1,4 +1,4 @@
-import type { IdFormule, IdPriorite, IdSelection } from '../content/balance';
+import type { IdFormule, IdPriorite, IdSelection, IdVisibilite } from '../content/balance';
 import { CLIENTS } from '../content/clientele';
 import { trouverImprevu } from '../content/imprevus';
 import { trouverIntrigue } from '../content/intrigues';
@@ -6,7 +6,7 @@ import { TEXTES_ALERTES } from '../content/alertes';
 import { trouverDefi } from '../content/defis';
 import { trouverTendance } from '../content/tendances';
 import { trouverTheme } from '../content/themes';
-import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS } from '../content/regles';
+import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS, TEXTES_VISIBILITES } from '../content/regles';
 import { JOSEE_RESERVE } from '../content/josee';
 import { trouverChambre } from '../content/maison';
 import { PALIERS } from '../content/paliers';
@@ -46,6 +46,8 @@ function texteRegle(regle: keyof Regles, valeur: number | string): string | null
       return t.selection(TEXTES_SELECTIONS[valeur as IdSelection]?.nom ?? '');
     case 'priorite':
       return t.priorite(TEXTES_PRIORITES[valeur as IdPriorite]?.nom ?? '');
+    case 'visibilite':
+      return t.visibilite(TEXTES_VISIBILITES[valeur as IdVisibilite]?.nom ?? '');
   }
 }
 
@@ -105,6 +107,8 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return t.remboursementAvance(formaterEuros(evenement.montant));
     case 'refuse':
       return t.refuse(evenement.client, CLIENTS.find((c) => c.nom === evenement.client)?.genre === 'f');
+    case 'visibilite':
+      return t.visibiliteCout(formaterEuros(evenement.montant));
     case 'portier':
       return t.portier(formaterEuros(evenement.montant));
     case 'regle':

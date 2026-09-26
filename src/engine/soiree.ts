@@ -79,6 +79,7 @@ import {
   qualiteDesRegles,
   quotaAtteint,
   selectionActive,
+  visibiliteActive,
   type EvenementRegle,
 } from './regles';
 
@@ -91,6 +92,7 @@ export type EvenementSoiree =
   | { type: 'salaires'; montant: number }
   | { type: 'charges'; montant: number }
   | { type: 'portier'; montant: number }
+  | { type: 'visibilite'; montant: number }
   | { type: 'dispute' }
   | { type: 'disputeDegeneree'; montant: number }
   | { type: 'miseEnReserve'; montant: number }
@@ -167,6 +169,12 @@ export function ouvrirNuit(etat: EtatJeu, evenements: Sortie): void {
   if (portier > 0) {
     depenser(etat, portier, 'portier');
     evenements.push({ type: 'portier', montant: portier });
+  }
+  // La visibilité se paie à chaque soirée ouverte.
+  const visibilite = visibiliteActive(etat).cout;
+  if (visibilite > 0) {
+    depenser(etat, visibilite, 'visibilite');
+    evenements.push({ type: 'visibilite', montant: visibilite });
   }
 }
 
@@ -276,6 +284,7 @@ export function poidsSegment(etat: EtatJeu, segment: Segment): number {
     attraitSegment(etat, segment) *
     (selectionActive(etat).attire[segment] ?? 1) *
     (B.FORMULES[formuleActive(etat)].attire[segment] ?? 1) *
+    (visibiliteActive(etat).attire[segment] ?? 1) *
     attraitTheme(etat, segment);
   if (segment === 'groupe' && fetardeEnService(etat)) p *= B.FETARDE_ATTIRE_GROUPES;
   if (segment === 'habitue' && etat.personnel.some((e) => e.enServiceCeSoir && !e.repos && aTrait(e, 'Tête d’affiche'))) {
@@ -459,6 +468,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
       B.FORMULES[formuleActive(etat)].affluence *
       affluenceTheme(etat) *
       affluenceRelations(etat) *
+      visibiliteActive(etat).affluence *
       facteurDemande(etat);
     if (premierClientGaranti || tirage.chance(parHeure * heures)) arrivee(etat, tirage, evenements);
 

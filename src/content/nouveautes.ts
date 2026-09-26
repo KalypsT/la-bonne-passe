@@ -63,6 +63,11 @@ export const NOUVEAUTES: Nouveaute[] = [
     palier: 3,
     texte: 'L’assurance, dans l’onglet Finances : la casse, et même les amendes, remboursées contre une prime chaque lundi.',
   },
+  {
+    id: 'visibilite',
+    palier: 3,
+    texte: 'La visibilité, dans les règles de la maison : site discret, concierges d’hôtel ou influenceurs. Plus de monde, pas toujours celui qu’on voudrait.',
+  },
 ];
 
 export function trouverNouveaute(id: string): Nouveaute | undefined {

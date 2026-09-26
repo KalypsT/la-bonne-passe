@@ -29,7 +29,7 @@ import { intriguesDeDepart } from '../engine/intrigues';
 import { quartierDeDepart } from '../engine/quartier';
 import { relationsDeDepart } from '../engine/relations';
 import { rivaleDeDepart } from '../engine/rivale';
-import { RELATIONS, TAPAGE } from '../content/balance';
+import { JOUR_PREMIERE_MENSUALITE, RELATIONS, TAPAGE } from '../content/balance';
 import { moisDeDepart, prochainObjectif, statsDeDepart } from '../engine/bilans';
 
 type Donnees = Record<string, unknown>;
@@ -346,6 +346,25 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       nouveautes,
     };
   },
+  // v23 → v24 : la visibilité (bouche-à-oreille, site, concierges, influenceurs), au deuxième lundi après le palier 3.
+  23: (d) => {
+    const systemes = estObjet(d.systemes) ? d.systemes : {};
+    const jour = typeof d.jour === 'number' ? d.jour : 1;
+    // Le deuxième lundi après la première mensualité (jour 28) est le jour 36.
+    const ouverte = systemes.assurance === true && jour >= JOUR_PREMIERE_MENSUALITE + 8;
+    const avecPoste = (c: unknown) => (estObjet(c) && estObjet(c.depenses) ? { ...c, depenses: { ...c.depenses, visibilite: 0 } } : c);
+    const semaine = estObjet(d.semaine) ? { ...d.semaine, comptes: avecPoste(d.semaine.comptes) } : d.semaine;
+    const bilanSemaine = estObjet(d.bilanSemaine) ? { ...d.bilanSemaine, comptes: avecPoste(d.bilanSemaine.comptes) } : d.bilanSemaine;
+    return {
+      ...d,
+      version: 24,
+      systemes: { ...systemes, visibilite: ouverte },
+      regles: { ...(estObjet(d.regles) ? d.regles : {}), visibilite: 'bouche' },
+      semaine,
+      bilanSemaine,
+      nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(ouverte ? ['visibilite'] : [])],
+    };
+  },
 };
 
 
@@ -412,6 +431,7 @@ function estEtatValide(d: Donnees): boolean {
     Array.isArray(d.nouveautes) &&
     estObjet(d.regles) &&
     typeof d.regles.tarif === 'number' &&
+    typeof d.regles.visibilite === 'string' &&
     estObjet(d.bar) &&
     estObjet(d.avance) &&
     estObjet(d.equipes) &&

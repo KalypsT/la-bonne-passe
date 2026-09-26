@@ -283,7 +283,7 @@ describe('migrations', () => {
     const rendezVous = [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'poete', duree: 60, restant: 20 }];
     const migre = migrer({ ...etat, version: 11, palier: 2, systemes, personnel, rendezVous, nouveautes: ['clientele'] });
     expect(migre?.version).toBe(VERSION_ETAT);
-    expect(migre?.regles).toEqual({ tarif: 1, formule: 'standard', selection: 'normale', priorite: 'arrivee' });
+    expect(migre?.regles).toEqual({ tarif: 1, formule: 'standard', selection: 'normale', priorite: 'arrivee', visibilite: 'bouche' });
     expect(migre?.systemes).toMatchObject({ tarifs: true, porte: true });
     expect(migre?.personnel[0]?.chargeCeSoir).toBe(2);
     expect(migre?.rendezVous[0]?.formule).toBe('standard');
@@ -484,6 +484,24 @@ describe('migrations', () => {
     expect(juste?.systemes.assurance).toBe(false);
     expect(juste?.nouveautes).toEqual(['equipes']);
     expect(migrer({ ...etat, version: 23, systemes })).toBeNull();
+  });
+
+  it('migre une sauvegarde v23 : la visibilité, ouverte au deuxième lundi après le palier 3', () => {
+    const base = creerEtatInitial();
+    const { visibilite: _v, ...regles } = base.regles;
+    const { visibilite: _s, ...systemes } = base.systemes;
+    const depenses = { ...base.semaine.comptes.depenses } as Record<string, number>;
+    delete depenses.visibilite;
+    const v23 = { ...base, version: 23, regles, semaine: { ...base.semaine, comptes: { ...base.semaine.comptes, depenses } } };
+    const tot = migrer({ ...v23, systemes: { ...systemes, assurance: true }, jour: 30 });
+    expect(tot?.version).toBe(VERSION_ETAT);
+    expect(tot?.regles.visibilite).toBe('bouche');
+    expect(tot?.systemes.visibilite).toBe(false);
+    expect(tot?.semaine.comptes.depenses.visibilite).toBe(0);
+    const tard = migrer({ ...v23, systemes: { ...systemes, assurance: true }, jour: 40, nouveautes: [] });
+    expect(tard?.systemes.visibilite).toBe(true);
+    expect(tard?.nouveautes).toEqual(['visibilite']);
+    expect(migrer({ ...base, version: 24, regles })).toBeNull();
   });
 
   it('refuse une version future ou des données sans version', () => {

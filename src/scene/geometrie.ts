@@ -40,4 +40,6 @@ export const POSITIONS = {
   bulleBouteille: { x: 360, y: 262 },
   bullePhotographe: { x: 520, y: 356 },
   bulleSabotage: { x: 170, y: 352 },
+  bulleJournaliste: { x: 470, y: 356 },
+  bulleFenetre: { x: 44, y: 140 },
 };
