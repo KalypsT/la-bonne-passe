@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TRESORERIE_INITIALE } from '../content/balance';
+import { RELATIONS, TAPAGE, TRESORERIE_INITIALE } from '../content/balance';
 import { trouverNouveaute } from '../content/nouveautes';
 import { creerEtatInitial, VERSION_ETAT } from '../engine/etat';
 import { tick } from '../engine/tick';
@@ -407,6 +407,35 @@ describe('migrations', () => {
     expect(apres?.mois).toMatchObject({ numero: 2, objectif: 'satisfaction' });
     expect(apres?.nouveautes).toEqual(['objectifs']);
     expect(migrer({ ...etat, version: 20, systemes, semaine })).toBeNull();
+  });
+
+  it('migre une sauvegarde v20 : relations du quartier, souvenir du voisin, et palier 3 après la première mensualité', () => {
+    const base = creerEtatInitial();
+    const { relations: _r, hasardQuartier: _h, ...etat } = base;
+    const { relations: _s, ...systemes } = base.systemes;
+    const depenses = { ...base.semaine.comptes.depenses } as Record<string, number>;
+    delete depenses.relations;
+    const semaine = { ...base.semaine, comptes: { ...base.semaine.comptes, depenses } };
+    const intrigues = { ...base.intrigues, finies: [{ id: 'voisin', fin: 'invite', jour: 12 }] };
+    const v20 = { ...etat, version: 20, systemes, semaine, intrigues, quartier: { tapage: 45, insonorise: false } };
+
+    const avant = migrer({ ...v20, palier: 2, mensualitesPayees: 0 });
+    expect(avant?.version).toBe(VERSION_ETAT);
+    expect(avant?.palier).toBe(2);
+    expect(avant?.systemes.relations).toBe(false);
+    expect(avant?.semaine.comptes.depenses.relations).toBe(0);
+    // Invité chez soi, le voisin s'en souvient ; le tapage de la nuit passée, un peu moins bien.
+    const souvenir = RELATIONS.depart.voisins! + RELATIONS.souvenirDuVoisin.invite! - Math.round((45 - TAPAGE.recidive) * RELATIONS.voisins.pente);
+    expect(avant?.relations.jauges.voisins).toBe(souvenir);
+    expect(avant?.relations.jauges.mairie).toBe(RELATIONS.depart.mairie);
+    expect(typeof avant?.hasardQuartier).toBe('number');
+
+    const apres = migrer({ ...v20, palier: 2, mensualitesPayees: 1, annonces: [] });
+    expect(apres?.palier).toBe(3);
+    expect(apres?.systemes.relations).toBe(true);
+    // Josée présente le palier 3 au chargement.
+    expect(apres?.annonces).toEqual([3]);
+    expect(migrer({ ...etat, version: 21, systemes, semaine })).toBeNull();
   });
 
   it('refuse une version future ou des données sans version', () => {

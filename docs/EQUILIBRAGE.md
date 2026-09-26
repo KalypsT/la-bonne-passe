@@ -976,3 +976,63 @@ Une partie de la nuit 16 (porte laxiste, bar ouvert), rechargée depuis une sauv
 - **Le rythme** : 5 à 7 décisions en 3 minutes. Intense, voulu ; à juger en main.
 - **Chambre sale et linge** n'ont pas de délai, mais arrivent deux fois plus vite en temps réel.
 - **« Encore 50 minutes de jeu »** sur la carte d'alerte : le chiffre a doublé alors que le temps réel est le même. S'il trompe, afficher plutôt une jauge ou des secondes.
+
+
+## Relations avec le quartier et palier 3 (v0.5, partie 2)
+
+Le palier 3 s'ouvre le matin de la première mensualité (jour 28), après le bilan du mois. Il ouvre l'onglet Relations : voisins, mairie, presse et police, une jauge de −100 à +100 chacun. Toutes les valeurs sont dans `RELATIONS`, `ACTIONS_RELATIONS` et `QUARTIER_ARGENT` (`balance.ts`).
+
+### Comment les jauges bougent
+
+- **Voisins** : chaque matin, (30 − tapage de la nuit) × 0,15. Une nuit calme les apaise jusqu'à +30 au plus ; au-delà, il faut des gestes. Le point neutre (30) est calé sur le tapage mesuré au deuxième mois : 34 en moyenne en classique, 43 porte laxiste, 17 porte stricte, 24 en soirée feutrée. Premier essai à 28 avec une pente de 0,3 au-dessus de 25 : les voisins tombaient à −72 en classique et −98 en laxiste, c'était une punition, pas une relation.
+- **Mairie, police** : reviennent de 2 % par jour vers leur valeur de départ (3 % au premier essai : même le joueur qui soignait ses relations n'atteignait jamais les bons termes). Une nuit à plus de 50 de tapage coûte 1 point de police ; des voisins en mauvais termes coûtent 0,5 point de mairie par jour.
+- **Presse** : revient vers (réputation − 35) × 0,6, soit environ +10 à la réputation 50.
+- **Cartes** : l'inspection, la vidéo, les critiques, l'échevin, le voleur, l'enceinte, les prolongations, l'intrigue du voisin et le magazine de Mila touchent les jauges. Le photographe et le groupe bruyant laissés filer aussi.
+
+### Seuils, services et ennuis
+
+En bons termes (au moins +40) ou en mauvais termes (−40 au plus), chaque matin, une chance sur trois (0,35) qu'un acteur se manifeste, puis 7 jours de répit pour lui. Huit cartes, deux par acteur, dans `src/content/quartier.ts`. Elles ont leur propre générateur (`hasardQuartier`), comme les actions : le reste de la partie ne bifurque pas.
+
+### Actions
+
+Deux par acteur, une par semaine et par acteur, de 30 € (café au commissariat, +4) à 450 € (mécène du festival du canal, +16 mairie, +4 voisins). Deux ont un risque (le déjeuner avec l'échevin, la soirée pour la presse).
+
+### Mesures (10 graines, 56 nuits, cartes tranchées au hasard)
+
+Le joueur « relations entretenues » agit dès qu'un acteur passe sous +10 ; le « soigneur » vise +45 et choisit l'action la plus chère quand la caisse le permet.
+
+| Stratégie (56 nuits) | Voisins | Mairie | Presse | Police | Événements du quartier par partie, mois 2 (total sur les parties) | Actions de relations par partie, mois 2 | Avoir, nuit 56 | Décisions par soirée, mois 2 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | -16 | 18 | 12 | 14 | 0,5 (petition 5) | 0,0 | 5 547 € | 8,2 |
+| Classique 3, sélection laxiste | -88 | 12 | 17 | 4 | 1,9 (petition 19) | 0,0 | 5 019 € | 8,0 |
+| Classique 3, sélection stricte | 30 | 23 | 15 | 11 | 0,0 | 0,0 | -694 € | 5,4 |
+| Feutrée, 4 | 20 | 22 | 23 | 13 | 0,3 (portrait 3) | 0,0 | 5 681 € | 7,0 |
+| Classique 3, relations entretenues (cible 10) | 8 | 23 | 22 | 16 | 0,0 | 3,0 | 4 650 € | 8,2 |
+| Laxiste, relations entretenues (cible 10) | -56 | 18 | 18 | 15 | 1,2 (petition 11, portrait 1) | 7,4 | 4 389 € | 8,9 |
+| Classique 3, relations soignées (cible 45) | 30 | 45 | 29 | 34 | 1,8 (feteVoisins 5, conseilEchevin 11, agentQuartier 1, portrait 1) | 14,1 | 2 914 € | 8,5 |
+
+- **Le style de la maison se lit dans le quartier** : porte laxiste, voisins à −88 et une pétition presque à chaque partie ; porte stricte, voisins à +30 et aucune plainte ; soirée feutrée, une presse plus chaleureuse (+23) et quelques portraits.
+- **Soigner ses relations coûte** : environ 2 600 € sur le deuxième mois pour le soigneur, qui obtient la mairie en bons termes et près de deux opportunités par mois (le conseil de l'échevin surtout). L'entretien léger (3 actions par mois) coûte peu et évite les ennuis.
+- **Le premier mois ne change pas** : les tableaux sur 28 nuits sont identiques à ceux de la partie 1.
+- **La porte stricte s'appauvrit au deuxième mois** (−694 € à la nuit 56, le portier coûte 80 € par soir) : ce n'est pas un effet des relations, à reprendre au rééquilibrage final.
+
+### Gardes (`equilibrage-quartier.test.ts`, joueur attentif, 10 graines, 56 nuits)
+
+- Porte laxiste : voisins en mauvais termes dans au moins 5 parties sur 10 (6 mesurées), une pétition dans au moins 4 (9 mesurées). Le joueur attentif fait rentrer les groupes bruyants dès l'alerte : il finit à −44 en moyenne, un joueur distrait à −88.
+- Porte stricte : voisins à +20 au moins en moyenne (+24), jamais de pétition.
+- Classique : entre les deux (−25), à plus de 15 points de la porte laxiste.
+- Soigneur : mairie en bons termes dans au moins 5 parties sur 10, au moins une opportunité par partie, pour un coût de 500 à 5 000 € (4 000 € mesurés avec un joueur qui dit oui à tout).
+- Sans rien faire, mairie et police restent dans la zone neutre. La presse, elle, suit les choix : le joueur simulé qui accepte toujours les journalistes finit adoré (+67).
+
+### Dans le navigateur (vite preview, 844 × 390 et 667 × 375)
+
+- Une partie à la nuit 27 : bilan de la semaine, fin du mois 1, puis la carte « Palier 3 : Tenir la maison » présentée par Josée ; l'onglet Relations montre les quatre jauges (lignes de 59 px) ; la fiche des voisins montre services, ennuis et actions (boutons de 45 px au moins) ; une action se paie, se note au journal et se verrouille jusqu'à la semaine suivante.
+- Une sauvegarde de la v0.4 (version 20) au jour 30, mensualité payée : au chargement, fin du mois, bilan de la semaine, puis la carte du palier 3 ; les voisins se souviennent de l'intrigue du voisin.
+- La pétition s'affiche avec l'étiquette « Le quartier », trois choix lisibles en 667 × 375.
+- Aucune erreur dans la console.
+
+### À surveiller
+
+- **Les événements du quartier restent rares sans action du joueur** (0,5 par partie au deuxième mois en classique) : les cartes du quartier de la partie 5, hors seuils, doivent nourrir les soirées.
+- **Le prix des actions** : 4 000 à 5 000 € pour tout porter au-dessus de +40, pour des services modestes. À juger en jouant, et à revoir quand la rivale et la visibilité arriveront.
+- **La presse** monte vite chez un joueur qui accepte tous les journalistes.

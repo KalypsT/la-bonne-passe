@@ -58,7 +58,6 @@ export function CarteMois({ partie }: { partie: EtatJeu }) {
                 <p className="sous">{texteObjectif(b.prochain)}</p>
               </>
             )}
-            {b.numero === 1 && <p className="sous laiton">{t.palierAVenir}</p>}
           </section>
         </div>
         <div className="carte-actions fin">

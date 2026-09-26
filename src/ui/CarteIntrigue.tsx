@@ -1,3 +1,4 @@
+import { EVENEMENTS_QUARTIER } from '../content/quartier';
 import { useState } from 'react';
 import { trouverIntrigue } from '../content/intrigues';
 import { TEXTES } from '../content/textes';
@@ -79,7 +80,11 @@ export function CarteIntrigue({ partie }: { partie: EtatJeu }) {
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-intrigue">
       <div className="carte-modale">
-        {def.titre !== etape.titre && <p className="sous etiquette-intrigue">{t.etiquette(texte(def.titre))}</p>}
+        {EVENEMENTS_QUARTIER.some((q) => q.id === def.id) ? (
+          <p className="sous etiquette-intrigue">{t.quartier}</p>
+        ) : (
+          def.titre !== etape.titre && <p className="sous etiquette-intrigue">{t.etiquette(texte(def.titre))}</p>
+        )}
         <h2 id="titre-intrigue" className="titre-neon">
           {texte(etape.titre)}
         </h2>

@@ -9,6 +9,7 @@ import * as B from '../content/balance';
 import type { Talent } from '../content/personnel';
 import { aTrait, changerLoyaute, changerMoral, ajusterAffinite, depart, type EvenementPersonnel } from './personnel';
 import { changerTapage } from './quartier';
+import { changerRelations, type EvenementRelation } from './relations';
 
 const borner = (v: number, min = 0, max = 100) => Math.min(max, Math.max(min, v));
 
@@ -31,7 +32,7 @@ export interface OutilsEffet {
   demarrerSuite: (id: string, delai: number, employeId: string | null) => void;
   /** Fait entrer une candidate ou un candidat remarquable au salon. */
   candidatVedette?: () => void;
-  evenements?: { push(e: EvenementPersonnel): unknown };
+  evenements?: { push(e: EvenementPersonnel | EvenementRelation): unknown };
   /** Multiplie les effets de réputation et de satisfaction (les imprévus, nombreux, pèsent moins lourd). */
   forceSatisfaction?: number;
 }
@@ -84,6 +85,8 @@ export function appliquerEffet(etat: EtatJeu, effet: EffetCarte, qui: Concernes,
   if (effet.travaux) depenser(etat, effet.travaux, 'travaux');
   if (effet.tapage) changerTapage(etat, effet.tapage);
   if (effet.insonoriser) etat.quartier.insonorise = true;
+  if (effet.relations) changerRelations(etat, effet.relations, evenements);
+  if (effet.affluenceSoir) etat.relations.affluenceSoir = Math.min(etat.relations.affluenceSoir, effet.affluenceSoir);
   for (let i = 0; i < (effet.clients ?? 0); i++) outils.ajouterClient(effet.clientsSegment);
   if (effet.candidatVedette) outils.candidatVedette?.();
   if (effet.suite) outils.demarrerSuite(effet.suite.id, effet.suite.delai, qui.employeId);

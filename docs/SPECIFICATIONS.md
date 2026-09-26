@@ -126,7 +126,7 @@ Le joueur part presque de rien : une hôtesse, une chambre en état, un salon et
 | Départ | — | Sanne seule ; 1 chambre en état (Boudoir) sur 4, les autres sous des draps ; le salon et le bureau ; 1 personne au ménage. Onglets Maison, Personnel, Finances, Journal. Touristes et Habitués. |
 | 1. Rouvrir | Première soirée bouclée | Recrutement, rénovation des chambres fermées, planning du soir, réserve de sécurité |
 | 2. Se faire un nom | Réputation 25 | Segments Affaires et Groupes, onglet Clientèle, tarifs et formules, sélection à l'entrée et priorité d'accueil ; bar à rénover, puis équipe Bar et avance fournisseur ; soirées à thème et tendances au premier lundi |
-| 3. Tenir la maison | Première mensualité payée | Équipes Accueil et Sécurité, onglet Relations, première rivale qui réagit, emprunt, assurance |
+| 3. Tenir la maison | Première mensualité payée | Onglet Relations (voisins, mairie, presse, police), première rivale qui réagit, équipes Accueil et Sécurité, assurance ; l'emprunt arrive avec les finances complètes (v0.6) |
 | 4. Monter en gamme | Réputation 50 et 4 personnes | VIP et Couples curieux, formations, chambres de luxe (Jacuzzi) et niveaux de confort, placement, changement de nom de la maison |
 | 5. S'agrandir | Réputation 70 et accord de la mairie | Agrandissement, jusqu'à 8 personnes, promotion en gérante, deuxième établissement |
 
@@ -258,6 +258,16 @@ La maison vit dans un quartier : chaque acteur extérieur a une jauge de relatio
 | Voisins | Paix, témoins favorables | Plaintes, pétition, presse locale |
 | Fournisseurs | Prix, livraisons fiables | Retards, ruptures de stock |
 | Presse | Visibilité flatteuse | Scandale, fuite de VIP |
+
+### Les relations à Amsterdam (v0.5)
+
+- **Quatre acteurs** au palier 3 : voisins, mairie, presse, police. Les fournisseurs viendront avec les finances complètes (v0.6).
+- **Seuils** : en bons termes au-dessus de +40, en mauvais termes sous −40. Départ : voisins +10, mairie +10 (les souvenirs de Josée), presse 0, police +5.
+- **Ce qui les fait bouger** : les voisins jugent chaque nuit d'après le tapage ; une nuit très bruyante fait venir la police ; des voisins fâchés écrivent à la mairie ; la presse suit la réputation ; toutes reviennent doucement vers leur point d'équilibre. Les imprévus, les intrigues et les alertes manquées (photographe, groupe bruyant) les touchent aussi.
+- **Ce qu'ils changent** : voisins en bons termes, le tapage monte moins vite ; mairie en bons termes, plus d'inspection sanitaire à l'improviste ; la presse fait varier la venue des touristes (jusqu'à ±15 %) ; police en bons termes, une dispute qui dégénère ne coûte plus de réputation.
+- **Événements du quartier** : un acteur en bons ou en mauvais termes se manifeste de temps en temps, par une carte (fête des voisins ou pétition, conseil de l'échevin ou inspection surprise, portrait ou fuite dans la presse, tuyau de l'agent de quartier ou contrôle devant la porte).
+- **Actions** : deux par acteur, une par semaine et par acteur, dans l'onglet Relations, avec leur coût, leur effet et l'avis de Josée ; certaines ont un risque.
+- Avant le palier 3, les cartes font déjà bouger les jauges, en silence.
 
 ### Maisons rivales
 

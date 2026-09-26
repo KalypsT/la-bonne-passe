@@ -23,6 +23,7 @@ import { clienteleDeDepart, type Clientele } from './clientele';
 import { semaineDeDepart, type BilanSemaine, type Semaine } from './semaine';
 import { intriguesDeDepart, type Intrigues } from './intrigues';
 import { quartierDeDepart, type Quartier } from './quartier';
+import { relationsDeDepart, type Relations } from './relations';
 import type { AlerteMinutee } from './minuteries';
 import { moisDeDepart, type BilanMois, type Mois } from './bilans';
 
@@ -345,6 +346,10 @@ export interface EtatJeu {
   intrigues: Intrigues;
   /** Le quartier : tapage, insonorisation (v0.4). */
   quartier: Quartier;
+  /** Relations avec les acteurs du quartier : voisins, mairie, presse, police (v0.5, palier 3). */
+  relations: Relations;
+  /** Générateur à part pour les événements et les actions du quartier (v0.5). */
+  hasardQuartier: number;
   /** Étape du didacticiel de Madame Josée, ou null s'il est fini ou passé. */
   didacticiel: number | null;
   /** État courant du générateur pseudo-aléatoire. */
@@ -352,7 +357,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 20;
+export const VERSION_ETAT = 21;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -518,6 +523,8 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     hasardAlertes: ((options.graine ?? GRAINE_PAR_DEFAUT) * 7 + 13) | 0,
     intrigues: intriguesDeDepart(),
     quartier: quartierDeDepart(),
+    relations: relationsDeDepart(),
+    hasardQuartier: ((options.graine ?? GRAINE_PAR_DEFAUT) * 31 + 7) | 0,
     didacticiel: options.didacticiel ? 0 : null,
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,
   };

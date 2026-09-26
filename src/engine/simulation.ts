@@ -14,6 +14,8 @@ import { INTRIGUES } from '../content/intrigues';
 import { choixPossibles, etapeCourante, type IntrigueFinie } from './intrigues';
 import { estOuvert } from './temps';
 import { TEXTES_ALERTES } from '../content/alertes';
+import { ACTEURS_ORDRE, type IdActeur } from '../content/relations';
+import { actionPossible } from './relations';
 
 export interface ResumeNuit {
   numero: number;
@@ -46,6 +48,10 @@ export interface ResumeNuit {
   alertes: Record<string, number>;
   /** Décisions significatives de la soirée : imprévus, cartes d'intrigue et alertes apparues. */
   decisions: number;
+  /** Relations avec le quartier à la fermeture (v0.5). */
+  relations: Record<IdActeur, number>;
+  /** Actions de relations menées depuis la nuit précédente. */
+  actionsRelations: number;
 }
 
 /** Comment le joueur simulé tranche les cartes : le premier choix possible, ou au hasard (graine à part). */
@@ -79,6 +85,13 @@ export interface OptionsSimulation {
    * elles-mêmes, comme le joueur simulé de la v0.3 (pour mesurer une mécanique seule, sans le bruit des cartes).
    */
   cartes?: boolean;
+  /**
+   * Relations avec le quartier (v0.5) : « aucune » (par défaut, le joueur les ignore) ou « entretien » (chaque matin,
+   * une action auprès d'un acteur qui passe sous la cible : la plus chère si la caisse le permet largement).
+   */
+  relations?: 'aucune' | 'entretien';
+  /** Cible du joueur qui entretient ses relations (10 par défaut). */
+  cibleRelations?: number;
 }
 
 const ORDRE_RENOVATION = ['orientale', 'velours', 'miroirs'];
@@ -114,6 +127,7 @@ export function simuler(options: OptionsSimulation): {
   let intriguesSoiree = 0;
   let alertesNuit: Record<string, number> = {};
   let alertesAvant = new Set<string>();
+  let actionsRelations = 0;
   const bullesVues = new Set<string>();
   const hasard = creerTirage((graine * 7919) | 0);
   const trancher = (possibles: boolean[]): number => {
@@ -138,8 +152,9 @@ export function simuler(options: OptionsSimulation): {
     if (sansCartes) etat.prochainImprevu = Number.MAX_SAFE_INTEGER;
     const r = { evenements: tickSurPlace(etat, ordres) };
     if (sansCartes) {
-      // Ni alerte minutée, ni défi, ni objectif du mois à récompenser : la mécanique seule.
+      // Ni alerte minutée, ni défi, ni objectif du mois à récompenser, ni événement du quartier : la mécanique seule.
       etat.minuteries = [];
+      etat.intrigues.actives = [];
       etat.defi = null;
       etat.mois = { ...etat.mois, objectif: 'reputation', cible: 999 };
     }
@@ -185,7 +200,10 @@ export function simuler(options: OptionsSimulation): {
           intriguesSoiree,
           alertes: alertesNuit,
           decisions: imprevusNuit.length + intriguesSoiree + Object.values(alertesNuit).reduce((a, b) => a + b, 0),
+          relations: { ...etat.relations.jauges },
+          actionsRelations,
         });
+        actionsRelations = 0;
         avoirPrecedent = etat.tresorerie + etat.reserve;
         imprevusNuit = [];
         intriguesNuit = [];
@@ -258,6 +276,21 @@ export function simuler(options: OptionsSimulation): {
       const ouvertes = etat.chambres.filter((c) => c.ouverte).length;
       if (etat.systemes.recrutement && ouvertes >= 3 && etat.equipes.menage < 2) jouer([{ type: 'equipeMenage', effectif: 2 }]);
       if (etat.systemes.reserve && etat.tauxReserve === 0) jouer([{ type: 'tauxReserve', taux: 0.1 }]);
+      if (options.relations === 'entretien' && etat.systemes.relations) {
+        const cible = options.cibleRelations ?? 10;
+        for (const acteur of ACTEURS_ORDRE) {
+          if (etat.relations.jauges[acteur] >= cible) continue;
+          // La plus chère si la caisse le permet largement, sinon la moins chère.
+          const actions = Object.entries(B.ACTIONS_RELATIONS)
+            .filter(([, a]) => a.acteur === acteur)
+            .sort(([, a], [, b]) => b.cout - a.cout);
+          const choisie = actions.find(([id, a]) => actionPossible(etat, id) && etat.tresorerie > a.cout + (a === actions[0]![1] ? 2500 : 800));
+          if (choisie) {
+            jouer([{ type: 'actionRelation', action: choisie[0] }]);
+            actionsRelations += 1;
+          }
+        }
+      }
       for (const e of etat.personnel) {
         if (e.moral < 45) jouer([{ type: 'entretienIndividuel', employeId: e.id, reponse: 'ecouter' }]);
         if (e.menaceDepart !== null && etat.tresorerie > 400) jouer([{ type: 'prime', employeId: e.id, niveau: 1 }]);

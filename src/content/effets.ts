@@ -3,6 +3,7 @@
 
 import type { Segment } from './clientele';
 import type { Talent } from './personnel';
+import type { IdActeur } from './relations';
 
 export interface EffetCarte {
   /** Moral, loyauté, fatigue de la personne concernée ({prenom}). */
@@ -59,6 +60,10 @@ export interface EffetCarte {
   juridique?: boolean;
   /** Points gardés en mémoire par l'intrigue : ses étapes suivantes peuvent les exiger (dénouement selon les choix). */
   points?: number;
+  /** Relations avec le quartier (v0.5) : points gagnés ou perdus auprès de chaque acteur. */
+  relations?: Partial<Record<IdActeur, number>>;
+  /** Les arrivées de la soirée en cours sont multipliées par ce facteur (un contrôle devant la porte). */
+  affluenceSoir?: number;
   /** Démarre une suite différée (une intrigue courte), dans tant de jours, avec la même personne. */
   suite?: { id: string; delai: number };
 }

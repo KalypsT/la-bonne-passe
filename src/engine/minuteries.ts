@@ -12,6 +12,7 @@ import { changerSatisfaction } from './clientele';
 import { depenser, encaisser } from './comptes';
 import { changerLoyaute, changerMoral } from './personnel';
 import { changerTapage } from './quartier';
+import { changerRelations, relationsOuvertes, type EvenementRelation } from './relations';
 import { ecart, instant } from './temps';
 
 export interface AlerteMinutee {
@@ -29,7 +30,8 @@ export type EvenementMinuterie =
   | { type: 'alerteMinutee'; id: IdAlerte; prenom?: string }
   | { type: 'alerteTraitee'; id: IdAlerte; action: number; reussite: boolean; prenom?: string }
   | { type: 'alerteManquee'; id: IdAlerte; prenom?: string }
-  | { type: 'dispute' };
+  | { type: 'dispute' }
+  | EvenementRelation;
 
 export type OrdreMinuterie = { type: 'traiterAlerte'; cle: string; action: number };
 
@@ -76,6 +78,7 @@ function manquer(etat: EtatJeu, a: AlerteMinutee, evenements: Sortie): void {
       break;
     case 'bruit':
       changerTapage(etat, A.bruit.tapageManque);
+      if (relationsOuvertes(etat)) changerRelations(etat, B.RELATIONS.bruitManque, evenements);
       break;
     case 'ivre':
       changerTapage(etat, A.ivre.tapageManque);
@@ -85,6 +88,7 @@ function manquer(etat: EtatJeu, a: AlerteMinutee, evenements: Sortie): void {
       break;
     case 'photographe':
       changerSatisfaction(etat, 'affaires', -A.photographe.satisfactionManquee);
+      if (relationsOuvertes(etat)) changerRelations(etat, B.RELATIONS.photographeManque, evenements);
       break;
     case 'pause': {
       const e = etat.personnel.find((x) => x.id === a.cible);

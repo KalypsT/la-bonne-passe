@@ -12,12 +12,14 @@ export type EvenementPalier = { type: 'palier'; numero: number };
 export const SYSTEMES_PAR_PALIER: Record<number, (keyof Systemes)[]> = {
   1: ['recrutement', 'renovation', 'planning', 'reserve'],
   2: ['affaires', 'groupes', 'clientele', 'tarifs', 'porte', 'bar'],
+  3: ['relations'],
 };
 
-/** Condition pour atteindre chaque palier, vérifiée à chaque fermeture. Le palier 3 viendra en v0.5. */
+/** Condition pour atteindre chaque palier, vérifiée à chaque fermeture (et le jour de la mensualité). Le palier 4 viendra en v0.6. */
 const DECLENCHEURS: Record<number, (etat: EtatJeu) => boolean> = {
   1: (etat) => etat.nuitsBouclees >= 1,
   2: (etat) => etat.reputation >= REPUTATION_PALIER_2,
+  3: (etat) => etat.mensualitesPayees >= 1,
 };
 
 /** Monte d'un palier : ouvre ses systèmes et prépare sa carte d'annonce. */
@@ -28,6 +30,8 @@ export function accorderPalier(etat: EtatJeu, numero: number): void {
   for (const systeme of SYSTEMES_PAR_PALIER[numero] ?? []) etat.systemes[systeme] = true;
   // Le recrutement ouvre avec les trois premiers candidats, attendus dans la semaine.
   if (numero === 1) planifierVisitesScenarisees(etat);
+  // Le quartier se remet à compter : la semaine des relations commence aujourd'hui.
+  if (numero === 3) etat.relations.lundi = { ...etat.relations.jauges };
   if (!etat.annonces.includes(numero)) etat.annonces.push(numero);
 }
 

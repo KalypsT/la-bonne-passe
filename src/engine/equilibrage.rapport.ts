@@ -4,7 +4,8 @@
 import { it } from 'vitest';
 import type { Offre, Segment } from '../content/clientele';
 import type { EtatJeu, Regles } from './etat';
-import { choixAdaptatif, mesurerRenouvellement, partsDeClientele, simuler, type Renouvellement, type ResumeNuit } from './simulation';
+import { EVENEMENTS_QUARTIER } from '../content/quartier';
+import { choixAdaptatif, mesurerRenouvellement, partsDeClientele, simuler, type OptionsSimulation, type Renouvellement, type ResumeNuit } from './simulation';
 
 const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const NUITS = 28;
@@ -78,6 +79,39 @@ function renouvellement(): { lignes: string[]; types: string[] } {
   return { lignes, types };
 }
 
+/** Le quartier (v0.5) : relations au bout de deux mois, événements et actions du deuxième mois (après le palier 3). */
+function quartier(): string[] {
+  const lignes = [
+    '| Stratégie (56 nuits) | Voisins | Mairie | Presse | Police | Événements du quartier par partie, mois 2 (total sur les parties) | Actions de relations par partie, mois 2 | Avoir, nuit 56 | Décisions par soirée, mois 2 |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+  ];
+  const ids = new Set(EVENEMENTS_QUARTIER.map((e) => e.id));
+  const variantes: { nom: string; options: Partial<OptionsSimulation> }[] = [
+    { nom: 'Classique, 3', options: {} },
+    { nom: 'Classique 3, sélection laxiste', options: { regles: { selection: 'laxiste' } } },
+    { nom: 'Classique 3, sélection stricte', options: { regles: { selection: 'stricte' } } },
+    { nom: 'Feutrée, 4', options: { offre: 'feutree', rdvMax: 4 } },
+    { nom: 'Classique 3, relations entretenues (cible 10)', options: { relations: 'entretien' } },
+    { nom: 'Laxiste, relations entretenues (cible 10)', options: { regles: { selection: 'laxiste' }, relations: 'entretien' } },
+    { nom: 'Classique 3, relations soignées (cible 45)', options: { relations: 'entretien', cibleRelations: 45 } },
+  ];
+  const virgule = (x: number) => x.toFixed(1).replace('.', ',');
+  for (const v of variantes) {
+    const parties = GRAINES.map((graine) => simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 56, politique: 'hasard', ...v.options }));
+    const moy = (f: (p: (typeof parties)[number]) => number) => parties.reduce((t, p) => t + f(p), 0) / parties.length;
+    const mois2 = (p: (typeof parties)[number]) => p.nuits.slice(28);
+    const evenements = parties.flatMap((p) => mois2(p).flatMap((n) => n.intrigues).map((x) => x.split(':')[0]!).filter((id) => ids.has(id)));
+    const parType = [...new Set(evenements)].map((id) => `${id} ${evenements.filter((x) => x === id).length}`).join(', ');
+    const jauge = (a: string) => moy((p) => p.nuits[55]?.relations[a as keyof ResumeNuit['relations']] ?? 0).toFixed(0);
+    lignes.push(
+      `| ${v.nom} | ${jauge('voisins')} | ${jauge('mairie')} | ${jauge('presse')} | ${jauge('police')} | ` +
+        `${virgule(evenements.length / parties.length)}${parType ? ` (${parType})` : ''} | ${virgule(moy((p) => mois2(p).reduce((t, n) => t + n.actionsRelations, 0)))} | ` +
+        `${arrondi(moy((p) => p.etat.tresorerie + p.etat.reserve))} € | ${virgule(moy((p) => mois2(p).reduce((t, n) => t + n.decisions, 0) / 28))} |`,
+    );
+  }
+  return lignes;
+}
+
 it('rapport d’équilibrage', () => {
   const lignes = [
     '| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |',
@@ -109,4 +143,5 @@ it('rapport d’équilibrage', () => {
   const r = renouvellement();
   console.log(`\nRenouvellement des soirées : ${GRAINES.length} graines, ${NUITS} nuits (cartes tranchées au hasard)\n\n${r.lignes.join('\n')}\n`);
   console.log(`\nAlertes par soirée, selon leur type (mêmes parties)\n\n${r.types.join('\n')}\n`);
-}, 120_000);
+  console.log(`\nLe quartier : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard ; événements sur 10 parties)\n\n${quartier().join('\n')}\n`);
+}, 300_000);

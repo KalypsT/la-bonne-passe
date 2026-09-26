@@ -657,3 +657,80 @@ export const OBJECTIFS = {
   recompenseReputation: 2,
   recompenseMoral: 4,
 };
+
+// ——— v0.5 : relations avec le quartier (palier 3) ———
+
+/**
+ * Relations avec les acteurs du quartier : une jauge de −100 à +100 chacun.
+ * En bons termes (au-dessus de `bons`), l'acteur rend des services ; en mauvais termes (sous `mauvais`), il crée des ennuis.
+ */
+export const RELATIONS = {
+  /** Valeurs de départ : Josée a laissé de bons souvenirs à la mairie, et le quartier la connaît. */
+  depart: { voisins: 10, mairie: 10, presse: 0, police: 5 } as Record<string, number>,
+  bons: 40,
+  mauvais: -40,
+  /**
+   * Chaque matin, une jauge revient un peu vers son point d'équilibre (sa valeur de départ ; pour la presse, selon la
+   * réputation) : on oublie les faveurs comme les rancunes. Les voisins, eux, jugent la nuit passée (voir `voisins`).
+   */
+  retour: 0.02,
+  /**
+   * Les voisins lisent le tapage de la nuit (0 à 100), avant qu'il ne retombe : la jauge bouge de (neutre − tapage) × pente.
+   * Une nuit plus calme que `neutre` les apaise, sans dépasser le plafond (au-delà, il faut des gestes) ; une nuit plus
+   * bruyante les agace. Mesures v0.5 : tapage moyen de 34 en classique, 43 porte laxiste, 17 porte stricte, 24 en feutrée.
+   */
+  voisins: { neutre: 30, pente: 0.15, plafondCalme: 30 },
+  /** Une nuit très bruyante : les voisins appellent la police. */
+  police: { tapageAppel: 50, perte: 1 },
+  /** Voisins en mauvais termes : leurs plaintes arrivent à la mairie, chaque matin. */
+  mairie: { plaintesVoisins: 0.5 },
+  /** La presse suit la réputation : elle revient vers (réputation − neutre) × pente plutôt que vers sa valeur de départ. */
+  presse: { reputationNeutre: 35, pente: 0.6 },
+  /** Une dispute qui dégénère sur le quai. */
+  dispute: { police: -3, voisins: -2 },
+  /** Un photographe laissé filer : la photo d'un client finit dans un journal. */
+  photographeManque: { presse: -3 },
+  /** Le groupe bruyant laissé sur le quai. */
+  bruitManque: { voisins: -2 },
+  /** Événements du quartier : chaque matin, en bons ou en mauvais termes, cette chance d'une carte, puis tant de jours de répit. */
+  evenementChance: 0.35,
+  evenementRepit: 7,
+  /** Une action de relation par acteur et par semaine. */
+  actionRepit: 7,
+  /** En bons termes avec les voisins, ils tolèrent : le tapage monte moins vite. */
+  voisinsTolerants: 0.8,
+  /** Bonne ou mauvaise presse : la demande des touristes varie jusqu'à ± ce facteur (à ±100). */
+  presseTouristes: 0.15,
+  /** Un contrôle de police devant la porte : les arrivées de la soirée sont multipliées par ce facteur. */
+  controleAffluence: 0.6,
+  /** Ce que les voisins gardent de l'intrigue du voisin du dessus, selon son dénouement (sauvegardes d'avant la v0.5). */
+  souvenirDuVoisin: { apaise: 8, invite: 15, insonorise: 10, rire: 5, arrangement: 0, bluff: -5, condamne: -20 } as Record<string, number>,
+};
+
+/** Actions de relations, dans l'onglet Relations : coût, gain, et parfois un risque. Textes dans src/content/relations.ts. */
+export const ACTIONS_RELATIONS: Record<
+  string,
+  { acteur: string; cout: number; gain: number; autres?: Record<string, number>; risque?: { chance: number; effet: Record<string, number>; reputation?: number } }
+> = {
+  bouteilleVoisins: { acteur: 'voisins', cout: 40, gain: 6 },
+  associationQuartier: { acteur: 'voisins', cout: 250, gain: 14, autres: { presse: 2 } },
+  dejeunerEchevin: { acteur: 'mairie', cout: 120, gain: 8, risque: { chance: 0.2, effet: { mairie: -8, presse: -3 } } },
+  festivalCanal: { acteur: 'mairie', cout: 450, gain: 16, autres: { voisins: 4 } },
+  panierRedacteur: { acteur: 'presse', cout: 90, gain: 5 },
+  soireePresse: { acteur: 'presse', cout: 200, gain: 10, risque: { chance: 0.25, effet: { presse: -14 }, reputation: -0.5 } },
+  cafeCommissariat: { acteur: 'police', cout: 30, gain: 4 },
+  tournoiPolice: { acteur: 'police', cout: 220, gain: 12, autres: { voisins: 2 } },
+};
+
+/** Les sommes en jeu dans les événements du quartier (v0.5). */
+export const QUARTIER_ARGENT = {
+  feteVoisins: 60,
+  petitionRencontre: 150,
+  normesPreventives: 100,
+  inspectionAmende: 250,
+  inspectionNormes: 200,
+  inspectionAvocat: 150,
+  fuiteAvocat: 300,
+  portierSoir: 80,
+  controleAvocat: 200,
+};

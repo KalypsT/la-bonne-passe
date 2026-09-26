@@ -28,6 +28,7 @@ import { attendBriefing, estOuvert, instant, jourDeLaSemaine, MINUTES_PAR_JOUR }
 import { cloreSemaine, type EvenementSemaine } from './semaine';
 import { avancerIntrigues, matinDesIntrigues, trancherIntrigue, type EvenementIntrigue, type OrdreIntrigue } from './intrigues';
 import { matinDuQuartier } from './quartier';
+import { agirRelation, matinDesRelations, type EvenementRelation, type OrdreRelation } from './relations';
 import { traiterAlerte, type OrdreMinuterie } from './minuteries';
 
 /** Ordres envoyés par l'interface au moteur. */
@@ -67,7 +68,8 @@ export type Ordre =
   | OrdreIntrigue
   | OrdreMinuterie
   | OrdreRegle
-  | OrdreBar;
+  | OrdreBar
+  | OrdreRelation;
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -88,7 +90,8 @@ export type EvenementMoteur =
   | EvenementPersonnel
   | EvenementImprevu
   | EvenementIntrigue
-  | EvenementSemaine;
+  | EvenementSemaine
+  | EvenementRelation;
 
 /** Taille du journal gardé dans la sauvegarde. */
 export const TAILLE_JOURNAL = 50;
@@ -262,6 +265,9 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       etat.hasard = tirage.etat();
       return;
     }
+    case 'actionRelation':
+      agirRelation(etat, ordre.action, evenements);
+      return;
     case 'choixIntrigue': {
       const tirage = creerTirage(etat.hasard);
       trancherIntrigue(etat, ordre.choix, tirage, (segment) => arrivee(etat, tirage, evenements, segment), evenements);
@@ -321,6 +327,8 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     matinDuPersonnel(etat, evenements);
     // Le voisin se plaint de la nuit passée : les intrigues regardent le tapage avant que le quartier oublie.
     matinDesIntrigues(etat);
+    // Les voisins jugent aussi la nuit passée ; puis le quartier oublie un peu.
+    matinDesRelations(etat, evenements);
     matinDuQuartier(etat);
   }
   avancerTravaux(etat, evenements);

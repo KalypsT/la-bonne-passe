@@ -312,6 +312,8 @@ export const TEXTES = {
   intrigue: {
     /** Étiquette au-dessus du titre de la carte. */
     etiquette: (titre: string) => `Intrigue · ${titre}`,
+    /** Étiquette des événements du quartier (v0.5). */
+    quartier: 'Le quartier',
     tropCher: 'Trésorerie insuffisante',
     continuer: 'Continuer',
     denouement: 'Dénouement',
@@ -432,7 +434,6 @@ export const TEXTES = {
     atteint: (valeur: string, cible: string) => `${valeur}, pour ${cible} visés`,
     recompense: 'Réputation en hausse, et l’équipe fête ça.',
     prochain: 'Le mois qui commence',
-    palierAVenir: 'Tu as tenu ton premier mois. La suite (équipes d’accueil et de sécurité, le quartier, l’emprunt) arrive avec la prochaine version du jeu.',
     continuer: 'Au travail',
   },
   alerteCarte: {
@@ -485,6 +486,7 @@ export const TEXTES = {
       personnel: 'Primes',
       portier: 'Portier',
       themes: 'Soirées à thème',
+      relations: 'Relations avec le quartier',
       incidents: 'Casse et imprévus',
       mensualite: 'Mensualité',
       avance: 'Remboursement du grossiste',

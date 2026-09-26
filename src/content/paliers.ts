@@ -42,13 +42,19 @@ export const PALIERS: DefinitionPalier[] = [
     numero: 3,
     nom: 'Tenir la maison',
     objectif: 'Payer la première mensualité.',
-    ouvre: 'Accueil et sécurité, onglet Relations, emprunt, assurance.',
+    ouvre: 'Onglet Relations : voisins, mairie, presse et police.',
+    details: [
+      'Onglet Relations : les voisins, la mairie, la presse et la police, chacun avec sa jauge, de −100 à +100.',
+      'En bons termes (au-dessus de +40), ils rendent service ; en mauvais termes (sous −40), les ennuis commencent.',
+      'Une action par semaine et par acteur pour soigner la relation : une bouteille, un don, un déjeuner, un tournoi.',
+      'Le quartier se manifeste : fête des voisins, pétition, inspection, portrait, fuite, contrôle.',
+    ],
   },
   {
     numero: 4,
     nom: 'Monter en gamme',
     objectif: 'Réputation 50 et 4 personnes.',
-    ouvre: 'VIP, formations, chambres de luxe, changement de nom de la maison.',
+    ouvre: 'VIP, formations, chambres de luxe, changement de nom de la maison (dans une prochaine version du jeu).',
   },
   {
     numero: 5,

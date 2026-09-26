@@ -10,6 +10,8 @@
 import * as B from './balance';
 import type { EffetCarte } from './effets';
 import { SUITES } from './suites';
+import { EVENEMENTS_QUARTIER } from './quartier';
+import type { IdActeur } from './relations';
 
 const euros = (n: number) => `${n.toLocaleString('fr-FR')} €`;
 
@@ -32,6 +34,9 @@ export interface ConditionIntrigue {
   /** Points que l'intrigue a gardés en mémoire (voir l'effet `points`), au moins ou au plus. */
   pointsMin?: number;
   pointsMax?: number;
+  /** Relations avec le quartier (v0.5) : au moins ou au plus, pour chaque acteur cité. */
+  relationMin?: Partial<Record<IdActeur, number>>;
+  relationMax?: Partial<Record<IdActeur, number>>;
 }
 
 /** Ce qui suit un choix : une autre étape dans tant de jours, ou la fin de l'intrigue. */
@@ -99,14 +104,14 @@ export const INTRIGUES_PRINCIPALES: DefinitionIntrigue[] = [
           {
             texte: 'S’excuser, une bouteille à la main',
             detail: `−${euros(B.VOISIN.bouteille)}, et le quartier se calme un peu`,
-            effet: { argent: -B.VOISIN.bouteille, tapage: -15 },
+            effet: { argent: -B.VOISIN.bouteille, tapage: -15, relations: { voisins: 5 } },
             journal: 'Monsieur Bakker repart avec une bouteille de porto et la promesse d’un quai plus calme.',
             suite: { etape: 'sonometre', delai: 3 },
           },
           {
             texte: 'Lui rappeler où il habite',
             detail: 'Rien ne change. Il reviendra',
-            effet: {},
+            effet: { relations: { voisins: -8 } },
             journal: '« C’est un quartier vivant, monsieur Bakker. » Il remonte l’escalier en marmonnant quelque chose sur Mozart.',
             suite: { etape: 'sonometre', delai: 2 },
           },
@@ -114,10 +119,10 @@ export const INTRIGUES_PRINCIPALES: DefinitionIntrigue[] = [
             texte: 'L’inviter à passer un soir',
             detail: 'Il pourrait adorer. Ou très mal le prendre',
             chance: 0.5,
-            effet: { satisfaction: { habitue: 3 } },
+            effet: { satisfaction: { habitue: 3 }, relations: { voisins: 8 } },
             journal: 'Monsieur Bakker hésite, puis accepte « un porto, un seul ».',
             suite: { fin: 'invite' },
-            echec: {},
+            echec: { relations: { voisins: -2 } },
             journalEchec: '« Moi ? Chez vous ? » Monsieur Bakker s’étrangle et claque sa porte, deux étages plus haut.',
             suiteEchec: { etape: 'avocat', delai: 3 },
           },
@@ -135,14 +140,14 @@ export const INTRIGUES_PRINCIPALES: DefinitionIntrigue[] = [
           {
             texte: 'Faire rentrer tout le monde',
             detail: 'Le quai se calme ; les groupes, eux, boudent',
-            effet: { tapage: -25, satisfaction: { groupe: -2 } },
+            effet: { tapage: -25, satisfaction: { groupe: -2 }, relations: { voisins: 4 } },
             journal: 'Tout le monde à l’intérieur, fenêtres fermées. Les groupes chantent plus bas. Un peu.',
             suite: { etape: 'avocat', delai: 4 },
           },
           {
             texte: 'Insonoriser le salon',
             detail: `${euros(B.VOISIN.insonorisation)} de travaux ; le bruit portera deux fois moins, pour de bon`,
-            effet: { travaux: B.VOISIN.insonorisation, insonoriser: true, tapage: -20 },
+            effet: { travaux: B.VOISIN.insonorisation, insonoriser: true, tapage: -20, relations: { voisins: 10 } },
             journal: 'Laine de roche, double vitrage et rideaux épais : les ouvriers attaquent le salon dès demain.',
             suite: { fin: 'insonorise' },
           },
@@ -150,10 +155,10 @@ export const INTRIGUES_PRINCIPALES: DefinitionIntrigue[] = [
             texte: 'Lui tendre des bouchons d’oreille',
             detail: 'Il n’a aucun humour. Ou peut-être que si',
             chance: 0.35,
-            effet: { reputation: 1 },
+            effet: { reputation: 1, relations: { voisins: 3 } },
             journal: 'Il regarde les bouchons, puis toi, puis éclate de rire. « Touché. »',
             suite: { fin: 'rire' },
-            echec: {},
+            echec: { relations: { voisins: -4 } },
             journalEchec: 'Monsieur Bakker range les bouchons dans la poche de son pyjama, sans un mot. Mauvais signe.',
             suiteEchec: { etape: 'avocat', delai: 2 },
           },
@@ -171,14 +176,14 @@ export const INTRIGUES_PRINCIPALES: DefinitionIntrigue[] = [
           {
             texte: 'Proposer un arrangement',
             detail: `−${euros(B.VOISIN.arrangement)}, et l’affaire est close`,
-            effet: { argent: -B.VOISIN.arrangement, juridique: true },
+            effet: { argent: -B.VOISIN.arrangement, juridique: true, relations: { voisins: 2 } },
             journal: 'Tu signes un chèque à l’ordre de monsieur Bakker, « pour le préjudice ».',
             suite: { fin: 'arrangement' },
           },
           {
             texte: 'Insonoriser le salon',
             detail: `${euros(B.VOISIN.insonorisation)} de travaux ; plus rien ne filtrera`,
-            effet: { travaux: B.VOISIN.insonorisation, insonoriser: true, tapage: -20 },
+            effet: { travaux: B.VOISIN.insonorisation, insonoriser: true, tapage: -20, relations: { voisins: 10 } },
             journal: 'Tu réponds à Maître De Vries par un devis d’insonorisation. Signé.',
             suite: { fin: 'insonorise' },
           },
@@ -186,10 +191,10 @@ export const INTRIGUES_PRINCIPALES: DefinitionIntrigue[] = [
             texte: 'Laisser venir',
             detail: `Du bluff, sans doute. Sinon, ${euros(B.VOISIN.amende)} d’amende et un article`,
             chance: 0.5,
-            effet: {},
+            effet: { relations: { voisins: -3 } },
             journal: 'Tu ranges la lettre dans un tiroir. Et tu attends.',
             suite: { fin: 'bluff' },
-            echec: { argent: -B.VOISIN.amende, reputation: -3, juridique: true },
+            echec: { argent: -B.VOISIN.amende, reputation: -3, juridique: true, relations: { voisins: -10, presse: -5, mairie: -3 } },
             journalEchec: `Le tribunal donne raison à monsieur Bakker : ${euros(B.VOISIN.amende)} d’amende.`,
             suiteEchec: { fin: 'condamne' },
           },
@@ -254,21 +259,21 @@ export const INTRIGUES_PRINCIPALES: DefinitionIntrigue[] = [
           {
             texte: 'Oui, en pleine lumière',
             detail: 'Réputation et touristes en hausse ; les clients discrets n’aiment pas les flashs',
-            effet: { points: 1, reputation: 2, satisfaction: { touriste: 4, affaires: -5 }, moral: 10 },
+            effet: { points: 1, reputation: 2, satisfaction: { touriste: 4, affaires: -5 }, moral: 10, relations: { presse: 6 } },
             journal: 'Mila pose sur le canapé de velours, le nom de {maison} bien lisible derrière elle.',
             suite: { etape: 'part', delai: 5 },
           },
           {
             texte: 'Oui, mais sans le nom de la maison',
             detail: 'Un compromis : Mila est contente à moitié',
-            effet: { moral: 4, reputation: 0.5 },
+            effet: { moral: 4, reputation: 0.5, relations: { presse: 3 } },
             journal: 'Le photographe cadre serré sur Mila. La maison reste dans le flou, comme il se doit.',
             suite: { etape: 'part', delai: 5 },
           },
           {
             texte: 'Pas de photographe ici',
             detail: 'Les clients discrets te remercient ; Mila boude',
-            effet: { points: -1, moral: -12, loyaute: -6, satisfaction: { affaires: 3 } },
+            effet: { points: -1, moral: -12, loyaute: -6, satisfaction: { affaires: 3 }, relations: { presse: -3 } },
             journal: 'Tu raccompagnes le photographe jusqu’au quai. Mila, elle, claque la porte de la loge.',
             suite: { etape: 'part', delai: 3 },
           },
@@ -496,7 +501,7 @@ export const INTRIGUES_PRINCIPALES: DefinitionIntrigue[] = [
 ];
 
 /** Toutes les intrigues, et les suites différées des imprévus. */
-export const INTRIGUES: DefinitionIntrigue[] = [...INTRIGUES_PRINCIPALES, ...SUITES];
+export const INTRIGUES: DefinitionIntrigue[] = [...INTRIGUES_PRINCIPALES, ...SUITES, ...EVENEMENTS_QUARTIER];
 
 export function trouverIntrigue(id: string): DefinitionIntrigue | undefined {
   return INTRIGUES.find((i) => i.id === id);

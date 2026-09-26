@@ -6,6 +6,7 @@ import { alertes } from '../engine/alertes';
 import { creerEtatInitial, type EtatJeu, type Nuit } from '../engine/etat';
 import { nettoyerNom } from '../engine/identite';
 import { secondesParTick } from '../engine/temps';
+import type { IdActeur } from '../content/relations';
 import { appliquerOrdres, tick, type EvenementMoteur, type Ordre } from '../engine/tick';
 import { charger, lireEmplacements, sauvegarder, supprimer, type Emplacement } from '../save/emplacements';
 import { formaterEuros } from './format';
@@ -18,7 +19,8 @@ export type Fiche =
   | { type: 'piece'; id: 'salon' | 'bar' | 'bureau' }
   | { type: 'employe'; id: string }
   | { type: 'segment'; id: Segment }
-  | { type: 'regles'; id: 'regles' };
+  | { type: 'regles'; id: 'regles' }
+  | { type: 'acteur'; id: IdActeur };
 export type Carte =
   | 'briefing'
   | 'bilan'
@@ -354,7 +356,14 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   ouvrirAlerte: (cle) => set({ carte: 'alerte', alerteOuverte: cle }),
 
   ouvrirFiche: (fiche) => {
-    const onglet: Onglet = fiche?.type === 'employe' ? 'personnel' : fiche?.type === 'segment' || fiche?.type === 'regles' ? 'clientele' : 'maison';
+    const onglet: Onglet =
+      fiche?.type === 'employe'
+        ? 'personnel'
+        : fiche?.type === 'segment' || fiche?.type === 'regles'
+          ? 'clientele'
+          : fiche?.type === 'acteur'
+            ? 'relations'
+            : 'maison';
     set(fiche ? { fiche, onglet } : { fiche: null });
     if (fiche?.type === 'chambre' && fiche.id === 'boudoir') get().signalerDidacticiel('boudoir');
   },

@@ -1,9 +1,10 @@
-// Le quartier autour de la maison. En v0.4, seulement le tapage, qui nourrit l'intrigue du voisin du dessus ;
-// les relations (mairie, police, voisins…) viendront en v0.5.
+// Le quartier autour de la maison : le tapage de chaque nuit, qui nourrit l'intrigue du voisin du dessus
+// et, chaque matin, la relation avec les voisins (src/engine/relations.ts).
 
 import * as B from '../content/balance';
 import { CLIENTS } from '../content/clientele';
 import type { EtatJeu } from './etat';
+import { facteurTapageVoisins } from './relations';
 
 export interface Quartier {
   /** Bruit accumulé, de 0 à 100 : il monte les soirs de fête et retombe chaque matin. */
@@ -28,7 +29,8 @@ export function facteurTapage(etat: EtatJeu): number {
   return (
     (T.selection[etat.regles.selection] ?? 1) *
     (etat.themeDuSoir ? (T.themes[etat.themeDuSoir] ?? 1) : 1) *
-    (etat.quartier.insonorise ? T.insonorise : 1)
+    (etat.quartier.insonorise ? T.insonorise : 1) *
+    facteurTapageVoisins(etat)
   );
 }
 
