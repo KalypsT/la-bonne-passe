@@ -314,10 +314,6 @@ export function traiterAlerte(etat: EtatJeu, cle: string, action: number, tirage
       if (action !== 0 || !barSert(etat)) return;
       etat.bar.stock = Math.max(0, etat.bar.stock - 1);
       encaisser(etat, A.bouteille.prix, 'bar');
-      if (etat.nuit) {
-        etat.nuit.recettes += A.bouteille.prix;
-        etat.nuit.bar += A.bouteille.prix;
-      }
       break;
     }
     case 'photographe': {

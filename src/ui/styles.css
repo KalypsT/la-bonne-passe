@@ -1748,3 +1748,21 @@ body {
 .jauge-barre.rivale.basse i {
   background: var(--neon);
 }
+
+/* ——— Bilan de fin de nuit ——— */
+
+.compte-nuit h3:first-child {
+  margin-top: 0;
+}
+
+/* Les salaires de midi : une ligne à part, sous les dépenses de la nuit. */
+.comptes .a-part {
+  margin-top: 2px;
+  padding-top: 2px;
+  border-top: 1px dashed var(--ligne);
+}
+
+.chiffres.serre div {
+  padding: 3px 0;
+  font-size: 12.5px;
+}

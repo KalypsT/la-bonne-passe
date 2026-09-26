@@ -321,6 +321,7 @@ Cibles : une soirée correcte rapporte 600 à 1 000 € net à la maison (recett
 
 | Outil | Ce que le joueur décide | Effet | Palier |
 | --- | --- | --- | --- |
+| Bilan de fin de nuit | rien, il le lit | Le compte de la journée poste par poste : recettes (rendez-vous comptés pleins, bar, autres, assurance), dépenses (part du personnel avec son pourcentage, commandes du briefing, thème, portier, visibilité, relations, incidents, livraisons express, et les salaires de midi sur une ligne à part), gagné cette nuit dont mis en réserve, trésorerie avant → après. Les charges du lundi et la mensualité restent au bilan de la semaine | Départ |
 | Bilan du lundi | rien, il le lit | Recettes et dépenses par poste, résultat de la semaine, trésorerie projetée sur 4 semaines (mensualités et remboursements compris) ; carte en pause le lundi à 5 h, à revoir dans l'onglet Finances | Départ |
 | Réserve de sécurité | 0, 10 ou 20 % de la recette du soir mis de côté | Couvre la mensualité ; y toucher hors urgence vaut une remarque de Josée | 1 |
 | Tarifs et formules | 3 crans de tarif général, une formule | ±20 % de recette par rendez-vous, effet inverse sur la demande selon le segment | 2 |

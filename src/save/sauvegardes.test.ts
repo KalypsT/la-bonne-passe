@@ -302,7 +302,7 @@ describe('migrations', () => {
     expect(migre?.bar).toEqual({ ouvert: false, travaux: null, stock: 0, commande: 0 });
     expect(migre?.avance.statut).toBe('aVenir');
     expect(migre?.equipes).toEqual({ menage: 2, bar: 0, accueil: 0, securite: 0 });
-    expect(migre?.nuit?.bar).toBe(0);
+    expect(migre?.nuit?.comptes.recettes.bar).toBe(0);
     expect(migre?.systemes.bar).toBe(true);
     expect(migre?.nouveautes[0]).toBe('bar');
     expect(trouverNouveaute('bar')?.palier).toBe(2);
@@ -502,6 +502,32 @@ describe('migrations', () => {
     expect(tard?.systemes.visibilite).toBe(true);
     expect(tard?.nouveautes).toEqual(['visibilite']);
     expect(migrer({ ...base, version: 24, regles })).toBeNull();
+  });
+
+  it('migre une sauvegarde v24 : comptes de la nuit par poste, part du personnel et livraisons express', () => {
+    const base = creerEtatInitial();
+    const sansPostes = (c: typeof base.semaine.comptes) => {
+      const depenses = { ...c.depenses } as Record<string, number>;
+      delete depenses.partPersonnel;
+      delete depenses.express;
+      return { ...c, depenses };
+    };
+    const { journee: _j, ...reste } = base;
+    // Une nuit en cours : 300 € gardés par la maison (dont 60 € de bar), 240 € reversés, 50 € de dépenses.
+    const nuit = { numero: 3, recettes: 300, partPersonnel: 240, depenses: 50, servis: 2, perdus: 0, reputationDebut: 20, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0, bar: 60 };
+    const v24 = { ...reste, version: 24, nuitsBouclees: 2, tresorerie: 5000, nuit, semaine: { ...base.semaine, comptes: sansPostes(base.semaine.comptes) } };
+    const migre = migrer(v24);
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.semaine.comptes.depenses.partPersonnel).toBe(0);
+    expect(migre?.semaine.comptes.depenses.express).toBe(0);
+    expect(migre?.nuit?.comptes.recettes).toMatchObject({ rendezVous: 480, bar: 60 });
+    expect(migre?.nuit?.comptes.depenses.partPersonnel).toBe(240);
+    expect(migre?.journee.comptes.recettes.rendezVous).toBe(480);
+    expect(migre?.journee.tresorerieAvant).toBe(4750);
+    const fermee = migrer({ ...v24, nuitsBouclees: 3 });
+    expect(fermee?.journee.comptes.recettes.rendezVous).toBe(0);
+    expect(fermee?.journee.tresorerieAvant).toBe(5000);
+    expect(migrer({ ...reste, version: 25 })).toBeNull();
   });
 
   it('refuse une version future ou des données sans version', () => {

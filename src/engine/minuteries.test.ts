@@ -12,6 +12,7 @@ import { prochainClient } from './regles';
 import { employeDisponible } from './soiree';
 import { appliquerOrdres, type EvenementMoteur } from './tick';
 import { instant } from './temps';
+import { comptesVides } from './comptes';
 
 const h = (heures: number, minutes = 0) => heures * 60 + minutes;
 
@@ -26,7 +27,7 @@ function soiree(champs: Partial<EtatJeu> = {}): EtatJeu {
   for (const e of etat.personnel) e.enServiceCeSoir = true;
   etat.bar = { ouvert: true, travaux: null, stock: 40, commande: 0 };
   etat.equipes.bar = 1;
-  etat.nuit = { numero: 9, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 30, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0, bar: 0 };
+  etat.nuit = { numero: 9, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 0, perdus: 0, reputationDebut: 30, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 };
   return { ...etat, ...champs };
 }
 
@@ -142,7 +143,7 @@ describe('réagir, ou laisser filer', () => {
     const apres = traiter(etat, cle, 0).etat;
     expect(apres.tresorerie).toBe(5_000 + B.ALERTES.bouteille.prix);
     expect(apres.semaine.comptes.recettes.bar).toBe(B.ALERTES.bouteille.prix);
-    expect(apres.nuit!.bar).toBe(B.ALERTES.bouteille.prix);
+    expect(apres.journee.comptes.recettes.bar).toBe(B.ALERTES.bouteille.prix);
     expect(apres.bar.stock).toBe(39);
   });
 

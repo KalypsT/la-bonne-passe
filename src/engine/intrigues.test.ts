@@ -11,6 +11,7 @@ import { bruitDuSoir, matinDuQuartier } from './quartier';
 import { candidatDepuis } from './recrutement';
 import { appliquerOrdres, tick, type EvenementMoteur, type Ordre } from './tick';
 import { instant } from './temps';
+import { comptesVides } from './comptes';
 
 const h = (heures: number, minutes = 0) => heures * 60 + minutes;
 
@@ -213,7 +214,7 @@ describe('le moteur d’intrigues', () => {
   it('un imprévu et une carte d’intrigue ne sortent jamais en même temps', () => {
     const etat = maison({ minuteDuJour: h(22), nuit: null });
     etat.intrigues.carte = 'voisin';
-    etat.nuit = { numero: 9, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 25, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0, bar: 0 };
+    etat.nuit = { numero: 9, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 0, perdus: 0, reputationDebut: 25, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 };
     for (let g = 0; g < 50; g++) declencherImprevu(etat, creerTirage(g), []);
     expect(etat.imprevu).toBeNull();
     const avecImprevu = maison({ minuteDuJour: h(11), imprevu: { id: 'pluie', employeId: null, employe2Id: null } });

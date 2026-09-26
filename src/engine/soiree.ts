@@ -32,7 +32,7 @@ import { declencherImprevu, type EvenementImprevu } from './imprevus';
 import { aTrait, nuitDuPersonnel, type EvenementPersonnel } from './personnel';
 import { revelerTraits, type EvenementRecrutement } from './recrutement';
 import { ecart, instant } from './temps';
-import { depenser, encaisser, noterDepense } from './comptes';
+import { comptesVides, depenser, encaisser, journeeVide, noterDepense, recetteMaison } from './comptes';
 import { demandeTendance, disputeTendance } from './semaine';
 import { bruitDuSoir, changerTapage } from './quartier';
 import { conclureMois, type EvenementBilan } from './bilans';
@@ -126,9 +126,10 @@ export function modeleClient(id: string): ModeleClient {
 function nouvelleNuit(etat: EtatJeu): Nuit {
   return {
     numero: etat.nuitsBouclees + 1,
-    recettes: 0,
-    partPersonnel: 0,
-    depenses: 0,
+    comptes: comptesVides(),
+    tresorerieAvant: etat.journee.tresorerieAvant,
+    tresorerieApres: etat.tresorerie,
+    retraitReserve: 0,
     servis: 0,
     perdus: 0,
     reputationDebut: etat.reputation,
@@ -136,7 +137,6 @@ function nouvelleNuit(etat: EtatJeu): Nuit {
     pireAvis: null,
     reserve: 0,
     imprevus: 0,
-    bar: 0,
   };
 }
 
@@ -158,9 +158,8 @@ export function ouvrirNuit(etat: EtatJeu, evenements: Sortie): void {
   livrerCommandeBar(etat);
   ouvrirNuitClientele(etat);
   if (etat.themeDuSoir) {
-    // Payé au briefing, le thème compte dans les dépenses de sa nuit (la trésorerie, elle, est déjà débitée).
+    // Payé au briefing, le thème est déjà dans les comptes de la journée.
     const cout = B.THEMES[etat.themeDuSoir]?.cout ?? 0;
-    if (etat.nuit) etat.nuit.depenses += cout;
     evenements.push({ type: 'theme', id: etat.themeDuSoir, montant: cout });
   }
   // Sélection stricte : le portier se paie à l'ouverture.
@@ -190,6 +189,13 @@ export function fermerNuit(etat: EtatJeu, tirage: Tirage, evenements: Sortie): v
   for (const e of etat.personnel) e.repos = false;
   etat.nuitsBouclees += 1;
   mettreEnReserve(etat, evenements);
+  if (etat.nuit) {
+    // Les comptes de la journée deviennent ceux de la nuit ; ce qui suit (jusqu'à 5 h) reste à la semaine.
+    etat.nuit.comptes = structuredClone(etat.journee.comptes);
+    etat.nuit.tresorerieAvant = etat.journee.tresorerieAvant;
+    etat.nuit.tresorerieApres = etat.tresorerie;
+    etat.nuit.retraitReserve = etat.journee.retraitReserve;
+  }
   if (etat.nuit) evenements.push({ type: 'bilan', nuit: structuredClone(etat.nuit) });
   verifierPaliers(etat, evenements);
 }
@@ -197,7 +203,7 @@ export function fermerNuit(etat: EtatJeu, tirage: Tirage, evenements: Sortie): v
 /** Réserve de sécurité : une part de la recette du soir quitte la trésorerie. */
 function mettreEnReserve(etat: EtatJeu, evenements: Sortie): void {
   if (!etat.systemes.reserve || !etat.nuit || etat.tauxReserve <= 0) return;
-  const montant = Math.round(Math.max(0, etat.nuit.recettes) * etat.tauxReserve);
+  const montant = Math.round(Math.max(0, recetteMaison(etat.journee.comptes)) * etat.tauxReserve);
   if (montant <= 0) return;
   etat.tresorerie -= montant;
   etat.reserve += montant;
@@ -395,7 +401,9 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   const tarif = trouverOffre(etat.offre).prix * (1 + ecartTarif(etat)) * formule.prix * prixTheme(etat);
   const prix = Math.round((modele.budget * B.BUDGET_CLIENTS * tarif * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
   const maison = Math.round(prix * (1 - employe.part));
-  encaisser(etat, maison, 'rendezVous');
+  // Le client paie la maison, qui reverse aussitôt sa part à la personne qui l'a reçu.
+  encaisser(etat, prix, 'rendezVous');
+  depenser(etat, prix - maison, 'partPersonnel');
   const gain = gainReputation(etat.clientele.satisfaction[modele.segment], ressentie);
   const effet = gain > 0 ? gain * trouverOffre(etat.offre).reputation * boucheTheme(etat) : gain;
   changerSatisfaction(etat, modele.segment, effet * B.SATISFACTION_PAR_CLIENT);
@@ -419,8 +427,6 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   const liste = ressentie >= 0.75 ? AVIS.excellents : ressentie >= 0.55 ? AVIS.corrects : AVIS.decevants;
   const avis = { client: modele.nom, texte: tirage.choisir(liste), qualite: ressentie };
   if (etat.nuit) {
-    etat.nuit.recettes += maison;
-    etat.nuit.partPersonnel += prix - maison;
     etat.nuit.servis += 1;
     if (!etat.nuit.meilleurAvis || qualite > etat.nuit.meilleurAvis.qualite) etat.nuit.meilleurAvis = avis;
     if (!etat.nuit.pireAvis || qualite < etat.nuit.pireAvis.qualite) etat.nuit.pireAvis = avis;
@@ -590,4 +596,6 @@ export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
     // La première mensualité payée ouvre le palier 3, présenté après le bilan du mois.
     verifierPaliers(etat, evenements);
   }
+  // La journée commence : ses comptes, ceux de la nuit à venir, partent de zéro.
+  etat.journee = journeeVide(etat.tresorerie);
 }

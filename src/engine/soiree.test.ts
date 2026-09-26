@@ -5,6 +5,7 @@ import { creerEtatInitial, type EtatJeu } from './etat';
 import { qualiteRdv } from './soiree';
 import { instant } from './temps';
 import { appliquerOrdres, tick, type EvenementMoteur, type Ordre } from './tick';
+import { comptesVides } from './comptes';
 
 const h = (heures: number, minutes = 0) => heures * 60 + minutes;
 
@@ -34,7 +35,8 @@ describe('ouverture de la nuit', () => {
   it('prépare la nuit : comptes à zéro et linge commandé livré', () => {
     const avant = partieA(h(19, 55), { lingeCommande: 50 });
     const { etat } = tick(avant);
-    expect(etat.nuit).toMatchObject({ numero: 1, recettes: 0, servis: 0, perdus: 0 });
+    expect(etat.nuit).toMatchObject({ numero: 1, servis: 0, perdus: 0 });
+    expect(etat.nuit?.comptes).toEqual(comptesVides());
     expect(etat.linge).toBe(B.LINGE_INITIAL + 50);
     expect(etat.lingeCommande).toBe(0);
   });
@@ -59,7 +61,7 @@ describe('clients et rendez-vous', () => {
   it('un rendez-vous terminé rapporte la part de la maison et use la chambre, le linge et Sanne', () => {
     const avant = partieA(h(21), {
       rendezVous: [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', formule: 'standard' as const, duree: 60, restant: 5 }],
-      nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0, bar: 0 },
+      nuit: { numero: 1, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 },
     });
     const { etat, evenements } = tick(avant);
     const fin = evenements.find((e) => e.type === 'finRdv');
@@ -67,9 +69,11 @@ describe('clients et rendez-vous', () => {
     const montant = fin && fin.type === 'finRdv' ? fin.montant : 0;
     expect(montant).toBeGreaterThan(0);
     expect(etat.tresorerie).toBe(avant.tresorerie + montant);
-    expect(etat.nuit?.recettes).toBe(montant);
+    // Le rendez-vous se compte plein, la part de Sanne part aussitôt en dépense.
+    const c = etat.journee.comptes;
+    expect(c.recettes.rendezVous - c.depenses.partPersonnel).toBe(montant);
     // Sanne garde 50 %, à l'arrondi près.
-    expect(Math.abs((etat.nuit?.partPersonnel ?? 0) - montant)).toBeLessThanOrEqual(1);
+    expect(Math.abs(c.depenses.partPersonnel - montant)).toBeLessThanOrEqual(1);
     expect(etat.nuit?.servis).toBe(1);
     expect(etat.linge).toBe(avant.linge - B.LINGE_PAR_RDV);
     const boudoir = etat.chambres.find((c) => c.id === 'boudoir')!;
@@ -85,7 +89,7 @@ describe('clients et rendez-vous', () => {
     const etat0 = partieA(h(21), {
       file: [{ id: 9, modele: 'poete', patience: 5 }],
       rendezVous: [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele: 'retraite', formule: 'standard' as const, duree: 60, restant: 60 }],
-      nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0, bar: 0 },
+      nuit: { numero: 1, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 },
     });
     const { etat, evenements } = tick(etat0);
     expect(evenements).toContainEqual({ type: 'clientParti', client: 'Le poète fauché' });
@@ -124,7 +128,7 @@ describe('clients et rendez-vous', () => {
     let etat = partieA(h(21), {
       file,
       personnel: creerEtatInitial().personnel.map((e) => ({ ...e, repos: true })),
-      nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0, bar: 0 },
+      nuit: { numero: 1, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 },
     });
     let pleine = false;
     for (let i = 0; i < 40 && !pleine; i++) {
@@ -253,7 +257,7 @@ describe('fermeture et bilan', () => {
     const avant = partieA(h(3, 55), {
       file: [{ id: 5, modele: 'poete', patience: 40 }],
       rendezVous: [{ chambreId: 'boudoir', employeId: 'sanne', clientId: 4, modele: 'retraite', formule: 'standard' as const, duree: 60, restant: 40 }],
-      nuit: { numero: 1, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0, bar: 0 },
+      nuit: { numero: 1, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 },
     });
     const { etat, evenements } = tick(avant);
     expect(etat.rendezVous).toHaveLength(0);
@@ -277,7 +281,7 @@ describe('fermeture et bilan', () => {
       const nuit = etat.nuit!;
       expect(nuit.servis).toBeGreaterThanOrEqual(1);
       expect(nuit.servis).toBeLessThanOrEqual(B.RDV_MAX_PAR_SOIR);
-      expect(nuit.recettes).toBeGreaterThan(0);
+      expect(nuit.comptes.recettes.rendezVous).toBeGreaterThan(0);
     }
   });
 });

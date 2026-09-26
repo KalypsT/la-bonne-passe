@@ -5,6 +5,7 @@ import { creerEtatInitial, type EtatJeu } from './etat';
 import { gainReputation, jourProchaineMensualite, NOMBRE_MENSUALITES } from './soiree';
 import { heureDeInstant, instant } from './temps';
 import { appliquerOrdres, tick, TAILLE_JOURNAL, type EvenementMoteur, type Ordre } from './tick';
+import { comptesVides, journeeVide } from './comptes';
 
 const h = (heures: number, minutes = 0) => heures * 60 + minutes;
 
@@ -145,7 +146,7 @@ describe('équipe de ménage', () => {
 });
 
 describe('réserve de sécurité', () => {
-  const nuit = { numero: 2, recettes: 500, partPersonnel: 500, depenses: 0, servis: 3, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0, bar: 0 };
+  const nuit = { numero: 2, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 3, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 };
 
   it('ne se règle pas avant le palier 1', () => {
     expect(ordonner(partieA(h(10)), { type: 'tauxReserve', taux: 0.2 }).etat.tauxReserve).toBe(0);
@@ -157,7 +158,11 @@ describe('réserve de sécurité', () => {
 
   it('met de côté une part de la recette du soir à la fermeture', () => {
     const regle = ordonner(auPalier1(), { type: 'tauxReserve', taux: 0.2 }).etat;
-    const avant = { ...regle, minuteDuJour: h(3, 55), briefingJour: 2, nuit };
+    // La maison a gardé 500 € de ses rendez-vous : 1 000 € encaissés, 500 € reversés.
+    const journee = journeeVide(regle.tresorerie);
+    journee.comptes.recettes.rendezVous = 1000;
+    journee.comptes.depenses.partPersonnel = 500;
+    const avant = { ...regle, minuteDuJour: h(3, 55), briefingJour: 2, nuit, journee };
     const { etat, evenements } = tick(avant);
     expect(etat.reserve).toBe(100);
     expect(etat.tresorerie).toBe(avant.tresorerie - 100);

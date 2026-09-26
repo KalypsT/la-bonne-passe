@@ -119,7 +119,7 @@ describe('sélection à l’entrée', () => {
     const ouverture = regle({ ...stricte, minuteDuJour: h(19, 55), briefingJour: 5 }, { type: 'regle', regle: 'selection', valeur: 'stricte' });
     const { etat, evenements } = tick(ouverture);
     expect(evenements).toContainEqual({ type: 'portier', montant: B.SELECTIONS.stricte.cout });
-    expect(etat.nuit?.depenses).toBe(B.SELECTIONS.stricte.cout);
+    expect(etat.journee.comptes.depenses.portier).toBe(B.SELECTIONS.stricte.cout);
   });
 
   it('les disputes : trois fois moins en stricte, plus nombreuses en laxiste', () => {

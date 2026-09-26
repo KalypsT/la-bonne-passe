@@ -2,6 +2,7 @@ import { BAR_MAX, LIVRAISON_EXPRESS_BAR, RENOVATION_BAR, SALAIRE_BAR, SEUIL_BAR 
 import { PALIERS } from '../content/paliers';
 import { TEXTES } from '../content/textes';
 import { barSert } from '../engine/bar';
+import { comptesDeLaNuit } from '../engine/comptes';
 import type { EtatJeu } from '../engine/etat';
 import { heureDeInstant } from '../engine/temps';
 import { formaterEuros, formaterHeure } from './format';
@@ -23,6 +24,7 @@ export function etatDuBar(partie: EtatJeu): string {
 export function FicheBar({ partie }: { partie: EtatJeu }) {
   const ordonner = useInterface((s) => s.ordonner);
   const b = partie.bar;
+  const recetteBar = comptesDeLaNuit(partie)?.recettes.bar ?? 0;
 
   if (!partie.systemes.bar) {
     const p = PALIERS.find((x) => x.numero === 2)!;
@@ -71,10 +73,10 @@ export function FicheBar({ partie }: { partie: EtatJeu }) {
         </button>
       </div>
       <p className="sous">{t.equipeAide}</p>
-      {partie.nuit && partie.nuit.bar > 0 && (
+      {recetteBar > 0 && (
         <>
           <h3>{t.recette}</h3>
-          <p className="sous">{formaterEuros(partie.nuit.bar)}</p>
+          <p className="sous">{formaterEuros(recetteBar)}</p>
         </>
       )}
       <p className="sous">{t.recetteDetail}</p>

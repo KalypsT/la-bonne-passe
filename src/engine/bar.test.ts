@@ -7,6 +7,7 @@ import { accorderPalier } from './paliers';
 import { formuleActive } from './regles';
 import { arrivee, modeleClient } from './soiree';
 import { appliquerOrdres, tick, type Ordre } from './tick';
+import { comptesVides } from './comptes';
 
 const h = (heures: number, minutes = 0) => heures * 60 + minutes;
 
@@ -26,7 +27,7 @@ function avecBar(champs: Partial<EtatJeu> = {}): EtatJeu {
 
 const ordonner = (etat: EtatJeu, ordre: Ordre) => appliquerOrdres(etat, [ordre]);
 const rdv = (modele: string, formule: B.IdFormule = 'standard') => ({ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele, formule, duree: 60, restant: 5 });
-const nuit = () => ({ numero: 5, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0, bar: 0 });
+const nuit = () => ({ numero: 5, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 });
 
 /** Avance jusqu'à l'heure dite, en validant les briefings. */
 function jusqua(etat: EtatJeu, jour: number, minute: number) {
@@ -80,11 +81,11 @@ describe('ventes et stock', () => {
   it('chaque client reçu passe au bar : recette selon son segment, bouteilles bues', () => {
     const avant = avecBar({ rendezVous: [rdv('fetard')], nuit: nuit() });
     const apres = tick(avant).etat;
-    expect(apres.nuit?.bar).toBe(B.BAR_RECETTE.groupe);
+    expect(apres.journee.comptes.recettes.bar).toBe(B.BAR_RECETTE.groupe);
     expect(apres.bar.stock).toBeCloseTo(30 - B.BAR_CONSO.groupe);
     const sansBar = tick(partie(2, { rendezVous: [rdv('fetard')], nuit: nuit() })).etat;
     expect(apres.tresorerie - sansBar.tresorerie).toBeGreaterThanOrEqual(B.BAR_RECETTE.groupe);
-    expect(sansBar.nuit?.bar).toBe(0);
+    expect(sansBar.journee.comptes.recettes.bar).toBe(0);
   });
 
   it('un bar qui sert plaît, surtout aux groupes ; un bar vide les fâche et donne l’alerte', () => {

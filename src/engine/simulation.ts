@@ -20,13 +20,21 @@ import { CARTES_RIVALE, INTRIGUE_CHAT_NOIR } from '../content/rivale';
 import { IMPREVUS_QUARTIER } from '../content/imprevusQuartier';
 import { actionPossible } from './relations';
 import { reponsePossible } from './rivale';
+import { gagneNuit } from './comptes';
 
 export interface ResumeNuit {
   numero: number;
   reputation: number;
   tresorerie: number;
-  /** Recette de la maison moins les dépenses de la nuit. */
+  /** Recette de la maison moins les dépenses de la nuit, hors salaires de midi et travaux (la cible des spécifications). */
   net: number;
+  /** Gagné cette nuit, comme au bilan de fermeture : recettes moins toutes les dépenses de la journée. */
+  gagne: number;
+  /**
+   * Ce que le bilan de fermeture ne sait pas expliquer : trésorerie après, moins trésorerie avant, gagné,
+   * réserve mise de côté et retirée. Toujours zéro si les comptes de la nuit sont justes.
+   */
+  ecartCaisse: number;
   /** Résultat réel depuis le bilan précédent : trésorerie et réserve, frais fixes et investissements compris. */
   resultat: number;
   /** Satisfaction de chaque segment à la fermeture. */
@@ -203,9 +211,11 @@ export function simuler(options: OptionsSimulation): {
           numero: e.nuit.numero,
           reputation: etat.reputation,
           tresorerie: etat.tresorerie,
-          net: e.nuit.recettes - e.nuit.depenses,
+          net: gagneNuit(e.nuit.comptes) + e.nuit.comptes.depenses.salaires + e.nuit.comptes.depenses.travaux,
+          gagne: gagneNuit(e.nuit.comptes),
+          ecartCaisse: e.nuit.tresorerieApres - e.nuit.tresorerieAvant - gagneNuit(e.nuit.comptes) + e.nuit.reserve - e.nuit.retraitReserve,
           resultat: etat.tresorerie + etat.reserve - avoirPrecedent,
-          bar: e.nuit.bar,
+          bar: e.nuit.comptes.recettes.bar,
           satisfaction: { ...etat.clientele.satisfaction },
           servisParSegment: { ...(etat.clientele.historique[0]?.servis ?? { touriste: 0, habitue: 0, affaires: 0, groupe: 0 }) },
           servis: e.nuit.servis,

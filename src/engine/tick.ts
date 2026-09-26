@@ -169,7 +169,7 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       return;
     }
     case 'livraisonLinge':
-      depenser(etat, B.LIVRAISON_EXPRESS_LINGE.prix, 'linge');
+      depenser(etat, B.LIVRAISON_EXPRESS_LINGE.prix, 'express');
       etat.linge += B.LIVRAISON_EXPRESS_LINGE.draps;
       evenements.push({ type: 'livraisonLinge', montant: B.LIVRAISON_EXPRESS_LINGE.prix });
       return;
@@ -219,6 +219,7 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       const urgence = etat.tresorerie < 0;
       etat.tresorerie += montant;
       etat.reserve = 0;
+      etat.journee.retraitReserve += montant;
       evenements.push({ type: 'retraitReserve', montant, urgence });
       return;
     }
