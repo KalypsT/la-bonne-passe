@@ -405,6 +405,17 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), 'parures'],
     };
   },
+  // v26 → v27 : les crans de 2 à 6 rendez-vous, avec refus et négociation au cran 6 (leur propre hasard).
+  // Josée les présente aux parties qui ont déjà le planning (palier 1).
+  26: (d) => {
+    const palier = typeof d.palier === 'number' ? d.palier : 0;
+    return {
+      ...d,
+      version: 27,
+      hasardPlafond: (typeof d.hasard === 'number' ? d.hasard * 23 + 11 : 11) | 0,
+      nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(palier >= 1 ? ['crans'] : [])],
+    };
+  },
 };
 
 
@@ -493,6 +504,7 @@ function estEtatValide(d: Donnees): boolean {
     typeof d.hasardQuartier === 'number' &&
     estObjet(d.rivale) &&
     typeof d.hasardRivale === 'number' &&
+    typeof d.hasardPlafond === 'number' &&
     estObjet(d.systemes)
   );
 }

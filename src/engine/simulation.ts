@@ -22,6 +22,8 @@ import { actionPossible } from './relations';
 import { reponsePossible } from './rivale';
 import { gagneNuit } from './comptes';
 
+const moyenne = (l: number[]) => (l.length ? l.reduce((a, b) => a + b, 0) / l.length : 0);
+
 export interface ResumeNuit {
   numero: number;
   reputation: number;
@@ -35,6 +37,10 @@ export interface ResumeNuit {
    * réserve mise de côté et retirée. Toujours zéro si les comptes de la nuit sont justes.
    */
   ecartCaisse: number;
+  /** Personnel à la fermeture : fatigue moyenne et la plus haute, moral moyen (v0.6). */
+  fatigueMoyenne: number;
+  fatigueMax: number;
+  moralMoyen: number;
   /** Résultat réel depuis le bilan précédent : trésorerie et réserve, frais fixes et investissements compris. */
   resultat: number;
   /** Satisfaction de chaque segment à la fermeture. */
@@ -86,6 +92,10 @@ export interface OptionsSimulation {
   equipeBar?: number;
   /** Accepter l'avance du grossiste. */
   avance?: boolean;
+  /** Mettre au repos quiconque dépasse cette fatigue au briefing (55 par défaut ; 101 : jamais). */
+  reposFatigue?: number;
+  /** Au cran 6, accepter ce que demandent ceux qui négocient (prime ou repos promis). */
+  accepterNegociations?: boolean;
   /** Soirée à thème programmée au briefing, dès qu'elles sont ouvertes (fixe, ou choisie selon la partie). */
   theme?: string | null | ((etat: EtatJeu) => string | null);
   /** Pour les mesures : ces tendances toutes les semaines, dès qu'elles sont ouvertes. */
@@ -213,6 +223,9 @@ export function simuler(options: OptionsSimulation): {
           tresorerie: etat.tresorerie,
           net: gagneNuit(e.nuit.comptes) + e.nuit.comptes.depenses.salaires + e.nuit.comptes.depenses.travaux,
           gagne: gagneNuit(e.nuit.comptes),
+          fatigueMoyenne: moyenne(etat.personnel.map((x) => x.fatigue)),
+          fatigueMax: Math.max(0, ...etat.personnel.map((x) => x.fatigue)),
+          moralMoyen: moyenne(etat.personnel.map((x) => x.moral)),
           ecartCaisse: e.nuit.tresorerieApres - e.nuit.tresorerieAvant - gagneNuit(e.nuit.comptes) + e.nuit.reserve - e.nuit.retraitReserve,
           resultat: etat.tresorerie + etat.reserve - avoirPrecedent,
           bar: e.nuit.comptes.recettes.bar,
@@ -349,10 +362,12 @@ export function simuler(options: OptionsSimulation): {
 
     if (r.evenements.some((e) => e.type === 'briefing')) {
       const offre = typeof options.offre === 'function' ? options.offre(etat) : options.offre;
-      const repos = etat.personnel.filter((e) => e.fatigue > 55 || e.promesseRepos !== null).map((e) => e.id);
+      const seuilRepos = options.reposFatigue ?? 55;
+      const repos = etat.personnel.filter((e) => e.fatigue > seuilRepos || (seuilRepos <= 100 && e.promesseRepos !== null)).map((e) => e.id);
+      const accords = Object.fromEntries(etat.personnel.map((e) => [e.id, options.accepterNegociations ? 'accepter' : 'refuser'] as const));
       const commanderBar = etat.bar.ouvert && etat.equipes.bar > 0 && etat.bar.stock < (etat.regles.formule === 'champagne' ? 50 : 30);
       const theme = typeof options.theme === 'function' ? options.theme(etat) : (options.theme ?? null);
-      jouer([{ type: 'validerBriefing', offre, packLinge: etat.linge < 4 ? 5 : 0, commanderBar, repos, rdvMax, theme }]);
+      jouer([{ type: 'validerBriefing', offre, packLinge: etat.linge < 4 ? 5 : 0, commanderBar, repos, rdvMax, theme, accords }]);
     }
   }
   return { nuits: resumes, etat, departs, bilans, tresorerieMin, intrigues: etat.intrigues.finies, bilansMois };

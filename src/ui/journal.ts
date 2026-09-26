@@ -1,4 +1,5 @@
 import type { IdFormule, IdPriorite, IdSelection, IdVisibilite } from '../content/balance';
+import { TEXTES_PLAFOND } from '../content/plafond';
 import { CLIENTS } from '../content/clientele';
 import { trouverImprevu } from '../content/imprevus';
 import { trouverIntrigue } from '../content/intrigues';
@@ -193,6 +194,12 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
           : t.entretienRecadrer(evenement.prenom);
     case 'prime':
       return t.prime(evenement.prenom, formaterEuros(evenement.montant));
+    case 'plafondRefuse':
+      return TEXTES_PLAFOND.journalRefus(evenement.prenom);
+    case 'plafondAccord':
+      return evenement.contrepartie === 'prime'
+        ? TEXTES_PLAFOND.journalPrime(evenement.prenom, formaterEuros(evenement.montant))
+        : TEXTES_PLAFOND.journalRepos(evenement.prenom);
     case 'amitie':
       return t.amitie(evenement.prenom, evenement.prenom2);
     case 'rivalite':

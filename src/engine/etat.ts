@@ -181,6 +181,8 @@ export interface Employe extends Identite {
   recadre: number;
   /** En pause jusqu'à cet instant (minutes absolues) : pas de rendez-vous (v0.4). */
   pauseJusqua?: number;
+  /** A refusé le cran 6 au briefing : s'arrête à ce nombre ce soir (v0.6). */
+  plafondCeSoir?: number;
 }
 
 export interface Candidat extends Identite {
@@ -378,6 +380,8 @@ export interface EtatJeu {
   rivale: Rivale;
   /** Générateur à part pour la rivale (v0.5). */
   hasardRivale: number;
+  /** Hasard des réponses au cran 6, à part pour ne pas décaler les autres tirages (v0.6). */
+  hasardPlafond: number;
   /** Niveau d'assurance (indice dans ASSURANCES) : 0 aucune, 1 casse, 2 casse et amendes (v0.5). */
   assurance: number;
   /** Étape du didacticiel de Madame Josée, ou null s'il est fini ou passé. */
@@ -387,7 +391,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 26;
+export const VERSION_ETAT = 27;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -564,6 +568,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     hasardQuartier: ((options.graine ?? GRAINE_PAR_DEFAUT) * 31 + 7) | 0,
     rivale: rivaleDeDepart(),
     hasardRivale: ((options.graine ?? GRAINE_PAR_DEFAUT) * 17 + 3) | 0,
+    hasardPlafond: ((options.graine ?? GRAINE_PAR_DEFAUT) * 23 + 11) | 0,
     assurance: 0,
     didacticiel: options.didacticiel ? 0 : null,
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,

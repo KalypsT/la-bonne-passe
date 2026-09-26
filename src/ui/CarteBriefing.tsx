@@ -1,9 +1,13 @@
 import { useState } from 'react';
-import { CIBLES_LINGE_AUTO, COMMANDE_BAR, FORMULES, PACKS_LINGE, SEUIL_BAR, THEMES, HEURE_FERMETURE, HEURE_OUVERTURE, RDV_MAX_CRANS } from '../content/balance';
+import { CIBLES_LINGE_AUTO, COMMANDE_BAR, FORMULES, PACKS_LINGE, PLAFOND, SEUIL_BAR, THEMES, HEURE_FERMETURE, HEURE_OUVERTURE, RDV_MAX_CRANS } from '../content/balance';
 import { OFFRES, type Offre } from '../content/clientele';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
 import { manqueAuto, prixLinge } from '../engine/linge';
+import { fatigueFinDeNuit, fatigueLendemain, reponsePlafond, type AccordPlafond } from '../engine/plafond';
+import { AIDE_CRANS, etatFinDeNuit, repliquePlafond, TEXTES_PLAFOND } from '../content/plafond';
+import type { Employe } from '../engine/etat';
+import type { IdFormule } from '../content/balance';
 import { jourDeLaSemaine } from '../engine/temps';
 import { Avatar } from '../scene/Avatar';
 import { formaterEuros, formaterHeure } from './format';
@@ -28,6 +32,8 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
   // Planning : une personne promise au repos est proposée au repos d'office.
   const [repos, setRepos] = useState<string[]>(() => partie.personnel.filter((e) => e.promesseRepos !== null).map((e) => e.id));
   const [rdvMax, setRdvMax] = useState(partie.rdvMax);
+  // Au cran 6 : ta réponse à ceux qui négocient (par défaut, ils s'arrêtent à 5).
+  const [accords, setAccords] = useState<Record<string, AccordPlafond>>({});
   const planning = partie.systemes.planning;
   const formule = formuleActive(partie);
   const tendances = partie.semaine.tendances.flatMap((id) => trouverTendance(id) ?? []);
@@ -36,7 +42,6 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
     if (suivant.length < partie.personnel.length) setRepos(suivant);
   };
   const pl = TEXTES.planning;
-  const indiceRdv = Math.max(0, RDV_MAX_CRANS.findIndex((n) => n === rdvMax));
   const t = TEXTES.briefing;
   const p = TEXTES.personnel;
   const jourSemaine = TEXTES.jours[jourDeLaSemaine(partie.jour)] ?? '';
@@ -56,7 +61,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
               {TEXTES.date(jourSemaine, partie.jour)} · {t.horaires(formaterHeure(HEURE_OUVERTURE), formaterHeure(HEURE_FERMETURE))}
             </p>
           </div>
-          <button className="bouton principal" onClick={() => validerBriefing({ offre, packLinge, lingeAuto, commanderBar, repos: planning ? repos : [], rdvMax, theme })}>
+          <button className="bouton principal" onClick={() => validerBriefing({ offre, packLinge, lingeAuto, commanderBar, repos: planning ? repos : [], rdvMax, theme, accords })}>
             {t.lancer}
           </button>
         </header>
@@ -65,6 +70,22 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
         )}
         <div className="carte-colonnes">
           <section>
+            {planning && (
+              <>
+                <h3>{pl.rdvMax}</h3>
+                <div className="boutons-ligne" role="group" aria-label={pl.rdvMax}>
+                  {RDV_MAX_CRANS.map((n) => (
+                    <button key={n} className={rdvMax === n ? 'choix-court choisi' : 'choix-court'} aria-pressed={rdvMax === n} onClick={() => setRdvMax(n)}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <p className="sous">
+                  {AIDE_CRANS[rdvMax]}
+                  {formule !== 'standard' && ` ${pl.charge(TEXTES_FORMULES[formule].nom, FORMULES[formule].charge)}`}
+                </p>
+              </>
+            )}
             <h3>{t.ceSoir}</h3>
             {partie.personnel.map((e) => {
               const auRepos = repos.includes(e.id);
@@ -77,6 +98,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
                     <br />
                     {p.fatigue.toLowerCase()} <span className={e.fatigue > 70 ? 'negatif' : ''}>{Math.round(e.fatigue)} %</span> ·{' '}
                     {p.moral.toLowerCase()} <span className={e.moral < 35 ? 'negatif' : ''}>{Math.round(e.moral)} %</span>
+                    {planning && !auRepos && <EstimationFatigue employe={e} cran={rdvMax} formule={formule} theme={theme} />}
                   </p>
                   {planning && (
                     <button
@@ -88,25 +110,18 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
                       {auRepos ? pl.repos : pl.travaille}
                     </button>
                   )}
+                  {planning && !auRepos && (
+                    <ReponseCran
+                      partie={partie}
+                      employe={e}
+                      cran={rdvMax}
+                      accord={accords[e.id] ?? 'refuser'}
+                      choisir={(a) => setAccords({ ...accords, [e.id]: a })}
+                    />
+                  )}
                 </div>
               );
             })}
-            {planning && (
-              <>
-                <h3>{pl.rdvMax}</h3>
-                <div className="boutons-ligne" role="group" aria-label={pl.rdvMax}>
-                  {RDV_MAX_CRANS.map((n) => (
-                    <button key={n} className={rdvMax === n ? 'choix-court choisi' : 'choix-court'} aria-pressed={rdvMax === n} onClick={() => setRdvMax(n)}>
-                      {n}
-                    </button>
-                  ))}
-                </div>
-                <p className="sous">
-                  {pl.rdvMaxAide[indiceRdv]}
-                  {formule !== 'standard' && ` ${pl.charge(TEXTES_FORMULES[formule].nom, FORMULES[formule].charge)}`}
-                </p>
-              </>
-            )}
             {!partie.systemes.planning && partie.didacticiel === null && <p className="sous">{t.planningVerrouille(partie.personnel[0]?.prenom ?? '')}</p>}
             <h3>{t.linge}</h3>
             <p className="sous">{t.stockLingeCommande(partie.linge, partie.lingeCommande)}</p>
@@ -208,6 +223,55 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
           </section>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Fatigue attendue en fin de nuit au cran choisi (Fêtarde, formule et thème compris). */
+function EstimationFatigue({ employe, cran, formule, theme }: { employe: Employe; cran: number; formule: IdFormule; theme: string | null }) {
+  const fin = fatigueFinDeNuit(employe, cran, formule, theme);
+  const t = TEXTES_PLAFOND;
+  return (
+    <>
+      <br />
+      <span className={fin > 80 ? 'negatif' : fin > 75 ? 'laiton' : ''}>
+        {t.finDeNuit(fin, etatFinDeNuit(fin, employe.genre))}
+        {fin > 80 && fatigueLendemain(fin, employe) > 0 && t.pasRemis(employe.genre)}
+      </span>
+    </>
+  );
+}
+
+/** Au cran 6 : le refus ou la négociation d'une personne, avec ta réponse. */
+function ReponseCran({
+  partie,
+  employe,
+  cran,
+  accord,
+  choisir,
+}: {
+  partie: EtatJeu;
+  employe: Employe;
+  cran: number;
+  accord: AccordPlafond;
+  choisir: (a: AccordPlafond) => void;
+}) {
+  const reponse = reponsePlafond(partie, employe, cran);
+  if (reponse === 'accepte') return null;
+  const t = TEXTES_PLAFOND;
+  return (
+    <div className="reponse-cran">
+      <p className="mini-fiche">{repliquePlafond(reponse, employe, partie.jour)}</p>
+      {reponse !== 'refuse' && (
+        <div className="boutons-ligne" role="group" aria-label={employe.prenom}>
+          <button className={accord === 'accepter' ? 'choix-court choisi' : 'choix-court'} aria-pressed={accord === 'accepter'} onClick={() => choisir('accepter')}>
+            {reponse === 'negociePrime' ? t.primeAccepter(formaterEuros(PLAFOND.prime)) : t.reposAccepter}
+          </button>
+          <button className={accord === 'refuser' ? 'choix-court choisi' : 'choix-court'} aria-pressed={accord === 'refuser'} onClick={() => choisir('refuser')}>
+            {t.resterACinq}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

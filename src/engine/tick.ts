@@ -32,6 +32,7 @@ import { agirRelation, matinDesRelations, type EvenementRelation, type OrdreRela
 import { lundiDeLaRivale, repondreRivale, type EvenementRivale, type OrdreRivale } from './rivale';
 import { changerAssurance, changerEquipe, type EvenementEquipe, type OrdreEquipe } from './equipes';
 import { traiterAlerte, type OrdreMinuterie } from './minuteries';
+import { appliquerPlafond, type AccordPlafond, type EvenementPlafond } from './plafond';
 import { changerCibleAuto, commanderAuto, commanderPack, livraisonExpress, type EvenementLinge } from './linge';
 
 /** Ordres envoyés par l'interface au moteur. */
@@ -50,6 +51,8 @@ export type Ordre =
       /** Planning (palier 1) : qui se repose ce soir, et le maximum de rendez-vous par personne. */
       repos?: string[];
       rdvMax?: number;
+      /** Au cran 6, ta réponse à ceux qui négocient (par défaut : ils s'arrêtent à 5). */
+      accords?: Record<string, AccordPlafond>;
     }
   | { type: 'nettoyageExpress'; chambreId: string }
   | { type: 'livraisonLinge' }
@@ -86,6 +89,7 @@ export type EvenementMoteur =
   | { type: 'fermeture'; jour: number }
   | { type: 'nettoyage'; chambreId: string; montant: number }
   | EvenementLinge
+  | EvenementPlafond
   | { type: 'repos'; employeId: string; prenom?: string }
   | { type: 'disputeReglee'; choix: 'verre' | 'calmer'; reussite: boolean }
   | { type: 'debutTravaux'; chambreId: string; montant: number; fin: number }
@@ -159,6 +163,8 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
         const repos = new Set(ordre.repos ?? []);
         const tousAuRepos = etat.personnel.every((e) => repos.has(e.id));
         for (const e of etat.personnel) e.reposPrevu = !tousAuRepos && repos.has(e.id);
+        // Au cran 6, chacun répond : oui, non (il s'arrête à 5), ou à négocier.
+        appliquerPlafond(etat, ordre.accords ?? {}, evenements);
       }
       return;
     }

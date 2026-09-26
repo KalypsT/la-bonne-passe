@@ -295,7 +295,6 @@ export const TEXTES = {
     reposDetail: 'Repos : fatigue en baisse, moral en hausse.',
     unAuMoins: 'Il faut au moins une personne en service.',
     rdvMax: 'Rendez-vous max par personne',
-    rdvMaxAide: ['Personnel reposé, recettes limitées.', 'Raisonnable.', 'Rentable… jusqu’à l’épuisement.'],
     charge: (formule: string, charge: number) => `${formule} : chacun compte pour ${String(charge).replace('.', ',')}.`,
     promesse: 'repos promis',
     menace: 'veut partir',
