@@ -416,6 +416,8 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   employe.rdvCeSoir += 1;
   employe.chargeCeSoir += chargeFormule(rdv.formule);
   employe.moral = borner(employe.moral - B.MORAL_PAR_RDV * formule.charge);
+  // Au-delà de 4 rendez-vous dans la nuit, chacun pèse davantage sur le moral.
+  if (employe.rdvCeSoir > B.PLAFOND.confort) employe.moral = borner(employe.moral - B.PLAFOND.moralAuDela);
   etat.linge = Math.max(0, etat.linge - B.LINGE_PAR_RDV);
   chambre.proprete = borner(chambre.proprete - tirage.entre(B.SALISSURE_MIN, B.SALISSURE_MAX) * formule.salissure);
   chambre.etat = borner(chambre.etat - tirage.entre(B.USURE_MIN, B.USURE_MAX));

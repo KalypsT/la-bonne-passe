@@ -1346,3 +1346,34 @@ Le linge se compte en parures, une par rendez-vous, au lieu de 10 draps par rend
 - Une parure coûte 4 à 5 % de la recette d'un rendez-vous (environ 240 € en moyenne au premier mois) : le linge reste un poste mineur, que le gros pack allège d'environ 2 € par rendez-vous.
 - Une maison à 4 personnes et 4 rendez-vous chacune use 16 parures par nuit : la commande automatique à 20 revient à environ 160 à 180 € par soir, contre environ 190 € au tarif du pack de 5 et près de 290 € en express.
 - Le joueur simulé commande toujours un pack de 5 quand il lui reste moins de 4 parures, comme avant : toutes les mesures des versions précédentes restent valables.
+
+### Le plafond de rendez-vous (partie 1c)
+
+Crans 2 à 6 au briefing, 4 par défaut. La fatigue ne change pas : 12 à 17 points par rendez-vous (14,5 en moyenne), 1 point récupéré par heure libre en service, 4 par heure au repos (64 entre deux nuits). Estimation d'une personne reposée : 54 % en fin de nuit à 4, 70 % à 5, 85 % à 6 (21 % encore le lendemain).
+
+**Le frein** : sans lui, le cran 5 rapportait près de 6 000 € de plus que le 4 sur un mois, et le 6 autant que le 5. Chaque rendez-vous au-delà de 4 coûte désormais 7 points de moral en plus (`PLAFOND.moralAuDela`). Essais à 5, 6, 7 et 8 : à 5, le 6 permanent sans repos gardait 33 % d'avance au bout d'un mois ; à 8, le 5 coûtait plus de 2 départs en deux mois même avec des soirs de repos. À 7, le 6 permanent fait jeu égal avec le 4 le premier mois, puis s'effondre.
+
+**Refus au cran 6** : possible si la fatigue au briefing atteint 30 ou si le moral est sous 50. Chance de réticence 45 % (90 % si les deux), multipliée selon les traits (Diva ×1,5, Solitaire ×1,3, Tête brûlée ×1,2, Mère poule ×0,8, Fêtarde et Fidèle ×0,6). Une réticence se négocie dans 55 % des cas (plus avec une loyauté haute) : prime de 60 € ou soir de repos promis. Tiré avec son propre hasard (`hasardPlafond`) : les autres tirages de la partie ne bougent pas.
+
+Premier mois selon le cran (joueur actif classique, 10 graines, 56 nuits ; « repos » : il met au repos quiconque dépasse 55 de fatigue ; au cran 6, il laisse à 5 ceux qui négocient) :
+
+| Cran | Repos | Clients reçus (28 nuits) | Net des nuits 1 à 28 | Trésorerie jour 28 (mensualité payée) | Trésorerie jour 56 | Plus bas | Fatigue la plus haute | Moral semaine 4 / 8 | Départs (56 nuits) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 3 | oui | 270 | 18 595 € | 2 412 € | 6 367 € | −279 € | 59 | 91 / 98 | 0,0 |
+| 4 | oui | 314 | 21 600 € | 4 668 € | 11 920 € | −5 € | 87 | 85 / 86 | 0,3 |
+| 5 | oui | 360 | 25 402 € | 7 938 € | 11 712 € | 43 € | 97 | 56 / 41 | 1,7 |
+| 6 | oui | 326 | 22 347 € | 5 259 € | 680 € | −2 925 € | 99 | 55 / 2 | 3,7 |
+| 3 | non | 279 | 19 056 € | 2 856 € | 5 480 € | −201 € | 61 | 89 / 98 | 0,0 |
+| 4 | non | 316 | 21 644 € | 4 692 € | 12 316 € | −60 € | 87 | 83 / 85 | 0,0 |
+| 5 | non | 368 | 25 821 € | 8 334 € | 12 694 € | 282 € | 99 | 54 / 37 | 1,9 |
+| 6 | non | 343 | 23 593 € | 6 392 € | 4 709 € | −2 907 € | 100 | 47 / 23 | 2,3 |
+
+Lecture :
+
+- **Le 4** reste le réglage sain : moral stable, presque aucun départ.
+- **Le 5** rapporte le plus au premier mois (+3 300 € au jour 28), puis rien de plus au deuxième, avec un moral qui tombe à 40 et 2 départs : un coup d'accélérateur, pas un régime.
+- **Le 6** permanent use l'équipe : moral sous 25 au deuxième mois, 2 à 4 départs, trésorerie effondrée. Garde dans `plafond.test.ts` : Sanne seule sans repos, épuisée en quelques nuits et moral sous 30 à la nuit 7 ; sur deux mois, le 6 ne dépasse pas le 4 de plus de 15 % au jour 35 et finit au moins 25 % derrière au jour 56.
+
+**Une seule chambre, au départ** (Sanne seule, 3 premières nuits, 10 graines) : elle fait 3,9 rendez-vous en moyenne au cran 4 (28 nuits sur 30 au plafond), 4,5 au cran 5 (15 sur 30) et 4,9 au cran 6 (14 sur 30). Le cran 6 est donc atteignable avec une seule chambre, une nuit sur deux : le frein vient des arrivées (environ un client par heure au départ) plus que de la chambre (des rendez-vous de 50 à 75 minutes laissent la place à 7 dans la nuit).
+
+**À surveiller** : au cran 4, qui est le réglage par défaut du jeu, le premier mois dépasse la cible des spécifications (0 à 4 000 € après la première mensualité) : 4 700 € au jour 28, 7 900 € au cran 5. Les gardes historiques jouent au cran 3 (2 400 €). À reprendre dans la partie 8, avec le découvert et l'impôt.

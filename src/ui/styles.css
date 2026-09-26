@@ -1365,6 +1365,7 @@ body {
 /* Planning au briefing */
 .ligne-planning {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -1765,4 +1766,25 @@ body {
 .chiffres.serre div {
   padding: 3px 0;
   font-size: 12.5px;
+}
+
+/* Au briefing, la réponse d'une personne au cran 6 */
+.reponse-cran {
+  flex-basis: 100%;
+  margin: 2px 0 4px;
+  padding-left: 8px;
+  border-left: 2px solid var(--laiton);
+}
+
+.reponse-cran .mini-fiche {
+  font-style: italic;
+}
+
+.reponse-cran .boutons-ligne {
+  margin: 4px 0 0;
+}
+
+.ligne-planning > .mini-fiche {
+  flex: 1 1 0;
+  min-width: 0;
 }

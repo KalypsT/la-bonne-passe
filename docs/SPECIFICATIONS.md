@@ -165,7 +165,10 @@ Les traits modifient les règles. Exemples : une Diva perd du moral tant qu'aucu
 
 ### Actions du joueur
 
-1. **Planning** : qui travaille quels soirs, décidé au briefing. Repos, congés, soirée spéciale, et le nombre maximum de rendez-vous par personne et par soir (2, 3 ou 4 : plus de recettes, plus d'usure).
+1. **Planning** : qui travaille quels soirs, décidé au briefing. Repos, congés, soirée spéciale, et le nombre maximum de rendez-vous par personne et par soir (v0.6 : 2 à 6, 4 par défaut ; plus de recettes, plus d'usure).
+   - Un rendez-vous fatigue d'environ 14,5 points, et une journée de repos en rend 64. Au briefing, chaque personne affiche sa fatigue attendue en fin de nuit au cran choisi, en comptant la fatigue déjà là, la Fêtarde, la formule et le thème (« fin de nuit ≈ 87 % : épuisée, pas remise demain »). À 5, c'est tout juste tenable ; à 6, on dépasse l'épuisement (80) et la personne n'est pas remise le lendemain.
+   - Au-delà de 4 rendez-vous dans la nuit, chacun coûte 7 points de moral de plus.
+   - Au cran 6, une personne fatiguée (30 et plus au briefing) ou au moral bas (sous 50) peut refuser (elle s'arrête à 5) ou négocier : une prime de 60 €, ou un soir de repos promis dans les 3 jours (une promesse rompue coûte comme à l'entretien). Sa réponse s'affiche au briefing, avec une réplique selon ses traits, et le joueur accepte ou la laisse à 5. Les traits pèsent : une Diva ou une Solitaire dit plus souvent non, une Fêtarde ou une Fidèle plus rarement.
 2. **Entretien individuel** : écouter, promettre, recadrer. 2 ou 3 réponses, avec des effets sur le moral et la loyauté.
 3. **Argent** : prime, part reversée, avance sur salaire.
 4. **Évolution** : formations (langues, conversation, danse), promotion en gérante.

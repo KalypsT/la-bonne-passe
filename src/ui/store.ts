@@ -8,6 +8,7 @@ import { nettoyerNom } from '../engine/identite';
 import { secondesParTick } from '../engine/temps';
 import type { IdActeur } from '../content/relations';
 import { appliquerOrdres, tick, type EvenementMoteur, type Ordre } from '../engine/tick';
+import type { AccordPlafond } from '../engine/plafond';
 import { charger, lireEmplacements, sauvegarder, supprimer, type Emplacement } from '../save/emplacements';
 import { formaterEuros } from './format';
 
@@ -103,6 +104,7 @@ interface EtatInterface {
     repos: string[];
     rdvMax: number;
     theme: string | null;
+    accords?: Record<string, AccordPlafond>;
   }) => void;
   /** Envoie un ordre au moteur (nettoyage, linge, repos, dispute), sans faire avancer le temps. */
   ordonner: (ordre: Ordre) => void;
@@ -301,11 +303,11 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     if (bilan) get().sauvegarderPartie();
   },
 
-  validerBriefing: ({ offre, packLinge, lingeAuto, commanderBar, repos, rdvMax, theme }) => {
+  validerBriefing: ({ offre, packLinge, lingeAuto, commanderBar, repos, rdvMax, theme, accords }) => {
     const { partie, vitesse } = get();
     if (!partie) return;
     reserveDeTemps = 0;
-    const resultat = appliquerOrdres(partie, [{ type: 'validerBriefing', offre, packLinge, lingeAuto, commanderBar, repos, rdvMax, theme }]);
+    const resultat = appliquerOrdres(partie, [{ type: 'validerBriefing', offre, packLinge, lingeAuto, commanderBar, repos, rdvMax, theme, accords }]);
     set({ partie: resultat.etat, carte: null, vitesse: vitesse === 0 ? 1 : vitesse });
     get().signalerDidacticiel('briefing');
     get().sauvegarderPartie();

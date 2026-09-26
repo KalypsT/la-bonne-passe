@@ -5,6 +5,7 @@ import * as B from '../content/balance';
 import type { Segment } from '../content/clientele';
 import { barSert } from './bar';
 import type { ClientEnFile, Employe, EtatJeu, Regles } from './etat';
+import { plafondDe } from './plafond';
 
 export type OrdreRegle =
   | { type: 'regle'; regle: 'tarif'; valeur: number }
@@ -81,7 +82,7 @@ export function chargeFormule(formule: B.IdFormule): number {
 
 /** La personne a atteint son maximum du soir pour un rendez-vous de plus dans la formule en vigueur. */
 export function quotaAtteint(etat: EtatJeu, e: Employe): boolean {
-  return e.chargeCeSoir + chargeFormule(formuleActive(etat)) > etat.rdvMax + 1e-9;
+  return e.chargeCeSoir + chargeFormule(formuleActive(etat)) > plafondDe(etat, e) + 1e-9;
 }
 
 /**

@@ -196,8 +196,37 @@ export const MARCHE_MAX = 5;
 
 // ——— Personnel complet (palier 1) ———
 
-/** Rendez-vous maximum par personne et par soir : crans proposés au briefing, et valeur de départ. */
-export const RDV_MAX_CRANS = [2, 3, 4] as const;
+/** Rendez-vous maximum par personne et par soir : crans proposés au briefing (4 par défaut, RDV_MAX_PAR_SOIR). */
+export const RDV_MAX_CRANS = [2, 3, 4, 5, 6] as const;
+
+/**
+ * Au-delà de 4 rendez-vous par soir (v0.6) : chaque rendez-vous de plus coûte du moral en plus.
+ * Au cran 6, une personne fatiguée ou au moral bas peut refuser (elle s'arrête à 5) ou négocier.
+ */
+export const PLAFOND = {
+  /** Rendez-vous par soir au-delà desquels chacun coûte `moralAuDela` de moral en plus. */
+  confort: 4,
+  moralAuDela: 7,
+  /** Le cran qui se négocie, et celui où s'arrête une personne qui refuse. */
+  cranNegocie: 6,
+  repli: 5,
+  /** Au briefing : fatigue à partir de laquelle, ou moral sous lequel, la personne peut dire non. */
+  seuilFatigue: 30,
+  seuilMoral: 50,
+  /** Chance de ne pas accepter d'emblée, si l'une des conditions est remplie ; les deux : chance doublée (plafonnée). */
+  chance: 0.45,
+  chanceMax: 0.9,
+  /** Chance multipliée selon les traits. */
+  traits: { Diva: 1.5, Solitaire: 1.3, 'Tête brûlée': 1.2, Fêtarde: 0.6, Fidèle: 0.6, 'Mère poule': 0.8 } as Record<string, number>,
+  /** Parmi les réticences : chance de négocier plutôt que refuser net (loyauté haute : plus souvent). */
+  negocier: 0.55,
+  negocierLoyaute: 0.3,
+  /** Ce que coûte un accord : une prime, ou un soir de repos promis (délai de l'entretien). */
+  prime: 60,
+};
+
+/** Estimation de la fatigue au briefing : récupération dans la journée, entre deux nuits (16 h au repos). */
+export const HEURES_ENTRE_DEUX_NUITS = 16;
 /** Une soirée de repos au planning : moral regagné à la fermeture. */
 export const MORAL_SOIR_DE_REPOS = 8;
 /** Moral bas : sous ce seuil, la qualité des rendez-vous baisse. */

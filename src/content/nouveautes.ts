@@ -9,6 +9,12 @@ export interface Nouveaute {
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    id: 'crans',
+    palier: 1,
+    texte:
+      'Au briefing, jusqu’à 6 rendez-vous par personne. Je t’affiche la fatigue de fin de nuit de chacun. Au-delà de 4, le moral trinque ; et au 6, une personne fatiguée peut refuser ou négocier.',
+  },
+  {
     id: 'parures',
     palier: 0,
     texte:

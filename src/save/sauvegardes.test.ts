@@ -8,8 +8,8 @@ import { migrer } from './migrations';
 import { ambitionDuMarche } from '../engine/recrutement';
 import { creerStockageMemoire, type Stockage } from './stockage';
 
-/** Les nouveautés apportées par la migration testée, sans celles des mises à jour suivantes (le linge en parures). */
-const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => n !== 'parures');
+/** Les nouveautés apportées par la migration testée, sans celles des mises à jour suivantes (v0.6 : parures, crans). */
+const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => n !== 'parures' && n !== 'crans');
 
 const MAINTENANT = Date.UTC(2026, 8, 25, 20, 0);
 
@@ -547,6 +547,18 @@ describe('migrations', () => {
     expect(migrer({ ...v25, linge: 1 })?.linge).toBe(1);
     expect(migrer({ ...v25, linge: 0 })?.linge).toBe(0);
     expect(migrer({ ...base, version: 26 })).toBeNull();
+  });
+
+  it('migre une sauvegarde v26 : le hasard des crans, et Josée les présente aux parties qui ont le planning', () => {
+    const { hasardPlafond: _h, ...base } = creerEtatInitial({ graine: 8 });
+    const v26 = { ...base, version: 26, nouveautes: [] };
+    const avant = migrer({ ...v26, palier: 0 });
+    expect(avant?.version).toBe(VERSION_ETAT);
+    expect(typeof avant?.hasardPlafond).toBe('number');
+    expect(avant?.nouveautes).toEqual([]);
+    expect(migrer({ ...v26, palier: 1 })?.nouveautes).toEqual(['crans']);
+    expect(trouverNouveaute('crans')?.palier).toBe(1);
+    expect(migrer({ ...base, version: 27 })).toBeNull();
   });
 
   it('refuse une version future ou des données sans version', () => {
