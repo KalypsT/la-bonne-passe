@@ -144,7 +144,8 @@ export function conclureDefi(etat: EtatJeu, evenements: Sortie): ResultatDefi | 
 
 /** Le lundi, après les tendances : le défi de la nouvelle semaine. */
 export function lancerDefi(etat: EtatJeu, evenements: Sortie): void {
-  etat.defi = etat.systemes.defis ? choisirDefi(etat) : null;
+  // En mode libre (v1.0), l'objectif de la semaine prend la place du défi.
+  etat.defi = etat.systemes.defis && !etat.systemes.modeLibre ? choisirDefi(etat) : null;
   if (etat.defi) evenements.push({ type: 'defi', id: etat.defi });
 }
 

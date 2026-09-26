@@ -16,6 +16,7 @@ import { TEXTES_GAMME } from '../content/gamme';
 import { LIEUX, TEXTES_AGRANDIR } from '../content/agrandir';
 import { CONSIGNES, TEXTES_MAISON2 } from '../content/maison2';
 import { TEXTES_FIN, TITRES } from '../content/fin';
+import { OBJECTIFS_LIBRES, TEXTES_MODE_LIBRE } from '../content/modeLibre';
 import { PALIERS } from '../content/paliers';
 import { TEXTES_ACTIONS_RELATIONS, TEXTES_SEUILS_RELATIONS } from '../content/relations';
 import { TEXTES_JOURNAL_RIVALE, TEXTES_REPONSES_RIVALE } from '../content/rivale';
@@ -277,6 +278,10 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       const titre = TITRES[evenement.titre];
       return TEXTES_FIN.journal(partie.joueur.genre === 'patron' ? titre.patron : titre.patronne);
     }
+    case 'objectifLibre':
+      return TEXTES_MODE_LIBRE.journal.nouveau(OBJECTIFS_LIBRES[evenement.objectif].titre);
+    case 'objectifLibreConclu':
+      return (evenement.reussi ? TEXTES_MODE_LIBRE.journal.reussi : TEXTES_MODE_LIBRE.journal.rate)(OBJECTIFS_LIBRES[evenement.objectif].titre);
     case 'demissionMaison':
       return TEXTES_MAISON2.journal.demission(evenement.prenom);
     case 'renommerMaison':
