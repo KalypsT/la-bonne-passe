@@ -72,6 +72,8 @@ export interface OptionsSimulation {
   politique?: Politique;
   /** Faux : aucune intrigue ne démarre (pour mesurer une mécanique seule, comme sans tendance). */
   intrigues?: boolean;
+  /** Faux : ni imprévu ni intrigue (pour mesurer une mécanique seule, sans le bruit des cartes). */
+  cartes?: boolean;
 }
 
 const ORDRE_RENOVATION = ['orientale', 'velours', 'miroirs'];
@@ -89,7 +91,8 @@ export function simuler(options: OptionsSimulation): {
 } {
   const { graine, nuits, recruter = true, renover = true, rdvMax = 3, equipeBar = 1, avance = true } = options;
   const etat = creerEtatInitial({ graine });
-  if (options.intrigues === false) {
+  const sansCartes = options.cartes === false;
+  if (options.intrigues === false || sansCartes) {
     etat.intrigues.finies = INTRIGUES.filter((d) => d.genre === 'intrigue').map((d) => ({ id: d.id, fin: 'ecartee', jour: 0 }));
   }
   const resumes: ResumeNuit[] = [];
@@ -122,6 +125,8 @@ export function simuler(options: OptionsSimulation): {
         ordres.push({ type: 'nettoyageExpress', chambreId: c.id });
       }
     }
+    // Sans cartes : l'imprévu suivant est repoussé indéfiniment.
+    if (sansCartes) etat.prochainImprevu = Number.MAX_SAFE_INTEGER;
     const r = { evenements: tickSurPlace(etat, ordres) };
     tresorerieMin = Math.min(tresorerieMin, etat.tresorerie);
     const ouvert = estOuvert(etat);

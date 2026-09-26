@@ -3,6 +3,7 @@
 
 import * as B from '../content/balance';
 import { INTRIGUES, trouverIntrigue, type ConditionIntrigue, type EtapeIntrigue, type Issue } from '../content/intrigues';
+import type { Segment } from '../content/clientele';
 import type { EtatJeu } from './etat';
 import { appliquerEffet, effetPossible } from './effets';
 import type { Tirage } from './hasard';
@@ -189,7 +190,13 @@ export function choixPossibles(etat: EtatJeu): boolean[] {
   return etape?.choix.map((c) => effetPossible(etat, c.effet)) ?? [];
 }
 
-export function trancherIntrigue(etat: EtatJeu, choix: number, tirage: Tirage, ajouterClient: () => void, evenements: Sortie): void {
+export function trancherIntrigue(
+  etat: EtatJeu,
+  choix: number,
+  tirage: Tirage,
+  ajouterClient: (segment?: Segment) => void,
+  evenements: Sortie,
+): void {
   const active = etat.intrigues.actives.find((a) => a.id === etat.intrigues.carte);
   const etape = active && etapeDe(active);
   const option = etape?.choix[choix];
@@ -210,14 +217,11 @@ export function trancherIntrigue(etat: EtatJeu, choix: number, tirage: Tirage, a
     evenements.push({ type: 'remboursement', prenom: prenom ?? '', montant: active.avance });
     active.avance = 0;
   }
-  appliquerEffet(
-    etat,
-    effet,
-    { employeId: active.employeId },
+  appliquerEffet(etat, effet, { employeId: active.employeId }, {
     ajouterClient,
-    (id, delai, employeId) => demarrerSuite(etat, id, delai, employeId),
+    demarrerSuite: (id, delai, employeId) => demarrerSuite(etat, id, delai, employeId),
     evenements,
-  );
+  });
   evenements.push({ type: 'intrigueTranchee', id: active.id, etape: active.etape, choix, reussite, prenom });
   suivre(etat, active, issue, evenements);
 }

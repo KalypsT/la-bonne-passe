@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { simuler, type OptionsSimulation } from './simulation';
+import { mesurerRenouvellement, simuler, type OptionsSimulation, type Renouvellement } from './simulation';
 
 // Les soirées se renouvellent-elles ? (v0.4) Gardes de l'intrigue du voisin et de la mesure du renouvellement.
 // Joueur actif, classique à 3 rendez-vous, 28 nuits, 10 graines.
@@ -29,8 +29,12 @@ const debutArc = (p: Partie, id: string) => p.nuits.find((n) => n.intrigues.some
 
 describe('le voisin du dessus', () => {
   it('une porte laxiste le fait descendre vite ; un portier le laisse dormir', () => {
+    // Il descend presque toujours dans le mois, et en médiane avant la nuit 14. Quand Mila et Jonas occupent
+    // les deux places d'intrigue (dès la nuit 10), il attend son tour.
     const laxiste = parties.get('laxiste')!.map(nuitDuVoisin);
-    expect(laxiste.filter((n) => n !== null && n <= 14).length).toBeGreaterThanOrEqual(8);
+    expect(laxiste.filter((n) => n !== null).length).toBeGreaterThanOrEqual(8);
+    const triees = laxiste.map((n) => n ?? 99).sort((a, b) => a - b);
+    expect(triees[Math.floor(triees.length / 2)]).toBeLessThanOrEqual(14);
     expect(parties.get('stricte')!.map(nuitDuVoisin).every((n) => n === null)).toBe(true);
   });
 
@@ -62,8 +66,30 @@ describe('les arcs de Mila et de Jonas', () => {
   it('les histoires ne ruinent pas un joueur raisonnable, ni ne le font perdre en réputation', () => {
     const avoir = (nom: string) => parties.get(nom)!.reduce((s, p) => s + p.etat.tresorerie + p.etat.reserve, 0) / GRAINES.length;
     const reputation = (nom: string) => parties.get(nom)!.reduce((s, p) => s + p.nuits[27]!.reputation, 0) / GRAINES.length;
-    expect(avoir('classique')).toBeGreaterThan(avoir('sans-intrigue') * 0.8);
+    // L'argent d'une partie varie de 2 000 € d'une graine à l'autre : sur 10 graines, 1 000 € de tolérance.
+    expect(avoir('classique')).toBeGreaterThan(avoir('sans-intrigue') - 1000);
     expect(reputation('classique')).toBeGreaterThan(reputation('sans-intrigue') - 3);
+  });
+});
+
+describe('les imprévus se renouvellent', () => {
+  it('une quinzaine de cartes différentes par mois, aucune deux fois dans la même semaine', () => {
+    for (const nom of ['classique', 'laxiste', 'stricte']) {
+      const mesures = parties.get(nom)!.map((p) => mesurerRenouvellement(p.nuits));
+      const moy = (f: (m: Renouvellement) => number) => mesures.reduce((t, m) => t + f(m), 0) / mesures.length;
+      expect(moy((m) => m.imprevusDifferents), nom).toBeGreaterThanOrEqual(12);
+      expect(Math.max(...mesures.map((m) => m.repetitionMax)), nom).toBeLessThanOrEqual(5);
+      expect(moy((m) => m.dejaVus7), nom).toBeLessThanOrEqual(0.1);
+      expect(moy((m) => m.imprevus), nom).toBeGreaterThanOrEqual(1.2);
+    }
+  });
+
+  it('la porte, les tendances et les thèmes changent les cartes qui sortent', () => {
+    const vues = (nom: string) => new Set(parties.get(nom)!.flatMap((p) => p.nuits.flatMap((n) => n.imprevus)));
+    expect(vues('stricte').has('refoule')).toBe(true);
+    expect(vues('laxiste').has('refoule')).toBe(false);
+    expect(vues('laxiste').has('enceinte')).toBe(true);
+    expect(vues('stricte').has('enceinte')).toBe(false);
   });
 });
 

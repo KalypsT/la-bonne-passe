@@ -506,3 +506,87 @@ Comme les intrigues déplacent l'argent de plusieurs centaines d'euros selon les
 Parties jouées dans le navigateur (version compilée) : une sauvegarde du jour 9 avec Mila et Jonas confirmés. En 844 × 390, les deux arcs se déroulent sur 12 jours de jeu ; en choisissant de ne jamais mettre Mila en avant puis de refuser ses 55 %, elle fait sa valise et part, avec sa carte d'adieu ; Jonas, qui révise au salon et ne reçoit que la moitié de son inscription, rate son examen et repassera à l'automne. Une ancienne sauvegarde (version 16) reçoit les ambitions et l'humeur du voisinage, présentées par Josée ; la fiche de chaque personne montre son ambition. En 667 × 375, la carte d'arc la plus longue (portrait compris) tient en hauteur ; les cartes défilent désormais si un texte déborde. Aucune erreur.
 
 `npm test` : 321 tests en 11 secondes environ.
+
+## Imprévus liés à l'état du jeu (v0.4, partie 3)
+
+### Ce qui a changé
+
+- **24 imprévus** (6 avant), dont 10 opportunités parmi les 18 nouveaux. Ils dépendent de l'état de la maison : palier, réputation, tendance de la semaine (congrès, match), thème du soir (masquée, burlesque, jazz, années folles), bar qui sert, règles (sélection stricte ou laxiste, tarif +20 %), clients présents (un habitué, un groupe, une touriste), place libre dans l'équipe. Certaines circonstances en rendent d'autres plus probables sans les exiger (`bonus` : ×3) : l'enterrement de vie de garçon tombe plus souvent pendant la saison des EVG ou avec une porte laxiste.
+- **7 suites différées** (`src/content/suites.ts`) : l'inspecteur qui revient, la vidéo qui tourne, l'article flatteur ou acide, le club de bridge, l'échevin reconnaissant, le chat Rembrandt, et l'homme au costume.
+- **Nouveaux effets** : clients d'un segment donné (ils passent la porte sans sélection : la maison les a invités), bouteilles au bar, fatigue de toute l'équipe, candidate ou candidat remarquable (deux talents à 5 et 4, exige 60 %).
+- **Anti-répétition compté en nuits** (`IMPREVU_REPOS_NUITS` = 8) : une carte vue ne revient pas avant 8 nuits. S'il n'y a rien d'autre à tirer, la soirée se passe d'imprévu plutôt que de répéter. Une carte jamais vue pèse 3 fois plus. Trois cartes sont uniques (l'anniversaire, le loup tombé, le chat). Sauvegarde en version 18 (`imprevusNuit`).
+- **Effets adoucis** : les effets de réputation et de satisfaction des imprévus sont multipliés par 0,5 (`IMPREVU_FORCE_SATISFACTION`) ; nombreux, ils pesaient trop.
+
+### Ce que la mesure a révélé : l'équilibre de la v0.3 reposait sur une répétition
+
+En v0.3, « Un client généreux » sortait environ 15 fois par mois (il ne demande qu'une personne disponible). Au premier choix, il rapportait 180 € et envoyait la personne au repos pour la nuit. Il faisait donc à la fois une bonne part de l'argent du mois (environ 2 000 €) et un frein caché à la réputation (une place de moins presque un soir sur deux).
+
+Dilué parmi 24 cartes et soumis au délai de repos, il sort environ 4 fois par mois. Sans rien retoucher, le joueur actif perdait environ 1 500 € sur le mois, et sa réputation montait d'une dizaine de points (34 → 45 à la nuit 28). Même en retirant toutes les cartes, les constantes de la v0.3 ne tiennent plus leurs gardes.
+
+Réglages :
+
+| Valeur | Avant | Après | Pourquoi |
+| --- | --- | --- | --- |
+| `CHARGES_FIXES` | 1 350 € | 1 000 € | Rendre l'argent que le client généreux apportait |
+| `BAR_RECETTE` | 14 / 10 / 24 / 30 € | 15 / 11 / 26 / 33 € | Le bar se remboursait de justesse en 42 nuits ; il ne se remboursait plus |
+| `IMPREVU_CHANCE_PAR_HEURE` | 0,35 | 0,5 | Compenser les soirs où tout est en repos (le nombre de cartes possibles limite plus que la chance) |
+| `IMPREVU_FORCE_SATISFACTION` | (1) | 0,5 | Réputation de 46 à 43 à la nuit 28 |
+| Premier choix des cartes | | | Le joueur simulé « prudent » prend le premier choix : c'est l'option économe (faire comme d'habitude, chanter, offrir un verre), pas celle qui coûte |
+
+Essayés et écartés : baisser `REPUTATION_PAR_RDV` (2 → 1,5 ou 1,8) ou relever `REPUTATION_FREIN` (2 → 2,5 ou 3) ramenait la réputation vers 40, mais cassait l'ordre des offres (la soirée feutrée ne construisait plus la meilleure réputation) ou la rentabilité du bar. Relever `REPUTATION_CLIENT_PERDU` (0,1 → 0,2) aussi.
+
+### Les gardes, revues
+
+Beaucoup de gardes comparaient deux stratégies à 1 ou 2 points près sur 6 à 10 graines. Avec des cartes qui font bifurquer chaque partie, l'argent d'une partie varie de 2 000 € d'une graine à l'autre (écart-type mesuré sur 40 graines), et ces écarts deviennent du bruit. D'où :
+
+- **Gardes de mécanique sans cartes** (option `cartes: false` : ni imprévu ni intrigue) : offres (`equilibrage.test.ts`), règles, bar, semaine, thèmes. Elles vérifient les mécaniques telles qu'elles sont ; les gardes du mois et du renouvellement jouent avec toutes les cartes.
+- **Deux affirmations affaiblies, à reprendre en partie 6** (`equilibrage-semaine.test.ts`, 12 graines au lieu de 6) :
+  - le joueur qui suit les tendances fait toujours mieux en réputation (+4 sur 40 graines), mais plus en argent (−300 € ± 450). La garde vérifie désormais qu'il ne perd pas plus de 800 € ;
+  - deux soirées à thème par semaine n'achètent plus que +1 de réputation (contre +3 exigés), mais rapportent +535 € : la réputation sature vers 49 et le frein écrase ce qu'elles ajoutent. La garde vérifie qu'elles ne coûtent pas de réputation et ne font pas perdre plus de 800 €.
+- **Voisin** (partie 1) : « avant la nuit 14 dans 8 parties sur 10 » devient « dans le mois dans 8 parties sur 10, en médiane avant la nuit 14 ». Mila et Jonas occupent les deux places d'intrigue dès la nuit 10, et le voisin attend son tour.
+- **Arcs** (partie 2) : « pas plus de 20 % d'argent perdu » devient « pas plus de 1 000 € ».
+- **Nouvelles gardes** : au moins 12 imprévus différents par mois, aucun plus de 5 fois, moins de 10 % déjà vus dans les 7 nuits précédentes, au moins 1,2 imprévu par soirée. La porte stricte fait sortir « Refoulé à la porte » et jamais « Une enceinte sur le quai » ; la porte laxiste, l'inverse.
+
+### Renouvellement
+
+| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 3,7 | 50 % | 2,2 | 1,3 | 15,0 | 4,0 | 0 % | 15,5 | 8 sur 10, nuit 15 |
+| Feutrée, 4 | 3,3 | 62 % | 1,8 | 1,3 | 15,1 | 3,9 | 0 % | 14,2 | 2 sur 10, nuit 17 |
+| Adaptatif (suit les tendances), 3 | 3,5 | 55 % | 1,8 | 1,5 | 18,5 | 4,0 | 0 % | 14,7 | 4 sur 10, nuit 18 |
+| Classique 3, sélection laxiste | 3,8 | 48 % | 2,2 | 1,4 | 15,7 | 4,0 | 0 % | 15,5 | 10 sur 10, nuit 14 |
+| Classique 3, sélection stricte | 3,2 | 60 % | 1,6 | 1,4 | 15,6 | 4,0 | 0 % | 13,3 | 0 sur 10 |
+
+Avant (partie 2) : 5 à 6 imprévus différents par mois, le plus fréquent 15 fois, 87 % déjà vus dans la semaine. Après : 15 à 18 cartes différentes, au plus 4 fois la même, aucune dans la même semaine.
+
+Le prix à payer : 1,3 à 1,5 imprévu par soirée au lieu de 1,6, donc 3,2 à 3,8 décisions par soirée. Le délai de 8 nuits est le bon compromis : avec 9, plus aucune répétition mais 1,2 imprévu par soirée ; avec 5, 1,6 par soirée mais la moitié des cartes déjà vues dans la semaine. Pour atteindre 2 imprévus par soirée sans répétition, il faudra plus de cartes sans condition. Les alertes de la partie 4 doivent apporter le reste des décisions.
+
+### À surveiller
+
+- **La réputation monte plus haut qu'en v0.3** : 49 à la nuit 28 en classique (35 avant), 59 en soirée feutrée, 54 avec une porte stricte. Le palier 4 (réputation 50 et 4 personnes) arriverait vers la fin du premier mois pour un bon joueur. À reprendre au rééquilibrage de la partie 6.
+- **Le joueur passif** atteint parfois le palier 2 (une partie sur 10, nuit 8) : sans le client généreux qui envoyait Sanne se reposer, la maison reste ouverte.
+- **Le résultat réel de la semaine 2 baisse** (74 € par jour en classique, contre 267) : les rénovations et le bar sont payés plus tard. L'avoir du mois reste dans la cible : 2 080 € après la mensualité, pire partie au-dessus de −2 000 €.
+
+| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 3 à 4 | 34 / 41 / 49 | 74 € | 726 € | 2 080 € | 25 % | 85 | 0,0 | 27 / 28 / 13 / 32 | 66 / 50 / 23 / 54 |
+| Classique, 4 | 3 à 4 | 36 / 44 / 46 | 559 € | 1 176 € | 6 677 € | 15 % | 72 | 0,4 | 26 / 24 / 22 / 29 | 64 / 44 / 26 / 51 |
+| Happy hour, 4 | 3 à 3 | 42 / 46 / 49 | 60 € | 708 € | 777 € | 20 % | 76 | 0,9 | 37 / 24 / 12 / 28 | 70 / 50 / 22 / 51 |
+| Feutrée, 4 | 3 à 4 | 36 / 48 / 59 | 69 € | 625 € | 1 181 € | 1 % | 84 | 0,0 | 20 / 40 / 12 / 28 | 74 / 64 / 32 / 61 |
+| Adaptatif (suit les tendances), 3 | 3 à 4 | 34 / 45 / 53 | 120 € | 732 € | 2 125 € | 16 % | 88 | 0,0 | 27 / 33 / 15 / 25 | 66 / 58 / 36 / 51 |
+| Classique 3, sans bar | 3 à 4 | 34 / 40 / 43 | 211 € | 655 € | 3 833 € | 23 % | 84 | 0,0 | 29 / 27 / 14 / 30 | 60 / 45 / 19 / 47 |
+| Classique 3, bar à 2, sans avance | 3 à 4 | 34 / 41 / 48 | -15 € | 729 € | 1 203 € | 25 % | 84 | 0,0 | 27 / 28 / 13 / 32 | 65 / 49 / 25 / 52 |
+| Classique 3, champagne | 3 à 4 | 34 / 40 / 40 | 195 € | 847 € | 4 647 € | 20 % | 85 | 0,2 | 26 / 26 / 17 / 31 | 47 / 37 / 30 / 49 |
+| Classique 3, tarif −20 % | 3 à 4 | 35 / 42 / 38 | -28 € | 499 € | -605 € | 28 % | 84 | 0,0 | 33 / 21 / 13 / 34 | 62 / 33 / 8 / 51 |
+| Classique 3, tarif +20 % | 3 à 4 | 31 / 37 / 42 | 280 € | 843 € | 3 544 € | 12 % | 90 | 0,0 | 23 / 25 / 19 / 33 | 46 / 44 / 34 / 45 |
+| Classique 3, formule courte | 3 à 4 | 35 / 45 / 52 | 24 € | 524 € | 1 037 € | 10 % | 86 | 0,0 | 23 / 28 / 20 / 29 | 67 / 45 / 42 / 55 |
+| Classique 3, soirée complète | 3 à 4 | 33 / 40 / 43 | 262 € | 854 € | 5 031 € | 18 % | 84 | 0,0 | 26 / 35 / 5 / 34 | 61 / 51 / 12 / 46 |
+| Classique 3, sélection laxiste | 3 à 4 | 33 / 39 / 39 | 84 € | 696 € | 1 306 € | 17 % | 87 | 0,0 | 24 / 30 / 11 / 35 | 58 / 35 / 13 / 52 |
+| Classique 3, sélection stricte | 3 à 4 | 35 / 47 / 54 | 136 € | 682 € | 1 910 € | 15 % | 85 | 0,0 | 25 / 38 / 18 / 19 | 67 / 61 / 38 / 44 |
+| Classique 3, habitués d’abord | 3 à 4 | 34 / 42 / 48 | 123 € | 784 € | 2 873 € | 23 % | 84 | 0,0 | 25 / 28 / 15 / 32 | 62 / 50 / 24 / 52 |
+| Classique 3, pressés d’abord | 3 à 4 | 34 / 41 / 44 | 97 € | 734 € | 2 005 € | 24 % | 86 | 0,0 | 28 / 26 / 14 / 32 | 61 / 44 / 23 / 49 |
+| Passif (classique, sans recruter ni rénover) | 8 à 99 | 21 / 21 / 22 | -130 € | 171 € | -1 565 € | 63 % | 45 | 0,0 | 51 / 46 / 1 / 1 | 22 / 22 / 8 / 9 |
+
+Partie jouée dans le navigateur (version compilée, 844 × 390) : quatre soirées depuis une sauvegarde du jour 9, 9 imprévus et 9 cartes différentes (averse, client généreux, chat, critique, live, querelle, tireuse, enterrement de vie de garçon, voleur), sans erreur. Les cartes les plus longues (soirée privée, critique, candidate remarquable) tiennent en 667 × 375 ; la candidate apparaît dans l'onglet Personnel.
+
+`npm test` : 337 tests en 12 secondes environ.

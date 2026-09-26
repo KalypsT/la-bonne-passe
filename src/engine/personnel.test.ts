@@ -315,7 +315,7 @@ describe('imprévus', () => {
     const etat = forcer(soiree(equipe()));
     const { etat: apres, evenements } = ordonner(etat, { type: 'choixImprevu', choix: 0 });
     expect(apres.imprevu).toBeNull();
-    expect(apres.reputation).toBeCloseTo(etat.reputation + 1);
+    expect(apres.reputation).toBeCloseTo(etat.reputation + B.IMPREVU_FORCE_SATISFACTION);
     expect(evenements).toContainEqual({ type: 'imprevuTranche', id: 'touriste', choix: 0, reussite: true, prenom: undefined, prenom2: undefined });
   });
 

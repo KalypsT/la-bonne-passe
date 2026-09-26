@@ -5,6 +5,7 @@ import * as B from '../content/balance';
 import {
   ACCROCHES,
   INTROS,
+  INTRO_VEDETTE,
   AGE_MAX,
   AGE_MIN,
   PIECES_SILHOUETTE,
@@ -34,7 +35,8 @@ export type EvenementRecrutement =
   | { type: 'finEssai'; employeId: string; prenom: string }
   | { type: 'essaiConfirme'; employeId: string; prenom: string }
   | { type: 'finCollaboration'; prenom: string }
-  | { type: 'traitRevele'; employeId: string; prenom: string; trait: string };
+  | { type: 'traitRevele'; employeId: string; prenom: string; trait: string }
+  | { type: 'candidatVedette'; candidatId: string; prenom: string };
 
 export type OrdreRecrutement =
   | { type: 'questionCandidat'; candidatId: string; question: number }
@@ -178,6 +180,20 @@ export function genererCandidat(etat: EtatJeu, tirage: Tirage, expire: number): 
     questionPosee: null,
     contreOffre: null,
   };
+}
+
+/** Une candidate ou un candidat remarquable attend au salon : deux talents hauts, et une part à la hauteur. */
+export function candidatVedette(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
+  if (!etat.systemes.recrutement) return;
+  const c = genererCandidat(etat, tirage, etat.jour + B.JOURS_REFLEXION);
+  const [fort, second] = [...TALENTS_LISTE].sort((a, b) => c.talents[b] - c.talents[a]);
+  c.talents[fort!] = B.CANDIDAT_VEDETTE.talentFort;
+  c.talents[second!] = Math.max(c.talents[second!], B.CANDIDAT_VEDETTE.talentSecond);
+  c.partMin = B.CANDIDAT_VEDETTE.partMin;
+  c.source = 'boucheAOreille';
+  c.intro = INTRO_VEDETTE(c.prenom, c.genre);
+  etat.candidats.push(c);
+  evenements.push({ type: 'candidatVedette', candidatId: c.id, prenom: c.prenom });
 }
 
 /** Le matin : candidats lassés, fins d'essai, et le marché renouvelé chaque lundi. */

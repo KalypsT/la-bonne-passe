@@ -18,7 +18,7 @@ beforeAll(() => {
     parties.set(
       `${offre}-${rdvMax}`,
       GRAINES.map((graine) => {
-        const r = simuler({ graine, offre, nuits: 14, rdvMax });
+        const r = simuler({ graine, offre, nuits: 14, rdvMax, cartes: false });
         const moral = r.etat.personnel.reduce((s, e) => s + e.moral, 0) / r.etat.personnel.length;
         return { nuits: r.nuits, moral, departs: r.departs };
       }),

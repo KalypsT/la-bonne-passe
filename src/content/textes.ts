@@ -250,6 +250,7 @@ export const TEXTES = {
     rivalite: (a: string, b: string) => `Entre ${a} et ${b}, le courant ne passe plus.`,
     imprevu: (titre: string) => `Imprévu : ${titre.charAt(0).toLowerCase()}${titre.slice(1)}.`,
     intrigue: (titre: string) => `${titre}.`,
+    candidatVedette: (prenom: string) => `${prenom} attend au salon pour un entretien : sa candidature est dans l’onglet Personnel.`,
     remboursement: (prenom: string, montant: string) => `${prenom} te rend les ${montant} que tu lui avais avancés.`,
   },
   recrutement: {

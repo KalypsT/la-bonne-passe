@@ -17,8 +17,8 @@ beforeAll(() => {
     parties.set(
       nom,
       GRAINES.map((graine) => {
-        // Sans tendance ni intrigue : on mesure le bar, pas le hasard des semaines ni des histoires.
-        const r = simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 42, tendances: [], intrigues: false, ...options });
+        // Sans tendance ni carte : on mesure le bar, pas le hasard des semaines, des imprévus ni des histoires.
+        const r = simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 42, tendances: [], cartes: false, ...options });
         return { nuits: r.nuits, avoir: r.etat.tresorerie + r.etat.reserve };
       }),
     );
