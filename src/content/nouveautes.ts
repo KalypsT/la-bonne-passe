@@ -1,6 +1,8 @@
 // Nouveautés arrivées avec une mise à jour du jeu, pour un palier déjà atteint.
 // Une partie qui a déjà passé le palier les découvre au chargement, présentées par Josée.
 
+import { TEXTES_BANQUE } from './banque';
+
 export interface Nouveaute {
   id: string;
   palier: number;
@@ -8,6 +10,11 @@ export interface Nouveaute {
 }
 
 export const NOUVEAUTES: Nouveaute[] = [
+  {
+    id: 'banque',
+    palier: 0,
+    texte: TEXTES_BANQUE.nouveaute,
+  },
   {
     id: 'crans',
     palier: 1,

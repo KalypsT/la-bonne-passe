@@ -1,3 +1,4 @@
+import { CarteFaillite } from './CarteFaillite';
 import { alertes as calculerAlertes, type Alerte } from '../engine/alertes';
 import { Maison } from '../scene/Maison';
 import { BarreHaut } from './BarreHaut';
@@ -100,6 +101,7 @@ export function EcranJeu() {
       {carte === 'entretienIndividuel' && <CarteEntretienIndividuel partie={partie} />}
       {carte === 'adieu' && <CarteAdieu partie={partie} />}
       {carte === 'aide' && <CarteAide />}
+      {carte === 'faillite' && <CarteFaillite partie={partie} />}
       <Didacticiel partie={partie} />
     </div>
   );

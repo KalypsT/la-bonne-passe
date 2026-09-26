@@ -56,6 +56,26 @@ export const MENSUALITE = 2500;
 /** Jour de la première mensualité, puis tous les 28 jours (un mois de jeu = 4 semaines). */
 export const JOUR_PREMIERE_MENSUALITE = 28;
 export const JOURS_PAR_MOIS = 28;
+/**
+ * La banque (v0.6) : découvert toléré jusqu'à −2 000 €, avec 1 % d'agios par jour sur ce qui est dû.
+ * Au-delà, les salaires des équipes ne sont plus versés. Une mensualité qui ferait passer sous le
+ * découvert autorisé reste impayée : lettre de la banque, et +2 points sur le taux du prochain emprunt.
+ * Deux mensualités impayées (la précédente toujours en retard à la suivante) : faillite.
+ */
+export const DECOUVERT = {
+  plafond: 2000,
+  /** Agios prélevés chaque matin, en part de ce qui est à découvert. */
+  agios: 0.01,
+  /** Une mensualité impayée : points de taux en plus sur le prochain emprunt. */
+  majorationTaux: 2,
+};
+/** Salaires impayés : moral perdu par chaque personne suivie, chaque jour sans paie ; départ d'un membre d'équipe ensuite. */
+export const SALAIRES_IMPAYES = {
+  moral: 6,
+  /** Jours de suite sans paie avant qu'un membre d'équipe s'en aille (puis un par jour). */
+  joursAvantDepart: 2,
+};
+
 /** Réserve de sécurité : part de la recette du soir mise de côté (palier 1). */
 export const TAUX_RESERVE = [0, 0.1, 0.2] as const;
 

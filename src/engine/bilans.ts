@@ -51,6 +51,8 @@ export interface BilanMois {
   avoir: number;
   /** La mensualité est passée à découvert : la banque écrit. */
   decouvert: boolean;
+  /** La mensualité n'a pas pu être payée (v0.6) : lettre de la banque, à régulariser avant la suivante. */
+  impayee?: boolean;
   objectif: IdObjectif;
   cible: number;
   segment: Segment | null;
@@ -189,7 +191,7 @@ export function prochainObjectif(etat: EtatJeu, numero: number): Mois {
 }
 
 /** Le jour de la mensualité, une fois qu'elle est payée : l'objectif est jugé, le mois suivant commence. */
-export function conclureMois(etat: EtatJeu, depuisReserve: number, reste: boolean, evenements: Sortie): void {
+export function conclureMois(etat: EtatJeu, depuisReserve: number, reste: boolean, evenements: Sortie, impayee = false): void {
   const mois = etat.mois;
   const valeur = valeurObjectif(etat, mois);
   const reussi = objectifReussi(mois, valeur);
@@ -204,6 +206,7 @@ export function conclureMois(etat: EtatJeu, depuisReserve: number, reste: boolea
     depuisReserve,
     avoir: Math.round(etat.tresorerie + etat.reserve),
     decouvert: etat.tresorerie < 0,
+    impayee,
     objectif: mois.objectif,
     cible: mois.cible,
     segment: mois.segment,

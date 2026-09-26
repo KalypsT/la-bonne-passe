@@ -29,6 +29,7 @@ import { rivaleDeDepart, type Rivale } from './rivale';
 import type { AlerteMinutee } from './minuteries';
 import { moisDeDepart, type BilanMois, type Mois } from './bilans';
 import { journeeVide, type Comptes, type Journee } from './comptes';
+import { banqueDeDepart, type Banque } from './banque';
 
 /** Drapeaux d'ouverture des systèmes. L'interface masque ou verrouille ce qui est fermé. */
 export interface Systemes {
@@ -382,6 +383,10 @@ export interface EtatJeu {
   hasardRivale: number;
   /** Hasard des réponses au cran 6, à part pour ne pas décaler les autres tirages (v0.6). */
   hasardPlafond: number;
+  /** La banque : échéances, retards, salaires dus (v0.6). */
+  banque: Banque;
+  /** La partie est finie (faillite) : le temps ne s'écoule plus (v0.6). */
+  finDePartie: { raison: 'faillite'; jour: number } | null;
   /** Niveau d'assurance (indice dans ASSURANCES) : 0 aucune, 1 casse, 2 casse et amendes (v0.5). */
   assurance: number;
   /** Étape du didacticiel de Madame Josée, ou null s'il est fini ou passé. */
@@ -391,7 +396,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 27;
+export const VERSION_ETAT = 28;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -569,6 +574,8 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     rivale: rivaleDeDepart(),
     hasardRivale: ((options.graine ?? GRAINE_PAR_DEFAUT) * 17 + 3) | 0,
     hasardPlafond: ((options.graine ?? GRAINE_PAR_DEFAUT) * 23 + 11) | 0,
+    banque: banqueDeDepart(),
+    finDePartie: null,
     assurance: 0,
     didacticiel: options.didacticiel ? 0 : null,
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,

@@ -8,8 +8,8 @@ import { migrer } from './migrations';
 import { ambitionDuMarche } from '../engine/recrutement';
 import { creerStockageMemoire, type Stockage } from './stockage';
 
-/** Les nouveautés apportées par la migration testée, sans celles des mises à jour suivantes (v0.6 : parures, crans). */
-const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => n !== 'parures' && n !== 'crans');
+/** Les nouveautés apportées par la migration testée, sans celles des mises à jour suivantes (v0.6 : parures, crans, banque). */
+const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => !['parures', 'crans', 'banque'].includes(n));
 
 const MAINTENANT = Date.UTC(2026, 8, 25, 20, 0);
 
@@ -541,7 +541,8 @@ describe('migrations', () => {
     expect(migre?.linge).toBe(4);
     expect(migre?.lingeCommande).toBe(5);
     expect(migre?.lingeAuto).toBe(0);
-    expect(migre?.nouveautes).toEqual(['parures']);
+    expect(propres(migre?.nouveautes)).toEqual([]);
+    expect(migre?.nouveautes).toContain('parures');
     expect(trouverNouveaute('parures')).toBeDefined();
     expect(migrer({ ...v25, linge: 40 })?.linge).toBe(4);
     expect(migrer({ ...v25, linge: 1 })?.linge).toBe(1);
@@ -555,10 +556,28 @@ describe('migrations', () => {
     const avant = migrer({ ...v26, palier: 0 });
     expect(avant?.version).toBe(VERSION_ETAT);
     expect(typeof avant?.hasardPlafond).toBe('number');
-    expect(avant?.nouveautes).toEqual([]);
-    expect(migrer({ ...v26, palier: 1 })?.nouveautes).toEqual(['crans']);
+    expect(avant?.nouveautes).not.toContain('crans');
+    expect(migrer({ ...v26, palier: 1 })?.nouveautes).toContain('crans');
     expect(trouverNouveaute('crans')?.palier).toBe(1);
     expect(migrer({ ...base, version: 27 })).toBeNull();
+  });
+
+  it('migre une sauvegarde v27 : la banque, calée sur les mensualités déjà payées, et Josée la présente', () => {
+    const { banque: _b, finDePartie: _f, ...base } = creerEtatInitial();
+    const sansAgios = (c: typeof base.semaine.comptes) => {
+      const depenses = { ...c.depenses } as Record<string, number>;
+      delete depenses.agios;
+      return { ...c, depenses };
+    };
+    const v27 = { ...base, version: 27, mensualitesPayees: 1, tresorerie: -500, nouveautes: [], semaine: { ...base.semaine, comptes: sansAgios(base.semaine.comptes) } };
+    const migre = migrer(v27);
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.banque).toEqual({ echeances: 1, retard: 0, impayees: 0, salairesDus: 0, joursImpayes: 0, alerte: 1 });
+    expect(migre?.finDePartie).toBeNull();
+    expect(migre?.semaine.comptes.depenses.agios).toBe(0);
+    expect(migre?.nouveautes).toContain('banque');
+    expect(trouverNouveaute('banque')).toBeDefined();
+    expect(migrer({ ...base, version: 28 })).toBeNull();
   });
 
   it('refuse une version future ou des données sans version', () => {

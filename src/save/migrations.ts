@@ -32,6 +32,7 @@ import { rivaleDeDepart } from '../engine/rivale';
 import { JOUR_PREMIERE_MENSUALITE, RELATIONS, TAPAGE } from '../content/balance';
 import { moisDeDepart, prochainObjectif, statsDeDepart } from '../engine/bilans';
 import { comptesVides, journeeVide } from '../engine/comptes';
+import { banqueDeDepart } from '../engine/banque';
 
 type Donnees = Record<string, unknown>;
 
@@ -416,6 +417,28 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(palier >= 1 ? ['crans'] : [])],
     };
   },
+  // v27 → v28 : la banque (découvert, agios, salaires et mensualités impayés, faillite), présentée par Josée.
+  27: (d) => {
+    const payees = typeof d.mensualitesPayees === 'number' ? d.mensualitesPayees : 0;
+    const tresorerie = typeof d.tresorerie === 'number' ? d.tresorerie : 0;
+    const avecPoste = (c: unknown) => (estObjet(c) && estObjet(c.depenses) ? { ...c, depenses: { agios: 0, ...c.depenses } } : c);
+    const semaine = estObjet(d.semaine) ? { ...d.semaine, comptes: avecPoste(d.semaine.comptes) } : d.semaine;
+    const bilanSemaine = estObjet(d.bilanSemaine) ? { ...d.bilanSemaine, comptes: avecPoste(d.bilanSemaine.comptes) } : d.bilanSemaine;
+    const journee = estObjet(d.journee) ? { ...d.journee, comptes: avecPoste(d.journee.comptes) } : d.journee;
+    const nuit = estObjet(d.nuit) ? { ...d.nuit, comptes: avecPoste(d.nuit.comptes) } : d.nuit;
+    const banque = { ...banqueDeDepart(), echeances: payees, alerte: tresorerie < -2000 ? 2 : tresorerie < 0 ? 1 : 0 };
+    return {
+      ...d,
+      version: 28,
+      banque,
+      finDePartie: null,
+      semaine,
+      bilanSemaine,
+      journee,
+      nuit,
+      nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), 'banque'],
+    };
+  },
 };
 
 
@@ -505,6 +528,7 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(d.rivale) &&
     typeof d.hasardRivale === 'number' &&
     typeof d.hasardPlafond === 'number' &&
+    estObjet(d.banque) &&
     estObjet(d.systemes)
   );
 }

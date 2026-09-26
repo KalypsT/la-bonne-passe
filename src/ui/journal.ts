@@ -1,5 +1,6 @@
 import type { IdFormule, IdPriorite, IdSelection, IdVisibilite } from '../content/balance';
 import { TEXTES_PLAFOND } from '../content/plafond';
+import { TEXTES_BANQUE } from '../content/banque';
 import { CLIENTS } from '../content/clientele';
 import { trouverImprevu } from '../content/imprevus';
 import { trouverIntrigue } from '../content/intrigues';
@@ -152,6 +153,22 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       );
     case 'mensualite':
       return t.mensualite(formaterEuros(evenement.montant), formaterEuros(evenement.depuisReserve));
+    case 'agios':
+      return TEXTES_BANQUE.journal.agios(formaterEuros(evenement.montant));
+    case 'decouvert':
+      return evenement.niveau === 1 ? TEXTES_BANQUE.journal.decouvert : TEXTES_BANQUE.journal.decouvertDepasse;
+    case 'salairesImpayes':
+      return TEXTES_BANQUE.journal.salairesImpayes(formaterEuros(evenement.montant), formaterEuros(evenement.dus));
+    case 'salairesRattrapes':
+      return TEXTES_BANQUE.journal.salairesRattrapes(formaterEuros(evenement.montant));
+    case 'departEquipe':
+      return TEXTES_BANQUE.journal.departEquipe(evenement.equipe);
+    case 'mensualiteImpayee':
+      return TEXTES_BANQUE.journal.mensualiteImpayee(formaterEuros(evenement.montant), evenement.limite);
+    case 'regularisation':
+      return TEXTES_BANQUE.journal.regularisation(formaterEuros(evenement.montant));
+    case 'faillite':
+      return TEXTES_BANQUE.journal.faillite;
     case 'equipeMenage':
       return t.equipeMenage(evenement.effectif);
     case 'visite':

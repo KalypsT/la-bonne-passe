@@ -1,3 +1,4 @@
+import { TEXTES_BANQUE } from '../content/banque';
 import { TEXTES } from '../content/textes';
 import type { Emplacement } from '../save/emplacements';
 import { Avatar } from '../scene/Avatar';
@@ -81,7 +82,11 @@ function CarteEmplacement({ numero, emplacement, maintenant }: PropsCarte) {
       <p className="carte-ligne attenue">
         {t.dernierePartie} : {formaterDernierePartie(r.dernierePartie, maintenant)}
       </p>
-      <p className={r.tresorerie < 0 ? 'carte-argent negatif' : 'carte-argent'}>{formaterEuros(r.tresorerie)}</p>
+      {r.faillite !== undefined ? (
+        <p className="carte-argent negatif">{TEXTES_BANQUE.titreEcran.faillite(r.faillite)}</p>
+      ) : (
+        <p className={r.tresorerie < 0 ? 'carte-argent negatif' : 'carte-argent'}>{formaterEuros(r.tresorerie)}</p>
+      )}
       <div className="carte-actions">
         <button className="bouton principal" onClick={() => continuer(numero)}>
           {t.continuer}

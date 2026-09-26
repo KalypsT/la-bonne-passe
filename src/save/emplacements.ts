@@ -21,6 +21,8 @@ export interface ResumePartie {
   tresorerie: number;
   /** Date de dernière partie, en millisecondes depuis 1970. */
   dernierePartie: number;
+  /** Jour de la faillite, si la partie s'est finie ainsi (v0.6). */
+  faillite?: number;
 }
 
 export type Emplacement =
@@ -41,6 +43,7 @@ export function resumer(etat: EtatJeu, dernierePartie: number): ResumePartie {
     minuteDuJour: etat.minuteDuJour,
     tresorerie: etat.tresorerie,
     dernierePartie,
+    ...(etat.finDePartie ? { faillite: etat.finDePartie.jour } : {}),
   };
 }
 

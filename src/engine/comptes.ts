@@ -21,6 +21,7 @@ export type PosteDepense =
   | 'assurance'
   | 'incidents'
   | 'mensualite'
+  | 'agios'
   | 'avance';
 
 export const POSTES_RECETTES: PosteRecette[] = ['rendezVous', 'bar', 'autres', 'assurance'];
@@ -41,6 +42,7 @@ export const POSTES_DEPENSES: PosteDepense[] = [
   'assurance',
   'incidents',
   'mensualite',
+  'agios',
   'avance',
 ];
 

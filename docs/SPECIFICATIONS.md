@@ -336,9 +336,10 @@ Cibles : une soirée correcte rapporte 600 à 1 000 € net à la maison (recett
 ### Règles automatiques
 
 - Impôt trimestriel de 20 % du bénéfice, prélevé seul, annoncé 2 semaines avant par Josée.
-- Découvert toléré jusqu'à −2 000 €, avec 1 % d'agios par jour.
-- Au-delà, les salaires ne sont plus versés : moral en baisse, puis départs.
-- Une mensualité impayée : lettre de la banque, adressée à la maison, et +2 points sur le taux du prochain emprunt. Deux mensualités impayées : faillite et fin de partie.
+- Découvert toléré jusqu'à −2 000 €, avec 1 % d'agios par jour (prélevés chaque matin sur ce qui est à découvert). Josée signale l'entrée dans le découvert, puis son dépassement.
+- Au-delà, les salaires des équipes ne sont plus versés : chaque jour sans paie, le moral de chaque personne suivie baisse de 6 ; à partir du deuxième jour de suite, une personne d'équipe s'en va chaque jour (sécurité, accueil, bar, puis ménage, dont la dernière reste). Les arriérés se paient dès que la caisse le permet.
+- Une mensualité se paie (réserve d'abord) tant que la caisse et la réserve restent au-dessus de −2 000 € après paiement. Sinon, elle est impayée : lettre de la banque, adressée à la maison, dans le bilan du mois, et +2 points sur le taux du prochain emprunt. Elle se régularise d'elle-même dès que la caisse le permet ; le palier 3 attend qu'elle soit payée. Deux mensualités impayées (la précédente toujours en retard le jour de la suivante) : faillite et fin de partie, avec un écran qui propose de recommencer. Le calendrier des échéances ne glisse pas.
+- L'onglet Finances montre la banque : découvert autorisé, agios du lendemain, salaires dus, mensualité en retard et sa date limite, avec l'avis de Josée (v0.6).
 
 ### Garde-fous de simplicité
 
@@ -512,4 +513,4 @@ Après la v1.0 : chapitres 2 à 4, chaleur, gérantes multi-maisons, Grand Gala 
 - [x] Le quartier vit-il ? (v0.5) Oui : au deuxième mois, 11 à 16 événements venus de dehors par semaine selon la maison, aucune semaine sans, des relations qui divergent selon le style (voisins de −33 à +36), une rivale qui frappe deux à trois fois par mois et d'autant plus fort qu'on lui prend sa clientèle. Détail dans docs/EQUILIBRAGE.md.
 - [ ] Le deuxième mois est-il trop dense à ×1 ? 6 à 10 alertes et 8 à 12 décisions par soirée de 3 minutes, contre 4 à 5 alertes au premier mois.
 - [ ] Les équipes Accueil et Sécurité valent-elles leur salaire ? Elles achètent du calme, pas de l'argent : une équipe coûte environ 1 800 à 2 600 € par mois.
-- [ ] Le découvert : plusieurs stratégies passent sous −2 000 € le jour de la première mensualité ; les conséquences (salaires impayés, taux) arrivent avec les finances complètes de la v0.6.
+- [x] Le découvert dès la première mensualité (v0.6, partie 2) : avec les vraies règles, un joueur actif paie sa première mensualité 9 fois sur 10 (2 parties sur 10 finissent le jour 28 à découvert), régularise la dixième dans le mois, ne fait jamais faillite en deux mois, et paie moins de 110 € d'agios. Le joueur passif (Sanne seule, rien rénové) ne la paie pas 7 fois sur 10, et fait faillite au jour 56 dans 7 parties sur 10 : « laisser faire » n'est plus un léger déficit mais une vraie menace, que « confier la gestion à Josée » (partie 4) devra adoucir. Détail dans docs/EQUILIBRAGE.md.
