@@ -1811,3 +1811,21 @@ body {
   padding-left: 18px;
   font-size: 13px;
 }
+
+/* Compteur par tranches (nouvel emprunt) */
+.boutons-ligne.compteur {
+  align-items: center;
+}
+
+.boutons-ligne.compteur .choix-court {
+  flex: none;
+  width: 56px;
+  font-size: 20px;
+}
+
+.compteur-valeur {
+  flex: 1;
+  text-align: center;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}

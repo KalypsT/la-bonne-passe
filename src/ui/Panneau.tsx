@@ -45,6 +45,7 @@ import { etatDuBar, FicheBar } from './FicheBar';
 import { FicheRegles, FicheSegment, OngletClientele } from './OngletClientele';
 import { FicheActeur, FicheRivale, OngletRelations } from './OngletRelations';
 import { Assurance, EquipesQuartier } from './Equipes';
+import { NouvelEmprunt } from './Emprunt';
 import { useInterface, type Fiche, type Onglet } from './store';
 
 const t = TEXTES.panneau;
@@ -695,6 +696,7 @@ function OngletFinances({ partie }: { partie: EtatJeu }) {
       )}
       <Reserve partie={partie} />
       <Assurance partie={partie} />
+      <NouvelEmprunt partie={partie} />
     </>
   );
 }

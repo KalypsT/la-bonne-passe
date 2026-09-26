@@ -11,6 +11,11 @@ export interface Nouveaute {
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    id: 'emprunt',
+    palier: 3,
+    texte: TEXTES_BANQUE.nouveauteEmprunt,
+  },
+  {
     id: 'banque',
     palier: 0,
     texte: TEXTES_BANQUE.nouveaute,

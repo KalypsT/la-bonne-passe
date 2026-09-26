@@ -1400,3 +1400,23 @@ Lecture :
 
 - **Le joueur actif** tient : une première mensualité impayée une fois sur dix au plus, toujours régularisée avant la suivante, jamais de faillite, jamais de salaire en retard. Les agios restent une piqûre (moins de 110 € en deux mois). Garde : `equilibrage-banque.test.ts`.
 - **Le joueur passif** fait faillite au jour 56 dans 7 parties sur 10. Les spécifications voulaient qu'un joueur qui laisse faire finisse « en léger déficit » : avec les vraies conséquences, il perd la maison. C'est cohérent avec « deux mensualités impayées : faillite », mais c'est dur pour un débutant distrait. « Confier la gestion à Josée » (partie 4) doit servir de filet ; à défaut, on pourrait allonger le délai de régularisation.
+
+### Le nouvel emprunt et la projection (partie 3)
+
+Ouvert au lundi qui suit la visibilité (le jour 43 pour une partie qui paie sa première mensualité à l'heure). Taux : 9 % à réputation 20, 4 % à 80, linéaire entre les deux, au demi-point, +2 points par mensualité restée impayée (`EMPRUNT`, `DECOUVERT.majorationTaux`). Mensualité d'un prêt amortissable (taux annuel sur 12 mois de 28 jours). Échéances le même jour que la mensualité du rachat : un seul prélèvement, une seule chance de le payer, une seule lettre en cas d'impayé.
+
+Exemples (réputation 50, taux 6,5 %) : 10 000 € sur 12 mois, 863 € par échéance (356 € d'intérêts) ; 20 000 € sur 24 mois, 891 € (1 384 €) ; 40 000 € sur 6 mois, 6 794 € par échéance (764 €), plus que ce que gagne une maison de trois personnes en un mois.
+
+Un joueur qui emprunte dès l'ouverture sans rien faire de l'argent (cartes au hasard, 10 graines, 84 nuits) :
+
+| Emprunt | Signé au jour | Taux | Trésorerie jour 56 | Valeur nette jour 84 (dettes et capital dû déduits) | Plus bas | Impayées | Faillites |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Sans emprunt | — | — | 4 107 € | 4 771 € | −735 € | 0,1 | 0/10 |
+| 10 000 € sur 12 mois | 44 | 6,7 % | 13 363 € | 4 722 € | −735 € | 0,1 | 0/10 |
+| 20 000 € sur 24 mois | 44 | 6,7 % | 23 335 € | 4 665 € | −735 € | 0,1 | 0/10 |
+| 40 000 € sur 6 mois | 44 | 6,7 % | 37 430 € | 4 520 € | −735 € | 0,1 | 0/10 |
+| 40 000 € sur 24 mois | 44 | 6,7 % | 42 442 € | 4 545 € | −735 € | 0,1 | 0/10 |
+
+Lecture : un emprunt qui dort ne coûte que ses intérêts (50 à 250 € sur trois mois) ; il ne rapporte que s'il finance des travaux ou une équipe plus tôt. Le piège est la durée courte : 40 000 € sur 6 mois se remboursent 6 794 € par mois, et Josée le dit avant la signature. À mesurer dans la partie 8 avec un joueur qui investit l'argent (agrandissement, confort).
+
+La simulation mesure désormais le résultat sur la valeur nette (trésorerie et réserve, moins la mensualité en retard, les salaires dus et le capital encore dû sur les nouveaux emprunts) : un emprunt reçu n'est pas un gain.

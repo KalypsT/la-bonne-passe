@@ -69,6 +69,21 @@ export const DECOUVERT = {
   /** Une mensualité impayée : points de taux en plus sur le prochain emprunt. */
   majorationTaux: 2,
 };
+/**
+ * Nouvel emprunt (v0.6), au premier lundi après l'ouverture de la visibilité : par tranches de 5 000 €,
+ * 40 000 € d'encours au plus, sur 6, 12 ou 24 mois. Taux de 9 % (réputation 20 ou moins) à 4 % (80 et plus),
+ * arrondi au demi-point, plus 2 points par mensualité restée impayée. Échéances tous les 28 jours, avec la mensualité.
+ */
+export const EMPRUNT = {
+  tranche: 5000,
+  max: 40000,
+  durees: [6, 12, 24] as const,
+  tauxMax: 9,
+  tauxMin: 4,
+  reputationBasse: 20,
+  reputationHaute: 80,
+};
+
 /** Salaires impayés : moral perdu par chaque personne suivie, chaque jour sans paie ; départ d'un membre d'équipe ensuite. */
 export const SALAIRES_IMPAYES = {
   moral: 6,

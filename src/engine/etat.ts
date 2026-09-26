@@ -66,6 +66,8 @@ export interface Systemes {
   assurance: boolean;
   /** Visibilité : site, concierges, influenceurs (au deuxième lundi après le palier 3, v0.5). */
   visibilite: boolean;
+  /** Nouvel emprunt (au premier lundi après la visibilité, v0.6). */
+  emprunt: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -248,6 +250,8 @@ export interface Nuit {
   tresorerieApres: number;
   /** Retiré de la réserve dans la journée. */
   retraitReserve: number;
+  /** Emprunt reçu dans la journée. */
+  empruntRecu: number;
   servis: number;
   perdus: number;
   reputationDebut: number;
@@ -396,7 +400,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 28;
+export const VERSION_ETAT = 29;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -422,6 +426,7 @@ export function systemesDeDepart(): Systemes {
     securite: false,
     assurance: false,
     visibilite: false,
+    emprunt: false,
   };
 }
 

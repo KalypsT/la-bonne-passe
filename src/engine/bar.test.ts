@@ -27,7 +27,7 @@ function avecBar(champs: Partial<EtatJeu> = {}): EtatJeu {
 
 const ordonner = (etat: EtatJeu, ordre: Ordre) => appliquerOrdres(etat, [ordre]);
 const rdv = (modele: string, formule: B.IdFormule = 'standard') => ({ chambreId: 'boudoir', employeId: 'sanne', clientId: 1, modele, formule, duree: 60, restant: 5 });
-const nuit = () => ({ numero: 5, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 });
+const nuit = () => ({ numero: 5, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, empruntRecu: 0, servis: 0, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 });
 
 /** Avance jusqu'à l'heure dite, en validant les briefings. */
 function jusqua(etat: EtatJeu, jour: number, minute: number) {

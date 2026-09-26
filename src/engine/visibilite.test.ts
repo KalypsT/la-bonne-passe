@@ -66,7 +66,7 @@ describe('la visibilité', () => {
   it('les influenceurs plaisent à la presse et agacent les voisins, chaque matin après une soirée', () => {
     const matin = avecVisibilite(maison({ jour: 38, minuteDuJour: h(5) }), 'influenceurs');
     matin.nuit = {
-      numero: matin.nuitsBouclees, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 0, perdus: 0, reputationDebut: 50,
+      numero: matin.nuitsBouclees, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, empruntRecu: 0, servis: 0, perdus: 0, reputationDebut: 50,
       meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0,
     };
     const avant = { ...matin.relations.jauges };

@@ -23,3 +23,8 @@ export function formaterDernierePartie(date: number, maintenant: number): string
   if (minutes < 48 * 60) return d.hier;
   return d.le(new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }));
 }
+
+/** Un taux en %, à la française : « 6,5 % ». */
+export function formaterTaux(taux: number): string {
+  return `${String(Math.round(taux * 10) / 10).replace('.', ',')}\u00a0%`;
+}

@@ -21,6 +21,7 @@ export type PosteDepense =
   | 'assurance'
   | 'incidents'
   | 'mensualite'
+  | 'emprunts'
   | 'agios'
   | 'avance';
 
@@ -42,6 +43,7 @@ export const POSTES_DEPENSES: PosteDepense[] = [
   'assurance',
   'incidents',
   'mensualite',
+  'emprunts',
   'agios',
   'avance',
 ];
@@ -61,6 +63,8 @@ export interface Journee {
   tresorerieAvant: number;
   /** Retiré de la réserve dans la journée : ce n'est pas une recette, mais la trésorerie le reçoit. */
   retraitReserve: number;
+  /** Emprunt reçu dans la journée : pas une recette non plus (v0.6). */
+  empruntRecu: number;
 }
 
 export function comptesVides(): Comptes {
@@ -79,7 +83,7 @@ export function totalDepenses(c: Comptes): number {
 }
 
 export function journeeVide(tresorerie: number): Journee {
-  return { comptes: comptesVides(), tresorerieAvant: tresorerie, retraitReserve: 0 };
+  return { comptes: comptesVides(), tresorerieAvant: tresorerie, retraitReserve: 0, empruntRecu: 0 };
 }
 
 /** Dépense payée par la trésorerie : comptes de la semaine et de la journée. */

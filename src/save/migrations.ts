@@ -439,6 +439,29 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), 'banque'],
     };
   },
+  // v28 → v29 : le nouvel emprunt, ouvert d'emblée si la visibilité l'est déjà (Josée le présente) ;
+  // un poste pour ses échéances, et l'emprunt reçu tenu à part des recettes.
+  28: (d) => {
+    const systemes = estObjet(d.systemes) ? d.systemes : {};
+    const ouvert = systemes.visibilite === true;
+    const avecPoste = (c: unknown) => (estObjet(c) && estObjet(c.depenses) ? { ...c, depenses: { emprunts: 0, ...c.depenses } } : c);
+    const semaine = estObjet(d.semaine) ? { ...d.semaine, comptes: avecPoste(d.semaine.comptes), empruntRecu: 0 } : d.semaine;
+    const bilanSemaine = estObjet(d.bilanSemaine) ? { ...d.bilanSemaine, comptes: avecPoste(d.bilanSemaine.comptes) } : d.bilanSemaine;
+    const journee = estObjet(d.journee) ? { ...d.journee, comptes: avecPoste(d.journee.comptes), empruntRecu: 0 } : d.journee;
+    const nuit = estObjet(d.nuit) ? { ...d.nuit, comptes: avecPoste(d.nuit.comptes), empruntRecu: 0 } : d.nuit;
+    const banque = estObjet(d.banque) ? { ...d.banque, retardRachat: typeof d.banque.retard === 'number' && d.banque.retard > 0, emprunts: [] } : d.banque;
+    return {
+      ...d,
+      version: 29,
+      systemes: { ...systemes, emprunt: ouvert },
+      semaine,
+      bilanSemaine,
+      journee,
+      nuit,
+      banque,
+      nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(ouvert ? ['emprunt'] : [])],
+    };
+  },
 };
 
 

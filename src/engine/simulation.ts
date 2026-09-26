@@ -21,7 +21,7 @@ import { IMPREVUS_QUARTIER } from '../content/imprevusQuartier';
 import { actionPossible } from './relations';
 import { reponsePossible } from './rivale';
 import { gagneNuit } from './comptes';
-import { avoirNet } from './banque';
+import { valeurNette } from './banque';
 
 const moyenne = (l: number[]) => (l.length ? l.reduce((a, b) => a + b, 0) / l.length : 0);
 
@@ -42,7 +42,7 @@ export interface ResumeNuit {
   fatigueMoyenne: number;
   fatigueMax: number;
   moralMoyen: number;
-  /** Résultat réel depuis le bilan précédent : trésorerie et réserve, frais fixes et investissements compris. */
+  /** Résultat réel depuis le bilan précédent : trésorerie et réserve, nettes des dettes et du capital encore dû sur les nouveaux emprunts. */
   resultat: number;
   /** Satisfaction de chaque segment à la fermeture. */
   satisfaction: ParSegment;
@@ -93,6 +93,8 @@ export interface OptionsSimulation {
   equipeBar?: number;
   /** Accepter l'avance du grossiste. */
   avance?: boolean;
+  /** Signer ce nouvel emprunt dès qu'il s'ouvre (v0.6). */
+  emprunt?: { montant: number; duree: number };
   /** Mettre au repos quiconque dépasse cette fatigue au briefing (55 par défaut ; 101 : jamais). */
   reposFatigue?: number;
   /** Au cran 6, accepter ce que demandent ceux qui négocient (prime ou repos promis). */
@@ -156,7 +158,8 @@ export function simuler(options: OptionsSimulation): {
   const bilans: BilanSemaine[] = [];
   const bilansMois: BilanMois[] = [];
   let tresorerieMin = etat.tresorerie;
-  let avoirPrecedent = avoirNet(etat);
+  let avoirPrecedent = valeurNette(etat);
+  let empruntSigne = false;
   // Compteurs de la nuit en cours, pour mesurer le renouvellement des soirées.
   let imprevusNuit: string[] = [];
   let intriguesNuit: string[] = [];
@@ -227,8 +230,8 @@ export function simuler(options: OptionsSimulation): {
           fatigueMoyenne: moyenne(etat.personnel.map((x) => x.fatigue)),
           fatigueMax: Math.max(0, ...etat.personnel.map((x) => x.fatigue)),
           moralMoyen: moyenne(etat.personnel.map((x) => x.moral)),
-          ecartCaisse: e.nuit.tresorerieApres - e.nuit.tresorerieAvant - gagneNuit(e.nuit.comptes) + e.nuit.reserve - e.nuit.retraitReserve,
-          resultat: avoirNet(etat) - avoirPrecedent,
+          ecartCaisse: e.nuit.tresorerieApres - e.nuit.tresorerieAvant - gagneNuit(e.nuit.comptes) + e.nuit.reserve - e.nuit.retraitReserve - e.nuit.empruntRecu,
+          resultat: valeurNette(etat) - avoirPrecedent,
           bar: e.nuit.comptes.recettes.bar,
           satisfaction: { ...etat.clientele.satisfaction },
           servisParSegment: { ...(etat.clientele.historique[0]?.servis ?? { touriste: 0, habitue: 0, affaires: 0, groupe: 0 }) },
@@ -249,7 +252,7 @@ export function simuler(options: OptionsSimulation): {
         });
         actionsRelations = 0;
         actionsRivale = [];
-        avoirPrecedent = avoirNet(etat);
+        avoirPrecedent = valeurNette(etat);
         imprevusNuit = [];
         intriguesNuit = [];
         intriguesSoiree = 0;
@@ -347,6 +350,10 @@ export function simuler(options: OptionsSimulation): {
       }
       if (etat.systemes.visibilite && options.visibilite && etat.regles.visibilite !== options.visibilite) {
         jouer([{ type: 'regle', regle: 'visibilite', valeur: options.visibilite }]);
+      }
+      if (options.emprunt && etat.systemes.emprunt && etat.banque.emprunts.length === 0 && !empruntSigne) {
+        empruntSigne = true;
+        jouer([{ type: 'emprunter', montant: options.emprunt.montant, duree: options.emprunt.duree }]);
       }
       if (options.rivale === 'treve' && etat.systemes.rivale && etat.rivale.agressivite >= 40 && reponsePossible(etat, 'treve') && etat.tresorerie > 1500) {
         jouer([{ type: 'reponseRivale', reponse: 'treve' }]);

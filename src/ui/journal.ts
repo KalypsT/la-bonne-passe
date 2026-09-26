@@ -19,7 +19,7 @@ import { TEXTES } from '../content/textes';
 import type { EtatJeu, Regles } from '../engine/etat';
 import { jourDeLaSemaine } from '../engine/temps';
 import type { EvenementMoteur } from '../engine/tick';
-import { formaterEuros, formaterHeure } from './format';
+import { formaterEuros, formaterHeure, formaterTaux } from './format';
 import { remplir } from './modeles';
 
 /** Genre d'une personne de l'équipe, retrouvée par son identifiant ou son prénom. */
@@ -169,6 +169,12 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return TEXTES_BANQUE.journal.regularisation(formaterEuros(evenement.montant));
     case 'faillite':
       return TEXTES_BANQUE.journal.faillite;
+    case 'emprunt':
+      return TEXTES_BANQUE.journalEmprunt.signe(formaterEuros(evenement.montant), formaterTaux(evenement.taux), evenement.duree, formaterEuros(evenement.mensualite));
+    case 'echeanceEmprunts':
+      return TEXTES_BANQUE.journalEmprunt.echeance(formaterEuros(evenement.montant));
+    case 'empruntRembourse':
+      return TEXTES_BANQUE.journalEmprunt.rembourse(formaterEuros(evenement.montant));
     case 'equipeMenage':
       return t.equipeMenage(evenement.effectif);
     case 'visite':
