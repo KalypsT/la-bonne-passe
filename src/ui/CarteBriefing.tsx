@@ -4,6 +4,7 @@ import { OFFRES, type Offre } from '../content/clientele';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
 import { manqueAuto, prixLinge } from '../engine/linge';
+import { facteurFournisseurs, prixFournisseur } from '../engine/relations';
 import { fatigueFinDeNuit, fatigueLendemain, reponsePlafond, type AccordPlafond } from '../engine/plafond';
 import { AIDE_CRANS, etatFinDeNuit, repliquePlafond, TEXTES_PLAFOND } from '../content/plafond';
 import type { Employe } from '../engine/etat';
@@ -46,6 +47,8 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
   const p = TEXTES.personnel;
   const jourSemaine = TEXTES.jours[jourDeLaSemaine(partie.jour)] ?? '';
   const premierSoir = partie.nuitsBouclees === 0;
+  // Prix d'ami ou prix gonflés, selon les fournisseurs (v0.6).
+  const facteur = facteurFournisseurs(partie);
   // Ce que la commande automatique ajoutera après le pack choisi, et le linge disponible ce soir.
   const auto = manqueAuto({ ...partie, lingeAuto }, packLinge);
   const lingeCeSoir = partie.linge + partie.lingeCommande + packLinge + auto;
@@ -132,10 +135,10 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
                   key={n}
                   className={packLinge === n ? 'choix-court choisi' : 'choix-court'}
                   aria-pressed={packLinge === n}
-                  aria-label={n === 0 ? t.aucunPack : t.pack(n, formaterEuros(prixLinge(n)), formaterEuros(prixLinge(n) / n))}
+                  aria-label={n === 0 ? t.aucunPack : t.pack(n, formaterEuros(prixLinge(n, facteur)), formaterEuros(prixLinge(n, facteur) / n))}
                   onClick={() => setPackLinge(n)}
                 >
-                  {n === 0 ? t.aucunPack : `${n} · ${formaterEuros(prixLinge(n))}`}
+                  {n === 0 ? t.aucunPack : `${n} · ${formaterEuros(prixLinge(n, facteur))}`}
                 </button>
               ))}
             </div>
@@ -147,7 +150,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
                 </button>
               ))}
             </div>
-            <p className="sous">{lingeAuto > 0 ? t.lingeAutoAide : ''} {t.apresCommande(lingeCeSoir, auto, formaterEuros(prixLinge(auto)))}</p>
+            <p className="sous">{lingeAuto > 0 ? t.lingeAutoAide : ''} {t.apresCommande(lingeCeSoir, auto, formaterEuros(prixLinge(auto, facteur)))}</p>
             {partie.bar.ouvert && (
               <>
                 <h3>{t.bar}</h3>
@@ -156,7 +159,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
                   {partie.equipes.bar === 0 && ` · ${t.barSansEquipe}`}
                 </p>
                 <button className={commanderBar ? 'choix choisi' : 'choix'} aria-pressed={commanderBar} onClick={() => setCommanderBar(!commanderBar)}>
-                  {t.commanderBar(COMMANDE_BAR.bouteilles, formaterEuros(COMMANDE_BAR.prix))}
+                  {t.commanderBar(COMMANDE_BAR.bouteilles, formaterEuros(prixFournisseur(partie, COMMANDE_BAR.prix)))}
                 </button>
               </>
             )}

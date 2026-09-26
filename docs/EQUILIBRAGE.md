@@ -1420,3 +1420,26 @@ Un joueur qui emprunte dès l'ouverture sans rien faire de l'argent (cartes au h
 Lecture : un emprunt qui dort ne coûte que ses intérêts (50 à 250 € sur trois mois) ; il ne rapporte que s'il finance des travaux ou une équipe plus tôt. Le piège est la durée courte : 40 000 € sur 6 mois se remboursent 6 794 € par mois, et Josée le dit avant la signature. À mesurer dans la partie 8 avec un joueur qui investit l'argent (agrandissement, confort).
 
 La simulation mesure désormais le résultat sur la valeur nette (trésorerie et réserve, moins la mensualité en retard, les salaires dus et le capital encore dû sur les nouveaux emprunts) : un emprunt reçu n'est pas un gain.
+
+### Impôt, gestion par Josée et fournisseurs (partie 4)
+
+**L'impôt** : 20 % du bénéfice du trimestre (84 jours), sans déduire les mensualités ni les échéances d'emprunt. Premier essai : prélevé au jour 85, le lendemain de la troisième mensualité. Deux coups de suite, c'était trop dur : il est désormais annoncé au jour 85 (montant exact, trimestre clos) et prélevé au jour 99, deux semaines plus tard, à mi-chemin des mensualités.
+
+**Josée** : la commission était d'abord de 3 % de la recette de la maison (2 400 € en quatre mois pour le joueur classique) : plus un impôt qu'un léger déficit. Ramenée à 1 % (environ 800 € en quatre mois).
+
+Quatre mois de jeu (cartes au hasard, 10 graines, 112 nuits) :
+
+| Stratégie | Impôt du 1er trimestre | Trésorerie jour 98 → 100 | Commission de Josée | Valeur nette jour 112 | Impayées | Faillites | Sursis utilisés | Fournisseurs au jour 112 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 1 931 € | 4 859 → 2 120 € | — | 1 347 € | 0,3 | 0/10 | — | +18 |
+| Classique, 4 | 4 347 € | 17 747 → 12 977 € | — | 17 135 € | 0,0 | 0/10 | — | +26 |
+| Classique 3, sélection stricte | 1 256 € | 1 352 → −515 € | — | −3 952 € | 0,7 | 0/10 | — | 0 |
+| Classique 3, gestion confiée à Josée | 1 862 € | 4 631 → 1 781 € | 813 € | 1 813 € | 0,2 | 0/10 | 0/10 | +18 |
+| Passif, 4 | — | — | — | −12 160 € | 1,0 | 10/10 (jours 56 à 84) | — | −18 |
+| Passif, 4, gestion confiée à Josée | — | — | 112 € | −21 690 € | 2,0 | 10/10 (jours 84 à 112) | 10/10 | −27 |
+
+Lecture :
+
+- **L'impôt** coûte l'équivalent de deux à trois soirées par trimestre à un joueur classique, davantage à celui qui gagne bien : il ronge l'avance du cran 4 (4 300 €) sans l'annuler. Les joueurs à la peine (porte stricte) passent la mensualité du jour 112 plus souvent en retard (0,7 impayée en quatre mois), sans faillite. Garde : `equilibrage-banque.test.ts` (1 000 à 3 000 € au premier trimestre, aucune faillite en quatre mois).
+- **Josée** coûte environ 800 € en quatre mois, et son joueur ne s'en porte pas plus mal (1 813 € de valeur nette contre 1 347 €, dans l'écart d'une graine à l'autre) : la réserve fixe à 10 % évite quelques retards. Son sursis ne sauve pas le joueur passif : il repousse la faillite d'un mois (jour 84 au lieu de 56). Le joueur qui ne recrute ni ne rénove gagne moins que ses charges et sa mensualité ; aucun outil financier n'y peut rien. C'est un problème de conseil (Josée devrait lui dire de recruter et rénover), à traiter avec le didacticiel final (v1.0).
+- **Les fournisseurs** montent à +15 à +25 chez un joueur qui commande régulièrement, sans atteindre les bons termes (+40) : les prix d'ami se gagnent avec les deux actions. Ils tombent sous zéro chez les joueurs à la peine (salaires impayés), et au plus bas chez le joueur passif.

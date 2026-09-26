@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { ACTIONS_RELATIONS, RELATIONS } from '../content/balance';
 import {
   ACTEURS,
-  ACTEURS_ORDRE,
   HUMEURS,
   TEXTES_ACTIONS_RELATIONS,
   TEXTES_RELATIONS as t,
@@ -19,7 +18,7 @@ import {
   type IdReponseRivale,
 } from '../content/rivale';
 import type { EtatJeu } from '../engine/etat';
-import { actionPossible, prochaineAction, termes } from '../engine/relations';
+import { acteursOuverts, actionPossible, prochaineAction, termes } from '../engine/relations';
 import { chanceTreve, enTreve, prochaineReponse, reponsePossible } from '../engine/rivale';
 import { remplir } from './modeles';
 import { JoseeLigne } from './Josee';
@@ -47,7 +46,7 @@ export function OngletRelations({ partie }: { partie: EtatJeu }) {
   return (
     <>
       <p className="sous">{t.intro}</p>
-      {ACTEURS_ORDRE.map((id) => {
+      {acteursOuverts(partie).map((id) => {
         const valeur = partie.relations.jauges[id];
         const ecart = Math.round(valeur - partie.relations.lundi[id]);
         const humeur = HUMEURS[humeurRelation(valeur)];

@@ -33,6 +33,7 @@ import { JOUR_PREMIERE_MENSUALITE, RELATIONS, TAPAGE } from '../content/balance'
 import { moisDeDepart, prochainObjectif, statsDeDepart } from '../engine/bilans';
 import { comptesVides, journeeVide } from '../engine/comptes';
 import { banqueDeDepart } from '../engine/banque';
+import { fiscDeDepart } from '../engine/fisc';
 
 type Donnees = Record<string, unknown>;
 
@@ -462,6 +463,48 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(ouvert ? ['emprunt'] : [])],
     };
   },
+  // v29 → v30 : l'impôt trimestriel (le trimestre en cours part de zéro, à l'avantage du joueur), la gestion confiée
+  // à Josée (avec la réserve), et les fournisseurs, cinquième acteur des relations (ouverts si l'emprunt l'est).
+  29: (d) => {
+    const systemes = estObjet(d.systemes) ? d.systemes : {};
+    const fournisseurs = systemes.emprunt === true;
+    const avecPostes = (c: unknown) =>
+      estObjet(c) && estObjet(c.depenses) ? { ...c, depenses: { impots: 0, gestion: 0, ...c.depenses } } : c;
+    const semaine = estObjet(d.semaine) ? { ...d.semaine, comptes: avecPostes(d.semaine.comptes) } : d.semaine;
+    const bilanSemaine = estObjet(d.bilanSemaine) ? { ...d.bilanSemaine, comptes: avecPostes(d.bilanSemaine.comptes) } : d.bilanSemaine;
+    const journee = estObjet(d.journee) ? { ...d.journee, comptes: avecPostes(d.journee.comptes) } : d.journee;
+    const nuit = estObjet(d.nuit) ? { ...d.nuit, comptes: avecPostes(d.nuit.comptes) } : d.nuit;
+    const banque = estObjet(d.banque) ? { ...d.banque, sursis: false, supplement: 0 } : d.banque;
+    const r = estObjet(d.relations) ? d.relations : {};
+    const avecActeur = (x: unknown, v: number) => (estObjet(x) ? { fournisseurs: v, ...x } : x);
+    const relations = {
+      ...r,
+      jauges: avecActeur(r.jauges, 0),
+      lundi: avecActeur(r.lundi, 0),
+      derniereAction: avecActeur(r.derniereAction, -99),
+      dernierEvenement: avecActeur(r.dernierEvenement, -99),
+    };
+    const reserve = systemes.reserve === true;
+    return {
+      ...d,
+      version: 30,
+      systemes: { ...systemes, fournisseurs },
+      gestionJosee: false,
+      fisc: fiscDeDepart(),
+      semaine,
+      bilanSemaine,
+      journee,
+      nuit,
+      banque,
+      relations,
+      nouveautes: [
+        ...(Array.isArray(d.nouveautes) ? d.nouveautes : []),
+        'impot',
+        ...(reserve ? ['gestionJosee'] : []),
+        ...(fournisseurs ? ['fournisseurs'] : []),
+      ],
+    };
+  },
 };
 
 
@@ -552,6 +595,8 @@ function estEtatValide(d: Donnees): boolean {
     typeof d.hasardRivale === 'number' &&
     typeof d.hasardPlafond === 'number' &&
     estObjet(d.banque) &&
+    estObjet(d.fisc) &&
+    typeof d.gestionJosee === 'boolean' &&
     estObjet(d.systemes)
   );
 }

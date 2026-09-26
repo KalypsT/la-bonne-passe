@@ -113,6 +113,18 @@ export function CarteSemaine({ partie }: { partie: EtatJeu }) {
             </dl>
             <p className="sous">{t.projectionDetail}</p>
             <JoseeLigne texte={passeSousZero ? t.joseeProjection : t.joseeResultat(b.resultat >= 0)} />
+            {b.impot && (
+              <div className="defi-bilan">
+                <h3>{TEXTES_BANQUE.impot.titre}</h3>
+                <JoseeLigne
+                  texte={
+                    b.impot.paye
+                      ? TEXTES_BANQUE.impot.payeLundi(formaterEuros(b.impot.montant))
+                      : TEXTES_BANQUE.impot.annonceLundi(b.impot.jour, formaterEuros(b.impot.montant))
+                  }
+                />
+              </div>
+            )}
             <DefisDuLundi partie={partie} />
             <RivaleDuLundi partie={partie} />
             {(b.ouvertures ?? []).map((id) => {

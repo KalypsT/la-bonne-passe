@@ -262,11 +262,13 @@ La maison vit dans un quartier : chaque acteur extérieur a une jauge de relatio
 | Police | Tolérance, avertissements discrets | Contrôles, descentes (pays non légaux) |
 | Voisins | Paix, témoins favorables | Plaintes, pétition, presse locale |
 | Fournisseurs | Prix, livraisons fiables | Retards, ruptures de stock |
+
+Les fournisseurs (v0.6) rejoignent les relations au lundi qui suit l'ouverture du nouvel emprunt : en bons termes, le linge, le bar et les livraisons express coûtent 10 % de moins ; en mauvais termes, 15 % de plus, et une livraison express sur trois n'arrive pas. Ils aiment les commandes régulières du briefing et l'avance du grossiste rendue à temps ; les salaires impayés et les mensualités en retard les font fuir. Deux actions (régler les factures d'avance, négocier les prix autour d'un genièvre) et deux cartes (la tournée du blanchisseur, la rupture de linge).
 | Presse | Visibilité flatteuse | Scandale, fuite de VIP |
 
 ### Les relations à Amsterdam (v0.5)
 
-- **Quatre acteurs** au palier 3 : voisins, mairie, presse, police. Les fournisseurs viendront avec les finances complètes (v0.6).
+- **Quatre acteurs** au palier 3 : voisins, mairie, presse, police. Les fournisseurs les rejoignent avec les finances complètes (v0.6), quelques semaines plus tard.
 - **Seuils** : en bons termes au-dessus de +40, en mauvais termes sous −40. Départ : voisins +10, mairie +10 (les souvenirs de Josée), presse 0, police +5.
 - **Ce qui les fait bouger** : les voisins jugent chaque nuit d'après le tapage ; une nuit très bruyante fait venir la police ; des voisins fâchés écrivent à la mairie ; la presse suit la réputation ; toutes reviennent doucement vers leur point d'équilibre. Les imprévus, les intrigues et les alertes manquées (photographe, groupe bruyant) les touchent aussi.
 - **Ce qu'ils changent** : voisins en bons termes, le tapage monte moins vite ; mairie en bons termes, plus d'inspection sanitaire à l'improviste ; la presse fait varier la venue des touristes (jusqu'à ±15 %) ; police en bons termes, une dispute qui dégénère ne coûte plus de réputation.
@@ -335,7 +337,7 @@ Cibles : une soirée correcte rapporte 600 à 1 000 € net à la maison (recett
 
 ### Règles automatiques
 
-- Impôt trimestriel de 20 % du bénéfice, prélevé seul, annoncé 2 semaines avant par Josée.
+- Impôt trimestriel de 20 % du bénéfice (trimestres de 84 jours ; mensualités, échéances d'emprunt et impôt non déduits ; une perte ne se reporte pas). Josée annonce le montant exact à la clôture du trimestre (jours 85, 169…), au bilan du lundi ; il est prélevé seul deux semaines plus tard (jours 99, 183…), loin de la mensualité, même à découvert. L'onglet Finances montre le bénéfice du trimestre et l'impôt estimé ; la trésorerie projetée en tient compte (v0.6).
 - Découvert toléré jusqu'à −2 000 €, avec 1 % d'agios par jour (prélevés chaque matin sur ce qui est à découvert). Josée signale l'entrée dans le découvert, puis son dépassement.
 - Au-delà, les salaires des équipes ne sont plus versés : chaque jour sans paie, le moral de chaque personne suivie baisse de 6 ; à partir du deuxième jour de suite, une personne d'équipe s'en va chaque jour (sécurité, accueil, bar, puis ménage, dont la dernière reste). Les arriérés se paient dès que la caisse le permet.
 - Une mensualité se paie (réserve d'abord) tant que la caisse et la réserve restent au-dessus de −2 000 € après paiement. Sinon, elle est impayée : lettre de la banque, adressée à la maison, dans le bilan du mois, et +2 points sur le taux du prochain emprunt. Elle se régularise d'elle-même dès que la caisse le permet ; le palier 3 attend qu'elle soit payée. Deux mensualités impayées (la précédente toujours en retard le jour de la suivante) : faillite et fin de partie, avec un écran qui propose de recommencer. Le calendrier des échéances ne glisse pas.
@@ -346,7 +348,7 @@ Cibles : une soirée correcte rapporte 600 à 1 000 € net à la maison (recett
 - Chaque choix se fait en 2 à 4 crans, jamais en saisie libre.
 - L'effet s'affiche avant de valider (« mensualité 1 150 €, dernière échéance en mois 14 »).
 - Josée donne son avis en une phrase sur chaque décision.
-- Le joueur peut confier la gestion à Josée : réserve à 10 %, jamais d'emprunt ni de placement. C'est prudent, mais légèrement déficitaire.
+- Le joueur peut confier la gestion à Josée, dans l'onglet Finances dès la réserve (palier 1) : réserve fixée à 10 %, jamais d'emprunt ni de placement, et 1 % de la recette de la maison chaque lundi pour sa commission. C'est prudent, mais légèrement déficitaire. En échange, une fois dans la partie, elle obtient de la banque un sursis : l'échéance en retard passe en fin de prêt au lieu de mener à la faillite (v0.6).
 - Un outil s'ouvre à la fois, avec son palier.
 
 ## Événements et intrigues
@@ -513,4 +515,4 @@ Après la v1.0 : chapitres 2 à 4, chaleur, gérantes multi-maisons, Grand Gala 
 - [x] Le quartier vit-il ? (v0.5) Oui : au deuxième mois, 11 à 16 événements venus de dehors par semaine selon la maison, aucune semaine sans, des relations qui divergent selon le style (voisins de −33 à +36), une rivale qui frappe deux à trois fois par mois et d'autant plus fort qu'on lui prend sa clientèle. Détail dans docs/EQUILIBRAGE.md.
 - [ ] Le deuxième mois est-il trop dense à ×1 ? 6 à 10 alertes et 8 à 12 décisions par soirée de 3 minutes, contre 4 à 5 alertes au premier mois.
 - [ ] Les équipes Accueil et Sécurité valent-elles leur salaire ? Elles achètent du calme, pas de l'argent : une équipe coûte environ 1 800 à 2 600 € par mois.
-- [x] Le découvert dès la première mensualité (v0.6, partie 2) : avec les vraies règles, un joueur actif paie sa première mensualité 9 fois sur 10 (2 parties sur 10 finissent le jour 28 à découvert), régularise la dixième dans le mois, ne fait jamais faillite en deux mois, et paie moins de 110 € d'agios. Le joueur passif (Sanne seule, rien rénové) ne la paie pas 7 fois sur 10, et fait faillite au jour 56 dans 7 parties sur 10 : « laisser faire » n'est plus un léger déficit mais une vraie menace, que « confier la gestion à Josée » (partie 4) devra adoucir. Détail dans docs/EQUILIBRAGE.md.
+- [x] Le découvert dès la première mensualité (v0.6, partie 2) : avec les vraies règles, un joueur actif paie sa première mensualité 9 fois sur 10 (2 parties sur 10 finissent le jour 28 à découvert), régularise la dixième dans le mois, ne fait jamais faillite en deux mois, et paie moins de 110 € d'agios. Le joueur passif (Sanne seule, rien rénové) ne la paie pas 7 fois sur 10, et fait faillite au jour 56 dans 7 parties sur 10 : « laisser faire » n'est plus un léger déficit mais une vraie menace, que « confier la gestion à Josée » (partie 4) ne fait que retarder d'un mois : il gagne moins que ses charges, et c'est au didacticiel final (v1.0) de lui apprendre à recruter et rénover. Détail dans docs/EQUILIBRAGE.md.

@@ -10,6 +10,9 @@ export interface Nouveaute {
 }
 
 export const NOUVEAUTES: Nouveaute[] = [
+  { id: 'impot', palier: 0, texte: TEXTES_BANQUE.nouveautes.impot },
+  { id: 'gestionJosee', palier: 1, texte: TEXTES_BANQUE.nouveautes.gestionJosee },
+  { id: 'fournisseurs', palier: 3, texte: TEXTES_BANQUE.nouveautes.fournisseurs },
   {
     id: 'emprunt',
     palier: 3,

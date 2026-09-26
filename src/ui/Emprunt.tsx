@@ -42,7 +42,9 @@ export function NouvelEmprunt({ partie }: { partie: EtatJeu }) {
   const chaqueMois =
     (jourProchaineMensualite(partie) !== null ? MENSUALITE : 0) + partie.banque.emprunts.reduce((s, e) => s + e.mensualite, 0) + a.mensualite;
   const avis =
-    refus === 'retard'
+    refus === 'josee'
+      ? TEXTES_BANQUE.refusJosee
+      : refus === 'retard'
       ? j.retard
       : base !== undefined && chaqueMois > base * 4
         ? j.trop

@@ -93,6 +93,8 @@ export interface OptionsSimulation {
   equipeBar?: number;
   /** Accepter l'avance du grossiste. */
   avance?: boolean;
+  /** Confier la gestion à Josée dès qu'elle s'ouvre, avec la réserve (v0.6). */
+  gestionJosee?: boolean;
   /** Signer ce nouvel emprunt dès qu'il s'ouvre (v0.6). */
   emprunt?: { montant: number; duree: number };
   /** Mettre au repos quiconque dépasse cette fatigue au briefing (55 par défaut ; 101 : jamais). */
@@ -323,6 +325,7 @@ export function simuler(options: OptionsSimulation): {
       if (etat.bar.ouvert && etat.equipes.bar !== equipeBar) jouer([{ type: 'equipeBar', effectif: equipeBar }]);
       const ouvertes = etat.chambres.filter((c) => c.ouverte).length;
       if (etat.systemes.recrutement && ouvertes >= 3 && etat.equipes.menage < 2) jouer([{ type: 'equipeMenage', effectif: 2 }]);
+      if (options.gestionJosee && etat.systemes.reserve && !etat.gestionJosee) jouer([{ type: 'gestionJosee', active: true }]);
       if (etat.systemes.reserve && etat.tauxReserve === 0) jouer([{ type: 'tauxReserve', taux: 0.1 }]);
       if (options.relations === 'entretien' && etat.systemes.relations) {
         const cible = options.cibleRelations ?? 10;

@@ -8,8 +8,8 @@ import { migrer } from './migrations';
 import { ambitionDuMarche } from '../engine/recrutement';
 import { creerStockageMemoire, type Stockage } from './stockage';
 
-/** Les nouveautés apportées par la migration testée, sans celles des mises à jour suivantes (v0.6 : parures, crans, banque, emprunt). */
-const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => !['parures', 'crans', 'banque', 'emprunt'].includes(n));
+/** Les nouveautés apportées par la migration testée, sans celles des mises à jour suivantes (v0.6 : parures, crans, banque, emprunt, impôt, gestion, fournisseurs). */
+const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => !['parures', 'crans', 'banque', 'emprunt', 'impot', 'gestionJosee', 'fournisseurs'].includes(n));
 
 const MAINTENANT = Date.UTC(2026, 8, 25, 20, 0);
 
@@ -596,6 +596,37 @@ describe('migrations', () => {
     const ouvert = migrer({ ...v28, systemes: { ...systemes, visibilite: true } });
     expect(ouvert?.systemes.emprunt).toBe(true);
     expect(ouvert?.nouveautes).toContain('emprunt');
+  });
+
+  it('migre une sauvegarde v29 : impôt, gestion par Josée et fournisseurs, présentés par Josée', () => {
+    const base = creerEtatInitial();
+    const { fisc: _f, gestionJosee: _g, ...reste } = base;
+    const { fournisseurs: _s, ...systemes } = base.systemes;
+    const sansFournisseurs = <T extends Record<string, number>>(r: T) => {
+      const copie = { ...r } as Record<string, number>;
+      delete copie.fournisseurs;
+      return copie;
+    };
+    const relations = {
+      ...base.relations,
+      jauges: sansFournisseurs(base.relations.jauges),
+      lundi: sansFournisseurs(base.relations.lundi),
+      derniereAction: sansFournisseurs(base.relations.derniereAction),
+      dernierEvenement: sansFournisseurs(base.relations.dernierEvenement),
+    };
+    const v29 = { ...reste, version: 29, systemes: { ...systemes, reserve: true, emprunt: true }, relations, nouveautes: [] };
+    const migre = migrer(v29);
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.fisc).toEqual({ benefice: 0, semaines: 0, du: 0, jourDu: 0 });
+    expect(migre?.gestionJosee).toBe(false);
+    expect(migre?.systemes.fournisseurs).toBe(true);
+    expect(migre?.relations.jauges.fournisseurs).toBe(0);
+    expect(migre?.semaine.comptes.depenses.impots).toBe(0);
+    expect(migre?.banque).toMatchObject({ sursis: false, supplement: 0 });
+    expect(migre?.nouveautes).toEqual(['impot', 'gestionJosee', 'fournisseurs']);
+    const tot = migrer({ ...v29, systemes: { ...systemes, reserve: false, emprunt: false } });
+    expect(tot?.systemes.fournisseurs).toBe(false);
+    expect(tot?.nouveautes).toEqual(['impot']);
   });
 
   it('refuse une version future ou des données sans version', () => {

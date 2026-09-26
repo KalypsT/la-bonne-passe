@@ -4,8 +4,9 @@
 
 import { ACTIONS_RELATIONS, RELATIONS } from './balance';
 
-export type IdActeur = 'voisins' | 'mairie' | 'presse' | 'police';
-export const ACTEURS_ORDRE: IdActeur[] = ['voisins', 'mairie', 'presse', 'police'];
+export type IdActeur = 'voisins' | 'mairie' | 'presse' | 'police' | 'fournisseurs';
+/** Les fournisseurs rejoignent les quatre premiers au lundi qui suit le nouvel emprunt (v0.6). */
+export const ACTEURS_ORDRE: IdActeur[] = ['voisins', 'mairie', 'presse', 'police', 'fournisseurs'];
 
 const euros = (n: number) => `${n.toLocaleString('fr-FR')} €`;
 
@@ -64,6 +65,16 @@ export const ACTEURS: Record<IdActeur, DefinitionActeur> = {
     bouge: 'Les disputes qui dégénèrent, les incidents, les gestes envers le commissariat.',
     evenementBons: 'agentQuartier',
     evenementMauvais: 'controle',
+  },
+  fournisseurs: {
+    id: 'fournisseurs',
+    nom: 'Les fournisseurs',
+    portrait: 'Le grossiste en vins et spiritueux de la Haarlemmerstraat, et la blanchisserie Van Dijk, qui livre le linge en triporteur.',
+    bons: 'Prix d’ami : le linge, le bar et les livraisons express coûtent 10 % de moins.',
+    mauvais: 'Prix gonflés de 15 %, et une livraison express sur trois qui n’arrive jamais.',
+    bouge: 'Les commandes régulières du briefing, l’avance du grossiste rendue à temps ; les salaires et les mensualités impayés font fuir.',
+    evenementBons: 'saisonFournisseur',
+    evenementMauvais: 'ruptureFournisseur',
   },
 };
 
@@ -143,6 +154,19 @@ export const TEXTES_ACTIONS_RELATIONS: Record<string, TexteActionRelation> = {
     josee: 'Des maillots pour l’équipe du commissariat. Pas ton nom dessus, surtout : une étoile, ça suffit.',
     journal: 'L’équipe du commissariat joue en maillots neufs, une petite étoile rose sur le cœur. Elle perd quand même.',
   },
+  ardoiseFournisseurs: {
+    texte: 'Régler les factures d’avance',
+    detail: `${euros(A.ardoiseFournisseurs!.cout)} · fournisseurs ${pts(A.ardoiseFournisseurs!.gain)}`,
+    josee: 'Un fournisseur payé d’avance livre à l’heure. C’est la seule loi que je connaisse qui marche à tous les coups.',
+    journal: 'Tu passes chez le grossiste régler le mois à venir. Il te serre la main un peu plus longtemps que d’habitude.',
+  },
+  negocierFournisseurs: {
+    texte: 'Négocier les prix autour d’un genièvre',
+    detail: `${euros(A.negocierFournisseurs!.cout)} · fournisseurs ${pts(A.negocierFournisseurs!.gain)} ; une fois sur trois, il se vexe`,
+    josee: 'Monsieur Van Dijk aime qu’on discute, pas qu’on marchande. La nuance est fine.',
+    journal: 'Deux genièvres plus tard, Van Dijk accepte de « faire un geste ». Vous trinquez à la saison.',
+    journalEchec: 'Tu as marchandé une serviette de trop. Van Dijk repart vexé, son carnet de commandes sous le bras.',
+  },
 };
 
 /** Textes de l'onglet Relations et de ses fiches. */
@@ -181,5 +205,10 @@ export const TEXTES_SEUILS_RELATIONS: Record<IdActeur, { bons: string; mauvais: 
     bons: 'L’agent Visser te salue d’un coup de sonnette en passant. Un avertissement vaudra mieux qu’un procès-verbal.',
     mauvais: 'Le commissariat a noté l’adresse. Les rondes passent un peu trop souvent devant la porte.',
     neutre: 'La police te laisse tranquille. Pour l’instant.',
+  },
+  fournisseurs: {
+    bons: 'Tes fournisseurs te font des prix d’ami : 10 % de moins sur le linge et le bar.',
+    mauvais: 'Les fournisseurs se méfient : prix gonflés, et l’express ne répond plus toujours.',
+    neutre: 'Les fournisseurs livrent, facturent, et ne pensent rien de toi.',
   },
 };

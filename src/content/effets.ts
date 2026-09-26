@@ -62,6 +62,8 @@ export interface EffetCarte {
   juridique?: boolean;
   /** Points gardés en mémoire par l'intrigue : ses étapes suivantes peuvent les exiger (dénouement selon les choix). */
   points?: number;
+  /** Parures de linge propre en plus (ou en moins) dans le stock (v0.6). */
+  linge?: number;
   /** Relations avec le quartier (v0.5) : points gagnés ou perdus auprès de chaque acteur. */
   relations?: Partial<Record<IdActeur, number>>;
   /** Les arrivées de la soirée en cours sont multipliées par ce facteur (un contrôle devant la porte). */

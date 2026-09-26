@@ -3,6 +3,7 @@ import { PALIERS } from '../content/paliers';
 import { TEXTES } from '../content/textes';
 import { barSert } from '../engine/bar';
 import { comptesDeLaNuit } from '../engine/comptes';
+import { prixFournisseur } from '../engine/relations';
 import type { EtatJeu } from '../engine/etat';
 import { heureDeInstant } from '../engine/temps';
 import { formaterEuros, formaterHeure } from './format';
@@ -60,7 +61,7 @@ export function FicheBar({ partie }: { partie: EtatJeu }) {
         {b.commande > 0 && ` · ${TEXTES.bar.bouteilles(b.commande)} en commande`}
       </p>
       <button className="bouton discret pleine-largeur" onClick={() => ordonner({ type: 'livraisonBar' })}>
-        {t.livraison(LIVRAISON_EXPRESS_BAR.bouteilles, formaterEuros(LIVRAISON_EXPRESS_BAR.prix))}
+        {t.livraison(LIVRAISON_EXPRESS_BAR.bouteilles, formaterEuros(prixFournisseur(partie, LIVRAISON_EXPRESS_BAR.prix)))}
       </button>
       <h3>{t.equipe}</h3>
       <p className="sous">{t.effectif(n, formaterEuros(SALAIRE_BAR))}</p>

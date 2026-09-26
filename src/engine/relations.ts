@@ -27,6 +27,7 @@ export interface Relations {
 
 export type EvenementRelation =
   | { type: 'actionRelation'; action: string; acteur: IdActeur; montant: number; reussite: boolean }
+  | { type: 'expressRatee'; quoi: 'linge' | 'bar' }
   | { type: 'seuilRelation'; acteur: IdActeur; termes: 'bons' | 'mauvais' | 'neutre' };
 
 export type OrdreRelation = { type: 'actionRelation'; action: string };
@@ -63,12 +64,22 @@ export function relationsOuvertes(etat: EtatJeu): boolean {
   return etat.systemes.relations;
 }
 
+/** Cet acteur compte-t-il déjà ? Les fournisseurs arrivent plus tard (v0.6). */
+export function acteurOuvert(etat: EtatJeu, acteur: IdActeur): boolean {
+  return relationsOuvertes(etat) && (acteur !== 'fournisseurs' || etat.systemes.fournisseurs);
+}
+
+/** Les acteurs qui comptent déjà, dans l'ordre. */
+export function acteursOuverts(etat: EtatJeu): IdActeur[] {
+  return ACTEURS_ORDRE.filter((a) => acteurOuvert(etat, a));
+}
+
 export function enBonsTermes(etat: EtatJeu, acteur: IdActeur): boolean {
-  return relationsOuvertes(etat) && termes(etat.relations.jauges[acteur]) === 'bons';
+  return acteurOuvert(etat, acteur) && termes(etat.relations.jauges[acteur]) === 'bons';
 }
 
 export function enMauvaisTermes(etat: EtatJeu, acteur: IdActeur): boolean {
-  return relationsOuvertes(etat) && termes(etat.relations.jauges[acteur]) === 'mauvais';
+  return acteurOuvert(etat, acteur) && termes(etat.relations.jauges[acteur]) === 'mauvais';
 }
 
 /** Fait bouger une relation ; le journal note quand elle change de termes (une fois les relations ouvertes). */
@@ -77,7 +88,7 @@ export function changerRelation(etat: EtatJeu, acteur: IdActeur, delta: number, 
   const apres = Math.round(borner(avant + delta) * 10) / 10;
   etat.relations.jauges[acteur] = apres;
   const t = termes(apres);
-  if (evenements && relationsOuvertes(etat) && t !== termes(avant)) evenements.push({ type: 'seuilRelation', acteur, termes: t });
+  if (evenements && acteurOuvert(etat, acteur) && t !== termes(avant)) evenements.push({ type: 'seuilRelation', acteur, termes: t });
 }
 
 export function changerRelations(etat: EtatJeu, deltas: Partial<Record<string, number>>, evenements?: Sortie): void {
@@ -118,7 +129,7 @@ export function matinDesRelations(etat: EtatJeu, evenements: Sortie): void {
 
   // Un événement du quartier, au plus un par matin.
   const tirage = creerTirage(etat.hasardQuartier);
-  for (const a of ACTEURS_ORDRE) {
+  for (const a of acteursOuverts(etat)) {
     const t = termes(r.jauges[a]);
     if (t === 'neutre' || etat.jour - r.dernierEvenement[a] < R.evenementRepit) continue;
     if (!tirage.chance(R.evenementChance)) continue;
@@ -147,7 +158,7 @@ export function actionPossible(etat: EtatJeu, action: string): boolean {
   const def = B.ACTIONS_RELATIONS[action];
   if (!def || !relationsOuvertes(etat)) return false;
   const acteur = def.acteur as IdActeur;
-  return etat.jour >= prochaineAction(etat, acteur) && etat.tresorerie >= def.cout;
+  return acteurOuvert(etat, acteur) && etat.jour >= prochaineAction(etat, acteur) && etat.tresorerie >= def.cout;
 }
 
 /** Une action de relation, choisie dans l'onglet Relations : elle coûte, rapporte, et parfois se retourne. */
@@ -186,6 +197,32 @@ export function demandeRelations(etat: EtatJeu, segment: Segment): number {
 /** Un contrôle devant la porte ce soir. */
 export function affluenceRelations(etat: EtatJeu): number {
   return etat.relations.affluenceSoir;
+}
+
+/** Les fournisseurs : prix d'ami en bons termes, prix gonflés en mauvais termes (linge, bar, livraisons express). */
+export function facteurFournisseurs(etat: EtatJeu): number {
+  if (enBonsTermes(etat, 'fournisseurs')) return B.FOURNISSEURS.prixBons;
+  if (enMauvaisTermes(etat, 'fournisseurs')) return B.FOURNISSEURS.prixMauvais;
+  return 1;
+}
+
+/** Un prix de fournisseur, selon la relation. */
+export function prixFournisseur(etat: EtatJeu, prix: number): number {
+  return Math.round(prix * facteurFournisseurs(etat));
+}
+
+/** Fournisseurs en mauvais termes : une livraison express sur trois n'arrive pas (hasard du quartier). */
+export function expressRatee(etat: EtatJeu): boolean {
+  if (!enMauvaisTermes(etat, 'fournisseurs')) return false;
+  const tirage = creerTirage(etat.hasardQuartier);
+  const rate = tirage.chance(B.FOURNISSEURS.expressRatee);
+  etat.hasardQuartier = tirage.etat();
+  return rate;
+}
+
+/** Une commande régulière au briefing : les fournisseurs apprécient le client fidèle. */
+export function commandeFournisseurs(etat: EtatJeu): void {
+  if (acteurOuvert(etat, 'fournisseurs')) changerRelation(etat, 'fournisseurs', B.FOURNISSEURS.commande);
 }
 
 /** Police en bons termes : une dispute qui dégénère vaut un avertissement, pas une perte de réputation. */

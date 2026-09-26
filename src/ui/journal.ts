@@ -173,6 +173,20 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return TEXTES_BANQUE.journalEmprunt.signe(formaterEuros(evenement.montant), formaterTaux(evenement.taux), evenement.duree, formaterEuros(evenement.mensualite));
     case 'echeanceEmprunts':
       return TEXTES_BANQUE.journalEmprunt.echeance(formaterEuros(evenement.montant));
+    case 'impotAnnonce':
+      return TEXTES_BANQUE.impot.journalAnnonce(evenement.jour, formaterEuros(evenement.estimation));
+    case 'impot':
+      return evenement.montant > 0
+        ? TEXTES_BANQUE.impot.journal(formaterEuros(evenement.montant), formaterEuros(evenement.benefice))
+        : TEXTES_BANQUE.impot.journalRien;
+    case 'gestionJosee':
+      return evenement.active ? TEXTES_BANQUE.gestion.journalActive : TEXTES_BANQUE.gestion.journalReprise;
+    case 'commissionJosee':
+      return TEXTES_BANQUE.gestion.journalCommission(formaterEuros(evenement.montant));
+    case 'sursis':
+      return TEXTES_BANQUE.gestion.journalSursis(formaterEuros(evenement.montant));
+    case 'expressRatee':
+      return evenement.quoi === 'linge' ? TEXTES_BANQUE.fournisseurs.expressLinge : TEXTES_BANQUE.fournisseurs.expressBar;
     case 'empruntRembourse':
       return TEXTES_BANQUE.journalEmprunt.rembourse(formaterEuros(evenement.montant));
     case 'equipeMenage':

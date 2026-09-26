@@ -30,6 +30,7 @@ import type { AlerteMinutee } from './minuteries';
 import { moisDeDepart, type BilanMois, type Mois } from './bilans';
 import { journeeVide, type Comptes, type Journee } from './comptes';
 import { banqueDeDepart, type Banque } from './banque';
+import { fiscDeDepart, type Fisc } from './fisc';
 
 /** Drapeaux d'ouverture des systèmes. L'interface masque ou verrouille ce qui est fermé. */
 export interface Systemes {
@@ -68,6 +69,8 @@ export interface Systemes {
   visibilite: boolean;
   /** Nouvel emprunt (au premier lundi après la visibilité, v0.6). */
   emprunt: boolean;
+  /** Les fournisseurs, cinquième acteur des relations (au lundi qui suit l'emprunt, v0.6). */
+  fournisseurs: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -389,6 +392,10 @@ export interface EtatJeu {
   hasardPlafond: number;
   /** La banque : échéances, retards, salaires dus (v0.6). */
   banque: Banque;
+  /** Gestion confiée à Josée (v0.6, partie 4). */
+  gestionJosee: boolean;
+  /** Impôt trimestriel : bénéfice du trimestre en cours (v0.6, partie 4). */
+  fisc: Fisc;
   /** La partie est finie (faillite) : le temps ne s'écoule plus (v0.6). */
   finDePartie: { raison: 'faillite'; jour: number } | null;
   /** Niveau d'assurance (indice dans ASSURANCES) : 0 aucune, 1 casse, 2 casse et amendes (v0.5). */
@@ -400,7 +407,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 29;
+export const VERSION_ETAT = 30;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -427,6 +434,7 @@ export function systemesDeDepart(): Systemes {
     assurance: false,
     visibilite: false,
     emprunt: false,
+    fournisseurs: false,
   };
 }
 
@@ -580,6 +588,8 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     hasardRivale: ((options.graine ?? GRAINE_PAR_DEFAUT) * 17 + 3) | 0,
     hasardPlafond: ((options.graine ?? GRAINE_PAR_DEFAUT) * 23 + 11) | 0,
     banque: banqueDeDepart(),
+    gestionJosee: false,
+    fisc: fiscDeDepart(),
     finDePartie: null,
     assurance: 0,
     didacticiel: options.didacticiel ? 0 : null,

@@ -59,6 +59,7 @@ export const TEXTES_EQUIPES = {
 /** Ce qui s'ouvre un lundi après le palier 3, présenté par Josée au bilan de la semaine. */
 export const OUVERTURES_LUNDI: Record<string, { titre: string; josee: string }> = {
   emprunt: TEXTES_BANQUE.ouvertureLundi,
+  fournisseurs: TEXTES_BANQUE.ouvertureFournisseurs,
   assurance: { titre: TEXTES_EQUIPES.assurance.ouverture, josee: TEXTES_EQUIPES.assurance.ouvertureJosee },
   visibilite: {
     titre: 'Nouveau ce lundi : la visibilité, dans les règles de la maison (onglet Clientèle).',

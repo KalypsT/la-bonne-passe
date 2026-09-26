@@ -6,6 +6,7 @@ import type { Segment } from '../content/clientele';
 import { parSegment, segmentOuvert, type ParSegment } from './clientele';
 import { comptesVides, totalDepenses, totalRecettes, type Comptes } from './comptes';
 import { avoirNet, echeancesEmprunts } from './banque';
+import { impotEstime, jourProchainImpot, noterSemaineFiscale } from './fisc';
 import type { EtatJeu } from './etat';
 import type { Tirage } from './hasard';
 import { conclureDefi, lancerDefi, statsDeDepart, type EvenementBilan, type ResultatDefi, type StatsSemaine } from './bilans';
@@ -60,6 +61,8 @@ export interface BilanSemaine {
   ouvertures?: string[];
   /** Emprunts reçus dans la semaine (v0.6). */
   empruntRecu?: number;
+  /** L'impôt du trimestre : annoncé ce lundi (deux semaines avant), ou prélevé ce matin (v0.6). */
+  impot?: { jour: number; montant: number; paye: boolean };
 }
 
 export type EvenementSemaine = { type: 'bilanSemaine'; numero: number } | { type: 'tendance'; id: string } | EvenementBilan;
@@ -157,6 +160,8 @@ export function projeter(
     courant += resultatCourant;
     for (const j of prochainesMensualites) if (j >= debut && j < fin) courant -= B.MENSUALITE;
     for (const e of emprunts) if (e.jour >= debut && e.jour < fin) courant -= e.montant;
+    const impot = jourProchainImpot(etat);
+    if (impot >= debut && impot < fin) courant -= impotEstime(etat);
     const a = etat.avance;
     if (a.statut === 'acceptee' && a.echeance !== null && a.echeance >= debut && a.echeance < fin) courant -= a.montant;
     projection.push(Math.round(courant));
@@ -177,6 +182,9 @@ export function cloreSemaine(etat: EtatJeu, prochainesMensualites: number[], tir
   const exceptionnel = d.travaux + d.mensualite + d.emprunts + d.avance + d.charges;
   const avoir = avoirNet(etat);
   const resultatCourant = recettes - (depenses - exceptionnel) - B.CHARGES_FIXES;
+
+  // Son bénéfice rejoint celui du trimestre, pour l'impôt.
+  noterSemaineFiscale(etat, s.comptes);
 
   // Le défi de la semaine écoulée est jugé avant que la semaine ne se referme.
   const defi = conclureDefi(etat, evenements);

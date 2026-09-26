@@ -109,6 +109,58 @@ export const TEXTES_BANQUE = {
       'La banque veut bien te prêter, maintenant qu’elle connaît la maison. Par tranches de 5 000 €, à un taux qui dépend de ta réputation, et de tes retards. Lis bien la mensualité avant de signer.',
   },
 
+  impot: {
+    titre: 'Impôt du trimestre',
+    detail: '20 % du bénéfice du trimestre (84 jours). Annoncé à sa clôture (jours 85, 169…), prélevé seul deux semaines plus tard. Mensualités et échéances ne se déduisent pas.',
+    annonce: (jour: number) => `Impôt annoncé, prélevé au jour ${jour}`,
+    benefice: (semaines: number) => `Bénéfice des ${semaines} semaine${semaines > 1 ? 's' : ''} closes`,
+    estimation: (jour: number) => `Impôt estimé, prélevé au jour ${jour}`,
+    aucune: 'Pas encore de semaine close ce trimestre.',
+    journalAnnonce: (jour: number, montant: string) =>
+      `Le trimestre est clos. Josée te glisse un post-it : l’impôt, ${montant}, sera prélevé au jour ${jour}. Garde de quoi payer.`,
+    journal: (montant: string, benefice: string) => `L’impôt du trimestre est prélevé : ${montant}, pour ${benefice} de bénéfice.`,
+    journalRien: 'Pas de bénéfice ce trimestre, donc pas d’impôt. Maigre consolation.',
+    annonceLundi: (jour: number, montant: string) =>
+      `Le trimestre est clos. Dans deux semaines, au jour ${jour}, le fisc prendra sa part : ${montant}. Il ne prévient qu’une fois, et il ne négocie jamais.`,
+    payeLundi: (montant: string) => `Ce matin, le fisc a prélevé ${montant}. C’est fait pour trois mois.`,
+  },
+
+  gestion: {
+    titre: 'Qui tient les comptes ?',
+    moi: 'Moi',
+    josee: 'Josée',
+    detailMoi: 'Tu règles la réserve, et tu peux emprunter.',
+    detailJosee: (commission: number) =>
+      `Réserve à 10 %, jamais d’emprunt. Josée prend ${commission} % de la recette de la maison chaque lundi, et, une fois, obtient de la banque un sursis.`,
+    joseeMoi: 'Tu gardes la main. Si un jour tu veux dormir tranquille, je sais tenir une caisse.',
+    joseeJosee: 'Je tiens les comptes à l’ancienne : de côté d’abord, dépensé ensuite. Tu y perdras un peu, tu dormiras mieux.',
+    sursisUtilise: 'Le sursis de la banque a déjà servi.',
+    journalActive: 'Tu confies les comptes à Josée. Elle sort ses lunettes et un crayon bien taillé.',
+    journalReprise: 'Tu reprends les comptes. Josée te rend le grand livre avec un soupir.',
+    journalCommission: (montant: string) => `Josée prend sa commission de la semaine : ${montant}.`,
+    journalSursis: (montant: string) =>
+      `Deux échéances de suite… Josée a passé la matinée à la banque. Sursis obtenu : ${montant} reportés en fin de prêt. Ça ne marchera pas deux fois.`,
+  },
+
+  refusJosee: 'C’est Josée qui tient les comptes : pas d’emprunt tant que tu ne les reprends pas.',
+
+  fournisseurs: {
+    expressLinge: 'La blanchisserie ne répond pas : pas de livraison express ce soir.',
+    expressBar: 'Le grossiste laisse sonner : pas de livraison express ce soir.',
+  },
+
+  nouveautes: {
+    impot: 'L’impôt trimestriel : 20 % du bénéfice de chaque trimestre de 84 jours. Je t’annonce le montant à la clôture (jours 85, 169…), il est prélevé deux semaines plus tard. Le détail est dans l’onglet Finances.',
+    gestionJosee: 'Dans l’onglet Finances, tu peux me confier les comptes : réserve à 10 %, pas d’emprunt, une petite commission. Prudent, un peu coûteux, et j’ai quelques amis à la banque.',
+    fournisseurs: 'Les fournisseurs rejoignent l’onglet Relations : en bons termes, prix d’ami ; en mauvais termes, prix gonflés et livraisons express aléatoires.',
+  },
+
+  ouvertureFournisseurs: {
+    titre: 'Nouveau ce lundi : les fournisseurs, dans l’onglet Relations.',
+    josee:
+      'Van Dijk pour le linge, le grossiste pour le bar. Commande régulièrement, rembourse à l’heure, et ils te feront des prix. Oublie une paie, et tout le quai le saura.',
+  },
+
   nouveauteEmprunt:
     'Nouvel emprunt, dans l’onglet Finances : par tranches de 5 000 €, sur 6, 12 ou 24 mois, à un taux qui suit ta réputation. La mensualité s’affiche avant de signer.',
 

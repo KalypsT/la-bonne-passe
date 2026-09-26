@@ -7,6 +7,7 @@ import type { DefinitionIntrigue } from './intrigues';
 
 const Q = B.QUARTIER_ARGENT;
 const R = B.RELATIONS;
+const FA = B.FOURNISSEURS_ARGENT;
 const euros = (n: number) => `${n.toLocaleString('fr-FR')} €`;
 const H = (h: number, m = 0) => h * 60 + m;
 
@@ -347,5 +348,87 @@ export const EVENEMENTS_QUARTIER: DefinitionIntrigue[] = [
       },
     },
     fins: { cooperation: {}, ruelle: {}, avocat: {}, oubliee: {} },
+  },
+  {
+    id: 'saisonFournisseur',
+    titre: 'Le blanchisseur fait sa tournée',
+    genre: 'suite',
+    premiere: 'tournee',
+    etapes: {
+      tournee: {
+        heure: H(14),
+        titre: 'Le blanchisseur fait sa tournée',
+        texte:
+          'Monsieur Van Dijk gare son triporteur devant {maison}, un paquet sous le bras : « Pour la meilleure cliente du quai. Et si on parlait de la saison ? »',
+        enCours: 'Le blanchisseur passe voir la maison.',
+        condition: { relationMin: { fournisseurs: R.bons } },
+        sinon: { fin: 'oubliee' },
+        choix: [
+          {
+            texte: 'Accepter le paquet',
+            detail: '5 parures offertes ; il repart content',
+            effet: { linge: 5, relations: { fournisseurs: 2 } },
+            journal: 'Cinq parures de satin crème, pliées au carré. Van Dijk refuse qu’on le paie : « La prochaine fois. »',
+            suite: { fin: 'cadeau' },
+          },
+          {
+            texte: 'Commander pour la saison',
+            detail: `−${euros(FA.saison)} pour ${FA.saisonParures} parures, à prix d’ami`,
+            effet: { argent: -FA.saison, linge: FA.saisonParures, relations: { fournisseurs: 5 } },
+            journal: 'Une commande pour toute la saison, signée sur le coin du comptoir. Le triporteur repart chargé de promesses.',
+            suite: { fin: 'saison' },
+          },
+          {
+            texte: 'Le remercier, sans plus',
+            detail: 'Tu as assez de linge ; il comprend',
+            effet: {},
+            journal: 'Tu offres un café à Van Dijk. Il parle de sa fille, de ses genoux, et de la pluie.',
+            suite: { fin: 'cafe' },
+          },
+        ],
+      },
+    },
+    fins: { cadeau: {}, saison: {}, cafe: {}, oubliee: {} },
+  },
+  {
+    id: 'ruptureFournisseur',
+    titre: 'Rupture chez le blanchisseur',
+    genre: 'suite',
+    premiere: 'rupture',
+    etapes: {
+      rupture: {
+        heure: H(15),
+        titre: 'Rupture chez le blanchisseur',
+        texte:
+          'Le livreur de la blanchisserie Van Dijk passe les mains vides : « Plus de linge pour {maison} tant que l’ardoise n’est pas réglée. Ordre du patron. » Il ne reste presque rien dans l’armoire.',
+        enCours: 'La blanchisserie boude la maison.',
+        condition: { relationMax: { fournisseurs: R.mauvais } },
+        sinon: { fin: 'oubliee' },
+        choix: [
+          {
+            texte: 'Régler l’ardoise sur-le-champ',
+            detail: `−${euros(FA.ardoise)} ; la blanchisserie reprend ses livraisons, un peu rassurée`,
+            effet: { argent: -FA.ardoise, relations: { fournisseurs: 14 } },
+            journal: 'Tu règles l’ardoise en liquide, devant le livreur. Le triporteur revient une heure plus tard, chargé.',
+            suite: { fin: 'reglee' },
+          },
+          {
+            texte: 'Trouver un autre fournisseur',
+            detail: `−${euros(FA.autreFournisseur)} pour ${FA.autreParures} parures, plus chères ; Van Dijk l’apprend vite`,
+            effet: { argent: -FA.autreFournisseur, linge: FA.autreParures, relations: { fournisseurs: -5 } },
+            journal: 'Une blanchisserie de l’autre rive dépanne la maison, à prix d’or. Van Dijk fait la tête pour de bon.',
+            suite: { fin: 'autre' },
+          },
+          {
+            texte: 'Faire avec',
+            detail: 'Deux parures de moins, les clients le remarquent',
+            effet: { linge: -2, satisfaction: { habitue: -2, affaires: -1 } },
+            journal: 'On retourne les taies, on repasse les draps de la veille. Les habitués froncent le nez.',
+            suite: { fin: 'faire' },
+          },
+        ],
+      },
+    },
+    fins: { reglee: {}, autre: {}, faire: {}, oubliee: {} },
   },
 ];
