@@ -35,6 +35,7 @@ import { comptesVides, journeeVide } from '../engine/comptes';
 import { banqueDeDepart } from '../engine/banque';
 import { fiscDeDepart } from '../engine/fisc';
 import { annexesDeDepart } from '../engine/amenagement';
+import { hasardPlacementDeDepart, niveauxDeDepart } from '../engine/gamme';
 
 type Donnees = Record<string, unknown>;
 
@@ -530,6 +531,58 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       ],
     };
   },
+  // v31 → v32 : le palier 4. Deux segments de plus (VIP et Couples curieux, partis de la réputation acquise),
+  // le confort des chambres, les niveaux des équipes et le placement. Aucune partie n'a pu atteindre le palier 4 avant.
+  31: (d) => {
+    const reputation = typeof d.reputation === 'number' ? d.reputation : 0;
+    const avecSegments = (x: unknown, v: number) => (estObjet(x) ? { vip: v, couple: v, ...x } : x);
+    const clientele = estObjet(d.clientele)
+      ? {
+          ...d.clientele,
+          satisfaction: avecSegments(d.clientele.satisfaction, reputation),
+          satisfactionOuverture: avecSegments(d.clientele.satisfactionOuverture, reputation),
+          historique: Array.isArray(d.clientele.historique)
+            ? d.clientele.historique.map((n: unknown) => (estObjet(n) ? { ...n, servis: avecSegments(n.servis, 0), perdus: avecSegments(n.perdus, 0) } : n))
+            : d.clientele.historique,
+        }
+      : d.clientele;
+    const semaine = estObjet(d.semaine)
+      ? {
+          ...d.semaine,
+          satisfactionDebut: avecSegments(d.semaine.satisfactionDebut, reputation),
+          stats: estObjet(d.semaine.stats) ? { ...d.semaine.stats, servis: avecSegments(d.semaine.stats.servis, 0) } : d.semaine.stats,
+        }
+      : d.semaine;
+    const bilanSemaine = estObjet(d.bilanSemaine)
+      ? {
+          ...d.bilanSemaine,
+          satisfactionDebut: avecSegments(d.bilanSemaine.satisfactionDebut, reputation),
+          satisfactionFin: avecSegments(d.bilanSemaine.satisfactionFin, reputation),
+        }
+      : d.bilanSemaine;
+    const chambres = Array.isArray(d.chambres) ? d.chambres.map((c: unknown) => (estObjet(c) ? { ...c, confort: 1, confortAVenir: null } : c)) : d.chambres;
+    const systemes = estObjet(d.systemes) ? d.systemes : {};
+    const avecPostes = (c: unknown) =>
+      estObjet(c) && estObjet(c.depenses) && estObjet(c.recettes)
+        ? { ...c, recettes: { placement: 0, ...c.recettes }, depenses: { formations: 0, placement: 0, ...c.depenses } }
+        : c;
+    const journee = estObjet(d.journee) ? { ...d.journee, comptes: avecPostes(d.journee.comptes), placement: 0 } : d.journee;
+    const nuit = estObjet(d.nuit) ? { ...d.nuit, comptes: avecPostes(d.nuit.comptes), placement: 0 } : d.nuit;
+    return {
+      ...d,
+      version: 32,
+      clientele,
+      semaine: estObjet(semaine) ? { ...semaine, comptes: avecPostes(semaine.comptes) } : semaine,
+      bilanSemaine: estObjet(bilanSemaine) ? { ...bilanSemaine, comptes: avecPostes(bilanSemaine.comptes) } : bilanSemaine,
+      journee,
+      nuit,
+      chambres,
+      systemes: { ...systemes, vip: false, couples: false, confort: false, renommer: false, formations: false, placement: false },
+      niveauxEquipes: niveauxDeDepart(),
+      placement: null,
+      hasardPlacement: hasardPlacementDeDepart(typeof d.hasard === 'number' ? d.hasard : 0),
+    };
+  },
 };
 
 
@@ -622,6 +675,8 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(d.banque) &&
     estObjet(d.fisc) &&
     estObjet(d.annexes) &&
+    estObjet(d.niveauxEquipes) &&
+    typeof d.hasardPlacement === 'number' &&
     typeof d.gestionJosee === 'boolean' &&
     estObjet(d.systemes)
   );

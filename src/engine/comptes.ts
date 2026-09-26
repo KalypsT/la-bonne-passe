@@ -3,7 +3,7 @@
 
 import type { EtatJeu } from './etat';
 
-export type PosteRecette = 'rendezVous' | 'bar' | 'autres' | 'assurance';
+export type PosteRecette = 'rendezVous' | 'bar' | 'autres' | 'assurance' | 'placement';
 export type PosteDepense =
   | 'partPersonnel'
   | 'salaires'
@@ -24,10 +24,12 @@ export type PosteDepense =
   | 'emprunts'
   | 'impots'
   | 'gestion'
+  | 'formations'
+  | 'placement'
   | 'agios'
   | 'avance';
 
-export const POSTES_RECETTES: PosteRecette[] = ['rendezVous', 'bar', 'autres', 'assurance'];
+export const POSTES_RECETTES: PosteRecette[] = ['rendezVous', 'bar', 'autres', 'assurance', 'placement'];
 export const POSTES_DEPENSES: PosteDepense[] = [
   'partPersonnel',
   'salaires',
@@ -48,6 +50,8 @@ export const POSTES_DEPENSES: PosteDepense[] = [
   'emprunts',
   'impots',
   'gestion',
+  'formations',
+  'placement',
   'agios',
   'avance',
 ];
@@ -69,6 +73,8 @@ export interface Journee {
   retraitReserve: number;
   /** Emprunt reçu dans la journée : pas une recette non plus (v0.6). */
   empruntRecu: number;
+  /** Argent placé (négatif) ou revenu d'un placement (positif) dans la journée, hors gain ou perte (v0.6). */
+  placement: number;
 }
 
 export function comptesVides(): Comptes {
@@ -87,7 +93,7 @@ export function totalDepenses(c: Comptes): number {
 }
 
 export function journeeVide(tresorerie: number): Journee {
-  return { comptes: comptesVides(), tresorerieAvant: tresorerie, retraitReserve: 0, empruntRecu: 0 };
+  return { comptes: comptesVides(), tresorerieAvant: tresorerie, retraitReserve: 0, empruntRecu: 0, placement: 0 };
 }
 
 /** Dépense payée par la trésorerie : comptes de la semaine et de la journée. */

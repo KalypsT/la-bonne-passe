@@ -2,7 +2,7 @@
 
 import * as B from '../content/balance';
 import type { Offre, Segment } from '../content/clientele';
-import type { ParSegment } from './clientele';
+import { parSegment, type ParSegment } from './clientele';
 import { creerEtatInitial, type EtatJeu, type Regles } from './etat';
 import type { BilanSemaine } from './semaine';
 import type { BilanMois } from './bilans';
@@ -74,6 +74,8 @@ export interface ResumeNuit {
   relations: Record<IdActeur, number>;
   /** Actions de relations menées depuis la nuit précédente. */
   actionsRelations: number;
+  /** Alertes réglées seules par les équipes Accueil et Sécurité depuis la nuit précédente (v0.6). */
+  alertesReglees: number;
   /** La rivale à la fermeture (v0.5) : agressivité et vos rapports ; ses actions depuis la nuit précédente. */
   rivale: { agressivite: number; relation: number; actions: string[] };
 }
@@ -180,6 +182,7 @@ export function simuler(options: OptionsSimulation): {
   let alertesAvant = new Set<string>();
   let actionsRelations = 0;
   let actionsRivale: string[] = [];
+  let alertesReglees = 0;
   const bullesVues = new Set<string>();
   const hasard = creerTirage((graine * 7919) | 0);
   const trancher = (possibles: boolean[]): number => {
@@ -230,6 +233,7 @@ export function simuler(options: OptionsSimulation): {
       }
       if (e.type === 'depart') departs += 1;
       if (e.type === 'rivaleAgit') actionsRivale.push(e.action);
+      if (e.type === 'alerteReglee') alertesReglees += 1;
       if (e.type === 'bilanSemaine' && etat.bilanSemaine) bilans.push(structuredClone(etat.bilanSemaine));
       if (e.type === 'bilanMois' && etat.bilanMois) bilansMois.push(structuredClone(etat.bilanMois));
       if (e.type === 'bilan') {
@@ -242,11 +246,11 @@ export function simuler(options: OptionsSimulation): {
           fatigueMoyenne: moyenne(etat.personnel.map((x) => x.fatigue)),
           fatigueMax: Math.max(0, ...etat.personnel.map((x) => x.fatigue)),
           moralMoyen: moyenne(etat.personnel.map((x) => x.moral)),
-          ecartCaisse: e.nuit.tresorerieApres - e.nuit.tresorerieAvant - gagneNuit(e.nuit.comptes) + e.nuit.reserve - e.nuit.retraitReserve - e.nuit.empruntRecu,
+          ecartCaisse: e.nuit.tresorerieApres - e.nuit.tresorerieAvant - gagneNuit(e.nuit.comptes) + e.nuit.reserve - e.nuit.retraitReserve - e.nuit.empruntRecu - e.nuit.placement,
           resultat: valeurNette(etat) - avoirPrecedent,
           bar: e.nuit.comptes.recettes.bar,
           satisfaction: { ...etat.clientele.satisfaction },
-          servisParSegment: { ...(etat.clientele.historique[0]?.servis ?? { touriste: 0, habitue: 0, affaires: 0, groupe: 0 }) },
+          servisParSegment: { ...(etat.clientele.historique[0]?.servis ?? parSegment(0)) },
           servis: e.nuit.servis,
           perdus: e.nuit.perdus,
           personnel: etat.personnel.length,
@@ -260,10 +264,12 @@ export function simuler(options: OptionsSimulation): {
           decisions: imprevusNuit.length + intriguesSoiree + Object.values(alertesNuit).reduce((a, b) => a + b, 0),
           relations: { ...etat.relations.jauges },
           actionsRelations,
+          alertesReglees,
           rivale: { agressivite: etat.rivale.agressivite, relation: etat.rivale.relation, actions: actionsRivale },
         });
         actionsRelations = 0;
         actionsRivale = [];
+        alertesReglees = 0;
         avoirPrecedent = valeurNette(etat);
         imprevusNuit = [];
         intriguesNuit = [];
@@ -422,7 +428,7 @@ export function simuler(options: OptionsSimulation): {
 
 /** Part de chaque segment parmi les clients servis sur un ensemble de nuits, en %. */
 export function partsDeClientele(nuits: ResumeNuit[]): Record<Segment, number> {
-  const total: Record<Segment, number> = { touriste: 0, habitue: 0, affaires: 0, groupe: 0 };
+  const total: Record<Segment, number> = parSegment(0);
   for (const n of nuits) for (const s of Object.keys(total) as Segment[]) total[s] += n.servisParSegment[s];
   const somme = Object.values(total).reduce((a, b) => a + b, 0) || 1;
   for (const s of Object.keys(total) as Segment[]) total[s] = (total[s] * 100) / somme;

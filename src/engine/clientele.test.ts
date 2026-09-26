@@ -28,12 +28,12 @@ const rdvQuiFinit = (modele: string) => ({ chambreId: 'boudoir', employeId: 'san
 describe('satisfaction par segment', () => {
   it('la réputation est la moyenne pondérée des segments ouverts', () => {
     const etat = soiree(1);
-    etat.clientele.satisfaction = { touriste: 10, habitue: 30, affaires: 90, groupe: 90 };
+    etat.clientele.satisfaction = { touriste: 10, habitue: 30, affaires: 90, groupe: 90, vip: 0, couple: 0 };
     const P = B.POIDS_REPUTATION;
     // Avant le palier 2, Affaires et Groupes ne comptent pas.
     expect(reputationPonderee(etat)).toBeCloseTo((10 * P.touriste + 30 * P.habitue) / (P.touriste + P.habitue));
     const deux = soiree(2);
-    deux.clientele.satisfaction = { touriste: 10, habitue: 30, affaires: 90, groupe: 50 };
+    deux.clientele.satisfaction = { touriste: 10, habitue: 30, affaires: 90, groupe: 50, vip: 0, couple: 0 };
     const attendu = (10 * P.touriste + 30 * P.habitue + 90 * P.affaires + 50 * P.groupe) / (P.touriste + P.habitue + P.affaires + P.groupe);
     expect(reputationPonderee(deux)).toBeCloseTo(attendu);
   });
@@ -78,7 +78,7 @@ describe('satisfaction par segment', () => {
   it('un client refoulé par un quai plein compte comme perdu, sans coûter de réputation : la maison affiche complet', () => {
     const plein = [1, 2, 3, 4].map((id) => ({ id, modele: 'etudiant', patience: 50 }));
     const etat = soiree(1, { file: plein.slice(0, B.PLACES_FILE) });
-    etat.clientele.historique = [{ servis: { touriste: 0, habitue: 0, affaires: 0, groupe: 0 }, perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0 } }];
+    etat.clientele.historique = [{ servis: { touriste: 0, habitue: 0, affaires: 0, groupe: 0, vip: 0, couple: 0 }, perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0, vip: 0, couple: 0 } }];
     const avant = structuredClone(etat.clientele.satisfaction);
     const evenements: { type: string }[] = [];
     arrivee(etat, creerTirage(3), evenements);
@@ -135,8 +135,8 @@ describe('fréquentation', () => {
   it('chaque ouverture ouvre une ligne, les 7 dernières nuits sont gardées', () => {
     let etat: EtatJeu = { ...creerEtatInitial(), minuteDuJour: h(19, 55), briefingJour: 1 };
     etat.clientele.historique = Array.from({ length: 7 }, () => ({
-      servis: { touriste: 1, habitue: 0, affaires: 0, groupe: 0 },
-      perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0 },
+      servis: { touriste: 1, habitue: 0, affaires: 0, groupe: 0, vip: 0, couple: 0 },
+      perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0, vip: 0, couple: 0 },
     }));
     etat = tick(etat).etat;
     expect(etat.clientele.historique).toHaveLength(B.NUITS_HISTORIQUE_CLIENTELE);
@@ -151,7 +151,7 @@ describe('fréquentation', () => {
       file: [{ id: 2, modele: 'fetard', patience: 5 }],
       personnel: creerEtatInitial().personnel.map((e) => ({ ...e, repos: true })),
     });
-    avant.clientele.historique = [{ servis: { touriste: 0, habitue: 0, affaires: 0, groupe: 0 }, perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0 } }];
+    avant.clientele.historique = [{ servis: { touriste: 0, habitue: 0, affaires: 0, groupe: 0, vip: 0, couple: 0 }, perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0, vip: 0, couple: 0 } }];
     const apres = tick(avant).etat;
     expect(apres.clientele.historique[0]!.servis.affaires).toBe(1);
     expect(apres.clientele.historique[0]!.perdus.groupe).toBe(1);

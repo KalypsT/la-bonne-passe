@@ -18,7 +18,7 @@ export type EvenementRegle =
   | { type: 'regle'; regle: keyof Regles; valeur: number | string }
   | { type: 'refuse'; client: string };
 
-const PRIORITES: B.IdPriorite[] = ['arrivee', 'habitues', 'presses'];
+const PRIORITES: B.IdPriorite[] = ['arrivee', 'habitues', 'presses', 'vip'];
 
 /** Écart du tarif en vigueur au prix normal (0 tant que les tarifs sont fermés). */
 export function ecartTarif(etat: EtatJeu): number {
@@ -99,6 +99,8 @@ export function prochainClient(etat: EtatJeu, segmentDe: (c: ClientEnFile) => Se
       return file.find((c) => segmentDe(c) === 'habitue') ?? file[0];
     case 'presses':
       return file.reduce<ClientEnFile | undefined>((choix, c) => (!choix || c.patience < choix.patience ? c : choix), undefined);
+    case 'vip':
+      return file.find((c) => segmentDe(c) === 'vip') ?? file[0];
     default:
       return file[0];
   }
@@ -123,6 +125,8 @@ export function appliquerRegle(etat: EtatJeu, ordre: OrdreRegle, evenements: { p
       break;
     case 'priorite':
       if (!etat.systemes.porte || !PRIORITES.includes(ordre.valeur) || r.priorite === ordre.valeur) return;
+      // « VIP d'abord » s'ouvre avec les VIP (palier 4).
+      if (ordre.valeur === 'vip' && !etat.systemes.vip) return;
       r.priorite = ordre.valeur;
       break;
     case 'visibilite':

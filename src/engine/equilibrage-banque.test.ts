@@ -24,10 +24,11 @@ const moyenne = (nom: string, f: (p: Partie) => number) => {
 };
 
 describe('équilibrage de la banque', () => {
-  it('l’impôt du premier trimestre pèse sans ruiner : 1 000 à 3 000 €, jamais de faillite sur quatre mois', () => {
+  it('l’impôt du premier trimestre pèse sans ruiner : 1 000 à 4 000 €, jamais de faillite sur quatre mois', () => {
+    // v0.6, partie 6 : le palier 4 (VIP, couples) tombe vers le jour 40 et gonfle le bénéfice du premier trimestre.
     const impot = moyenne('quatreMois', (p) => p.bilans.reduce((t, b) => t + b.comptes.depenses.impots, 0));
     expect(impot).toBeGreaterThan(1000);
-    expect(impot).toBeLessThan(3000);
+    expect(impot).toBeLessThan(4000);
     expect(parties.get('quatreMois')!.filter((p) => p.etat.finDePartie).length).toBe(0);
   });
 

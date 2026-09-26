@@ -49,6 +49,7 @@ import { FicheRegles, FicheSegment, OngletClientele } from './OngletClientele';
 import { FicheActeur, FicheRivale, OngletRelations } from './OngletRelations';
 import { Assurance, EquipesQuartier } from './Equipes';
 import { NouvelEmprunt } from './Emprunt';
+import { ConfortChambre, Formation, PlacementExcedent, RenommerMaison } from './Gamme';
 import { AmenagementChambre, FicheAnnexe, statutAnnexe } from './Amenagement';
 import { TEXTES_AMENAGEMENT } from '../content/amenagement';
 import { useInterface, type Fiche, type Onglet } from './store';
@@ -310,6 +311,7 @@ function EquipeMenage({ partie }: { partie: EtatJeu }) {
     <>
       <h3>{t.equipeMenage}</h3>
       <p className="sous">{t.effectifMenage(n, formaterEuros(SALAIRE_MENAGE))}</p>
+      <Formation partie={partie} equipe="menage" />
       {ouvert ? (
         <div className="boutons-ligne">
           <button className="bouton discret" disabled={n <= 1} onClick={() => ordonner({ type: 'equipeMenage', effectif: n - 1 })}>
@@ -385,6 +387,7 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
         <h2>{piece.nom}</h2>
         <p className="sous">{fiche.id === 'bar' && partie.bar.ouvert ? (piece.descriptionOuverte ?? piece.description) : piece.description}</p>
         {fiche.id === 'bar' && <FicheBar partie={partie} />}
+        {fiche.id === 'bureau' && <RenommerMaison partie={partie} />}
       </div>
     );
   }
@@ -421,6 +424,7 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
       )}
       <Renovation partie={partie} chambreId={chambre.id} />
       <AmenagementChambre partie={partie} chambre={chambre} />
+      <ConfortChambre partie={partie} chambre={chambre} />
     </div>
   );
 }
@@ -729,6 +733,7 @@ function OngletFinances({ partie }: { partie: EtatJeu }) {
       <Reserve partie={partie} />
       <Assurance partie={partie} />
       <NouvelEmprunt partie={partie} />
+      <PlacementExcedent partie={partie} />
     </>
   );
 }

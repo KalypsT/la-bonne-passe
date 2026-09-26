@@ -32,6 +32,7 @@ import { journeeVide, type Comptes, type Journee } from './comptes';
 import { banqueDeDepart, type Banque } from './banque';
 import { fiscDeDepart, type Fisc } from './fisc';
 import { annexesDeDepart, type Annexes } from './amenagement';
+import { hasardPlacementDeDepart, niveauxDeDepart, type NiveauxEquipes, type Placement } from './gamme';
 import type { IdDecor } from '../content/maison';
 
 /** Drapeaux d'ouverture des systèmes. L'interface masque ou verrouille ce qui est fermé. */
@@ -76,6 +77,14 @@ export interface Systemes {
   /** Pièces annexes à ouvrir par des travaux : la buanderie (palier 2), les loges (palier 3), v0.6. */
   buanderie: boolean;
   loges: boolean;
+  /** Palier 4 (v0.6) : VIP et Couples curieux, confort des chambres, nom de la maison ; puis, lundi après lundi,
+   * les formations des équipes et le placement de l'excédent. */
+  vip: boolean;
+  couples: boolean;
+  confort: boolean;
+  renommer: boolean;
+  formations: boolean;
+  placement: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -120,6 +129,9 @@ export interface EtatChambre {
   decorRefait: boolean;
   /** Fermée temporairement par le joueur : elle ne reçoit pas (v0.6). */
   fermee: boolean;
+  /** Niveau de confort, 1 à 3 (3 : jacuzzi), et celui que posent les travaux en cours (v0.6, palier 4). */
+  confort: number;
+  confortAVenir: number | null;
 }
 
 /** Le bar, sous des draps au départ, à rénover au palier 2. */
@@ -267,6 +279,8 @@ export interface Nuit {
   retraitReserve: number;
   /** Emprunt reçu dans la journée. */
   empruntRecu: number;
+  /** Argent placé (négatif) ou revenu d'un placement (positif) dans la journée. */
+  placement: number;
   servis: number;
   perdus: number;
   reputationDebut: number;
@@ -406,6 +420,12 @@ export interface EtatJeu {
   banque: Banque;
   /** Loges et buanderie (v0.6, partie 5). */
   annexes: Annexes;
+  /** Niveaux des équipes, 1 à 3, par la formation (palier 4). */
+  niveauxEquipes: NiveauxEquipes;
+  /** L'excédent placé, bloqué jusqu'à son échéance (palier 4). */
+  placement: Placement | null;
+  /** Hasard du placement risqué, à part (v0.6). */
+  hasardPlacement: number;
   /** Gestion confiée à Josée (v0.6, partie 4). */
   gestionJosee: boolean;
   /** Impôt trimestriel : bénéfice du trimestre en cours (v0.6, partie 4). */
@@ -421,7 +441,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 31;
+export const VERSION_ETAT = 32;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -451,6 +471,12 @@ export function systemesDeDepart(): Systemes {
     fournisseurs: false,
     buanderie: false,
     loges: false,
+    vip: false,
+    couples: false,
+    confort: false,
+    renommer: false,
+    formations: false,
+    placement: false,
   };
 }
 
@@ -465,6 +491,8 @@ export function chambresDeDepart(): EtatChambre[] {
     decorAVenir: null,
     decorRefait: false,
     fermee: false,
+    confort: 1,
+    confortAVenir: null,
   }));
 }
 
@@ -611,6 +639,9 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     gestionJosee: false,
     fisc: fiscDeDepart(),
     annexes: annexesDeDepart(),
+    niveauxEquipes: niveauxDeDepart(),
+    placement: null,
+    hasardPlacement: hasardPlacementDeDepart(options.graine ?? GRAINE_PAR_DEFAUT),
     finDePartie: null,
     assurance: 0,
     didacticiel: options.didacticiel ? 0 : null,

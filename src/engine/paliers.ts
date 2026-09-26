@@ -1,7 +1,7 @@
 // Paliers de montée en puissance : déclencheurs et systèmes ouverts.
 // Voir « Montée en puissance » dans les spécifications.
 
-import { REPUTATION_PALIER_2 } from '../content/balance';
+import { PALIER_4, REPUTATION_PALIER_2 } from '../content/balance';
 import { accueillirSegments } from './clientele';
 import type { EtatJeu, Systemes } from './etat';
 import { planifierVisitesScenarisees } from './recrutement';
@@ -13,13 +13,15 @@ export const SYSTEMES_PAR_PALIER: Record<number, (keyof Systemes)[]> = {
   1: ['recrutement', 'renovation', 'planning', 'reserve'],
   2: ['affaires', 'groupes', 'clientele', 'tarifs', 'porte', 'bar', 'buanderie'],
   3: ['relations', 'rivale', 'accueil', 'securite', 'loges'],
+  4: ['vip', 'couples', 'confort', 'renommer'],
 };
 
-/** Condition pour atteindre chaque palier, vérifiée à chaque fermeture (et le jour de la mensualité). Le palier 4 viendra en v0.6. */
+/** Condition pour atteindre chaque palier, vérifiée à chaque fermeture (et le jour de la mensualité). Le palier 5 viendra avec la partie 7 de la v0.6. */
 const DECLENCHEURS: Record<number, (etat: EtatJeu) => boolean> = {
   1: (etat) => etat.nuitsBouclees >= 1,
   2: (etat) => etat.reputation >= REPUTATION_PALIER_2,
   3: (etat) => etat.mensualitesPayees >= 1,
+  4: (etat) => etat.reputation >= PALIER_4.reputation && etat.personnel.length >= PALIER_4.personnel,
 };
 
 /** Monte d'un palier : ouvre ses systèmes et prépare sa carte d'annonce. */
@@ -27,6 +29,7 @@ export function accorderPalier(etat: EtatJeu, numero: number): void {
   etat.palier = numero;
   // Les nouveaux segments partent de la réputation acquise : la moyenne ne chute pas.
   if (numero === 2) accueillirSegments(etat, ['affaires', 'groupe']);
+  if (numero === 4) accueillirSegments(etat, ['vip', 'couple']);
   for (const systeme of SYSTEMES_PAR_PALIER[numero] ?? []) etat.systemes[systeme] = true;
   // Le recrutement ouvre avec les trois premiers candidats, attendus dans la semaine.
   if (numero === 1) planifierVisitesScenarisees(etat);

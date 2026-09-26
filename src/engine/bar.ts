@@ -43,7 +43,7 @@ export function barVide(etat: EtatJeu): boolean {
 
 /** Ce que le bar ajoute (ou retire, s'il est vide) à la qualité ressentie par un segment. */
 export function qualiteBar(etat: EtatJeu, segment: Segment): number {
-  if (barSert(etat)) return B.BAR_QUALITE[segment] + (etat.equipes.bar >= 2 ? B.BAR_DEUXIEME : 0);
+  if (barSert(etat)) return B.BAR_QUALITE[segment] + (etat.equipes.bar >= 2 ? B.BAR_DEUXIEME : 0) + (etat.niveauxEquipes.bar - 1) * B.FORMATIONS.barQualite;
   if (barVide(etat)) return B.BAR_VIDE_QUALITE[segment] ?? 0;
   return 0;
 }
@@ -66,7 +66,8 @@ function retirerStock(etat: EtatJeu, bouteilles: number, evenements: Sortie): vo
 export function venteBar(etat: EtatJeu, segment: Segment, evenements: Sortie): number {
   if (!barSert(etat)) return 0;
   // Un thème festif fait boire davantage.
-  const montant = Math.round(B.BAR_RECETTE[segment] * barTheme(etat));
+  // Une équipe formée vend mieux (palier 4).
+  const montant = Math.round(B.BAR_RECETTE[segment] * barTheme(etat) * (1 + (etat.niveauxEquipes.bar - 1) * B.FORMATIONS.barRecette));
   retirerStock(etat, B.BAR_CONSO[segment] * barTheme(etat), evenements);
   encaisser(etat, montant, 'bar');
   return montant;

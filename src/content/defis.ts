@@ -199,6 +199,8 @@ export const SEGMENTS_OBJECTIF: Record<Segment, string> = {
   habitue: 'habitués',
   affaires: 'clients d’affaires',
   groupe: 'groupes',
+  vip: 'VIP',
+  couple: 'couples curieux',
 };
 
 /** Ordre des objectifs après le premier mois. */

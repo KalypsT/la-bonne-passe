@@ -278,8 +278,10 @@ function Chambre({ chambre }: { chambre: EtatChambre }) {
   return (
     <g>
       <DecorDeplace chambre={chambre} r={r} />
+      {chambre.ouverte && chambre.confort >= 3 && <Jacuzzi r={r} />}
       <Etiquette x={r.x + 5} y={r.y + r.h - 3}>
         {def.nom}
+        {chambre.confort > 1 ? ` ${'★'.repeat(chambre.confort - 1)}` : ''}
       </Etiquette>
       {/* Fermée pour l'instant : rideaux tirés, lumière éteinte (v0.6) */}
       {chambre.ouverte && chambre.fermee && chambre.travaux === null && (
@@ -314,6 +316,23 @@ function DecorDeplace({ chambre, r }: { chambre: EtatChambre; r: Rect }) {
   return (
     <g transform={`translate(${r.x - origine.x} ${r.y - origine.y})`}>
       <DecorChambre id={CHAMBRE_DU_DECOR[chambre.decor] ?? chambre.id} />
+    </g>
+  );
+}
+
+/** Le jacuzzi d'une chambre de luxe (palier 4) : une vasque et ses bulles, dans le coin. */
+function Jacuzzi({ r }: { r: Rect }) {
+  const cx = r.x + r.w - 30;
+  const cy = r.y + r.h - 14;
+  return (
+    <g>
+      <ellipse cx={cx} cy={cy} rx="20" ry="6" fill="#D9CBB8" />
+      <ellipse cx={cx} cy={cy - 1} rx="17" ry="4" fill="#5FA3A8" />
+      <g fill="#F4DCC8" opacity=".85">
+        <circle className="bulle-jacuzzi" cx={cx - 8} cy={cy - 4} r="1.4" />
+        <circle className="bulle-jacuzzi" cx={cx + 2} cy={cy - 6} r="1.1" />
+        <circle className="bulle-jacuzzi" cx={cx + 9} cy={cy - 3} r="1.3" />
+      </g>
     </g>
   );
 }

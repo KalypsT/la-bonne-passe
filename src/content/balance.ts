@@ -226,6 +226,61 @@ export const LOGES = { prix: 1500, heures: 10, recuperationEnService: 2, recuper
  */
 export const BUANDERIE = { prix: 1200, heures: 8, lavageOuvert: 0.5, lavageFerme: 2, lessive: 3, usure: 0.04 };
 
+// ——— Monter en gamme (v0.6, partie 6, palier 4) ———
+
+/**
+ * Ce que VIP et couples attendent, en plus de ce que tous attendent : les VIP le prestige (une chambre premium,
+ * sinon ils le font sentir) et un décor refait ; les couples un décor refait et une chambre impeccable.
+ * Un incident sur le quai (dispute qui dégénère, photographe laissé filer) fait fuir les VIP.
+ */
+export const GAMME = {
+  vip: { premium: 0.05, pasPremium: -0.05, decorRefait: 0.03 },
+  couple: { decorRefait: 0.04, propreteMin: 70, malusProprete: 0.05 },
+  incidentVip: -3,
+};
+/**
+ * Confort des chambres, 1 à 3 : chaque niveau au-dessus de 1 ajoute de la qualité et se paie sur le prix.
+ * Le niveau 3, le jacuzzi, n'entre que dans une chambre premium (Velours, Miroirs), et ravit VIP et couples.
+ */
+export const CONFORT = {
+  niveaux: [
+    { prix: 1500, heures: 12 },
+    { prix: 3500, heures: 24 },
+  ],
+  qualiteParNiveau: 0.04,
+  prixParNiveau: 0.1,
+  jacuzzi: { vip: 0.06, couple: 0.06 },
+};
+/**
+ * Formations des équipes (au lundi qui suit le palier 4) : niveau 1 à 3, une journée de stage payée d'un coup.
+ * Chaque niveau au-dessus de 1 : le ménage nettoie et relave 25 % plus vite ; le bar sert mieux (+0,02 de qualité)
+ * et vend 10 % de plus ; l'accueil et la sécurité règlent seuls 10 points d'alertes de plus, et l'accueil ajoute
+ * 25 % de patience.
+ */
+export const FORMATIONS = {
+  prix: [800, 1600],
+  menage: 0.25,
+  barQualite: 0.02,
+  barRecette: 0.1,
+  regle: 0.1,
+  patience: 0.25,
+};
+/**
+ * Placement de l'excédent (au deuxième lundi après le palier 4) : une somme bloquée 4 semaines. Prudent : +2 %.
+ * Risqué : de −5 à +8 %, tiré à l'échéance avec son propre hasard, et poussé d'un point par tendance porteuse
+ * de la semaine (congrès, haute saison, match) ou tiré d'un point par tendance creuse.
+ */
+export const PLACEMENT = {
+  montants: [2000, 5000, 10000] as const,
+  jours: 28,
+  prudent: 0.02,
+  risqueMin: -0.05,
+  risqueMax: 0.08,
+  tendance: 0.01,
+};
+/** Changer le nom de la maison (palier 4) : une nouvelle enseigne. */
+export const NOUVELLE_ENSEIGNE = 500;
+
 // Le linge se compte en parures (draps, housse, serviettes) : une par rendez-vous.
 export const LINGE_INITIAL = 4;
 export const LINGE_PAR_RDV = 1;
@@ -392,6 +447,8 @@ export const IMPREVU_POIDS_BONUS = 3;
 
 /** Réputation qui déclenche le palier 2. */
 export const REPUTATION_PALIER_2 = 25;
+/** Palier 4, « Monter en gamme » (v0.6) : réputation et personnes suivies dans l'équipe. */
+export const PALIER_4 = { reputation: 50, personnel: 4 };
 /** Un client d'un groupe arrive parfois avec un ami du même groupe. */
 export const GROUPE_CHANCE_ACCOMPAGNE = 0.5;
 /** Les groupes font monter le ton : chance de dispute multipliée par client de groupe sur le quai. */
@@ -399,7 +456,7 @@ export const GROUPE_DISPUTE = 1.3;
 /** Une Fêtarde en service attire les groupes : poids multiplié. */
 export const FETARDE_ATTIRE_GROUPES = 1.6;
 /** Poids de base des nouveaux segments dans les arrivées, avant l'offre du soir. */
-export const POIDS_SEGMENTS = { touriste: 1, habitue: 1, affaires: 0.7, groupe: 0.8 };
+export const POIDS_SEGMENTS = { touriste: 1, habitue: 1, affaires: 0.7, groupe: 0.8, vip: 0.2, couple: 0.45 };
 
 // ——— Clientèle : satisfaction par segment (v0.3) ———
 
@@ -407,14 +464,14 @@ export const POIDS_SEGMENTS = { touriste: 1, habitue: 1, affaires: 0.7, groupe: 
  * Chaque segment a sa satisfaction (0 à 100), qui nourrit la réputation auprès de lui.
  * La réputation globale est la moyenne pondérée des segments ouverts, avec ces poids.
  */
-export const POIDS_REPUTATION = { touriste: 1, habitue: 1.2, affaires: 0.9, groupe: 0.8 };
+export const POIDS_REPUTATION = { touriste: 1, habitue: 1.2, affaires: 0.9, groupe: 0.8, vip: 0.8, couple: 0.7 };
 /**
  * Un client ne touche que son segment : ses gains et ses pertes sont multipliés par ce facteur,
  * pour que la réputation globale avance à peu près au même rythme qu'avant la v0.3.
  */
 export const SATISFACTION_PAR_CLIENT = 2.2;
 /** Un client parti sans être reçu : perte multipliée selon ce que le segment supporte mal. */
-export const SENSIBILITE_ATTENTE = { touriste: 1, habitue: 1, affaires: 2, groupe: 0.8 };
+export const SENSIBILITE_ATTENTE = { touriste: 1, habitue: 1, affaires: 2, groupe: 0.8, vip: 2.5, couple: 1 };
 /** Un départ du personnel : les habitués perdent leurs repères. */
 export const DEPART_SATISFACTION_HABITUES = 3;
 /**
@@ -422,7 +479,7 @@ export const DEPART_SATISFACTION_HABITUES = 3;
  * Les habitués sont les plus sensibles : ils reviennent quand ils sont contents.
  */
 export const ATTRAIT_BASE = 0.5;
-export const ATTRAIT_PENTE = { touriste: 0.02, habitue: 0.035, affaires: 0.025, groupe: 0.015 };
+export const ATTRAIT_PENTE = { touriste: 0.02, habitue: 0.035, affaires: 0.025, groupe: 0.015, vip: 0.03, couple: 0.02 };
 /** Nuits gardées pour la fréquentation affichée dans l'onglet Clientèle. */
 export const NUITS_HISTORIQUE_CLIENTELE = 7;
 /** Humeur d'un segment affichée dans sa fiche : basse sous le premier seuil, haute au-dessus du second. */
@@ -436,7 +493,7 @@ export const TARIFS = [-0.2, 0, 0.2] as const;
  * Sensibilité de chaque segment au tarif : la demande varie de −élasticité × écart
  * (au tarif +20 %, les touristes viennent 30 % moins, les affaires 4 % moins).
  */
-export const ELASTICITE_PRIX = { touriste: 2, habitue: 0.8, affaires: 0.2, groupe: 1.3 };
+export const ELASTICITE_PRIX = { touriste: 2, habitue: 0.8, affaires: 0.2, groupe: 1.3, vip: 0.1, couple: 1 };
 /** Demande minimale d'un segment, quel que soit le tarif. */
 export const DEMANDE_PRIX_MIN = 0.2;
 /** Le tarif se sent aussi dans l'avis : qualité ressentie − élasticité × écart × ce facteur. */
@@ -492,12 +549,13 @@ export const SELECTIONS: Record<IdSelection, ReglageSelection> = {
 /** Un client refusé à la porte : son segment le prend un peu mal (avant SATISFACTION_PAR_CLIENT). */
 export const REFUS_SATISFACTION = 0.15;
 
-export type IdPriorite = 'arrivee' | 'habitues' | 'presses';
+export type IdPriorite = 'arrivee' | 'habitues' | 'presses' | 'vip';
 /** Le segment servi en priorité se sent reconnu : qualité ressentie en plus. */
 export const PRIORITE_QUALITE: Record<IdPriorite, Partial<Record<Segment, number>>> = {
   arrivee: {},
   habitues: { habitue: 0.04 },
   presses: { affaires: 0.04 },
+  vip: { vip: 0.05 },
 };
 
 // ——— Bar et équipe Bar (v0.3, palier 2) ———
@@ -515,10 +573,10 @@ export const LIVRAISON_EXPRESS_BAR = { bouteilles: 20, prix: 200 };
 /** Sous ce stock, le bar donne l'alerte. */
 export const SEUIL_BAR = 6;
 /** Chaque client reçu passe au bar : recette (en €, toute à la maison) et bouteilles bues, selon son segment. */
-export const BAR_RECETTE: Record<Segment, number> = { touriste: 15, habitue: 11, affaires: 26, groupe: 33 };
-export const BAR_CONSO: Record<Segment, number> = { touriste: 0.5, habitue: 0.4, affaires: 0.5, groupe: 1.2 };
+export const BAR_RECETTE: Record<Segment, number> = { touriste: 15, habitue: 11, affaires: 26, groupe: 33, vip: 40, couple: 22 };
+export const BAR_CONSO: Record<Segment, number> = { touriste: 0.5, habitue: 0.4, affaires: 0.5, groupe: 1.2, vip: 0.5, couple: 0.6 };
 /** Un bar qui sert : qualité ressentie en plus selon le segment ; la deuxième personne au bar ajoute BAR_DEUXIEME partout. */
-export const BAR_QUALITE: Record<Segment, number> = { touriste: 0.03, habitue: 0.02, affaires: 0.02, groupe: 0.06 };
+export const BAR_QUALITE: Record<Segment, number> = { touriste: 0.03, habitue: 0.02, affaires: 0.02, groupe: 0.06, vip: 0.03, couple: 0.04 };
 export const BAR_DEUXIEME = 0.02;
 /** Un bar ouvert mais vide : les groupes surtout le prennent mal. */
 export const BAR_VIDE_QUALITE: Partial<Record<Segment, number>> = { groupe: -0.06, touriste: -0.02 };

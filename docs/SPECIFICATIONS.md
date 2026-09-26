@@ -39,7 +39,7 @@ Une partie commence par le choix d'un emplacement de sauvegarde, puis par la cr�
 2. **Identité** : un prénom, obligatoire. Le jeu accorde ses textes selon l'avatar choisi (« la patronne » ou « le patron »).
 3. **La maison** : le nom de la maison, affiché en néon sur la façade (*La bonne passe* par défaut). Les courriers de la banque, de la mairie et des impôts sont adressés à la maison.
 
-Un filtre simple empêche les noms injurieux sur l'enseigne. Le nom de la maison reste modifiable une fois, au palier 4.
+Un filtre simple empêche les noms injurieux sur l'enseigne. Le nom de la maison reste modifiable une fois, au palier 4, dans la fiche du bureau, pour 500 € de nouvelle enseigne (v0.6).
 
 ## Boucle de jeu
 
@@ -127,7 +127,7 @@ Le joueur part presque de rien : une hôtesse, une chambre en état, un salon et
 | 1. Rouvrir | Première soirée bouclée | Recrutement, rénovation des chambres fermées, planning du soir, réserve de sécurité |
 | 2. Se faire un nom | Réputation 25 | Segments Affaires et Groupes, onglet Clientèle, tarifs et formules, sélection à l'entrée et priorité d'accueil ; bar à rénover, puis équipe Bar et avance fournisseur ; soirées à thème et tendances au premier lundi |
 | 3. Tenir la maison | Première mensualité payée | Onglet Relations (voisins, mairie, presse, police), première rivale qui réagit, équipes Accueil et Sécurité ; puis, lundi après lundi, l'assurance, la visibilité et le nouvel emprunt (v0.6) |
-| 4. Monter en gamme | Réputation 50 et 4 personnes | VIP et Couples curieux, formations, chambres de luxe (Jacuzzi) et niveaux de confort, placement, changement de nom de la maison |
+| 4. Monter en gamme | Réputation 50 et 4 personnes | VIP et Couples curieux, niveaux de confort des chambres (Jacuzzi dans les chambres premium), changement de nom de la maison ; puis, lundi après lundi, les formations et le placement (v0.6) |
 | 5. S'agrandir | Réputation 70 et accord de la mairie | Agrandissement, jusqu'à 8 personnes, promotion en gérante, deuxième établissement |
 
 - Environ un nouveau système par semaine de jeu, présenté par Josée à son ouverture.
@@ -195,6 +195,8 @@ Chaque personnage porte un arc de 3 à 5 événements, déclenchés par son mora
 
 Chaque équipe a un effectif et un niveau (1 à 3), qui augmente par la formation. L'effectif fixe la capacité, le niveau la qualité. Le ménage nettoie environ trois fois plus vite quand la maison est fermée.
 
+Formations (v0.6) : au lundi qui suit le palier 4, chaque équipe (ménage, bar, accueil, sécurité) passe du niveau 1 au niveau 2 pour 800 €, puis au niveau 3 pour 1 600 €, dans l'onglet Personnel et la fiche du bar. Par niveau au-dessus du premier : le ménage nettoie et lave 25 % plus vite ; le bar gagne 0,02 de qualité et 10 % de recette ; l'accueil et la sécurité règlent 10 points d'alertes de plus, et l'accueil ajoute 25 % de patience. Les formations individuelles (langues, danse) viendront plus tard.
+
 En v0.5, Accueil et Sécurité s'ouvrent au palier 3, au niveau 1 (les formations viendront au palier 4), de 0 à 2 personnes chacune, dans l'onglet Personnel. Chaque personne règle seule, dès son apparition, environ 30 % des alertes de son domaine : clients pressés et groupes bruyants pour l'Accueil ; clients éméchés, photographes, faux clients et disputes pour la Sécurité. L'Accueil ajoute 12 minutes de patience sur le quai par personne ; la Sécurité fait baisser le ton (−20 % de disputes par personne), rassure les clients d'affaires et tient la porte stricte à la place du portier. De l'argent contre de l'attention, sans vider la soirée.
 
 ### Départ
@@ -235,7 +237,9 @@ Chaque semaine, un ou deux contextes modifient la demande : un congrès médical
 3. **Formules** : rendez-vous court et soirée complète (palier 2), formule champagne (bar ouvert) ; abonnement habitué plus tard. Une seule formule proposée à la fois ; le maximum de rendez-vous par personne se compte en charge (un court compte moins, une soirée complète plus).
 4. **Soirées à thème** (palier 2, au premier lundi), programmées au briefing pour le soir même : masquée (affaires), burlesque (bouche-à-oreille, groupes et touristes), jazz (habitués, calme), années folles (bar). Chacune coûte, se paie par un supplément sur chaque rendez-vous, attire un segment et fatigue plus ou moins. Un même thème répété dans la semaine lasse : ses effets diminuent de moitié à chaque reprise.
 5. **Sélection à l'entrée** (palier 2) : laxiste, normale, stricte (un portier payé à la soirée, qui refuse une partie des groupes et des touristes). Les règles ciblées (« pas de groupes après minuit ») viendront avec l'équipe Accueil.
-6. **Priorité d'accueil** (palier 2) : ordre d'arrivée, habitués d'abord, pressés d'abord ; VIP au palier 4.
+6. **Priorité d'accueil** (palier 2) : ordre d'arrivée, habitués d'abord, pressés d'abord ; VIP d'abord au palier 4 (un peu plus de qualité pour eux).
+
+VIP et Couples curieux (v0.6) arrivent au palier 4 avec une satisfaction égale à la réputation acquise. Les VIP paient 380 à 450 €, attendent mal, se soucient peu du prix, veulent une chambre premium (+0,05, −0,05 sinon) et un décor refait, et chaque incident (dispute qui dégénère, photographe manqué) coûte 3 points de leur satisfaction. Les couples paient 200 à 240 €, aiment les décors refaits (+0,04) et fuient les chambres sous 70 % de propreté. Ils restent rares : environ un client sur dix au deuxième mois. Leurs tendances (scandale politique…) viendront plus tard.
 7. **Visibilité** (v0.5, avec les relations et la presse) : bouche-à-oreille, site discret, concierges d'hôtel, influenceurs. Plus de monde, mais en pays non légal, plus de chaleur. Elle s'ouvre au deuxième lundi après le palier 3, dans les règles de la maison, et se paie à chaque soirée ouverte (0, 30, 50 ou 40 €). Elle ne rapporte que si la maison a de la place : une soirée feutrée y gagne, une maison déjà pleine y perd. Le site discret attire clients d'affaires et habitués ; les concierges, clients d'affaires et touristes aisés (et la mairie apprécie) ; les influenceurs, beaucoup de touristes et de groupes : la presse adore, les voisins et les clients discrets beaucoup moins, et les photographes rôdent.
 
 ### Déroulé d'une visite, automatique
@@ -304,7 +308,7 @@ L'aménagement sert surtout les autres systèmes : des pièces à thème dans un
   - rafraîchir la déco (400 €, 6 h) : la chambre ne reçoit pas pendant les travaux, puis son état remonte à 90 % ;
   - refaire le décor (600 €, 8 h), en 4 styles : rose poudré (touristes), orientale (groupes), velours (habitués), miroirs (clients d'affaires). Les décors d'origine, défraîchis, ne donnent rien ; refait à neuf, un décor ajoute 0,06 de qualité aux clients de son segment. On peut refaire à neuf le décor d'origine ;
   - fermer pour l'instant, et rouvrir : une chambre fermée ne reçoit plus, ne s'use plus et ne donne plus l'alerte ;
-  - l'amélioration d'un niveau de confort vient avec le palier 4.
+  - améliorer le confort (palier 4, v0.6) : niveau 1 au départ ; niveau 2 « Soigné » (1 500 €, 12 h), niveau 3 « Jacuzzi » (3 500 €, 24 h, chambres premium seulement, avec un jacuzzi dessiné dans la scène). Chaque niveau au-dessus du premier ajoute 0,04 de qualité à tous les clients et 10 % au prix du rendez-vous ; le jacuzzi ajoute 0,06 de qualité aux VIP et aux couples. Des étoiles marquent le niveau sur la porte.
 - **Pièces annexes** (v0.6), à aménager par des travaux, visibles dans la maison en coupe et l'onglet Maison :
   - la buanderie (palier 2, 1 200 €, 8 h), derrière la fenêtre de droite du rez-de-chaussée ;
   - les loges du personnel (palier 3, 1 500 €, 10 h), sous les combles, derrière l'œil-de-bœuf. On s'y repose : récupération doublée entre deux clients, +25 % les soirs de repos, et le moral remonte seul jusqu'à 70 au lieu de 60.
@@ -342,7 +346,7 @@ Cibles : une soirée correcte rapporte 600 à 1 000 € net à la maison (recett
 | Avance fournisseur | accepter ou refuser une offre du grossiste | 1 500 € de stock du bar sans payer, remboursés +10 % sous 2 semaines | 2 |
 | Nouvel emprunt | montant par tranches de 5 000 € (jusqu'à 40 000 € d'encours), durée 6, 12 ou 24 mois | Taux de 9 % (réputation 20 ou moins) à 4 % (80 et plus), au demi-point, +2 points par mensualité restée impayée. L'argent arrive tout de suite, sans compter comme une recette ; les échéances tombent avec la mensualité du rachat, tous les 28 jours, sur leur propre poste, et se paient ou restent impayées avec elle. Avant de signer : taux, mensualité, intérêts, première et dernière échéance, trésorerie dans 4 semaines avec et sans, et l'avis de Josée | 3, au lundi qui suit la visibilité (v0.6) |
 | Assurance | aucune, casse, ou casse + amendes | 80 à 200 € par semaine ; rembourse 70 à 100 % des sinistres couverts (casse : 70 % à 80 €, casse et amendes : 100 % à 200 €) | 3, au premier lundi |
-| Placement de l'excédent | une somme bloquée 4 semaines, prudent ou risqué | +2 % sûr, ou −5 à +8 % selon les contextes de la semaine | 4 |
+| Placement de l'excédent | 2 000, 5 000 ou 10 000 € bloqués 28 jours, prudent ou risqué, un placement à la fois | +2 % sûr, ou −5 à +8 % (un point de plus par tendance porteuse de la semaine, un de moins par tendance creuse) ; le capital ne compte ni en recette ni en dépense, seuls le gain ou la perte passent au bilan ; Josée prévient si une mensualité tombe avant l'échéance ; impossible sous gestion de Josée | 4, deux lundis après le palier (v0.6) |
 
 ### Règles automatiques
 

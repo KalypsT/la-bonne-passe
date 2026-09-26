@@ -60,7 +60,15 @@ export const PALIERS: DefinitionPalier[] = [
     numero: 4,
     nom: 'Monter en gamme',
     objectif: 'Réputation 50 et 4 personnes.',
-    ouvre: 'VIP, formations, chambres de luxe, changement de nom de la maison (dans une prochaine version du jeu).',
+    ouvre: 'VIP et couples curieux, confort des chambres et jacuzzi, formations, placement, nouveau nom.',
+    details: [
+      'VIP : gros budgets, peu nombreux. Ils veulent de la discrétion, une chambre premium, du confort, et fuient les incidents.',
+      'Couples curieux : ils veulent de la conversation, un décor refait, une chambre impeccable.',
+      'Règles de la maison : nouvelle priorité d’accueil, « VIP d’abord ».',
+      'Confort des chambres, dans leur fiche : trois niveaux, et le jacuzzi dans les chambres premium.',
+      'Le nom de la maison peut changer, dans la fiche du bureau : une nouvelle enseigne.',
+      'Dès lundi : les formations des équipes ; le lundi suivant : le placement de l’excédent.',
+    ],
   },
   {
     numero: 5,

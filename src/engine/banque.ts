@@ -314,8 +314,9 @@ export function majorationTaux(etat: EtatJeu): number {
 }
 
 /** Ce que possède vraiment la maison : trésorerie et réserve, moins la mensualité en retard et les salaires dus. */
-export function avoirNet(etat: Pick<EtatJeu, 'tresorerie' | 'reserve' | 'banque'>): number {
-  return etat.tresorerie + etat.reserve - etat.banque.retard - etat.banque.salairesDus;
+export function avoirNet(etat: Pick<EtatJeu, 'tresorerie' | 'reserve' | 'banque' | 'placement'>): number {
+  // L'argent placé revient à l'échéance : il compte dans l'avoir.
+  return etat.tresorerie + etat.reserve + (etat.placement?.montant ?? 0) - etat.banque.retard - etat.banque.salairesDus;
 }
 
 /** Pour mesurer une stratégie : l'avoir net, moins le capital encore dû sur les nouveaux emprunts. */

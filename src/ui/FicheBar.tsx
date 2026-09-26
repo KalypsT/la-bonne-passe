@@ -9,6 +9,7 @@ import { heureDeInstant } from '../engine/temps';
 import { formaterEuros, formaterHeure } from './format';
 import { Cadenas } from './Icones';
 import { useInterface } from './store';
+import { Formation } from './Gamme';
 
 const t = TEXTES.bar;
 
@@ -65,6 +66,7 @@ export function FicheBar({ partie }: { partie: EtatJeu }) {
       </button>
       <h3>{t.equipe}</h3>
       <p className="sous">{t.effectif(n, formaterEuros(SALAIRE_BAR))}</p>
+      <Formation partie={partie} equipe="bar" />
       <div className="boutons-ligne">
         <button className="bouton discret" disabled={n <= 0} onClick={() => ordonner({ type: 'equipeBar', effectif: n - 1 })}>
           {t.separer}

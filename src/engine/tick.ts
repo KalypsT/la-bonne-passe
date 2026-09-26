@@ -33,6 +33,7 @@ import { lundiDeLaRivale, repondreRivale, type EvenementRivale, type OrdreRivale
 import { changerAssurance, changerEquipe, type EvenementEquipe, type OrdreEquipe } from './equipes';
 import { traiterAlerte, type OrdreMinuterie } from './minuteries';
 import { changerGestionJosee, emprunter, surveillerDecouvert } from './banque';
+import { appliquerGamme, type OrdreGamme } from './gamme';
 import { appliquerAmenagement, avancerTravauxAnnexes, type OrdreAmenagement } from './amenagement';
 import { appliquerPlafond, type AccordPlafond, type EvenementPlafond } from './plafond';
 import { changerCibleAuto, commanderAuto, commanderPack, livraisonExpress, type EvenementLinge } from './linge';
@@ -87,7 +88,8 @@ export type Ordre =
   | OrdreRelation
   | OrdreRivale
   | OrdreEquipe
-  | OrdreAmenagement;
+  | OrdreAmenagement
+  | OrdreGamme;
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -135,6 +137,11 @@ function avancerTravaux(etat: EtatJeu, evenements: EvenementMoteur[]): void {
     chambre.ouverte = true;
     chambre.proprete = B.PROPRETE_APRES_TRAVAUX;
     chambre.etat = B.ETAT_APRES_TRAVAUX;
+    // Un niveau de confort de plus (v0.6, palier 4).
+    if (chambre.confortAVenir) {
+      chambre.confort = chambre.confortAVenir;
+      chambre.confortAVenir = null;
+    }
     // Un changement de décor pose le nouveau décor (v0.6).
     if (chambre.decorAVenir) {
       chambre.decor = chambre.decorAVenir;
@@ -315,6 +322,12 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'renoverAnnexe':
       appliquerAmenagement(etat, ordre, evenements);
       return;
+    case 'ameliorerConfort':
+    case 'former':
+    case 'placer':
+    case 'renommerMaison':
+      appliquerGamme(etat, ordre, evenements);
+      return;
     case 'reponseRivale':
       repondreRivale(etat, ordre.reponse, evenements);
       return;
@@ -375,6 +388,15 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     // Le lundi, la semaine écoulée se referme en bilan avant les charges de la nouvelle.
     if (jourDeLaSemaine(etat.jour) === 0) {
       cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
+      // Palier 4 (v0.6) : au deuxième lundi, le placement ; au premier, les formations.
+      if (etat.systemes.formations && !etat.systemes.placement) {
+        etat.systemes.placement = true;
+        if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'placement'];
+      }
+      if (etat.palier >= 4 && !etat.systemes.formations) {
+        etat.systemes.formations = true;
+        if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'formations'];
+      }
       // Le lundi après l'emprunt : les fournisseurs rejoignent les relations (v0.6).
       if (etat.systemes.emprunt && !etat.systemes.fournisseurs) {
         etat.systemes.fournisseurs = true;

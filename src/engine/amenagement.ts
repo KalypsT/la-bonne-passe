@@ -115,7 +115,7 @@ export function utiliserParure(etat: EtatJeu, evenements: Sortie): void {
 export function laver(etat: EtatJeu, heures: number, ouvert: boolean): void {
   const b = etat.annexes.buanderie;
   if (!b.ouverte || b.sale <= 0) return;
-  b.lavage += etat.equipes.menage * (ouvert ? B.BUANDERIE.lavageOuvert : B.BUANDERIE.lavageFerme) * heures;
+  b.lavage += etat.equipes.menage * (ouvert ? B.BUANDERIE.lavageOuvert : B.BUANDERIE.lavageFerme) * heures * (1 + (etat.niveauxEquipes.menage - 1) * B.FORMATIONS.menage);
   const propres = Math.min(b.sale, Math.floor(b.lavage + 1e-9));
   if (propres <= 0) return;
   b.lavage -= propres;
