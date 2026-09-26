@@ -8,6 +8,7 @@ import { depenser, recetteMaison } from './comptes';
 import type { EtatChambre, EtatJeu } from './etat';
 import { creerTirage, tirer } from './hasard';
 import { instant } from './temps';
+import { maisonPrete } from './maison2';
 
 export interface Permis {
   statut: 'aucun' | 'depose' | 'refuse' | 'accorde';
@@ -33,7 +34,7 @@ export interface Etablissement {
   offres: OffreLieu[];
   /** Lieu acheté, ou null. */
   lieu: string | null;
-  statut: 'offres' | 'signe' | 'travaux' | 'pret';
+  statut: 'offres' | 'signe' | 'travaux' | 'pret' | 'ouvert';
   /** Jour de fin des travaux. */
   fin: number;
 }
@@ -146,6 +147,8 @@ export function avancerAgrandissement(etat: EtatJeu, evenements: Sortie): void {
   if (m.statut === 'travaux' && etat.jour >= m.fin && m.lieu) {
     m.statut = 'pret';
     evenements.push({ type: 'etablissementPret', lieu: m.lieu });
+    // v1.0 : la maison attend sa gérante, et Josée le dit.
+    maisonPrete(etat);
   }
 }
 

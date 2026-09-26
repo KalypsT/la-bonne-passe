@@ -1587,3 +1587,40 @@ Décisions : le joueur simulé prend moins d'une décision d'argent structurante
 - **Les décisions d'argent restent rares**, comme le voulaient les garde-fous : moins d'une par semaine, une à deux décisions d'investissement.
 
 À corriger en v1.0 : la **troisième semaine** (rien de neuf entre les soirées à thème et la première mensualité) et le **troisième mois** (semaines 9 à 12, entre les formations et le palier 5). Deux pistes : ouvrir la gérance ou une intrigue de personnage dans ces creux, ou faire arriver le palier 5 par étapes (dossier, enquête, permis) plutôt qu'en un lundi.
+
+## La v1.0 : le chapitre 1 complet
+
+### La deuxième maison ouvre (partie 1)
+
+Elle tourne seule, sans scène : un bilan résumé chaque lundi, qui passe dans les comptes de la semaine. Réglages dans `MAISON2` (`src/content/balance.ts`).
+
+**Le modèle d'une semaine** : rendez-vous = chambres × 2 × nuits × occupation, avec occupation = (0,35 + 0,55 × réputation / 100) × affluence de la consigne (à ±10 %) ; recette de la maison = rendez-vous × 175 € × rendement du lieu × 50 % (la part du personnel) × facteur de la gérante (0,85 à 1,05 selon ses talents) ; frais = 600 € de charges, le salaire de la gérante par soirée, un incident éventuel (300 à 700 €), et 5 % de la recette si elle est peu loyale. La réputation part de 30 (40 avec la presse) et suit chaque semaine 30 % de l'écart à sa cible (80 % de la réputation de la maison d'origine, plus les talents et la consigne).
+
+**Réglage** : avec un prix moyen de 160 €, un lieu se remboursait (achat, travaux, inauguration) en 34 à 44 semaines, montée de la réputation comprise : au-delà des 6 à 9 mois visés. À 175 €, avec un rendement de 1,4 pour le salon de thé (3 chambres) et 1,6 pour l'hôtel particulier (3 chambres, le plus cher), tous les lieux se remboursent en **29 à 33 semaines** (5 graines, Margot en consigne équilibrée, maison d'origine à 70).
+
+**Une faille corrigée** : en consigne ambitieuse, la loyauté de Margot baisse de 2 par semaine ; elle part vers la treizième. Si on pouvait la réengager aussitôt, sa loyauté repartait de 45 et l'ambitieuse devenait gratuite. Margot partie (démission ou fin de contrat) ne revient plus.
+
+**Mesures** (`npm run rapport`, 10 graines, 336 nuits ; le joueur achète le lieu le moins cher dès que la caisse le permet, en puisant dans sa réserve, puis inaugure) :
+
+| Stratégie | Palier 5 | Inauguration (jour) | Résultat par semaine pleine | Coût du lieu | Remboursé en (semaines) |
+| --- | --- | --- | --- | --- | --- |
+| Classique 3 | 89 (78 à 113) | 326, 1 partie sur 10 | — | 42 000 € | — |
+| Classique 4 | 80 (64 à 92) | 195 (159 à 245) | 2 166 € | 45 000 € | 21 |
+| Feutrée 4 | 75 (57 à 99) | 249 (214 à 321), 7 sur 10 | 2 033 € | 44 600 € | 22 |
+| Classique 4, gérante de l'équipe | 80 | 195 | 2 303 € | 45 000 € | 20 |
+| Classique 4, consigne ambitieuse | 80 | 195 | 2 627 € | 45 000 € | 17 |
+| Classique 4, consigne prudente | 80 | 195 | 1 760 € | 45 000 € | 26 |
+| Complet (bâtiment à crédit) | 85 (78 à 106) | 175 (156 à 197) | 2 220 € | 45 000 € | 20 |
+| Complet, cartes au hasard | 330, 1 sur 10 | jamais | — | — | — |
+
+Lecture :
+
+- **La maison elle-même tient sa cible** : une fois lancée, elle rapporte 1 800 à 2 600 € par semaine pleine et se rembourse en 5 à 6 mois de semaines pleines (7 à 8 mois en comptant la montée de sa réputation). La consigne compte : de 1 760 € (prudente) à 2 630 € (ambitieuse, jusqu'au départ de Margot). Une gérante de l'équipe rapporte un peu plus (salaire de 110 € au lieu de 150 €), mais elle manque au salon, ce que ce tableau ne compte pas.
+- **Le chapitre est bien trop long** : il faut 36 000 à 68 000 € pour l'achat et les travaux, après le palier 5. Le joueur actif inaugure vers le jour 175 à 195, soit le double des 6 à 8 h visées (à 5 minutes réelles par jour environ, ×1). Au cran 3, et en tranchant au hasard, presque jamais en un an de jeu. C'est la question Q5 : à régler en partie 6 (lieux moins chers, achat à crédit, ou objectif du chapitre avancé).
+
+Gardes : `equilibrage-maison2.test.ts` (chaque lieu se rembourse en 26 à 39 semaines ; l'ambitieuse attire plus de monde, et Margot s'en va avant la quatorzième semaine).
+
+À surveiller :
+
+- **La consigne ambitieuse** reste la plus payante tant qu'on remplace la gérante qui part. Ce qu'elle coûte (une personne de l'équipe qui quitte le salon) ne se voit qu'en jouant.
+- **Le bilan du lundi s'allonge** d'un bloc de plus, dans la colonne de droite.

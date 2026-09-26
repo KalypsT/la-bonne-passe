@@ -412,6 +412,7 @@ export const TEXTES = {
       autres: 'Autres (imprévus, pourboires…)',
       assurance: 'Remboursé par l’assurance',
       placement: 'Gain sur placement',
+      maison2: 'Deuxième maison (recette)',
     },
     postesDepenses: {
       partPersonnel: (pourcentage: number) => `Part du personnel (${pourcentage} %)`,
@@ -436,6 +437,7 @@ export const TEXTES = {
       formations: 'Formations des équipes',
       etablissement: 'Deuxième maison (achat et travaux)',
       caisse: 'Caisse qui ne tombe pas juste',
+      maison2: 'Deuxième maison (charges, salaire, incidents)',
       placement: 'Perte sur placement',
       agios: 'Agios',
       avance: 'Remboursement du grossiste',
@@ -532,7 +534,7 @@ export const TEXTES = {
     recettes: 'Recettes',
     depenses: 'Dépenses',
     resultat: 'Résultat de la semaine',
-    postesRecettes: { rendezVous: 'Rendez-vous', bar: 'Bar', autres: 'Divers', assurance: 'Remboursements de l’assurance', placement: 'Gain sur placement' },
+    postesRecettes: { rendezVous: 'Rendez-vous', bar: 'Bar', autres: 'Divers', assurance: 'Remboursements de l’assurance', placement: 'Gain sur placement', maison2: 'Deuxième maison (recette)' },
     postesDepenses: {
       partPersonnel: 'Part du personnel',
       salaires: 'Salaires des équipes',
@@ -556,6 +558,7 @@ export const TEXTES = {
       formations: 'Formations des équipes',
       etablissement: 'Deuxième maison (achat et travaux)',
       caisse: 'Caisse qui ne tombe pas juste',
+      maison2: 'Deuxième maison (charges, salaire, incidents)',
       placement: 'Perte sur placement',
       agios: 'Agios',
       avance: 'Remboursement du grossiste',

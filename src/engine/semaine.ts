@@ -8,6 +8,7 @@ import { comptesVides, totalDepenses, totalRecettes, type Comptes } from './comp
 import { avoirNet, echeancesEmprunts } from './banque';
 import { impotEstime, jourProchainImpot, noterSemaineFiscale } from './fisc';
 import type { EtatJeu } from './etat';
+import type { BilanMaison } from './maison2';
 import type { Tirage } from './hasard';
 import { conclureDefi, lancerDefi, statsDeDepart, type EvenementBilan, type ResultatDefi, type StatsSemaine } from './bilans';
 
@@ -63,6 +64,8 @@ export interface BilanSemaine {
   empruntRecu?: number;
   /** L'impôt du trimestre : annoncé ce lundi (deux semaines avant), ou prélevé ce matin (v0.6). */
   impot?: { jour: number; montant: number; paye: boolean };
+  /** Ce que la gérante de la deuxième maison raconte de sa semaine (v1.0). */
+  maison2?: BilanMaison;
 }
 
 export type EvenementSemaine = { type: 'bilanSemaine'; numero: number } | { type: 'tendance'; id: string } | EvenementBilan;

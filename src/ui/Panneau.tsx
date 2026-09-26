@@ -57,6 +57,7 @@ import { useInterface, type Fiche, type Onglet } from './store';
 import { personnelMax } from '../engine/agrandir';
 import { departsRecents, exigenceDuQuartier } from '../engine/recrutement';
 import { DeuxiemeMaison, FicheVoisin, Gerance, statutVoisin } from './Agrandir';
+import { statutMaison2 } from './Maison2';
 import { TEXTES_AGRANDIR } from '../content/agrandir';
 
 const t = TEXTES.panneau;
@@ -252,6 +253,9 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
         ))}
       {partie.systemes.agrandissement && (
         <Ligne titre={TEXTES_AGRANDIR.agrandissement.titre} detail={statutVoisin(partie)} fiche={{ type: 'voisin', id: 'voisin' }} />
+      )}
+      {partie.systemes.etablissement && (
+        <Ligne titre={TEXTES_AGRANDIR.etablissement.titre} detail={statutMaison2(partie)} fiche={{ type: 'piece', id: 'bureau' }} />
       )}
       <Voisinage partie={partie} />
     </>

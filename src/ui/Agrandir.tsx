@@ -5,6 +5,7 @@ import { accepteGerance, gerante, optionsAgrandissement, peutDemanderPermis, peu
 import { formaterEuros } from './format';
 import { JoseeLigne } from './Josee';
 import { useInterface } from './store';
+import { MaisonOuverte } from './Maison2';
 
 const t = TEXTES_AGRANDIR;
 const accord = (e: { genre: 'f' | 'm' }) => (e.genre === 'm' ? '' : 'e');
@@ -165,7 +166,7 @@ export function DeuxiemeMaison({ partie }: { partie: EtatJeu }) {
               </button>
             )}
             {m.statut === 'travaux' && <p className="sous">{e.enTravaux(m.fin)}</p>}
-            {m.statut === 'pret' && <p className="sous positif">{e.pret}</p>}
+            <MaisonOuverte partie={partie} />
           </>
         )
       )}

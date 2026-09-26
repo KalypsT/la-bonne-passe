@@ -11,6 +11,7 @@ import { formaterEuros } from './format';
 import { TEXTES_BANQUE } from '../content/banque';
 import { JoseeLigne } from './Josee';
 import { useInterface } from './store';
+import { BilanMaisonLundi } from './Maison2';
 import { trouverDefi } from '../content/defis';
 import { formaterMesure, texteDefi, texteReussiteDefi } from './objectifs';
 
@@ -125,6 +126,7 @@ export function CarteSemaine({ partie }: { partie: EtatJeu }) {
                 />
               </div>
             )}
+            {b.maison2 && <BilanMaisonLundi partie={partie} bilan={b.maison2} />}
             <DefisDuLundi partie={partie} />
             <RivaleDuLundi partie={partie} />
             {(b.ouvertures ?? []).map((id) => {

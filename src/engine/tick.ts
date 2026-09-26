@@ -36,6 +36,7 @@ import { changerGestionJosee, emprunter, surveillerDecouvert } from './banque';
 import { appliquerGamme, type OrdreGamme } from './gamme';
 import { appliquerAgrandir, avancerAgrandissement, reponseDuPermis, tirerOffres, type EvenementAgrandir, type OrdreAgrandir } from './agrandir';
 import { accorderPalier } from './paliers';
+import { appliquerMaison2, matinMaison2, semaineMaison2, type EvenementMaison2, type OrdreMaison2 } from './maison2';
 import { appliquerAmenagement, avancerTravauxAnnexes, type OrdreAmenagement } from './amenagement';
 import { appliquerPlafond, type AccordPlafond, type EvenementPlafond } from './plafond';
 import { changerCibleAuto, commanderAuto, commanderPack, livraisonExpress, type EvenementLinge } from './linge';
@@ -92,7 +93,8 @@ export type Ordre =
   | OrdreEquipe
   | OrdreAmenagement
   | OrdreGamme
-  | OrdreAgrandir;
+  | OrdreAgrandir
+  | OrdreMaison2;
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -118,7 +120,8 @@ export type EvenementMoteur =
   | EvenementRelation
   | EvenementRivale
   | EvenementEquipe
-  | EvenementAgrandir;
+  | EvenementAgrandir
+  | EvenementMaison2;
 
 /** Taille du journal gardé dans la sauvegarde. */
 export const TAILLE_JOURNAL = 50;
@@ -341,6 +344,13 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'lancerTravauxEtablissement':
       appliquerAgrandir(etat, ordre, evenements);
       return;
+    case 'confierMaison':
+    case 'rappelerGeranteMaison':
+    case 'inaugurer':
+    case 'consigneMaison':
+    case 'annonceMaisonVue':
+      appliquerMaison2(etat, ordre, evenements);
+      return;
     case 'reponseRivale':
       repondreRivale(etat, ordre.reponse, evenements);
       return;
@@ -398,9 +408,14 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
   if (etat.minuteDuJour === B.HEURE_DEBUT_JOURNEE) {
     etat.jour += 1;
     evenements.push({ type: 'nouveauJour', jour: etat.jour });
+    // La nuit passée comptait-elle pour la deuxième maison (v1.0) ?
+    matinMaison2(etat);
     // Le lundi, la semaine écoulée se referme en bilan avant les charges de la nouvelle.
     if (jourDeLaSemaine(etat.jour) === 0) {
+      // La deuxième maison fait ses comptes d'abord : ils entrent dans ceux de la semaine écoulée (v1.0).
+      const bilanMaison = semaineMaison2(etat, evenements);
       cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
+      if (bilanMaison && etat.bilanSemaine) etat.bilanSemaine.maison2 = bilanMaison;
       // Palier 5 (v0.6) : la mairie répond au dossier ; au deuxième lundi, la deuxième maison ; au premier, la gérance.
       reponseDuPermis(etat, evenements);
       if (etat.palier === 4 && etat.permis.statut === 'accorde') {

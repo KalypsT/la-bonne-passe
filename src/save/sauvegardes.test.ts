@@ -692,6 +692,27 @@ describe('migrations', () => {
     expect(migre?.nouveautes).toEqual(['entretien']);
   });
 
+  it('migre une sauvegarde v34 : deuxième maison à ouvrir, deux postes de comptes de plus', () => {
+    const base = creerEtatInitial();
+    const { maison2: _m, hasardMaison2: _h, ...reste } = base;
+    const { maison2: _s, ...systemes } = base.systemes;
+    const { maison2: _r, ...recettes } = base.semaine.comptes.recettes;
+    const { maison2: _d, ...depenses } = base.semaine.comptes.depenses;
+    const v34 = { ...reste, version: 34, systemes, semaine: { ...base.semaine, comptes: { recettes, depenses } } };
+    const migre = migrer(v34);
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.systemes.maison2).toBe(false);
+    expect(migre?.maison2).toMatchObject({ gerante: null, inauguration: null, bilans: [], annonces: [] });
+    expect(typeof migre?.hasardMaison2).toBe('number');
+    expect(migre?.semaine.comptes.recettes.maison2).toBe(0);
+    expect(migre?.semaine.comptes.depenses.maison2).toBe(0);
+
+    // Une maison déjà prête (fin de la v0.6) : le système s'ouvre, et Josée présente la suite.
+    const prete = migrer({ ...v34, etablissement: { offres: [], lieu: 'pension', statut: 'pret', fin: 60 } });
+    expect(prete?.systemes.maison2).toBe(true);
+    expect(prete?.maison2.annonces).toEqual([{ id: 'prete' }]);
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

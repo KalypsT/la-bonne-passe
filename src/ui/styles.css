@@ -1887,6 +1887,17 @@ body {
   margin: 6px 0 10px;
 }
 
+/* v1.0 : la gérante de la deuxième maison, portrait et présentation côte à côte. */
+.gerante-maison {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+.gerante-maison .sous {
+  margin: 0;
+}
+
 /* Palier 5 : la vue glisse vers le bâtiment voisin. Purement visuel. */
 .monde {
   transition: transform 0.5s ease;

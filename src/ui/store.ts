@@ -42,7 +42,8 @@ export type Carte =
   | 'alerte'
   | 'entretienIndividuel'
   | 'adieu'
-  | 'aide';
+  | 'aide'
+  | 'maison';
 
 export interface ChoixCreation {
   prenom: string;
@@ -143,6 +144,7 @@ function carteEnAttente(partie: EtatJeu | null): Carte | null {
   if (partie.bilanAVoir) return 'semaine';
   if (partie.annonces.length > 0) return 'palier';
   if (partie.nouveautes.length > 0) return 'nouveautes';
+  if (partie.maison2.annonces.length > 0) return 'maison';
   if (partie.adieux.length > 0) return 'adieu';
   if (partie.essaisATrancher.length > 0) return 'essai';
   return null;
@@ -154,7 +156,7 @@ function etapeDidacticiel(partie: EtatJeu | null) {
 }
 
 /** Événements qui mettent le jeu en pause et ouvrent une carte. */
-const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai', 'imprevu', 'intrigue', 'depart', 'grossiste', 'bilanSemaine', 'bilanMois', 'faillite']);
+const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai', 'imprevu', 'intrigue', 'depart', 'grossiste', 'bilanSemaine', 'bilanMois', 'faillite', 'etablissementPret']);
 
 /** Traduit les événements en montants flottants et en cartes à ouvrir. Le journal, lui, vit dans la partie. */
 function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
@@ -176,6 +178,7 @@ function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
     if (e.type === 'bilanMois' && !carte) carte = 'mois';
     if (e.type === 'depart' && !carte) carte = 'adieu';
     if (e.type === 'finEssai' && !carte) carte = 'essai';
+    if ((e.type === 'etablissementPret' || e.type === 'demissionMaison' || e.type === 'inauguration') && !carte) carte = 'maison';
     if (e.type === 'faillite') carte = 'faillite';
     if (e.type === 'bilan') {
       carte = 'bilan';
@@ -322,8 +325,9 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     const { partie } = get();
     if (!partie) return;
     const resultat = appliquerOrdres(partie, [ordre]);
-    recevoirEvenements(resultat.evenements, set);
-    set({ partie: resultat.etat });
+    const { carte: annonce } = recevoirEvenements(resultat.evenements, set);
+    // L'inauguration de la deuxième maison : Josée la présente aussitôt (v1.0).
+    set(annonce === 'maison' ? { partie: resultat.etat, carte: 'maison' } : { partie: resultat.etat });
     if (ordre.type === 'nettoyageExpress' && resultat.evenements.some((e) => e.type === 'nettoyage')) {
       get().signalerDidacticiel('nettoyage');
     }
@@ -339,11 +343,11 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     const { partie, carte: actuelle } = get();
     let suite = carte ?? carteEnAttente(partie);
     // Fermer une annonce, des nouveautés ou un adieu : le moteur les marque comme vus, puis on passe à la suite.
-    const vus = { palier: 'annonceVue', nouveautes: 'nouveautesVues', adieu: 'adieuVu', semaine: 'bilanSemaineVu', mois: 'bilanMoisVu' } as const;
+    const vus = { palier: 'annonceVue', nouveautes: 'nouveautesVues', adieu: 'adieuVu', semaine: 'bilanSemaineVu', mois: 'bilanMoisVu', maison: 'annonceMaisonVue' } as const;
     if (
       !carte &&
       partie &&
-      (actuelle === 'palier' || actuelle === 'nouveautes' || actuelle === 'adieu' || actuelle === 'semaine' || actuelle === 'mois')
+      (actuelle === 'palier' || actuelle === 'nouveautes' || actuelle === 'adieu' || actuelle === 'semaine' || actuelle === 'mois' || actuelle === 'maison')
     ) {
       const resultat = appliquerOrdres(partie, [{ type: vus[actuelle] }]);
       set({ partie: resultat.etat });

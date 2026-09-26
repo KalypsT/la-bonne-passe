@@ -14,6 +14,7 @@ import { ANNEXES, DECORS, trouverChambre } from '../content/maison';
 import { TEXTES_AMENAGEMENT } from '../content/amenagement';
 import { TEXTES_GAMME } from '../content/gamme';
 import { LIEUX, TEXTES_AGRANDIR } from '../content/agrandir';
+import { CONSIGNES, TEXTES_MAISON2 } from '../content/maison2';
 import { PALIERS } from '../content/paliers';
 import { TEXTES_ACTIONS_RELATIONS, TEXTES_SEUILS_RELATIONS } from '../content/relations';
 import { TEXTES_JOURNAL_RIVALE, TEXTES_REPONSES_RIVALE } from '../content/rivale';
@@ -256,6 +257,23 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return TEXTES_AGRANDIR.journal.travaux(formaterEuros(evenement.montant), evenement.fin);
     case 'etablissementPret':
       return TEXTES_AGRANDIR.journal.pret;
+    case 'maisonConfiee': {
+      const j = TEXTES_MAISON2.journal;
+      if (!evenement.accepte) return j.refus(evenement.prenom);
+      return evenement.externe ? j.engagee(evenement.prenom) : j.confiee(evenement.prenom, evenement.genre === 'm' ? '' : 'e');
+    }
+    case 'maisonRappel':
+      return evenement.externe ? TEXTES_MAISON2.journal.finContrat(evenement.prenom) : TEXTES_MAISON2.journal.rappel(evenement.prenom);
+    case 'inauguration':
+      return TEXTES_MAISON2.journal.inauguration(formaterEuros(evenement.montant));
+    case 'maisonRouverte':
+      return TEXTES_MAISON2.journal.rouverte;
+    case 'consigneMaison':
+      return TEXTES_MAISON2.journal.consigne(CONSIGNES[evenement.consigne].nom);
+    case 'bilanMaison':
+      return TEXTES_MAISON2.journal.bilan(formaterEuros(evenement.resultat));
+    case 'demissionMaison':
+      return TEXTES_MAISON2.journal.demission(evenement.prenom);
     case 'renommerMaison':
       return TEXTES_GAMME.journal.renommer(evenement.ancien, evenement.nom, formaterEuros(evenement.montant));
     case 'empruntRembourse':

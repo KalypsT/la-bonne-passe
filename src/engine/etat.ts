@@ -41,6 +41,7 @@ import {
   type Etablissement,
   type Permis,
 } from './agrandir';
+import { hasardMaison2DeDepart, maison2DeDepart, type Maison2 } from './maison2';
 import { hasardPlacementDeDepart, niveauxDeDepart, type NiveauxEquipes, type Placement } from './gamme';
 import type { IdDecor } from '../content/maison';
 
@@ -98,6 +99,8 @@ export interface Systemes {
   agrandissement: boolean;
   gerante: boolean;
   etablissement: boolean;
+  /** v1.0 : la deuxième maison, une fois ses travaux finis (gérante, inauguration, consigne, bilan du lundi). */
+  maison2: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -449,6 +452,10 @@ export interface EtatJeu {
   etablissement: Etablissement;
   /** Hasard des lieux proposés pour la deuxième maison, à part (v0.6). */
   hasardEtablissement: number;
+  /** La deuxième maison ouverte : sa gérante, sa consigne, ses bilans (v1.0). */
+  maison2: Maison2;
+  /** Hasard de la deuxième maison, à part (v1.0). */
+  hasardMaison2: number;
   /** Gestion confiée à Josée (v0.6, partie 4). */
   gestionJosee: boolean;
   /** Impôt trimestriel : bénéfice du trimestre en cours (v0.6, partie 4). */
@@ -464,7 +471,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 34;
+export const VERSION_ETAT = 35;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -503,6 +510,7 @@ export function systemesDeDepart(): Systemes {
     agrandissement: false,
     gerante: false,
     etablissement: false,
+    maison2: false,
   };
 }
 
@@ -674,6 +682,8 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     gerante: null,
     etablissement: etablissementDeDepart(),
     hasardEtablissement: hasardEtablissementDeDepart(options.graine ?? GRAINE_PAR_DEFAUT),
+    maison2: maison2DeDepart(),
+    hasardMaison2: hasardMaison2DeDepart(options.graine ?? GRAINE_PAR_DEFAUT),
     finDePartie: null,
     assurance: 0,
     didacticiel: options.didacticiel ? 0 : null,
