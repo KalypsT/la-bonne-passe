@@ -281,6 +281,52 @@ export const PLACEMENT = {
 /** Changer le nom de la maison (palier 4) : une nouvelle enseigne. */
 export const NOUVELLE_ENSEIGNE = 500;
 
+// ——— Palier 5 : s'agrandir (v0.6, partie 7) ———
+
+/**
+ * Palier 5 : la réputation pour déposer la demande de permis à la mairie, les frais du dossier, et la jauge
+ * de la mairie qu'il faut au lundi de la réponse (en bons termes).
+ */
+export const PALIER_5 = { reputation: 70, fraisDossier: 300, mairie: 40 };
+/**
+ * Agrandissement par le bâtiment voisin : ses deux étages (2 chambres), ou tout le bâtiment (3 chambres) ;
+ * après les étages, le rez-de-chaussée peut suivre. Travaux en heures de jeu. Les chambres arrivent meublées.
+ */
+export const AGRANDISSEMENT = {
+  etages: { prix: 14000, heures: 72, chambres: ['atelier', 'canal'] },
+  batiment: { prix: 22000, heures: 120, chambres: ['atelier', 'canal', 'jardin'] },
+  rez: { prix: 9000, heures: 48, chambres: ['jardin'] },
+} as const;
+/** Personnes suivies au plus une fois la maison agrandie. */
+export const PERSONNEL_MAX_AGRANDI = 8;
+/**
+ * La gérante (au lundi qui suit le palier 5) : elle ne reçoit plus, touche un salaire fixe à midi, règle seule une
+ * part de toutes les alertes du quartier, organise les rotations (chaque rendez-vous fatigue 20 % de moins), remonte
+ * le moral de l'équipe et met au repos qui dépasse la fatigue fixée.
+ * Elle accepte si c'est son ambition, ou si sa loyauté ou son moral le permettent ; sous la loyauté « honnête »,
+ * la caisse perd chaque nuit une part de la recette de la maison.
+ */
+export const GERANTE = {
+  salaire: 110,
+  regle: 0.2,
+  fatigue: 0.2,
+  moral: 2,
+  moralMax: 80,
+  reposFatigue: 70,
+  nuitsMin: 10,
+  loyauteAccord: 50,
+  moralAccord: 60,
+  moralAmbition: 15,
+  moralRetour: -10,
+  loyauteHonnete: 40,
+  caisse: 0.03,
+};
+/**
+ * Le deuxième établissement (deux lundis après le palier 5), jusqu'au projet : trois lieux proposés, l'achat
+ * (sans effet sur l'impôt : c'est un bien), puis les travaux, en jours. Prix tirés à ±`variation` près.
+ */
+export const ETABLISSEMENT = { offres: 3, variation: 0.1 };
+
 // Le linge se compte en parures (draps, housse, serviettes) : une par rendez-vous.
 export const LINGE_INITIAL = 4;
 export const LINGE_PAR_RDV = 1;

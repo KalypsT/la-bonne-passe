@@ -666,6 +666,23 @@ describe('migrations', () => {
     expect(migre?.semaine.comptes.depenses.formations).toBe(0);
   });
 
+  it('migre une sauvegarde v32 : palier 5 à venir, deux postes de dépenses de plus', () => {
+    const base = creerEtatInitial();
+    const { permis: _p, agrandissement: _a, gerante: _g, etablissement: _e, hasardEtablissement: _h, ...reste } = base;
+    const { agrandissement: _sa, gerante: _sg, etablissement: _se, ...systemes } = base.systemes;
+    const { etablissement: _de, caisse: _dc, ...depenses } = base.semaine.comptes.depenses;
+    const v32 = { ...reste, version: 32, systemes, semaine: { ...base.semaine, comptes: { ...base.semaine.comptes, depenses } }, nouveautes: [] };
+    const migre = migrer(v32);
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.permis.statut).toBe('aucun');
+    expect(migre?.agrandissement).toEqual({ achete: [], enCours: null });
+    expect(migre?.gerante).toBeNull();
+    expect(migre?.etablissement.statut).toBe('offres');
+    expect(migre?.systemes).toMatchObject({ agrandissement: false, gerante: false, etablissement: false });
+    expect(migre?.semaine.comptes.depenses).toMatchObject({ etablissement: 0, caisse: 0 });
+    expect(migre?.nouveautes).toEqual([]);
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

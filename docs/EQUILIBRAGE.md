@@ -1499,3 +1499,28 @@ Gardes déplacées (le palier 4 est maintenant atteint dans les simulations) :
 - **Les tendances propres aux VIP et aux couples** (scandale politique, Saint-Valentin…) ne sont pas encore écrites. Sans elles, ces deux segments sont stables d'une semaine à l'autre.
 - **L'usure** : les chambres premium à 0 % d'état perdent une bonne part de ce que le confort leur donne. C'est la même question qu'en partie 5, à trancher en partie 8.
 - **Le changement de nom** coûte 500 € et n'a aucun effet de jeu (une seule fois).
+
+### Le palier 5, « S'agrandir » (partie 7)
+
+Le joueur de référence des gardes ne dépose pas de permis : aucune garde existante n'a bougé. Nouvelles options de simulation : `permis`, `agrandir` (`etages` ou `batiment`), `empruntAgrandir`, `gerante`, `etablissement`, `recruterJusqua`. Pour un gros achat, le joueur simulé puise dans sa réserve.
+
+Joueur classique à 3 rendez-vous, commande de linge à 20, relations entretenues, permis déposé dès que possible, 8 graines, 168 nuits :
+
+| Stratégie | Palier 5 (jour moyen) | Personnes | Chambres | Net par nuit, mois 5 et 6 | Valeur nette jour 168 |
+| --- | --- | --- | --- | --- | --- |
+| Sans agrandir | 82 (64 à 120) | 4 | 4 | 767 € | 20 300 € |
+| Les deux étages, 6 personnes | 76 | 5,8 | 5,8 | 930 € | 16 700 € |
+| Les étages et une gérante | 76 | 5,8 | 5,8 | 862 € | 9 400 € |
+| Tout le bâtiment à crédit (20 000 € sur 24 mois), 8 personnes | 76 | 8 | 7 | 1 335 € | 46 100 € |
+| Le même, avec une gérante | 76 | 8 | 7 | 1 347 € | 38 500 € |
+| Le même, et la deuxième maison achetée | 76 | 8 | 7 | 873 € | 3 900 € (maison non comptée) |
+
+Lecture :
+
+- **Le palier 5** arrive entre les jours 57 et 120 (vers le jour 79), au troisième mois : un palier par mois environ après le palier 3. La réputation 70 est le vrai seuil. **La mairie** est déjà à +70 ou plus chez tous les joueurs (même sans l'entretenir) : son accord est une formalité. Sa jauge monte trop facilement ; à revoir en partie 8 avec les relations.
+- **Le bâtiment voisin entier, à crédit**, est le meilleur investissement du jeu : +74 % par nuit, et 26 000 € de valeur nette en plus en trois mois malgré la dette. Il faut des gens pour faire tourner les chambres : sans recruter au-delà de 4, il ne rapporte presque rien. C'est la récompense du chapitre ; la garde vérifie qu'il reste entre +30 % et +120 % par nuit.
+- **Les étages seuls** (sans crédit, 14 000 €) se remboursent en quatre mois environ : bon, sans plus. Le joueur prudent qui refuse la dette avance plus lentement.
+- **La gérante** : une première version (160 € par jour, sans effet sur la fatigue) coûtait 18 000 € en trois mois, sans rien d'autre en échange que de l'attention. Désormais ses rotations (−20 % de fatigue par rendez-vous) compensent la personne qui ne reçoit plus : le net par nuit est inchangé, et elle coûte à peu près son salaire (110 €, celui du ménage). Le joueur simulé répond à toutes les alertes à l'instant : ce qu'elle épargne en attention ne se mesure pas ici. **À surveiller en partie 8** : si les joueurs la trouvent chère, baisser le salaire ou élargir ce qu'elle règle.
+- **La deuxième maison** engloutit 40 000 à 65 000 € sans rien rapporter en v0.6 : c'est un projet, pas un placement. La valeur nette ne compte pas le bien acheté ; le rapport de fin de v0.6 devra le dire.
+
+Gardes : `equilibrage-agrandir.test.ts` (palier 5 entre le deuxième et le quatrième mois ; le bâtiment à crédit entre +30 % et +120 % par nuit ; la gérante sans perte par nuit et pas plus chère qu'environ son salaire).

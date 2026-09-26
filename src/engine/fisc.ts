@@ -27,10 +27,10 @@ export function fiscDeDepart(): Fisc {
   return { benefice: 0, semaines: 0, du: 0, jourDu: 0 };
 }
 
-/** Le bénéfice d'une semaine, au sens de l'impôt : sans mensualités, échéances d'emprunts ni l'impôt lui-même. */
+/** Le bénéfice d'une semaine, au sens de l'impôt : sans mensualités, échéances d'emprunts, l'impôt lui-même, ni l'achat de la deuxième maison (un bien, v0.6). */
 export function beneficeImposable(c: Comptes): number {
   const d = c.depenses;
-  return totalRecettes(c) - (totalDepenses(c) - d.mensualite - d.emprunts - d.impots);
+  return totalRecettes(c) - (totalDepenses(c) - d.mensualite - d.emprunts - d.impots - d.etablissement);
 }
 
 /** Jour de clôture du trimestre en cours : le lundi qui suit ses 84 jours (85, 169…). */

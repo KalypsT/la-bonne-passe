@@ -9,7 +9,7 @@ import { remplir } from '../ui/modeles';
 import type { EtatJeu } from '../engine/etat';
 import { estOuvert, momentDeLaJournee } from '../engine/temps';
 import { Figurine } from './Figurine';
-import { GEOMETRIE_CHAMBRES, POSITIONS } from './geometrie';
+import { GEOMETRIE_CHAMBRES, placeSalon, POSITIONS } from './geometrie';
 
 export interface Montant {
   id: number;
@@ -65,11 +65,18 @@ export function Vie({ partie, alertes, montants, onAlerte }: Props) {
       {/* Personnel au salon */}
       {enService &&
         partie.personnel.map((e, i) => {
-          const place = POSITIONS.salon[i];
+          const place = placeSalon(i, partie.personnel.length);
           if (!place || occupes.has(e.id)) return null;
           return (
             <g key={e.id} opacity={e.repos ? 0.45 : 1}>
               <Figurine silhouette={e.silhouette} x={place.x} y={place.y} />
+              {/* La gérante (palier 5) : une clé de laiton au-dessus de la tête. */}
+              {partie.gerante === e.id && (
+                <g transform={`translate(${place.x} ${place.y - 50})`} aria-hidden="true">
+                  <circle r="2.6" fill="none" stroke="#D4A64A" strokeWidth="1.2" />
+                  <path d="M2.6 0H8M6 0V2.4M8 0V2" stroke="#D4A64A" strokeWidth="1.2" fill="none" />
+                </g>
+              )}
             </g>
           );
         })}
@@ -184,7 +191,7 @@ function positionBulle(a: Alerte, partie: EtatJeu) {
       return POSITIONS.bulleBar;
     case 'epuisement': {
       const i = partie.personnel.findIndex((e) => e.id === a.employeId);
-      const place = POSITIONS.salon[i];
+      const place = placeSalon(i, partie.personnel.length);
       return place ? { x: place.x, y: place.y - 54 } : null;
     }
     case 'dispute':
@@ -192,7 +199,7 @@ function positionBulle(a: Alerte, partie: EtatJeu) {
     case 'menace': {
       // Au-dessus de la personne au salon, décalée pour ne pas couvrir une bulle d’épuisement.
       const i = partie.personnel.findIndex((e) => e.id === a.employeId);
-      const place = POSITIONS.salon[i];
+      const place = placeSalon(i, partie.personnel.length);
       return place ? { x: place.x + 14, y: place.y - 56 } : null;
     }
     case 'minuterie':
@@ -224,7 +231,7 @@ function positionMinuterie(a: Extract<Alerte, { type: 'minuterie' }>, partie: Et
       return POSITIONS.bulleBouteille;
     case 'pause': {
       const i = partie.personnel.findIndex((e) => e.id === a.cible);
-      const place = POSITIONS.salon[i];
+      const place = placeSalon(i, partie.personnel.length);
       return place ? { x: place.x - 14, y: place.y - 56 } : null;
     }
   }

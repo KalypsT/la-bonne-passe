@@ -1,4 +1,5 @@
-import { PARTS_PROPOSEES, PERSONNEL_MAX } from '../content/balance';
+import { PARTS_PROPOSEES } from '../content/balance';
+import { personnelMax } from '../engine/agrandir';
 import { TRAITS } from '../content/personnel';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
@@ -17,7 +18,7 @@ export function CarteEntretien({ partie }: { partie: EtatJeu }) {
   if (!candidat) return null;
 
   const question = candidat.questionPosee === null ? null : candidat.questions[candidat.questionPosee];
-  const complet = partie.personnel.length >= PERSONNEL_MAX;
+  const complet = partie.personnel.length >= personnelMax(partie);
   const reflechir = () => {
     ordonner({ type: 'reflechir', candidatId: candidat.id });
     ouvrirCarte(null);
@@ -60,7 +61,7 @@ export function CarteEntretien({ partie }: { partie: EtatJeu }) {
             )}
             <h3>{r.proposition}</h3>
             {complet ? (
-              <p className="sous negatif">{r.complet(PERSONNEL_MAX)}</p>
+              <p className="sous negatif">{r.complet(personnelMax(partie))}</p>
             ) : candidat.contreOffre !== null ? (
               <>
                 <p className="sous">{r.contreOffre(candidat.prenom, Math.round(candidat.contreOffre * 100))}</p>

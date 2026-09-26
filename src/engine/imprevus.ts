@@ -1,6 +1,7 @@
 // Imprévus de la soirée : environ 2 par nuit, en pause, avec 2 ou 3 choix.
 // Voir « Événements et intrigues » dans les spécifications.
 
+import { personnelMax } from './agrandir';
 import * as B from '../content/balance';
 import { IMPREVUS, trouverImprevu, type ConditionImprevu, type DefinitionImprevu } from '../content/imprevus';
 import type { Employe, EtatJeu, ImprevuEnCours } from './etat';
@@ -59,7 +60,7 @@ export function circonstances(etat: EtatJeu, c: ConditionImprevu): boolean {
     (c.tarifMin === undefined || (etat.systemes.tarifs && etat.regles.tarif >= c.tarifMin)) &&
     (c.segment === undefined || segmentOuvert(etat, c.segment)) &&
     (c.segmentPresent === undefined || segmentPresent(etat, c.segmentPresent)) &&
-    (!c.placeLibre || (etat.systemes.recrutement && etat.personnel.length < B.PERSONNEL_MAX)) &&
+    (!c.placeLibre || (etat.systemes.recrutement && etat.personnel.length < personnelMax(etat))) &&
     (!etat.systemes.relations ||
       Object.entries(c.relationMax ?? {}).every(([a, v]) => etat.relations.jauges[a as IdActeur] <= (v ?? 0))) &&
     (c.relationMin === undefined ||

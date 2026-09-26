@@ -12,7 +12,19 @@ export const GEOMETRIE_CHAMBRES: Record<string, Rect> = {
   orientale: { x: 302, y: 76, w: 202, h: 72 },
   velours: { x: 96, y: 156, w: 202, h: 72 },
   miroirs: { x: 302, y: 156, w: 202, h: 72 },
+  // Le bâtiment voisin (palier 5), à droite : un étage par chambre, alignés sur ceux de la maison.
+  atelier: { x: 526, y: 76, w: 202, h: 72 },
+  canal: { x: 526, y: 156, w: 202, h: 72 },
+  jardin: { x: 526, y: 236, w: 202, h: 70 },
 };
+
+/** Largeur du monde : la maison seule (600), ou avec le bâtiment voisin (palier 5), qu'on découvre en faisant glisser la vue. */
+export const LARGEUR_VUE = 600;
+export const LARGEUR_AGRANDIE = 820;
+/** Le bâtiment voisin, pour sa zone tactile avant le rachat. */
+export const GEOMETRIE_VOISIN: Rect = { x: 516, y: 30, w: 220, h: 342 };
+/** Son rez-de-chaussée surélevé (la chambre du jardin), tant qu'il reste au voisin. */
+export const GEOMETRIE_VOISIN_REZ: Rect = { x: 526, y: 236, w: 202, h: 70 };
 
 /** Pièces annexes (v0.6) : les loges dans le pignon, la buanderie derrière la fenêtre de droite du rez-de-chaussée.
  * Zones tactiles un peu plus hautes que le dessin, pour tenir 40 px en 667 × 375. */
@@ -38,7 +50,7 @@ export const POSITIONS = {
   /** Équipes Accueil (à droite de la porte) et Sécurité (à gauche), v0.5. */
   accueil: [{ x: 160, y: 394 }, { x: 172, y: 396 }],
   securite: [{ x: 108, y: 394 }, { x: 92, y: 396 }],
-  /** Places du personnel qui attend au salon. */
+  /** Places du personnel qui attend au salon (jusqu'à 4 ; au-delà, voir placeSalon). */
   salon: [{ x: 150, y: 304 }, { x: 184, y: 304 }, { x: 218, y: 304 }, { x: 252, y: 304 }],
   bulleLinge: { x: 112, y: 262 },
   bulleBar: { x: 408, y: 262 },
@@ -53,3 +65,9 @@ export const POSITIONS = {
   bulleJournaliste: { x: 470, y: 356 },
   bulleFenetre: { x: 44, y: 140 },
 };
+
+/** Place au salon de la i-ème personne : quatre places espacées, ou huit plus serrées dans une maison agrandie. */
+export function placeSalon(i: number, n: number): { x: number; y: number } | undefined {
+  if (n <= POSITIONS.salon.length) return POSITIONS.salon[i];
+  return i < 8 ? { x: 116 + i * 26, y: 304 } : undefined;
+}

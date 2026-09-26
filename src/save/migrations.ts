@@ -36,6 +36,7 @@ import { banqueDeDepart } from '../engine/banque';
 import { fiscDeDepart } from '../engine/fisc';
 import { annexesDeDepart } from '../engine/amenagement';
 import { hasardPlacementDeDepart, niveauxDeDepart } from '../engine/gamme';
+import { agrandissementDeDepart, etablissementDeDepart, hasardEtablissementDeDepart, permisDeDepart } from '../engine/agrandir';
 
 type Donnees = Record<string, unknown>;
 
@@ -583,6 +584,28 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       hasardPlacement: hasardPlacementDeDepart(typeof d.hasard === 'number' ? d.hasard : 0),
     };
   },
+  // v32 → v33 : le palier 5. Permis de la mairie, bâtiment voisin, gérante et deuxième maison, tous à venir ;
+  // deux postes de dépenses de plus. Aucune partie n'a pu atteindre le palier 5 avant.
+  32: (d) => {
+    const avecPostes = (c: unknown) =>
+      estObjet(c) && estObjet(c.depenses) ? { ...c, depenses: { etablissement: 0, caisse: 0, ...c.depenses } } : c;
+    const avecComptes = (x: unknown) => (estObjet(x) ? { ...x, comptes: avecPostes(x.comptes) } : x);
+    const systemes = estObjet(d.systemes) ? d.systemes : {};
+    return {
+      ...d,
+      version: 33,
+      journee: avecComptes(d.journee),
+      nuit: avecComptes(d.nuit),
+      semaine: avecComptes(d.semaine),
+      bilanSemaine: avecComptes(d.bilanSemaine),
+      systemes: { ...systemes, agrandissement: false, gerante: false, etablissement: false },
+      permis: permisDeDepart(),
+      agrandissement: agrandissementDeDepart(),
+      gerante: null,
+      etablissement: etablissementDeDepart(),
+      hasardEtablissement: hasardEtablissementDeDepart(typeof d.hasard === 'number' ? d.hasard : 0),
+    };
+  },
 };
 
 
@@ -677,6 +700,12 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(d.annexes) &&
     estObjet(d.niveauxEquipes) &&
     typeof d.hasardPlacement === 'number' &&
+    estObjet(d.permis) &&
+    estObjet(d.agrandissement) &&
+    Array.isArray(d.agrandissement.achete) &&
+    (d.gerante === null || typeof d.gerante === 'string') &&
+    estObjet(d.etablissement) &&
+    typeof d.hasardEtablissement === 'number' &&
     typeof d.gestionJosee === 'boolean' &&
     estObjet(d.systemes)
   );

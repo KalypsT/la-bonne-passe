@@ -13,6 +13,7 @@ import { JOSEE_RESERVE } from '../content/josee';
 import { ANNEXES, DECORS, trouverChambre } from '../content/maison';
 import { TEXTES_AMENAGEMENT } from '../content/amenagement';
 import { TEXTES_GAMME } from '../content/gamme';
+import { LIEUX, TEXTES_AGRANDIR } from '../content/agrandir';
 import { PALIERS } from '../content/paliers';
 import { TEXTES_ACTIONS_RELATIONS, TEXTES_SEUILS_RELATIONS } from '../content/relations';
 import { TEXTES_JOURNAL_RIVALE, TEXTES_REPONSES_RIVALE } from '../content/rivale';
@@ -221,6 +222,40 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return evenement.gain >= 0
         ? TEXTES_GAMME.journal.finPlacementGain(formaterEuros(evenement.montant), formaterEuros(evenement.gain))
         : TEXTES_GAMME.journal.finPlacementPerte(formaterEuros(evenement.montant), formaterEuros(-evenement.gain));
+    case 'permisDepose':
+      return TEXTES_AGRANDIR.journal.permisDepose(formaterEuros(evenement.montant));
+    case 'permis':
+      return evenement.accorde ? TEXTES_AGRANDIR.journal.permisAccorde : TEXTES_AGRANDIR.journal.permisRefuse;
+    case 'agrandissement':
+      return TEXTES_AGRANDIR.journal.agrandissement(
+        TEXTES_AGRANDIR.agrandissement.options[evenement.option].nom,
+        formaterEuros(evenement.montant),
+        Math.floor(evenement.fin / 1440) + 1,
+      );
+    case 'agrandissementFini':
+      return TEXTES_AGRANDIR.journal.agrandissementFini(evenement.chambres.length);
+    case 'gerance': {
+      const prenom = prenomEmploye(partie, evenement.employeId);
+      const e = genreDe(partie, evenement.employeId) === 'm' ? '' : 'e';
+      if (!evenement.accepte) return TEXTES_AGRANDIR.journal.refus(prenom);
+      return evenement.ambition ? TEXTES_AGRANDIR.journal.promotionAmbition(prenom, e) : TEXTES_AGRANDIR.journal.promotion(prenom, e);
+    }
+    case 'geranceFinie':
+      return TEXTES_AGRANDIR.journal.retour(prenomEmploye(partie, evenement.employeId));
+    case 'geranteRepos': {
+      const g = partie.gerante ? prenomEmploye(partie, partie.gerante) : TEXTES_AGRANDIR.gerante.titre;
+      return TEXTES_AGRANDIR.journal.geranteRepos(g, prenomEmploye(partie, evenement.employeId), genreDe(partie, evenement.employeId) === 'm' ? '' : 'e');
+    }
+    case 'caisse':
+      return TEXTES_AGRANDIR.journal.caisse(formaterEuros(evenement.montant));
+    case 'achatLieu': {
+      const l = LIEUX.find((x) => x.id === evenement.lieu);
+      return TEXTES_AGRANDIR.journal.achat(l?.nom ?? '', l?.quartier ?? '', formaterEuros(evenement.montant));
+    }
+    case 'travauxEtablissement':
+      return TEXTES_AGRANDIR.journal.travaux(formaterEuros(evenement.montant), evenement.fin);
+    case 'etablissementPret':
+      return TEXTES_AGRANDIR.journal.pret;
     case 'renommerMaison':
       return TEXTES_GAMME.journal.renommer(evenement.ancien, evenement.nom, formaterEuros(evenement.montant));
     case 'empruntRembourse':

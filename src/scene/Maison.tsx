@@ -1,4 +1,6 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { AGRANDISSEMENT } from '../content/balance';
+import { TEXTES_AGRANDIR } from '../content/agrandir';
 import { ANNEXES, trouverChambre, trouverPiece } from '../content/maison';
 import { TEXTES } from '../content/textes';
 import type { EtatChambre, EtatJeu } from '../engine/etat';
@@ -8,7 +10,17 @@ import type { Alerte } from '../engine/alertes';
 import { Avatar } from './Avatar';
 import { DecorChambre } from './DecorChambres';
 import { DecorTheme } from './DecorTheme';
-import { CHAMBRE_DU_DECOR, GEOMETRIE_ANNEXES, GEOMETRIE_CHAMBRES, GEOMETRIE_PIECES, type Rect } from './geometrie';
+import {
+  CHAMBRE_DU_DECOR,
+  GEOMETRIE_ANNEXES,
+  GEOMETRIE_CHAMBRES,
+  GEOMETRIE_PIECES,
+  GEOMETRIE_VOISIN,
+  GEOMETRIE_VOISIN_REZ,
+  LARGEUR_AGRANDIE,
+  LARGEUR_VUE,
+  type Rect,
+} from './geometrie';
 import { Vie, type Montant } from './Vie';
 
 interface Props {
@@ -37,13 +49,29 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
   const jour = lumiereDuJour(partie.minuteDuJour);
   const salonEclaire = ouvert || moment === 'briefing';
   const enseigneLongue = partie.maison.nom.length > 18;
+  // Palier 5 : le bâtiment voisin s'ajoute à droite ; on fait glisser la vue le long de la rue.
+  const large = partie.systemes.agrandissement;
+  const largeur = large ? LARGEUR_AGRANDIE : LARGEUR_VUE;
+  const [chezVoisin, setChezVoisin] = useState(false);
+  useEffect(() => {
+    if (!selection) return;
+    if (selection === 'voisin' || AILE.includes(selection)) setChezVoisin(true);
+    else if (GEOMETRIE_CHAMBRES[selection] || selection in GEOMETRIE_PIECES || selection in GEOMETRIE_ANNEXES) setChezVoisin(false);
+  }, [selection]);
+  const decalage = large && chezVoisin ? LARGEUR_AGRANDIE - LARGEUR_VUE : 0;
+  const alerteAilleurs = large && alertes.some((a) => a.type === 'chambreSale' && AILE.includes(a.chambreId) !== chezVoisin);
+  const ids = new Set(partie.chambres.map((c) => c.id));
+  const a = partie.agrandissement;
+  const zoneVoisin = !large ? null : a.achete.length === 0 || a.enCours ? GEOMETRIE_VOISIN : a.achete.includes('etages') && !a.achete.includes('rez') ? GEOMETRIE_VOISIN_REZ : null;
 
   return (
-    <svg className="maison" viewBox="0 0 600 410" preserveAspectRatio="xMidYMid meet" role="img" aria-label={partie.maison.nom}>
+    <>
+    <svg className="maison" viewBox={`0 0 ${LARGEUR_VUE} 410`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={partie.maison.nom}>
       <Motifs />
+      <g className="monde" style={{ transform: `translateX(${-decalage}px)` }}>
       {/* Ciel, étoiles, lune */}
-      <rect width="600" height="410" fill="url(#ciel)" />
-      <rect width="600" height="410" fill="#86B6C4" opacity={jour * 0.55} />
+      <rect width={largeur} height="410" fill="url(#ciel)" />
+      <rect width={largeur} height="410" fill="#86B6C4" opacity={jour * 0.55} />
       <g fill="#F4DCC8" opacity={0.6 * (1 - jour)}>
         <circle cx="40" cy="30" r=".8" />
         <circle cx="140" cy="18" r=".6" />
@@ -52,7 +80,7 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
         <circle cx="30" cy="80" r=".6" />
         <circle cx="430" cy="40" r=".5" />
       </g>
-      <g opacity={1 - jour}>
+      <g opacity={1 - jour} transform={large ? 'translate(235 0)' : undefined}>
         <circle cx="555" cy="36" r="22" fill="url(#chaud)" opacity=".5" />
         <circle cx="555" cy="36" r="11" fill="#F4DCC8" opacity=".9" />
         <circle cx="560" cy="33" r="10" fill="#0F2830" />
@@ -66,14 +94,18 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
         <rect x="16" y="215" width="10" height="15" opacity=".4" />
         <rect x="50" y="275" width="10" height="15" />
       </g>
-      <path d="M512 410V96H530V80H548V64H566V80H584V96H600V410Z" fill="#1A3640" />
-      <g fill="#E8B45A" opacity={(1 - jour) * 0.5}>
-        <rect x="530" y="130" width="10" height="15" />
-        <rect x="566" y="130" width="10" height="15" opacity=".3" />
-        <rect x="530" y="200" width="10" height="15" opacity=".35" />
-        <rect x="566" y="265" width="10" height="15" />
+      {/* À droite : la maison voisine ; au palier 5, elle est à vendre et le Chat Noir s'éloigne d'un bâtiment. */}
+      <g transform={large ? 'translate(224 0)' : undefined}>
+        <path d="M512 410V96H530V80H548V64H566V80H584V96H600V410Z" fill="#1A3640" />
+        <g fill="#E8B45A" opacity={(1 - jour) * 0.5}>
+          <rect x="530" y="130" width="10" height="15" />
+          <rect x="566" y="130" width="10" height="15" opacity=".3" />
+          <rect x="530" y="200" width="10" height="15" opacity=".35" />
+          <rect x="566" y="265" width="10" height="15" />
+        </g>
+        {partie.systemes.rivale && <EnseigneChatNoir nuit={1 - jour} />}
       </g>
-      {partie.systemes.rivale && <EnseigneChatNoir nuit={1 - jour} />}
+      {large && <BatimentVoisin partie={partie} nuit={1 - jour} />}
 
       {/* Pignon à gradins et poutre de levage */}
       <path d="M200 70V52H220V34H240V16H360V34H380V52H400V70Z" fill="url(#brique)" />
@@ -216,9 +248,9 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
       {ouvert && partie.themeDuSoir && <DecorTheme id={partie.themeDuSoir} />}
 
       {/* Quai, réverbère, vélo et canal */}
-      <rect x="0" y="372" width="600" height="22" fill="url(#paves)" />
+      <rect x="0" y="372" width={largeur} height="22" fill="url(#paves)" />
       <rect x="114" y="372" width="42" height="4" fill="#8A7A6A" />
-      <rect x="0" y="392" width="600" height="4" fill="#6B5E54" />
+      <rect x="0" y="392" width={largeur} height="4" fill="#6B5E54" />
       <circle cx="66" cy="316" r="24" fill="url(#chaud)" opacity={1 - jour * 0.7} />
       <path d="M66 392V320" stroke="#12181A" strokeWidth="2" />
       <path d="M61 310H71L69 322H63Z" fill="#F2C46A" />
@@ -228,7 +260,7 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
         <circle cx="554" cy="384" r="6.5" />
         <path d="M530 384L539 374H551L554 384M539 374L541 384H530M550 369V374M547 369H553M537 372H543" />
       </g>
-      <rect x="0" y="396" width="600" height="14" fill="url(#eau)" />
+      <rect x="0" y="396" width={largeur} height="14" fill="url(#eau)" />
       <g stroke="#F4DCC8" strokeOpacity=".14" strokeWidth="1" fill="none">
         <path className="vague" d="M20 401H90M150 404H250M300 400H380M430 405H520" />
       </g>
@@ -237,7 +269,8 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
       {/* Zones tactiles */}
       <g className="zones">
         {[
-          ...Object.entries(GEOMETRIE_CHAMBRES),
+          ...Object.entries(GEOMETRIE_CHAMBRES).filter(([id]) => ids.has(id)),
+          ...(zoneVoisin ? [['voisin', zoneVoisin] as const] : []),
           ...Object.entries(GEOMETRIE_PIECES),
           ...Object.entries(GEOMETRIE_ANNEXES).filter(([id]) => partie.systemes[id as 'loges' | 'buanderie']),
         ].map(([id, r]) => (
@@ -256,7 +289,82 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
       </g>
 
       <Vie partie={partie} alertes={alertes} montants={montants} onAlerte={onAlerte} />
+      </g>
     </svg>
+    {large && (
+      <button
+        className={`defiler ${chezVoisin ? 'gauche' : 'droite'}${alerteAilleurs ? ' alerte' : ''}`}
+        onClick={() => setChezVoisin(!chezVoisin)}
+      >
+        {chezVoisin ? TEXTES_AGRANDIR.scene.versMaison : TEXTES_AGRANDIR.scene.versVoisin}
+      </button>
+    )}
+    </>
+  );
+}
+
+/** Les chambres du bâtiment voisin (palier 5). */
+const AILE: string[] = [...AGRANDISSEMENT.batiment.chambres];
+
+/** Le bâtiment voisin : à vendre, en travaux, ou relié à la maison (palier 5). Ses chambres se dessinent avec les autres. */
+function BatimentVoisin({ partie, nuit }: { partie: EtatJeu; nuit: number }) {
+  const a = partie.agrandissement;
+  const achete = (id: string) => partie.chambres.some((c) => c.id === id);
+  const s = TEXTES_AGRANDIR.scene;
+  return (
+    <g>
+      {/* Pignon à gradins et façade de brique plus claire */}
+      <path d="M572 70V56H586V42H600V30H652V42H666V56H680V70Z" fill="#6A2E2A" />
+      <rect x="516" y="70" width="220" height="302" fill="#6A2E2A" />
+      <rect x="516" y="70" width="220" height="302" fill="url(#brique)" opacity=".55" />
+      <rect x="512" y="66" width="228" height="5" fill="#D9CBB8" />
+      <g fill="#2B1812">
+        <rect x="516" y="148" width="220" height="8" />
+        <rect x="516" y="228" width="220" height="8" />
+        <rect x="516" y="306" width="220" height="8" />
+      </g>
+      {/* Étages encore au voisin : volets clos */}
+      {[76, 156, 236].map((y, i) => {
+        const id = AILE[i]!;
+        if (achete(id)) return null;
+        return (
+          <g key={id}>
+            <rect x="526" y={y} width="202" height={i === 2 ? 70 : 72} fill="#1A2A30" />
+            {[560, 660].map((x) => (
+              <g key={x}>
+                <rect x={x} y={y + 14} width="34" height="44" fill="#2E4A3A" stroke="#D9CBB8" strokeWidth="1" />
+                <path d={`M${x + 17} ${y + 14}V${y + 58}`} stroke="#1E3328" strokeWidth="1.2" />
+                <rect x={x + 3} y={y + 17} width="28" height="38" fill="#E8B45A" opacity={nuit * (i === 1 ? 0.12 : 0.05)} />
+              </g>
+            ))}
+          </g>
+        );
+      })}
+      {/* Rez-de-chaussée : une porte et une vitrine */}
+      <path d="M540 372V340Q552 328 564 340V372Z" fill="#3A2A20" stroke="#D9CBB8" strokeWidth="1.2" />
+      <rect x="590" y="336" width="130" height="28" rx="2" fill="#2A3A40" stroke="#D9CBB8" strokeWidth="1.2" />
+      {a.achete.length === 0 && (
+        <g>
+          <rect x="604" y="341" width="102" height="18" rx="2" fill="#F4DCC8" />
+          <text x="655" y="354" textAnchor="middle" fontFamily="Jost, sans-serif" fontSize="9" fontWeight="600" fill="#5C1530">
+            {s.aVendre}
+          </text>
+        </g>
+      )}
+      {a.enCours && (
+        <g>
+          <rect x="516" y="316" width="220" height="5" fill="#D4A64A" />
+          <text x="626" y="354" textAnchor="middle" fontFamily="Jost, sans-serif" fontSize="8" fill="#F4DCC8">
+            {s.travaux}
+          </text>
+        </g>
+      )}
+      {a.achete.includes('etages') && !a.achete.includes('rez') && !a.enCours && (
+        <Etiquette x={531} y={302}>
+          {TEXTES_AGRANDIR.agrandissement.voisinFerme}
+        </Etiquette>
+      )}
+    </g>
   );
 }
 

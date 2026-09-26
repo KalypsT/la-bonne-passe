@@ -1,6 +1,7 @@
 // Recrutement : visites de candidats, marché du lundi, entretien d'embauche et période d'essai.
 // Voir « Recrutement » et « Départ » dans les spécifications.
 
+import { personnelMax } from './agrandir';
 import * as B from '../content/balance';
 import {
   ACCROCHES,
@@ -283,7 +284,7 @@ export function appliquerRecrutement(etat: EtatJeu, ordre: OrdreRecrutement, eve
     }
     case 'proposer': {
       const c = etat.candidats.find((x) => x.id === ordre.candidatId);
-      if (!c || c.questionPosee === null || etat.personnel.length >= B.PERSONNEL_MAX) return;
+      if (!c || c.questionPosee === null || etat.personnel.length >= personnelMax(etat)) return;
       if (!(B.PARTS_PROPOSEES as readonly number[]).includes(ordre.part)) return;
       if (ordre.part >= c.partMin) {
         etat.candidats = etat.candidats.filter((x) => x !== c);

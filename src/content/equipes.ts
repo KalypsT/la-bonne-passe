@@ -3,6 +3,7 @@
 
 import { ASSURANCES, EQUIPES } from './balance';
 import { TEXTES_BANQUE } from './banque';
+import { TEXTES_AGRANDIR } from './agrandir';
 import { TEXTES_GAMME } from './gamme';
 
 const euros = (n: number) => `${n.toLocaleString('fr-FR')} €`;
@@ -63,6 +64,8 @@ export const OUVERTURES_LUNDI: Record<string, { titre: string; josee: string }> 
   fournisseurs: TEXTES_BANQUE.ouvertureFournisseurs,
   formations: TEXTES_GAMME.ouvertures.formations,
   placement: TEXTES_GAMME.ouvertures.placement,
+  gerante: TEXTES_AGRANDIR.ouvertures.gerante,
+  etablissement: TEXTES_AGRANDIR.ouvertures.etablissement,
   assurance: { titre: TEXTES_EQUIPES.assurance.ouverture, josee: TEXTES_EQUIPES.assurance.ouvertureJosee },
   visibilite: {
     titre: 'Nouveau ce lundi : la visibilité, dans les règles de la maison (onglet Clientèle).',

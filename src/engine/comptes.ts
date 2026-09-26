@@ -26,6 +26,8 @@ export type PosteDepense =
   | 'gestion'
   | 'formations'
   | 'placement'
+  | 'etablissement'
+  | 'caisse'
   | 'agios'
   | 'avance';
 
@@ -52,6 +54,8 @@ export const POSTES_DEPENSES: PosteDepense[] = [
   'gestion',
   'formations',
   'placement',
+  'etablissement',
+  'caisse',
   'agios',
   'avance',
 ];

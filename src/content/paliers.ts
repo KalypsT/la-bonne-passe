@@ -73,7 +73,12 @@ export const PALIERS: DefinitionPalier[] = [
   {
     numero: 5,
     nom: 'S’agrandir',
-    objectif: 'Réputation 70 et accord de la mairie.',
-    ouvre: 'Agrandissement, gérantes, deuxième établissement.',
+    objectif: 'Réputation 70 et accord de la mairie : le dossier se dépose dans sa fiche (onglet Relations).',
+    ouvre: 'Le bâtiment voisin et jusqu’à 8 personnes, la gérance, une deuxième maison.',
+    details: [
+      'Le bâtiment voisin, à droite de la maison : ses deux étages (2 chambres) ou tout le bâtiment (3 chambres), meublés. Touche-le dans la scène.',
+      'Une fois agrandie, la maison peut accueillir jusqu’à 8 personnes.',
+      'Dès lundi : la gérance, dans la fiche de chaque personne. Le lundi suivant : le projet d’une deuxième maison, dans la fiche du bureau.',
+    ],
   },
 ];

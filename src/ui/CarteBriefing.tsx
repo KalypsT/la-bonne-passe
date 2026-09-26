@@ -1,3 +1,4 @@
+import { TEXTES_AGRANDIR } from '../content/agrandir';
 import { useState } from 'react';
 import { CIBLES_LINGE_AUTO, COMMANDE_BAR, FORMULES, PACKS_LINGE, PLAFOND, SEUIL_BAR, THEMES, HEURE_FERMETURE, HEURE_OUVERTURE, RDV_MAX_CRANS } from '../content/balance';
 import { OFFRES, type Offre } from '../content/clientele';
@@ -90,7 +91,13 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
               </>
             )}
             <h3>{t.ceSoir}</h3>
-            {partie.personnel.map((e) => {
+            {/* La gérante (palier 5) ne reçoit pas : elle tient la maison, hors planning. */}
+            {partie.gerante && (
+              <p className="sous laiton">
+                {TEXTES_AGRANDIR.briefing(partie.personnel.find((e) => e.id === partie.gerante)?.prenom ?? '', partie.personnel.find((e) => e.id === partie.gerante)?.genre === 'm' ? '' : 'e')}
+              </p>
+            )}
+            {partie.personnel.filter((e) => e.id !== partie.gerante).map((e) => {
               const auRepos = repos.includes(e.id);
               return (
                 <div key={e.id} className="ligne-planning">
