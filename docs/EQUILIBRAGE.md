@@ -1377,3 +1377,26 @@ Lecture :
 **Une seule chambre, au départ** (Sanne seule, 3 premières nuits, 10 graines) : elle fait 3,9 rendez-vous en moyenne au cran 4 (28 nuits sur 30 au plafond), 4,5 au cran 5 (15 sur 30) et 4,9 au cran 6 (14 sur 30). Le cran 6 est donc atteignable avec une seule chambre, une nuit sur deux : le frein vient des arrivées (environ un client par heure au départ) plus que de la chambre (des rendez-vous de 50 à 75 minutes laissent la place à 7 dans la nuit).
 
 **À surveiller** : au cran 4, qui est le réglage par défaut du jeu, le premier mois dépasse la cible des spécifications (0 à 4 000 € après la première mensualité) : 4 700 € au jour 28, 7 900 € au cran 5. Les gardes historiques jouent au cran 3 (2 400 €). À reprendre dans la partie 8, avec le découvert et l'impôt.
+
+### Le découvert et la banque (partie 2)
+
+Règles : découvert toléré jusqu'à −2 000 € (`DECOUVERT.plafond`), 1 % d'agios par jour ; au-delà, salaires des équipes impayés (−6 de moral par jour pour chaque personne suivie, un départ d'équipe par jour dès le deuxième jour) ; mensualité payée seulement si caisse et réserve restent au-dessus de −2 000 € après paiement, sinon impayée (+2 points de taux), régularisée dès que possible ; deux impayées, faillite.
+
+La simulation compte désormais l'avoir net (trésorerie et réserve, moins la mensualité en retard et les salaires dus) : une mensualité impayée n'est pas un gain. Sans ce correctif, deux gardes (le coût d'une équipe, le tarif +20 % en semaine de contrôles) basculaient, parce qu'une stratégie en difficulté « économisait » sa mensualité.
+
+Le jour de la première mensualité (cartes tranchées au hasard, 10 graines, 56 nuits) :
+
+| Stratégie | Trésorerie jour 28 | À découvert jour 28 | Première mensualité impayée | Au moins une impayée (56 nuits) | Faillites | Agios (56 nuits) | Jours sans paie |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 1 779 € | 2/10 | 1/10 | 1/10 | 0/10 | 36 € | 0,0 |
+| Classique, 4 | 5 798 € | 0/10 | 0/10 | 0/10 | 0/10 | 1 € | 0,0 |
+| Feutrée, 4 | 1 395 € | 3/10 | 1/10 | 1/10 | 0/10 | 50 € | 0,0 |
+| Happy hour, 4 | 2 881 € | 1/10 | 0/10 | 0/10 | 0/10 | 30 € | 0,0 |
+| Classique 3, sélection stricte | 1 699 € | 2/10 | 1/10 | 1/10 | 0/10 | 103 € | 0,0 |
+| Classique 3, accueil et sécurité | 1 641 € | 2/10 | 1/10 | 1/10 | 0/10 | 106 € | 0,0 |
+| Passif (Sanne seule, rien rénové), 4 | −784 € | 10/10 | 7/10 | 10/10 | 7/10 | 783 € | 1,3 |
+
+Lecture :
+
+- **Le joueur actif** tient : une première mensualité impayée une fois sur dix au plus, toujours régularisée avant la suivante, jamais de faillite, jamais de salaire en retard. Les agios restent une piqûre (moins de 110 € en deux mois). Garde : `equilibrage-banque.test.ts`.
+- **Le joueur passif** fait faillite au jour 56 dans 7 parties sur 10. Les spécifications voulaient qu'un joueur qui laisse faire finisse « en léger déficit » : avec les vraies conséquences, il perd la maison. C'est cohérent avec « deux mensualités impayées : faillite », mais c'est dur pour un débutant distrait. « Confier la gestion à Josée » (partie 4) doit servir de filet ; à défaut, on pourrait allonger le délai de régularisation.

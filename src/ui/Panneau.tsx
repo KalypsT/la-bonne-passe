@@ -1,4 +1,5 @@
 import {
+  DECOUVERT,
   EMPRUNT_RACHAT,
   LIVRAISON_EXPRESS_LINGE,
   MENAGE_MAX,
@@ -30,6 +31,8 @@ import { affinite, peutRecevoirEnEntretien, peutRecevoirPrime } from '../engine/
 import { quotaAtteint } from '../engine/regles';
 import { totalDepenses, totalRecettes } from '../engine/comptes';
 import { jourProchaineMensualite, NOMBRE_MENSUALITES } from '../engine/soiree';
+import { agiosDuJour, majorationTaux } from '../engine/banque';
+import { TEXTES_BANQUE } from '../content/banque';
 import { estOuvert, heureDeInstant, jourDeLaSemaine } from '../engine/temps';
 import { Figurine } from '../scene/Figurine';
 import { formaterEuros, formaterHeure } from './format';
@@ -665,6 +668,7 @@ function OngletFinances({ partie }: { partie: EtatJeu }) {
           </div>
         )}
       </dl>
+      <Banque partie={partie} />
       <dl className="chiffres">
         <div>
           <dt>{TEXTES.semaine.enCours}</dt>
@@ -691,6 +695,63 @@ function OngletFinances({ partie }: { partie: EtatJeu }) {
       )}
       <Reserve partie={partie} />
       <Assurance partie={partie} />
+    </>
+  );
+}
+
+/** La banque : découvert, agios, salaires dus, mensualité en retard, avec l'avis de Josée (v0.6). */
+function Banque({ partie }: { partie: EtatJeu }) {
+  const tb = TEXTES_BANQUE.finances;
+  const b = partie.banque;
+  const echeance = jourProchaineMensualite(partie);
+  const agios = agiosDuJour(partie);
+  const menace =
+    echeance !== null && echeance - partie.jour <= 7 && partie.tresorerie + partie.reserve - MENSUALITE - b.retard < -DECOUVERT.plafond;
+  const avis =
+    b.retard > 0 && echeance !== null
+      ? TEXTES_BANQUE.josee.retard(echeance)
+      : partie.tresorerie < -DECOUVERT.plafond
+        ? TEXTES_BANQUE.josee.depasse
+        : menace
+          ? TEXTES_BANQUE.josee.menace
+          : partie.tresorerie < 0
+            ? TEXTES_BANQUE.josee.decouvert
+            : TEXTES_BANQUE.josee.tranquille;
+  return (
+    <>
+      <h3>{tb.titre}</h3>
+      <dl className="chiffres">
+        <div>
+          <dt>{tb.decouvertAutorise}</dt>
+          <dd>{tb.decouvertDetail}</dd>
+        </div>
+        {agios > 0 && (
+          <div>
+            <dt>{tb.agiosDemain}</dt>
+            <dd className="negatif">−{formaterEuros(agios)}</dd>
+          </div>
+        )}
+        {b.salairesDus > 0 && (
+          <div>
+            <dt>{tb.salairesDus}</dt>
+            <dd className="negatif">{formaterEuros(b.salairesDus)}</dd>
+          </div>
+        )}
+        {b.retard > 0 && echeance !== null && (
+          <div>
+            <dt>{tb.retard}</dt>
+            <dd className="negatif">{tb.retardDetail(formaterEuros(b.retard), echeance)}</dd>
+          </div>
+        )}
+        {b.impayees > 0 && (
+          <div>
+            <dt>{tb.impayees}</dt>
+            <dd>{tb.impayeesDetail(b.impayees, majorationTaux(partie))}</dd>
+          </div>
+        )}
+      </dl>
+      {menace && b.retard === 0 && echeance !== null && <p className="alerte-ligne">{tb.mensualiteMenacee(echeance)}</p>}
+      <JoseeLigne texte={avis} />
     </>
   );
 }

@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import * as B from '../content/balance';
 import { ACTEURS, ACTEURS_ORDRE } from '../content/relations';
 import { evenementsExterieurs, mesurerRenouvellement, simuler, type OptionsSimulation } from './simulation';
+import { avoirNet } from './banque';
 
 // Le quartier vit-il ? (v0.5) Les relations réagissent au style de la maison, et les soigner coûte, mais rapporte.
 // La rivale frappe plus fort la maison qui lui prend sa clientèle, et une trêve la calme.
@@ -109,7 +110,8 @@ describe('le Chat Noir', () => {
 describe('les équipes Accueil et Sécurité, et l’assurance', () => {
   /** Alertes par soirée, des nuits 36 à 56 (les équipes sont engagées dès le jour 28). */
   const alertes = (nom: string) => moyenne(nom, (p) => mesurerRenouvellement(p.nuits.slice(35)).alertes);
-  const avoir = (nom: string) => moyenne(nom, (p) => p.etat.tresorerie + p.etat.reserve);
+  // v0.6 : net de la mensualité en retard et des salaires dus, que la banque et les équipes attendent.
+  const avoir = (nom: string) => moyenne(nom, (p) => avoirNet(p.etat));
 
   it('règlent une partie des alertes, sans vider la soirée', () => {
     console.log('alertes par soirée', ['classique', 'accueil', 'equipes'].map((n) => `${n} ${alertes(n).toFixed(1)}`).join(', '));

@@ -1,6 +1,8 @@
 import { MENTIONS_MOIS, OBJECTIFS_MOIS } from '../content/defis';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
+import { jourProchaineMensualite } from '../engine/soiree';
+import { TEXTES_BANQUE } from '../content/banque';
 import { formaterEuros } from './format';
 import { JoseeLigne } from './Josee';
 import { formaterMesure, texteObjectif } from './objectifs';
@@ -12,7 +14,10 @@ export function CarteMois({ partie }: { partie: EtatJeu }) {
   const b = partie.bilanMois;
   if (!b) return null;
   const t = TEXTES.bilanMois;
-  const mention = b.reussi
+  const limite = jourProchaineMensualite(partie);
+  const mention = b.impayee
+    ? TEXTES_BANQUE.lettre.mention
+    : b.reussi
     ? b.decouvert
       ? MENTIONS_MOIS.reussiDecouvert
       : MENTIONS_MOIS.reussiSerein
@@ -31,15 +36,22 @@ export function CarteMois({ partie }: { partie: EtatJeu }) {
             <dl className="comptes">
               <div>
                 <dt>{t.mensualite}</dt>
-                <dd>−{formaterEuros(b.mensualite)}</dd>
+                <dd className={b.impayee ? 'negatif' : ''}>{b.impayee ? t.impayee : `−${formaterEuros(b.mensualite)}`}</dd>
               </div>
               <div className="total">
-                <dt>{t.avoir}</dt>
+                <dt>{b.impayee ? t.avoirImpayee : t.avoir}</dt>
                 <dd className={b.avoir < 0 ? 'negatif' : ''}>{formaterEuros(b.avoir)}</dd>
               </div>
             </dl>
             {b.depuisReserve > 0 && <p className="sous">{t.depuisReserve(formaterEuros(b.depuisReserve))}</p>}
-            {b.decouvert && <p className="alerte-ligne">{t.lettre(partie.maison.nom)}</p>}
+            {b.impayee && limite !== null ? (
+              <div className="lettre-banque">
+                <b>{TEXTES_BANQUE.lettre.titre}</b>
+                <p>{TEXTES_BANQUE.lettre.texte(partie.maison.nom, formaterEuros(b.mensualite), limite)}</p>
+              </div>
+            ) : (
+              b.decouvert && <p className="alerte-ligne">{t.lettre(partie.maison.nom)}</p>
+            )}
             <h3>{t.objectif}</h3>
             <b>
               {OBJECTIFS_MOIS[b.objectif].titre} ·{' '}

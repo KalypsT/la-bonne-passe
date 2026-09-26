@@ -32,6 +32,7 @@ import { agirRelation, matinDesRelations, type EvenementRelation, type OrdreRela
 import { lundiDeLaRivale, repondreRivale, type EvenementRivale, type OrdreRivale } from './rivale';
 import { changerAssurance, changerEquipe, type EvenementEquipe, type OrdreEquipe } from './equipes';
 import { traiterAlerte, type OrdreMinuterie } from './minuteries';
+import { surveillerDecouvert } from './banque';
 import { appliquerPlafond, type AccordPlafond, type EvenementPlafond } from './plafond';
 import { changerCibleAuto, commanderAuto, commanderPack, livraisonExpress, type EvenementLinge } from './linge';
 
@@ -328,6 +329,8 @@ export function tick(etatInitial: EtatJeu, ordres: readonly Ordre[] = []): Resul
 
 /** Comme tick, mais modifie l'état reçu. Réservé à la simulation, qui travaille sur sa propre copie. */
 export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): EvenementMoteur[] {
+  // Une partie finie (faillite) ne s'écoule plus.
+  if (etat.finDePartie) return [];
   const evenements = appliquerOrdresSurPlace(etat, ordres);
   if (attendBriefing(etat)) {
     // Rappel du briefing en attente : déjà inscrit au journal quand 19 h a sonné.
@@ -359,6 +362,11 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
       lundiDeLaRivale(etat, evenements);
     }
     prelevementsDuMatin(etat, evenements);
+    if (etat.finDePartie) {
+      journaliser(etat, evenements.slice(dejaJournalises));
+      etat.hasard = tirage.etat();
+      return evenements;
+    }
     matinRecrutement(etat, tirage, evenements);
     matinDuPersonnel(etat, evenements);
     // Le voisin se plaint de la nuit passée : les intrigues regardent le tapage avant que le quartier oublie.
@@ -387,6 +395,7 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
   }
   if (attendBriefing(etat)) evenements.push({ type: 'briefing', jour: etat.jour });
 
+  surveillerDecouvert(etat, evenements);
   journaliser(etat, evenements.slice(dejaJournalises));
   etat.hasard = tirage.etat();
   return evenements;

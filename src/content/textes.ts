@@ -426,6 +426,7 @@ export const TEXTES = {
       assurance: 'Assurance',
       incidents: 'Incidents',
       mensualite: 'Mensualité',
+      agios: 'Agios',
       avance: 'Remboursement du grossiste',
     },
     gagne: 'Gagné cette nuit',
@@ -469,8 +470,10 @@ export const TEXTES = {
   bilanMois: {
     titre: (numero: number) => `Fin du mois ${numero}`,
     mensualite: 'Mensualité',
+    impayee: 'impayée',
     depuisReserve: (montant: string) => `dont ${montant} pris dans la réserve`,
     avoir: 'Trésorerie et réserve après la mensualité',
+    avoirImpayee: 'Trésorerie et réserve',
     lettre: (maison: string) =>
       `Une lettre de la banque, adressée à ${maison} : la mensualité est passée à découvert. Pour l’instant, un simple rappel à l’ordre.`,
     objectif: 'L’objectif du mois',
@@ -536,6 +539,7 @@ export const TEXTES = {
       assurance: 'Assurance',
       incidents: 'Casse et imprévus',
       mensualite: 'Mensualité',
+      agios: 'Agios',
       avance: 'Remboursement du grossiste',
     },
     reputation: 'Réputation',

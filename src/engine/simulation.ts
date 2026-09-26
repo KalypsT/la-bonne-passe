@@ -21,6 +21,7 @@ import { IMPREVUS_QUARTIER } from '../content/imprevusQuartier';
 import { actionPossible } from './relations';
 import { reponsePossible } from './rivale';
 import { gagneNuit } from './comptes';
+import { avoirNet } from './banque';
 
 const moyenne = (l: number[]) => (l.length ? l.reduce((a, b) => a + b, 0) / l.length : 0);
 
@@ -155,7 +156,7 @@ export function simuler(options: OptionsSimulation): {
   const bilans: BilanSemaine[] = [];
   const bilansMois: BilanMois[] = [];
   let tresorerieMin = etat.tresorerie;
-  let avoirPrecedent = etat.tresorerie + etat.reserve;
+  let avoirPrecedent = avoirNet(etat);
   // Compteurs de la nuit en cours, pour mesurer le renouvellement des soirées.
   let imprevusNuit: string[] = [];
   let intriguesNuit: string[] = [];
@@ -227,7 +228,7 @@ export function simuler(options: OptionsSimulation): {
           fatigueMax: Math.max(0, ...etat.personnel.map((x) => x.fatigue)),
           moralMoyen: moyenne(etat.personnel.map((x) => x.moral)),
           ecartCaisse: e.nuit.tresorerieApres - e.nuit.tresorerieAvant - gagneNuit(e.nuit.comptes) + e.nuit.reserve - e.nuit.retraitReserve,
-          resultat: etat.tresorerie + etat.reserve - avoirPrecedent,
+          resultat: avoirNet(etat) - avoirPrecedent,
           bar: e.nuit.comptes.recettes.bar,
           satisfaction: { ...etat.clientele.satisfaction },
           servisParSegment: { ...(etat.clientele.historique[0]?.servis ?? { touriste: 0, habitue: 0, affaires: 0, groupe: 0 }) },
@@ -248,7 +249,7 @@ export function simuler(options: OptionsSimulation): {
         });
         actionsRelations = 0;
         actionsRivale = [];
-        avoirPrecedent = etat.tresorerie + etat.reserve;
+        avoirPrecedent = avoirNet(etat);
         imprevusNuit = [];
         intriguesNuit = [];
         intriguesSoiree = 0;

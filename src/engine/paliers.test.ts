@@ -188,8 +188,10 @@ describe('réserve de sécurité', () => {
 describe('mensualité de l’emprunt', () => {
   it('tombe le jour 28, puis tous les 28 jours', () => {
     expect(jourProchaineMensualite(creerEtatInitial())).toBe(28);
-    expect(jourProchaineMensualite({ ...creerEtatInitial(), mensualitesPayees: 1 })).toBe(56);
-    expect(jourProchaineMensualite({ ...creerEtatInitial(), mensualitesPayees: NOMBRE_MENSUALITES })).toBeNull();
+    // Le calendrier suit les échéances passées, payées ou non.
+    const apres = (echeances: number) => ({ ...creerEtatInitial(), banque: { ...creerEtatInitial().banque, echeances } });
+    expect(jourProchaineMensualite(apres(1))).toBe(56);
+    expect(jourProchaineMensualite(apres(NOMBRE_MENSUALITES))).toBeNull();
   });
 
   it('se paie d’abord avec la réserve, puis avec la trésorerie', () => {

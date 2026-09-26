@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { Offre } from '../content/clientele';
 import type { Regles } from './etat';
 import { choixAdaptatif, simuler, type ResumeNuit } from './simulation';
+import { avoirNet } from './banque';
 
 // « L'offre change-t-elle vraiment la partie ? » La bonne réponse dépend de la semaine,
 // et un joueur qui suit les tendances fait mieux que celui qui ne touche à rien.
@@ -26,7 +27,7 @@ function jouer(
     GRAINES.map((graine) => {
       // Sans carte : les choix et les coûts des imprévus et des intrigues brouilleraient la comparaison des offres (gardés à part).
       const r = simuler({ graine, offre, rdvMax: 3, nuits, regles, tendances, theme, cartes: false });
-      return { nuits: r.nuits, avoir: r.etat.tresorerie + r.etat.reserve };
+      return { nuits: r.nuits, avoir: avoirNet(r.etat) };
     }),
   );
 }

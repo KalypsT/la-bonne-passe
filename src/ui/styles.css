@@ -1788,3 +1788,26 @@ body {
   flex: 1 1 0;
   min-width: 0;
 }
+
+/* Lettre de la banque, au bilan du mois */
+.lettre-banque {
+  margin: 6px 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--creme);
+  color: var(--nuit);
+  font-size: 12.5px;
+}
+
+.carte-modale .lettre-banque p {
+  margin: 4px 0 0;
+  color: var(--nuit);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 12.5px;
+}
+
+.liste-simple {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+}

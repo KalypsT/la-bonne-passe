@@ -32,7 +32,8 @@ import { declencherImprevu, type EvenementImprevu } from './imprevus';
 import { aTrait, nuitDuPersonnel, type EvenementPersonnel } from './personnel';
 import { revelerTraits, type EvenementRecrutement } from './recrutement';
 import { ecart, instant } from './temps';
-import { comptesVides, depenser, encaisser, journeeVide, noterDepense, recetteMaison } from './comptes';
+import { comptesVides, depenser, encaisser, journeeVide, recetteMaison } from './comptes';
+import { echeance, payerSalaires, prelevementAgios, regulariser, type EvenementBanque } from './banque';
 import { demandeTendance, disputeTendance } from './semaine';
 import { bruitDuSoir, changerTapage } from './quartier';
 import { conclureMois, type EvenementBilan } from './bilans';
@@ -109,7 +110,8 @@ export type EvenementSoiree =
   | EvenementBilan
   | EvenementRelation
   | EvenementRivale
-  | EvenementEquipe;
+  | EvenementEquipe
+  | EvenementBanque;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -545,8 +547,9 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
   if (etat.minuteDuJour === B.HEURE_SALAIRES) {
     const montant = etat.equipes.menage * B.SALAIRE_MENAGE + etat.equipes.bar * B.SALAIRE_BAR + salairesEquipesQuartier(etat);
     if (montant > 0) {
-      depenser(etat, montant, 'salaires');
-      evenements.push({ type: 'salaires', montant });
+      const avant = etat.semaine.comptes.depenses.salaires;
+      payerSalaires(etat, montant, evenements);
+      if (etat.semaine.comptes.depenses.salaires > avant) evenements.push({ type: 'salaires', montant: etat.semaine.comptes.depenses.salaires - avant });
     }
   }
 }
@@ -557,7 +560,7 @@ export const NOMBRE_MENSUALITES = Math.ceil(B.EMPRUNT_RACHAT / B.MENSUALITE);
 /** Jours des prochaines mensualités (jusqu'à n), dans l'ordre. */
 export function prochainesMensualites(etat: EtatJeu, n: number): number[] {
   const jours: number[] = [];
-  for (let k = etat.mensualitesPayees; k < NOMBRE_MENSUALITES && jours.length < n; k++) {
+  for (let k = etat.banque.echeances; k < NOMBRE_MENSUALITES && jours.length < n; k++) {
     jours.push(B.JOUR_PREMIERE_MENSUALITE + k * B.JOURS_PAR_MOIS);
   }
   return jours;
@@ -565,12 +568,13 @@ export function prochainesMensualites(etat: EtatJeu, n: number): number[] {
 
 /** Jour de la prochaine mensualité, ou null si l'emprunt est remboursé. */
 export function jourProchaineMensualite(etat: EtatJeu): number | null {
-  if (etat.mensualitesPayees >= NOMBRE_MENSUALITES) return null;
-  return B.JOUR_PREMIERE_MENSUALITE + etat.mensualitesPayees * B.JOURS_PAR_MOIS;
+  if (etat.banque.echeances >= NOMBRE_MENSUALITES) return null;
+  return B.JOUR_PREMIERE_MENSUALITE + etat.banque.echeances * B.JOURS_PAR_MOIS;
 }
 
-/** Charges fixes au début de chaque lundi (sauf le tout premier), mensualité le jour dit. */
+/** Charges fixes au début de chaque lundi (sauf le tout premier), agios, mensualité le jour dit. */
 export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
+  prelevementAgios(etat, evenements);
   if (etat.jour > 1 && (etat.jour - 1) % 7 === 0) {
     depenser(etat, B.CHARGES_FIXES, 'charges');
     evenements.push({ type: 'charges', montant: B.CHARGES_FIXES });
@@ -581,20 +585,21 @@ export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
     }
   }
   rembourserAvance(etat, evenements);
+  // Une mensualité en retard se régularise dès que possible ; la première payée ouvre le palier 3.
+  if (regulariser(etat, evenements)) verifierPaliers(etat, evenements);
   if (etat.jour === jourProchaineMensualite(etat)) {
-    // La réserve paie en premier, la trésorerie complète.
-    const depuisReserve = Math.min(etat.reserve, B.MENSUALITE);
-    etat.reserve -= depuisReserve;
-    noterDepense(etat, depuisReserve, 'mensualite');
-    depenser(etat, B.MENSUALITE - depuisReserve, 'mensualite');
-    etat.mensualitesPayees += 1;
-    evenements.push({
-      type: 'mensualite',
-      montant: B.MENSUALITE,
-      depuisReserve,
-      restantes: NOMBRE_MENSUALITES - etat.mensualitesPayees,
-    });
-    conclureMois(etat, depuisReserve, etat.mensualitesPayees < NOMBRE_MENSUALITES, evenements);
+    // La réserve paie en premier, la trésorerie complète, dans la limite du découvert autorisé.
+    const issue = echeance(etat, evenements);
+    if ('faillite' in issue) return;
+    if (issue.payee) {
+      evenements.push({
+        type: 'mensualite',
+        montant: B.MENSUALITE,
+        depuisReserve: issue.depuisReserve,
+        restantes: NOMBRE_MENSUALITES - etat.banque.echeances,
+      });
+    }
+    conclureMois(etat, issue.payee ? issue.depuisReserve : 0, etat.banque.echeances < NOMBRE_MENSUALITES, evenements, !issue.payee);
     // La première mensualité payée ouvre le palier 3, présenté après le bilan du mois.
     verifierPaliers(etat, evenements);
   }
