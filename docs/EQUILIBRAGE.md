@@ -864,3 +864,15 @@ Oui, et les gardes le vérifient (`equilibrage-renouvellement.test.ts`, joueur c
 - **L'argent du premier mois** est confortable pour un joueur actif (3 900 € en classique après la mensualité, dans la cible de 0 à 4 000 €). Le bar ne se rembourse qu'à partir de la cinquième semaine.
 - **Le défi du match** est presque impossible sans portier ; « Rien ne nous échappe » dépend de l'attention du joueur, que la simulation ne mesure pas.
 - **Les gardes de mécanique** jouent sans les cartes de la v0.4 (`cartes: false`) ; les gardes du jeu complet (mois, renouvellement) les gardent toutes. Un changement de contenu (une carte, une alerte) ne doit donc pas faire basculer les premières.
+
+### Partie jouée dans le navigateur (vite preview, 844 × 390)
+
+Nouvelle partie à ×4, rénovations et choix au hasard, jusqu'au bilan du mois 1 ; aucune erreur dans la console.
+
+- Argent aux nuits 7, 14, 21 et 27 : 2 257 €, 4 882 €, 4 499 €, 4 226 € ; 1 855 € après la mensualité.
+- Réputation aux mêmes nuits : 28, 32, 34, 33 ; l'objectif « Se faire un nom » (42) est donc raté, comme prévu pour un jeu au hasard.
+- Défis : touristes 22 sur 28, puis habitués 1 sur 5, tous deux ratés.
+- 42 cartes différentes vues, dont les trois intrigues avec leurs suites (inspecteur, homme au costume, vidéo, articles, bridge, chat).
+- Répétitions : « Un client pressé » (16) et les demandes de pause (13 pour Sanne) sont les plus fréquentes.
+
+`npm test` : 365 tests passent.
