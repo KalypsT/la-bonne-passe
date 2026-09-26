@@ -143,6 +143,7 @@ export function depart(etat: EtatJeu, e: Employe, evenements: Sortie): void {
   for (const autre of etat.personnel) changerMoral(autre, -B.DEPART_MORAL_AUTRES);
   changerSatisfaction(etat, 'habitue', -B.DEPART_SATISFACTION_HABITUES);
   etat.adieux.push(e.prenom);
+  etat.mois.departs += 1;
   evenements.push({ type: 'depart', prenom: e.prenom });
 }
 

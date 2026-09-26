@@ -114,6 +114,7 @@ export function noterClient(etat: EtatJeu, segment: Segment, issue: 'servis' | '
   if (etat.clientele.historique.length === 0) etat.clientele.historique.push({ servis: parSegment(0), perdus: parSegment(0) });
   etat.clientele.historique[0]![issue][segment] += 1;
   etat.semaine[issue] += 1;
+  if (issue === 'servis') etat.semaine.stats.servis[segment] += 1;
 }
 
 /** Fréquentation cumulée des dernières nuits. */

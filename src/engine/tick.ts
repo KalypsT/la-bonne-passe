@@ -57,6 +57,8 @@ export type Ordre =
   | { type: 'nouveautesVues' }
   /** Le bilan du lundi a été lu. */
   | { type: 'bilanSemaineVu' }
+  /** Le bilan de fin de mois a été lu. */
+  | { type: 'bilanMoisVu' }
   /** Le didacticiel avance (l'interface décide des étapes, le moteur les garde). */
   | { type: 'didacticiel'; etape: number | null }
   | OrdreRecrutement
@@ -233,6 +235,9 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       return;
     case 'bilanSemaineVu':
       etat.bilanAVoir = false;
+      return;
+    case 'bilanMoisVu':
+      etat.bilanMoisAVoir = false;
       return;
     case 'nouveautesVues':
       etat.nouveautes = [];

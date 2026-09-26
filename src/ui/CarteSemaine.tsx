@@ -7,6 +7,8 @@ import type { EtatJeu } from '../engine/etat';
 import { formaterEuros } from './format';
 import { JoseeLigne } from './Josee';
 import { useInterface } from './store';
+import { trouverDefi } from '../content/defis';
+import { formaterMesure, texteDefi, texteReussiteDefi } from './objectifs';
 
 /** Bilan du lundi : recettes et dépenses par poste, résultat, trésorerie projetée, tendances de la semaine. En pause. */
 export function CarteSemaine({ partie }: { partie: EtatJeu }) {
@@ -99,6 +101,7 @@ export function CarteSemaine({ partie }: { partie: EtatJeu }) {
             </dl>
             <p className="sous">{t.projectionDetail}</p>
             <JoseeLigne texte={passeSousZero ? t.joseeProjection : t.joseeResultat(b.resultat >= 0)} />
+            <DefisDuLundi partie={partie} />
             {(tendances.length > 0 || b.premieresTendances) && (
               <>
                 <h3>{t.tendances}</h3>
@@ -121,5 +124,38 @@ export function CarteSemaine({ partie }: { partie: EtatJeu }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Au bilan du lundi : le défi de la semaine écoulée, jugé, et celui de la semaine qui commence. */
+function DefisDuLundi({ partie }: { partie: EtatJeu }) {
+  const b = partie.bilanSemaine;
+  const o = TEXTES.objectifs;
+  const passe = b?.defi ? trouverDefi(b.defi.id) : undefined;
+  const nouveau = b?.nouveauDefi ? trouverDefi(b.nouveauDefi) : undefined;
+  if (!b || (!passe && !nouveau)) return null;
+  return (
+    <>
+      {passe && b.defi && (
+        <div className="defi-bilan">
+          <h3>{o.defiPasse}</h3>
+          <b>
+            {passe.titre} · <span className={b.defi.reussi ? 'positif' : 'negatif'}>{b.defi.reussi ? o.reussi : o.rate}</span>
+          </b>
+          <p className="sous">
+            {o.progression(formaterMesure(passe.mesure.type, b.defi.valeur), formaterMesure(passe.mesure.type, b.defi.cible), !!passe.auPlus)}
+          </p>
+          <JoseeLigne texte={texteReussiteDefi(b.defi.reussi ? passe.reussite : passe.echec, partie)} />
+        </div>
+      )}
+      {nouveau && (
+        <div className="defi-bilan">
+          <h3>{o.nouveauDefi}</h3>
+          <b>{nouveau.titre}</b>
+          <p className="sous">{texteDefi(nouveau, partie)}</p>
+          <p className="sous laiton">{o.recompense(nouveau.recompenseTexte)}</p>
+        </div>
+      )}
+    </>
   );
 }

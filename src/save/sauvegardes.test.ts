@@ -260,7 +260,9 @@ describe('migrations', () => {
     expect(migre?.clientele.satisfaction).toEqual({ touriste: 21.5, habitue: 21.5, affaires: 21.5, groupe: 21.5 });
     expect(migre?.clientele.historique).toEqual([]);
     expect(migre?.systemes.clientele).toBe(false);
-    expect(migre?.nouveautes).toEqual(['ambitions']);
+    // Les nouveautés des versions suivantes s'ajoutent ; celles de la clientèle, non.
+    expect(migre?.nouveautes).toEqual(expect.arrayContaining(['ambitions']));
+    expect(migre?.nouveautes).not.toContain('clientele');
     expect(migre?.reputation).toBe(21.5);
   });
 
@@ -269,7 +271,7 @@ describe('migrations', () => {
     const systemes = { ...etat.systemes, affaires: true, groupes: true };
     const migre = migrer({ ...etat, version: 10, palier: 2, reputation: 33, systemes });
     expect(migre?.systemes).toMatchObject({ clientele: true, affaires: true, groupes: true, bar: true });
-    expect(migre?.nouveautes).toEqual(['clientele', 'regles', 'bar', 'ambitions', 'voisinage']);
+    expect(migre?.nouveautes.slice(0, 3)).toEqual(['clientele', 'regles', 'bar']);
     expect(trouverNouveaute('clientele')?.palier).toBe(2);
     expect(migre?.clientele.satisfaction.affaires).toBe(33);
   });
@@ -285,11 +287,11 @@ describe('migrations', () => {
     expect(migre?.systemes).toMatchObject({ tarifs: true, porte: true });
     expect(migre?.personnel[0]?.chargeCeSoir).toBe(2);
     expect(migre?.rendezVous[0]?.formule).toBe('standard');
-    expect(migre?.nouveautes).toEqual(['clientele', 'regles', 'bar', 'ambitions', 'voisinage']);
+    expect(migre?.nouveautes.slice(0, 3)).toEqual(['clientele', 'regles', 'bar']);
     expect(trouverNouveaute('regles')?.palier).toBe(2);
     const avant = migrer({ ...etat, version: 11, palier: 1, systemes, personnel, rendezVous: [], nouveautes: [] });
     expect(avant?.systemes).toMatchObject({ tarifs: false, porte: false });
-    expect(avant?.nouveautes).toEqual(['ambitions']);
+    expect(avant?.nouveautes).not.toContain('regles');
   });
 
   it('migre une sauvegarde v12 : bar sous ses draps, sans équipe, et nouveauté au palier 2', () => {
@@ -302,11 +304,11 @@ describe('migrations', () => {
     expect(migre?.equipes).toEqual({ menage: 2, bar: 0 });
     expect(migre?.nuit?.bar).toBe(0);
     expect(migre?.systemes.bar).toBe(true);
-    expect(migre?.nouveautes).toEqual(['bar', 'ambitions', 'voisinage']);
+    expect(migre?.nouveautes[0]).toBe('bar');
     expect(trouverNouveaute('bar')?.palier).toBe(2);
     const avant = migrer({ ...etat, version: 12, palier: 1, equipes: { menage: 1 }, nouveautes: [] });
     expect(avant?.systemes.bar).toBe(false);
-    expect(avant?.nouveautes).toEqual(['ambitions']);
+    expect(avant?.nouveautes).not.toContain('bar');
   });
 
   it('migre une sauvegarde v13 : semaine en cours sans comptes, pas de bilan en attente, tendances au prochain lundi', () => {
@@ -333,7 +335,7 @@ describe('migrations', () => {
     expect(migre?.themeDuSoir).toBeNull();
     expect(migre?.semaine.themes).toEqual([]);
     expect(migre?.semaine.comptes.depenses.themes).toBe(0);
-    expect(migre?.nouveautes).toEqual(['themes', 'ambitions', 'voisinage']);
+    expect(migre?.nouveautes[0]).toBe('themes');
     const avant = migrer({ ...etat, version: 14, systemes: { ...systemes, tendances: false }, semaine: ancienne, nouveautes: [] });
     expect(avant?.systemes.themes).toBe(false);
     expect(avant?.nouveautes).toEqual([]);
@@ -364,7 +366,7 @@ describe('migrations', () => {
     });
     expect(migre?.personnel.map((e) => e.ambition)).toEqual(['gerante', 'affiche']);
     expect(migre?.candidats[0]?.ambition).toBe(ambitionDuMarche('c7'));
-    expect(migre?.nouveautes).toEqual(['ambitions', 'voisinage']);
+    expect(migre?.nouveautes.slice(0, 2)).toEqual(['ambitions', 'voisinage']);
     expect(migrer({ ...base, version: 16, palier: 0, personnel: [sansAmbition(base.personnel[0]!)], nouveautes: [] })?.nouveautes).toEqual([]);
     // Une sauvegarde v17 sans ambition est abîmée.
     expect(migrer({ ...base, personnel: [sansAmbition(base.personnel[0]!)] })).toBeNull();
@@ -386,6 +388,25 @@ describe('migrations', () => {
     expect(migre?.minuteries).toEqual([]);
     expect(migre?.hasardAlertes).toBe(48);
     expect(migrer({ ...etat, version: 19 })).toBeNull();
+  });
+
+  it('migre une sauvegarde v19 : défis ouverts avec les tendances, objectif du mois fixé', () => {
+    const base = creerEtatInitial();
+    const { defi: _d, mois: _m, bilanMois: _b, bilanMoisAVoir: _v, ...etat } = base;
+    const { defis: _s, ...systemes } = { ...base.systemes, tendances: true };
+    const { stats: _st, ...semaine } = base.semaine;
+    const avant = migrer({ ...etat, version: 19, palier: 2, systemes, semaine, mensualitesPayees: 0, nouveautes: [] });
+    expect(avant?.version).toBe(VERSION_ETAT);
+    expect(avant?.systemes.defis).toBe(true);
+    expect(avant?.defi).toBeNull();
+    expect(avant?.mois).toMatchObject({ numero: 1, objectif: 'reputation' });
+    expect(avant?.semaine.stats.disputes).toBe(0);
+    expect(avant?.nouveautes).toEqual(['objectifs', 'defis']);
+    const apres = migrer({ ...etat, version: 19, palier: 2, systemes: { ...systemes, tendances: false }, semaine, mensualitesPayees: 1, nouveautes: [] });
+    expect(apres?.systemes.defis).toBe(false);
+    expect(apres?.mois).toMatchObject({ numero: 2, objectif: 'satisfaction' });
+    expect(apres?.nouveautes).toEqual(['objectifs']);
+    expect(migrer({ ...etat, version: 20, systemes, semaine })).toBeNull();
   });
 
   it('refuse une version future ou des données sans version', () => {

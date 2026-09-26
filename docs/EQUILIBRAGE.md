@@ -667,3 +667,98 @@ Nouvelle garde (`equilibrage-renouvellement.test.ts`, semaines 2 à 4) : pour le
 Partie jouée dans le navigateur (version compilée) : six alertes en même temps sur une sauvegarde préparée, en 844 × 390 et 667 × 375 (bulles bien placées, carte lisible, pause accordée), puis trois soirées en ×4 depuis le jour 9 avec des alertes touchées au hasard, sans erreur.
 
 `npm test` : 352 tests en 14 secondes environ.
+
+## Bilans : défi de la semaine, objectif du mois, fin de mois (v0.4, partie 5)
+
+### Le défi de la semaine
+
+Il s'ouvre avec les tendances, au premier lundi après le palier 2. Il est annoncé au bilan du lundi, suivi dans l'onglet Maison (où on en est, ce qu'il rapporte), et jugé le lundi suivant. Onze défis (`src/content/defis.ts`), cibles dans `DEFIS` :
+
+- **Sept liés à une tendance** : congrès (12 clients d'affaires), match (au plus 3 disputes sur le quai), haute saison (28 touristes), enterrements de vie de garçon (2 000 € au bar, ou 25 clients des groupes sans bar), semaine creuse (55 clients), pluie ou fin du mois (+5 de satisfaction chez les habitués).
+- **Quatre ordinaires** : au plus 3 alertes laissées filer, 1 800 € au bar, au plus 15 % de clients perdus, 80 clients.
+
+Un défi lié à une tendance de la semaine pèse 3 fois plus au tirage, et jamais deux fois de suite le même. Le tirage a sa propre graine (numéro de la semaine) : il ne décale pas le hasard de la partie.
+
+Récompenses modestes : quelques points de satisfaction d'un segment, un point de réputation, du moral, des bouteilles offertes par le grossiste. Un défi raté ne coûte rien.
+
+### L'objectif du mois et le bilan de fin de mois
+
+Le jour de la mensualité, une carte en pause fait le bilan :
+
+- ce qui a été payé (et combien vient de la réserve) ;
+- l'avoir restant ;
+- la lettre de la banque si la mensualité est passée à découvert (un simple rappel à l'ordre : les conséquences viendront en v0.6) ;
+- l'objectif jugé, la mention de Josée et l'objectif du mois qui commence.
+
+| Mois | Objectif | Cible |
+| --- | --- | --- |
+| 1 | Se faire un nom | réputation 52 (`OBJECTIFS.reputationMois1`) |
+| 2 | Fidéliser la clientèle principale (le segment le plus reçu ces dernières nuits) | sa satisfaction + 8 |
+| 3 | Garder une réserve | 3 000 € après la mensualité |
+| 4 | Se faire un nom | réputation + 8 |
+| 5 | Garder l'équipe | aucun départ |
+
+Réussi : réputation +2 et moral +4 pour toute l'équipe.
+
+Après la première mensualité, le panneau « Prochain palier » et le bilan disent que la suite (palier 3) arrive avec la prochaine version : le joueur ne croit plus à un bug.
+
+Sauvegarde en version 20. Josée présente les objectifs (et les défis, si les tendances sont ouvertes) aux parties déjà avancées.
+
+### Réglages
+
+Mesures sur 20 parties de 56 nuits :
+
+- **Premier jet trop facile.** « Pas de dispute qui dégénère » réussissait toujours, car le joueur simulé règle chaque dispute : le défi compte désormais les disputes déclenchées. La semaine creuse (30 clients) réussissait 24 fois sur 25, et la recette du bar dépassait 2 000 € quand on en visait 700.
+- **Les défis ordinaires ne sortaient jamais**, parce qu'il y a une tendance chaque semaine. D'où le poids de 3 contre 1 plutôt qu'une priorité absolue.
+- **L'objectif du mois 1 à 35 de réputation réussissait 20 fois sur 20** (réputation moyenne de 54 au jour 28). À 52 : 14 sur 20 en classique, 18 en adaptatif, 20 en feutrée, 0 pour le passif.
+- **« Fidéliser le segment le moins content » échouait 19 fois sur 20.** C'est justement celui que la stratégie du joueur néglige, et il continue de baisser. On vise désormais la clientèle principale : 13 à 17 réussites sur 20.
+
+| Défi (classique / adaptatif, 20 parties × 8 semaines) | Réussis |
+| --- | --- |
+| Congrès | 7 sur 12 / 13 sur 13 : suivre la tendance paie |
+| Match | 0 sur 6 / 1 sur 4 : le portier aide, mais c'est dur |
+| Choyer les habitués | 6 sur 13 / 10 sur 16 |
+| Semaine creuse | 6 sur 12 / 14 sur 17 |
+| Rien ne nous échappe | 20 sur 24 / 16 sur 16 : le joueur simulé ne laisse rien filer ; un humain, si |
+
+### Renouvellement et bilans
+
+| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) | Défis réussis | Objectif du mois 1 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 7,2 | 20 % | 5,6 | 1,4 | 14,8 | 4,0 | 0 % | 15,9 | 9 sur 10, nuit 17 | 11 sur 20 | 6 sur 10 |
+| Feutrée, 4 | 4,3 | 49 % | 2,8 | 1,3 | 14,5 | 3,9 | 0 % | 14,7 | 1 sur 10, nuit 25 | 12 sur 20 | 10 sur 10 |
+| Adaptatif (suit les tendances), 3 | 5,8 | 25 % | 4,1 | 1,5 | 17,6 | 4,0 | 0 % | 14,7 | 2 sur 10, nuit 10 | 12 sur 20 | 5 sur 10 |
+| Classique 3, sélection laxiste | 7,3 | 21 % | 5,7 | 1,4 | 15,5 | 4,0 | 0 % | 15,8 | 10 sur 10, nuit 9 | 15 sur 20 | 3 sur 10 |
+| Classique 3, sélection stricte | 5,0 | 34 % | 3,5 | 1,4 | 15,4 | 4,0 | 0 % | 14,7 | 0 sur 10 | 11 sur 20 | 6 sur 10 |
+
+Les gardes de mécanique (`cartes: false`) ignorent aussi défis et objectifs : leurs récompenses touchent la réputation. La garde « le voisin descend pour au moins 6 joueurs classiques sur 10 » passe à 5 sur 10 : sur 20 graines, 12 parties sur 20, mais les 10 premières graines n'en donnent que 5.
+
+### À surveiller
+
+- **La réputation** : 55 à la nuit 28 en classique, 62 en happy hour ou en soirée feutrée. Les cibles des objectifs (52 au premier mois) sont calées sur ce niveau : **à revoir avec le rééquilibrage de la réputation de la partie 6**.
+- **Le défi du match** est presque impossible sans portier : voulu, mais à juger au téléphone.
+- **Le défi « Rien ne nous échappe »** dépend de l'attention du joueur, que la simulation ne sait pas mesurer.
+
+| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 3 à 4 | 35 / 45 / 55 | 161 € | 773 € | 3 654 € | 17 % | 90 | 0,0 | 28 / 24 / 13 / 35 | 78 / 56 / 24 / 60 |
+| Classique, 4 | 3 à 4 | 35 / 47 / 60 | 580 € | 1 168 € | 8 607 € | 9 % | 83 | 0,0 | 28 / 28 / 14 / 30 | 82 / 61 / 30 / 66 |
+| Happy hour, 4 | 2 à 3 | 42 / 53 / 62 | 265 € | 881 € | 3 999 € | 15 % | 83 | 0,3 | 34 / 28 / 14 / 24 | 87 / 66 / 25 / 64 |
+| Feutrée, 4 | 3 à 4 | 36 / 48 / 62 | 183 € | 786 € | 3 392 € | 1 % | 87 | 0,0 | 21 / 35 / 13 / 31 | 79 / 68 / 32 / 68 |
+| Adaptatif (suit les tendances), 3 | 3 à 4 | 35 / 47 / 59 | 151 € | 718 € | 2 837 € | 13 % | 93 | 0,0 | 27 / 29 / 12 / 31 | 74 / 64 / 33 / 60 |
+| Classique 3, sans bar | 3 à 4 | 35 / 45 / 52 | 199 € | 642 € | 3 964 € | 20 % | 89 | 0,0 | 28 / 24 / 14 / 35 | 74 / 53 / 22 / 56 |
+| Classique 3, bar à 2, sans avance | 3 à 4 | 35 / 45 / 57 | 54 € | 775 € | 1 174 € | 18 % | 92 | 0,0 | 28 / 25 / 13 / 35 | 80 / 58 / 28 / 61 |
+| Classique 3, champagne | 3 à 4 | 35 / 43 / 48 | 270 € | 884 € | 5 307 € | 15 % | 92 | 0,0 | 24 / 25 / 15 / 36 | 61 / 48 / 26 / 57 |
+| Classique 3, tarif −20 % | 3 à 4 | 37 / 49 / 59 | 39 € | 619 € | 553 € | 32 % | 90 | 0,0 | 33 / 26 / 14 / 28 | 85 / 61 / 21 / 64 |
+| Classique 3, tarif +20 % | 3 à 4 | 32 / 40 / 46 | 225 € | 832 € | 5 541 € | 4 % | 91 | 0,0 | 20 / 30 / 17 / 32 | 51 / 50 / 32 / 46 |
+| Classique 3, formule courte | 3 à 4 | 35 / 47 / 59 | 15 € | 542 € | 959 € | 9 % | 91 | 0,0 | 26 / 30 / 16 / 28 | 78 / 55 / 38 / 64 |
+| Classique 3, soirée complète | 3 à 4 | 34 / 43 / 52 | 531 € | 1 112 € | 6 909 € | 31 % | 88 | 0,0 | 27 / 35 / 7 / 31 | 72 / 61 / 17 / 53 |
+| Classique 3, sélection laxiste | 3 à 4 | 35 / 46 / 56 | 144 € | 798 € | 2 882 € | 20 % | 91 | 0,0 | 29 / 24 / 13 / 35 | 80 / 55 / 22 / 64 |
+| Classique 3, sélection stricte | 3 à 4 | 35 / 46 / 57 | 83 € | 660 € | 1 803 € | 14 % | 90 | 0,0 | 26 / 36 / 18 / 20 | 72 / 66 / 32 / 50 |
+| Classique 3, habitués d’abord | 3 à 4 | 35 / 45 / 55 | 133 € | 767 € | 2 166 € | 21 % | 90 | 0,0 | 25 / 29 / 10 / 36 | 74 / 59 / 24 / 60 |
+| Classique 3, pressés d’abord | 3 à 4 | 35 / 46 / 56 | 166 € | 780 € | 3 233 € | 20 % | 91 | 0,0 | 27 / 25 / 13 / 35 | 77 / 57 / 29 / 60 |
+| Passif (classique, sans recruter ni rénover) | 6 à 25 | 24 / 25 / 27 | -109 € | 193 € | -848 € | 61 % | 49 | 0,0 | 45 / 46 / 4 / 5 | 36 / 27 / 18 / 25 |
+
+Parties jouées dans le navigateur (version compilée, 844 × 390 et 667 × 375) : une ancienne sauvegarde reçoit les objectifs et les défis, présentés par Josée ; l'onglet Maison affiche le défi en cours (7 sur 12 clients d'affaires) et l'objectif du mois ; la veille de la mensualité, le temps avance et la carte « Fin du mois 1 » s'ouvre (objectif raté, 590 € pris dans la réserve, objectif suivant) ; la veille d'un lundi, le bilan de la semaine juge le défi du bar et annonce le suivant. Aucune erreur.
+
+`npm test` : 365 tests en 14 secondes environ.

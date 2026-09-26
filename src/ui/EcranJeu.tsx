@@ -16,6 +16,7 @@ import { CartePalier } from './CartePalier';
 import { CarteNouveautes } from './CarteNouveautes';
 import { CarteGrossiste } from './CarteGrossiste';
 import { CarteSemaine } from './CarteSemaine';
+import { CarteMois } from './CarteMois';
 import { Didacticiel } from './Didacticiel';
 import { Panneau } from './Panneau';
 import { useInterface, type Fiche } from './store';
@@ -91,6 +92,7 @@ export function EcranJeu() {
       {carte === 'nouveautes' && <CarteNouveautes partie={partie} />}
       {carte === 'grossiste' && <CarteGrossiste />}
       {carte === 'semaine' && <CarteSemaine partie={partie} />}
+      {carte === 'mois' && <CarteMois partie={partie} />}
       {carte === 'entretien' && <CarteEntretien partie={partie} />}
       {carte === 'essai' && <CarteEssai partie={partie} />}
       {carte === 'imprevu' && <CarteImprevu partie={partie} />}

@@ -5,6 +5,7 @@ import type { Offre, Segment } from '../content/clientele';
 import type { ParSegment } from './clientele';
 import { creerEtatInitial, type EtatJeu, type Regles } from './etat';
 import type { BilanSemaine } from './semaine';
+import type { BilanMois } from './bilans';
 import { appliquerOrdresSurPlace, tickSurPlace, type Ordre } from './tick';
 import { alertes } from './alertes';
 import { creerTirage } from './hasard';
@@ -74,8 +75,8 @@ export interface OptionsSimulation {
   /** Faux : aucune intrigue ne démarre (pour mesurer une mécanique seule, comme sans tendance). */
   intrigues?: boolean;
   /**
-   * Faux : ni imprévu, ni intrigue, ni alerte minutée, et les disputes laissées à elles-mêmes, comme le joueur
-   * simulé de la v0.3 (pour mesurer une mécanique seule, sans le bruit des cartes).
+   * Faux : ni imprévu, ni intrigue, ni alerte minutée, ni défi ni récompense du mois, et les disputes laissées à
+   * elles-mêmes, comme le joueur simulé de la v0.3 (pour mesurer une mécanique seule, sans le bruit des cartes).
    */
   cartes?: boolean;
 }
@@ -92,6 +93,8 @@ export function simuler(options: OptionsSimulation): {
   tresorerieMin: number;
   /** Intrigues et suites terminées, avec leur dénouement. */
   intrigues: IntrigueFinie[];
+  /** Bilans de fin de mois. */
+  bilansMois: BilanMois[];
 } {
   const { graine, nuits, recruter = true, renover = true, rdvMax = 3, equipeBar = 1, avance = true } = options;
   const etat = creerEtatInitial({ graine });
@@ -102,6 +105,7 @@ export function simuler(options: OptionsSimulation): {
   const resumes: ResumeNuit[] = [];
   let departs = 0;
   const bilans: BilanSemaine[] = [];
+  const bilansMois: BilanMois[] = [];
   let tresorerieMin = etat.tresorerie;
   let avoirPrecedent = etat.tresorerie + etat.reserve;
   // Compteurs de la nuit en cours, pour mesurer le renouvellement des soirées.
@@ -132,7 +136,12 @@ export function simuler(options: OptionsSimulation): {
     // Sans cartes : l'imprévu suivant est repoussé indéfiniment.
     if (sansCartes) etat.prochainImprevu = Number.MAX_SAFE_INTEGER;
     const r = { evenements: tickSurPlace(etat, ordres) };
-    if (sansCartes) etat.minuteries = [];
+    if (sansCartes) {
+      // Ni alerte minutée, ni défi, ni objectif du mois à récompenser : la mécanique seule.
+      etat.minuteries = [];
+      etat.defi = null;
+      etat.mois = { ...etat.mois, objectif: 'reputation', cible: 999 };
+    }
     tresorerieMin = Math.min(tresorerieMin, etat.tresorerie);
     const ouvert = estOuvert(etat);
     const alertesMaintenant = new Set(ouvert ? alertes(etat).map((a) => `${a.type}|${'chambreId' in a ? a.chambreId : 'employeId' in a ? a.employeId : ''}`) : []);
@@ -150,6 +159,7 @@ export function simuler(options: OptionsSimulation): {
       }
       if (e.type === 'depart') departs += 1;
       if (e.type === 'bilanSemaine' && etat.bilanSemaine) bilans.push(structuredClone(etat.bilanSemaine));
+      if (e.type === 'bilanMois' && etat.bilanMois) bilansMois.push(structuredClone(etat.bilanMois));
       if (e.type === 'bilan') {
         resumes.push({
           numero: e.nuit.numero,
@@ -255,7 +265,7 @@ export function simuler(options: OptionsSimulation): {
       jouer([{ type: 'validerBriefing', offre, commanderLinge: etat.linge < 40, commanderBar, repos, rdvMax, theme }]);
     }
   }
-  return { nuits: resumes, etat, departs, bilans, tresorerieMin, intrigues: etat.intrigues.finies };
+  return { nuits: resumes, etat, departs, bilans, tresorerieMin, intrigues: etat.intrigues.finies, bilansMois };
 }
 
 /** Part de chaque segment parmi les clients servis sur un ensemble de nuits, en %. */
