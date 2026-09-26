@@ -6,7 +6,7 @@ import { ALERTES } from './balance';
 
 const euros = (n: number) => `${n.toLocaleString('fr-FR')} €`;
 
-export type IdAlerte = 'presse' | 'bruit' | 'ivre' | 'bouteille' | 'photographe' | 'pause';
+export type IdAlerte = 'presse' | 'bruit' | 'ivre' | 'bouteille' | 'photographe' | 'pause' | 'sabotage';
 
 export interface TexteAlerte {
   /** Libellé de la bulle (lu par les lecteurs d'écran) et titre de la carte. */
@@ -75,6 +75,18 @@ export const TEXTES_ALERTES: Record<IdAlerte, TexteAlerte> = {
     traitee: ['Tu te plantes devant l’objectif, bras croisés. Le photographe range son matériel.', 'Le photographe empoche le billet et se découvre une passion pour les péniches.'],
     manquee: 'Le photographe a mitraillé la porte toute la soirée. Les clients discrets ne reviendront pas de sitôt.',
     rate: 'Le photographe recule de dix mètres, et continue.',
+  },
+  sabotage: {
+    titre: 'Un client fait un scandale',
+    texte: 'Sur le quai, un homme en costume trop neuf crie qu’on l’a volé et prend les passants à témoin. La fleuriste d’en face jure l’avoir vu sortir du Chat Noir il y a dix minutes.',
+    actions: [
+      { texte: 'Le raccompagner fermement', detail: 'Ça marche souvent ; sinon, la bagarre' },
+      { texte: 'Lui rembourser sa « soirée »', detail: `${euros(ALERTES.sabotage.remboursement)}, et il s’en va` },
+    ],
+    journal: 'Un faux client fait un scandale sur le quai.',
+    traitee: ['Tu raccompagnes l’homme au bout du quai, un bras amical autour des épaules. Il ne revient pas.', 'L’homme empoche les billets et file, en direction du Chat Noir.'],
+    manquee: 'Le scandale a duré une heure : police, badauds, et un journaliste. Le Chat Noir a gagné sa soirée.',
+    rate: 'L’homme se débat et renverse une table. La dispute gagne le quai.',
   },
   pause: {
     titre: '{prenom} demande une pause',

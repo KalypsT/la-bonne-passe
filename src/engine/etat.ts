@@ -24,6 +24,7 @@ import { semaineDeDepart, type BilanSemaine, type Semaine } from './semaine';
 import { intriguesDeDepart, type Intrigues } from './intrigues';
 import { quartierDeDepart, type Quartier } from './quartier';
 import { relationsDeDepart, type Relations } from './relations';
+import { rivaleDeDepart, type Rivale } from './rivale';
 import type { AlerteMinutee } from './minuteries';
 import { moisDeDepart, type BilanMois, type Mois } from './bilans';
 
@@ -53,6 +54,8 @@ export interface Systemes {
   themes: boolean;
   /** Défis de la semaine, annoncés au bilan du lundi (en même temps que les tendances, v0.4). */
   defis: boolean;
+  /** La maison rivale, le Chat Noir (palier 3, v0.5) : elle agit à partir du lundi suivant. */
+  rivale: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -173,7 +176,7 @@ export interface Candidat extends Identite {
   intro: string;
   questions: QuestionEntretien[];
   partMin: number;
-  source: 'visite' | 'annonce' | 'boucheAOreille';
+  source: 'visite' | 'annonce' | 'boucheAOreille' | 'debauchage';
   /** Jour à partir duquel le candidat ne t'attend plus. */
   expire: number;
   /** Question posée à l'entretien (indice), ou null. */
@@ -350,6 +353,10 @@ export interface EtatJeu {
   relations: Relations;
   /** Générateur à part pour les événements et les actions du quartier (v0.5). */
   hasardQuartier: number;
+  /** La maison rivale, le Chat Noir (v0.5, palier 3). */
+  rivale: Rivale;
+  /** Générateur à part pour la rivale (v0.5). */
+  hasardRivale: number;
   /** Étape du didacticiel de Madame Josée, ou null s'il est fini ou passé. */
   didacticiel: number | null;
   /** État courant du générateur pseudo-aléatoire. */
@@ -357,7 +364,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 21;
+export const VERSION_ETAT = 22;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -378,6 +385,7 @@ export function systemesDeDepart(): Systemes {
     tendances: false,
     themes: false,
     defis: false,
+    rivale: false,
   };
 }
 
@@ -525,6 +533,8 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     quartier: quartierDeDepart(),
     relations: relationsDeDepart(),
     hasardQuartier: ((options.graine ?? GRAINE_PAR_DEFAUT) * 31 + 7) | 0,
+    rivale: rivaleDeDepart(),
+    hasardRivale: ((options.graine ?? GRAINE_PAR_DEFAUT) * 17 + 3) | 0,
     didacticiel: options.didacticiel ? 0 : null,
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,
   };

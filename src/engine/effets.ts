@@ -10,6 +10,7 @@ import type { Talent } from '../content/personnel';
 import { aTrait, changerLoyaute, changerMoral, ajusterAffinite, depart, type EvenementPersonnel } from './personnel';
 import { changerTapage } from './quartier';
 import { changerRelations, type EvenementRelation } from './relations';
+import { changerAgressivite, changerRapports, type EvenementRivale } from './rivale';
 
 const borner = (v: number, min = 0, max = 100) => Math.min(max, Math.max(min, v));
 
@@ -32,7 +33,9 @@ export interface OutilsEffet {
   demarrerSuite: (id: string, delai: number, employeId: string | null) => void;
   /** Fait entrer une candidate ou un candidat remarquable au salon. */
   candidatVedette?: () => void;
-  evenements?: { push(e: EvenementPersonnel | EvenementRelation): unknown };
+  /** Fait entrer une recrue débauchée au Chat Noir au salon (v0.5). */
+  candidatRival?: () => void;
+  evenements?: { push(e: EvenementPersonnel | EvenementRelation | EvenementRivale): unknown };
   /** Multiplie les effets de réputation et de satisfaction (les imprévus, nombreux, pèsent moins lourd). */
   forceSatisfaction?: number;
 }
@@ -87,9 +90,16 @@ export function appliquerEffet(etat: EtatJeu, effet: EffetCarte, qui: Concernes,
   if (effet.insonoriser) etat.quartier.insonorise = true;
   if (effet.relations) changerRelations(etat, effet.relations, evenements);
   if (effet.affluenceSoir) etat.relations.affluenceSoir = Math.min(etat.relations.affluenceSoir, effet.affluenceSoir);
+  if (effet.rivale?.agressivite) changerAgressivite(etat, effet.rivale.agressivite, evenements);
+  if (effet.rivale?.relation) changerRapports(etat, effet.rivale.relation);
+  if (effet.concurrence) etat.rivale.concurrence = effet.concurrence;
+  if (effet.candidatRival) outils.candidatRival?.();
   for (let i = 0; i < (effet.clients ?? 0); i++) outils.ajouterClient(effet.clientsSegment);
   if (effet.candidatVedette) outils.candidatVedette?.();
   if (effet.suite) outils.demarrerSuite(effet.suite.id, effet.suite.delai, qui.employeId);
   // Le départ en dernier : la personne a reçu ce que le choix lui réservait.
-  if (e && effet.depart && etat.personnel.includes(e)) depart(etat, e, evenements);
+  if (e && effet.depart && etat.personnel.includes(e)) {
+    if (effet.transfuge) etat.rivale.transfuges.push(e.prenom);
+    depart(etat, e, evenements);
+  }
 }

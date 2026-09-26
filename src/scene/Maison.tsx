@@ -73,6 +73,7 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
         <rect x="530" y="200" width="10" height="15" opacity=".35" />
         <rect x="566" y="265" width="10" height="15" />
       </g>
+      {partie.systemes.rivale && <EnseigneChatNoir nuit={1 - jour} />}
 
       {/* Pignon à gradins et poutre de levage */}
       <path d="M200 70V52H220V34H240V16H360V34H380V52H400V70Z" fill="url(#brique)" />
@@ -439,5 +440,25 @@ function Motifs() {
         <feGaussianBlur stdDeviation="2.5" />
       </filter>
     </defs>
+  );
+}
+
+/** L'enseigne du Chat Noir, la maison rivale, sur la façade voisine (palier 3). Allumée la nuit. */
+function EnseigneChatNoir({ nuit }: { nuit: number }) {
+  return (
+    <g className="enseigne-rivale" aria-hidden="true">
+      <rect x="524" y="300" width="68" height="30" rx="5" fill="#101418" stroke="#D4A64A" strokeWidth="1.2" opacity=".95" />
+      {/* Le chat, assis, queue en crosse */}
+      <path
+        d="M534 325V314L531.5 308.5L535.5 311.5H539.5L543.5 308.5L541 314V325Z M541 324Q548 324 546 318"
+        fill="#0B0B0E"
+        stroke="#D4A64A"
+        strokeWidth=".9"
+        opacity={0.5 + 0.5 * nuit}
+      />
+      <text x="569" y="319" textAnchor="middle" fontFamily="Yellowtail, cursive" fontSize="11" fill="#D4A64A" opacity={0.55 + 0.45 * nuit}>
+        Chat Noir
+      </text>
+    </g>
   );
 }

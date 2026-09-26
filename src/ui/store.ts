@@ -20,7 +20,8 @@ export type Fiche =
   | { type: 'employe'; id: string }
   | { type: 'segment'; id: Segment }
   | { type: 'regles'; id: 'regles' }
-  | { type: 'acteur'; id: IdActeur };
+  | { type: 'acteur'; id: IdActeur }
+  | { type: 'rivale'; id: 'chatNoir' };
 export type Carte =
   | 'briefing'
   | 'bilan'
@@ -361,7 +362,7 @@ export const useInterface = create<EtatInterface>((set, get) => ({
         ? 'personnel'
         : fiche?.type === 'segment' || fiche?.type === 'regles'
           ? 'clientele'
-          : fiche?.type === 'acteur'
+          : fiche?.type === 'acteur' || fiche?.type === 'rivale'
             ? 'relations'
             : 'maison';
     set(fiche ? { fiche, onglet } : { fiche: null });

@@ -29,6 +29,7 @@ import { cloreSemaine, type EvenementSemaine } from './semaine';
 import { avancerIntrigues, matinDesIntrigues, trancherIntrigue, type EvenementIntrigue, type OrdreIntrigue } from './intrigues';
 import { matinDuQuartier } from './quartier';
 import { agirRelation, matinDesRelations, type EvenementRelation, type OrdreRelation } from './relations';
+import { lundiDeLaRivale, repondreRivale, type EvenementRivale, type OrdreRivale } from './rivale';
 import { traiterAlerte, type OrdreMinuterie } from './minuteries';
 
 /** Ordres envoyés par l'interface au moteur. */
@@ -69,7 +70,8 @@ export type Ordre =
   | OrdreMinuterie
   | OrdreRegle
   | OrdreBar
-  | OrdreRelation;
+  | OrdreRelation
+  | OrdreRivale;
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -91,7 +93,8 @@ export type EvenementMoteur =
   | EvenementImprevu
   | EvenementIntrigue
   | EvenementSemaine
-  | EvenementRelation;
+  | EvenementRelation
+  | EvenementRivale;
 
 /** Taille du journal gardé dans la sauvegarde. */
 export const TAILLE_JOURNAL = 50;
@@ -268,6 +271,9 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'actionRelation':
       agirRelation(etat, ordre.action, evenements);
       return;
+    case 'reponseRivale':
+      repondreRivale(etat, ordre.reponse, evenements);
+      return;
     case 'choixIntrigue': {
       const tirage = creerTirage(etat.hasard);
       trancherIntrigue(etat, ordre.choix, tirage, (segment) => arrivee(etat, tirage, evenements, segment), evenements);
@@ -321,7 +327,11 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     etat.jour += 1;
     evenements.push({ type: 'nouveauJour', jour: etat.jour });
     // Le lundi, la semaine écoulée se referme en bilan avant les charges de la nouvelle.
-    if (jourDeLaSemaine(etat.jour) === 0) cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
+    if (jourDeLaSemaine(etat.jour) === 0) {
+      cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
+      // Le Chat Noir fait ses comptes, lui aussi, et décide de sa semaine.
+      lundiDeLaRivale(etat, evenements);
+    }
     prelevementsDuMatin(etat, evenements);
     matinRecrutement(etat, tirage, evenements);
     matinDuPersonnel(etat, evenements);

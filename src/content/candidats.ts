@@ -110,6 +110,9 @@ export const ACCROCHES = [
 export const INTRO_VEDETTE = (prenom: string, genre: 'f' | 'm') =>
   `${prenom} a passé la soirée au bar à observer la maison. ${genre === 'f' ? 'Elle' : 'Il'} a travaillé dans les plus belles maisons de Paris, et ${genre === 'f' ? 'elle' : 'il'} le sait.`;
 
+export const INTRO_DEBAUCHAGE = (prenom: string, genre: 'f' | 'm') =>
+  `${prenom} arrive du Chat Noir, un foulard noir noué au poignet. « Colette Vos paie bien, mais elle ne dit jamais merci. On m’a dit qu’ici, si. » ${genre === 'f' ? 'Elle' : 'Il'} connaît déjà les habitués de l’autre rive.`;
+
 export const INTROS = {
   annonce: (prenom: string) => `${prenom} a répondu à ta petite annonce. Le papier est encore plié dans sa poche.`,
   boucheAOreille: (prenom: string) => `${prenom} vient de la part d’une amie de Sanne. « Il paraît que la maison est correcte. »`,

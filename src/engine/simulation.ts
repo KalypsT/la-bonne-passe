@@ -16,6 +16,7 @@ import { estOuvert } from './temps';
 import { TEXTES_ALERTES } from '../content/alertes';
 import { ACTEURS_ORDRE, type IdActeur } from '../content/relations';
 import { actionPossible } from './relations';
+import { reponsePossible } from './rivale';
 
 export interface ResumeNuit {
   numero: number;
@@ -52,6 +53,8 @@ export interface ResumeNuit {
   relations: Record<IdActeur, number>;
   /** Actions de relations menées depuis la nuit précédente. */
   actionsRelations: number;
+  /** La rivale à la fermeture (v0.5) : agressivité et vos rapports ; ses actions depuis la nuit précédente. */
+  rivale: { agressivite: number; relation: number; actions: string[] };
 }
 
 /** Comment le joueur simulé tranche les cartes : le premier choix possible, ou au hasard (graine à part). */
@@ -92,6 +95,11 @@ export interface OptionsSimulation {
   relations?: 'aucune' | 'entretien';
   /** Cible du joueur qui entretient ses relations (10 par défaut). */
   cibleRelations?: number;
+  /**
+   * Réponse à la rivale (v0.5) : « aucune » (par défaut), « treve » (propose une trêve dès que possible),
+   * « riposte » (lance une rumeur chaque semaine où elle a agi).
+   */
+  rivale?: 'aucune' | 'treve' | 'riposte';
 }
 
 const ORDRE_RENOVATION = ['orientale', 'velours', 'miroirs'];
@@ -128,6 +136,7 @@ export function simuler(options: OptionsSimulation): {
   let alertesNuit: Record<string, number> = {};
   let alertesAvant = new Set<string>();
   let actionsRelations = 0;
+  let actionsRivale: string[] = [];
   const bullesVues = new Set<string>();
   const hasard = creerTirage((graine * 7919) | 0);
   const trancher = (possibles: boolean[]): number => {
@@ -177,6 +186,7 @@ export function simuler(options: OptionsSimulation): {
         if (ouvert) intriguesSoiree += 1;
       }
       if (e.type === 'depart') departs += 1;
+      if (e.type === 'rivaleAgit') actionsRivale.push(e.action);
       if (e.type === 'bilanSemaine' && etat.bilanSemaine) bilans.push(structuredClone(etat.bilanSemaine));
       if (e.type === 'bilanMois' && etat.bilanMois) bilansMois.push(structuredClone(etat.bilanMois));
       if (e.type === 'bilan') {
@@ -202,8 +212,10 @@ export function simuler(options: OptionsSimulation): {
           decisions: imprevusNuit.length + intriguesSoiree + Object.values(alertesNuit).reduce((a, b) => a + b, 0),
           relations: { ...etat.relations.jauges },
           actionsRelations,
+          rivale: { agressivite: etat.rivale.agressivite, relation: etat.rivale.relation, actions: actionsRivale },
         });
         actionsRelations = 0;
+        actionsRivale = [];
         avoirPrecedent = etat.tresorerie + etat.reserve;
         imprevusNuit = [];
         intriguesNuit = [];
@@ -290,6 +302,13 @@ export function simuler(options: OptionsSimulation): {
             actionsRelations += 1;
           }
         }
+      }
+      if (options.rivale === 'treve' && etat.systemes.rivale && etat.rivale.agressivite >= 40 && reponsePossible(etat, 'treve') && etat.tresorerie > 1500) {
+        jouer([{ type: 'reponseRivale', reponse: 'treve' }]);
+      }
+      const aAgi = etat.rivale.derniereAction && etat.jour - etat.rivale.derniereAction.jour < 7;
+      if (options.rivale === 'riposte' && aAgi && reponsePossible(etat, 'rumeur') && etat.tresorerie > 1000) {
+        jouer([{ type: 'reponseRivale', reponse: 'rumeur' }]);
       }
       for (const e of etat.personnel) {
         if (e.moral < 45) jouer([{ type: 'entretienIndividuel', employeId: e.id, reponse: 'ecouter' }]);

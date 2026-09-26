@@ -265,6 +265,7 @@ export const TEXTES = {
       visite: 'Visite à la maison',
       annonce: 'Petite annonce',
       boucheAOreille: 'Bouche-à-oreille',
+      debauchage: 'De chez le Chat Noir',
     },
     attendJusquA: (jour: string) => `Attend ta réponse jusqu’à ${jour}`,
     titreCandidate: 'Une candidate',

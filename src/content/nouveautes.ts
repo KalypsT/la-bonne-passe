@@ -48,6 +48,11 @@ export const NOUVEAUTES: Nouveaute[] = [
     palier: 2,
     texte: 'Un défi chaque semaine, annoncé au bilan du lundi et lié à ce qui se passe en ville. Réussi, il rapporte.',
   },
+  {
+    id: 'rivale',
+    palier: 3,
+    texte: 'Le Chat Noir, de l’autre côté du canal : Colette Vos réagit chaque lundi à ce que tu lui prends. Sa fiche est dans l’onglet Relations, avec tes réponses.',
+  },
 ];
 
 export function trouverNouveaute(id: string): Nouveaute | undefined {

@@ -16,6 +16,7 @@ import {
   relationsOuvertes,
   type EvenementRelation,
 } from './relations';
+import { demandeRivale, type EvenementRivale } from './rivale';
 import { declencherImprevu, type EvenementImprevu } from './imprevus';
 import { aTrait, nuitDuPersonnel, type EvenementPersonnel } from './personnel';
 import { revelerTraits, type EvenementRecrutement } from './recrutement';
@@ -93,7 +94,8 @@ export type EvenementSoiree =
   | EvenementTheme
   | EvenementMinuterie
   | EvenementBilan
-  | EvenementRelation;
+  | EvenementRelation
+  | EvenementRivale;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -269,7 +271,7 @@ export function poidsSegment(etat: EtatJeu, segment: Segment): number {
 
 /** Demande d'un segment : l'effet inverse du tarif, et les tendances de la semaine. */
 function demandeSegment(etat: EtatJeu, segment: Segment): number {
-  return demandePrix(etat, segment) * demandeTendance(etat, segment) * demandeRelations(etat, segment);
+  return demandePrix(etat, segment) * demandeTendance(etat, segment) * demandeRelations(etat, segment) * demandeRivale(etat, segment);
 }
 
 /**

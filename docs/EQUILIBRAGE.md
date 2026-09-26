@@ -1036,3 +1036,46 @@ Le joueur « relations entretenues » agit dès qu'un acteur passe sous +10 ; le
 - **Les événements du quartier restent rares sans action du joueur** (0,5 par partie au deuxième mois en classique) : les cartes du quartier de la partie 5, hors seuils, doivent nourrir les soirées.
 - **Le prix des actions** : 4 000 à 5 000 € pour tout porter au-dessus de +40, pour des services modestes. À juger en jouant, et à revoir quand la rivale et la visibilité arriveront.
 - **La presse** monte vite chez un joueur qui accepte tous les journalistes.
+
+
+## La rivale : le Chat Noir (v0.5, partie 3)
+
+Le Chat Noir s'ouvre avec le palier 3 (drapeau `rivale`), se présente au premier lundi par une carte de visite, puis agit chaque lundi. Valeurs dans `RIVALE` et `RIVALE_ARGENT` (`balance.ts`), textes et cartes dans `src/content/rivale.ts`, moteur dans `src/engine/rivale.ts` (générateur à part, `hasardRivale`).
+
+### Son humeur
+
+- **Cible d'agressivité** : (réputation − 30) × 2 + part des habitués et des clients d'affaires reçus ces 7 dernières nuits × 60, bornée entre 0 et 100. Chaque lundi, l'agressivité fait la moitié du chemin.
+- **Chance d'agir un lundi** : agressivité / 100 × 1,2. À 0,9 (premier essai), le joueur classique ne voyait que 1,5 coup au deuxième mois.
+- **Coups possibles** (poids, agressivité minimale) : prix cassés (3, dès 0), rumeur (3, dès 20), faux client (2, dès 50), débauchage (2, dès 40, un par mois au plus, s'il reste une place d'intrigue et une cible). En trêve, rien ; en bons rapports (+40), une main tendue une fois sur deux.
+
+### Mesures (10 graines, 56 nuits, cartes tranchées au hasard)
+
+| Stratégie (56 nuits) | Agressivité, nuit 56 | Rapports | Coups par partie, mois 2 (total sur les parties) | Faux clients par partie | Débauchages (dénouements) | Avoir, nuit 56 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 58 | 4 | 2,1 (rumeur 10, debauchage 1, sabotage 8, prix 2) | 0,8 | 1 (fidele 1) | 4 383 € |
+| Classique 3, sélection laxiste | 54 | 4 | 1,6 (rumeur 9, debauchage 2, sabotage 3, prix 2) | 0,3 | 2 (reste 1, fidele 1) | 5 449 € |
+| Classique 3, sélection stricte | 72 | -7 | 2,1 (rumeur 12, debauchage 2, sabotage 6, prix 1) | 0,6 | 2 (reste 2) | -138 € |
+| Feutrée, 4 | 87 | 1 | 2,7 (rumeur 8, prix 7, debauchage 3, sabotage 9) | 0,9 | 3 (reste 3) | 4 022 € |
+| Classique 3, trêve dès que possible | 47 | 15 | 1,1 (rumeur 6, sabotage 3, prix 2) | 0,3 | 0 | 3 930 € |
+| Classique 3, riposte par rumeur | 75 | -29 | 2,3 (rumeur 10, prix 3, sabotage 7, debauchage 3) | 0,7 | 3 (reste 1, fidele 2) | 4 901 € |
+
+- **Elle frappe là où on lui prend quelque chose** : la soirée feutrée, qui vit de ses habitués, la met en guerre (87), la porte laxiste (touristes et groupes) la laisse sur ses gardes (54). Coups au deuxième mois : 2,7 en soirée feutrée, 1,6 en porte laxiste.
+- **Elle coûte** : environ 1 100 € sur le deuxième mois en classique (avoir de 5 547 € en partie 2, 4 383 € aujourd'hui), 1 650 € en soirée feutrée.
+- **Répondre change la suite** : la trêve la calme (47) et divise ses coups par deux, pour environ 450 € de dîners ; la riposte par rumeur la met en colère (75, rapports −29).
+- **Le débauchage échoue souvent** : un joueur qui soigne son équipe voit sa personne décliner d'elle-même (« reste »). Le départ au Chat Noir n'arrive que si le moral ou la loyauté ont flanché (sous 45 ou 50).
+
+### Gardes (`equilibrage-quartier.test.ts`, joueur attentif, 10 graines, 56 nuits)
+
+- Elle se présente dans chaque partie, puis frappe de 1,5 à 4 fois au deuxième mois (2,3 mesurés en classique).
+- Soirée feutrée : au moins 15 points d'agressivité de plus que la porte laxiste (90 contre 70).
+- Trêve : au moins 5 points d'agressivité de moins que sans réponse, et moins de coups (0,9 contre 2,3).
+
+### Dans le navigateur (vite preview, 844 × 390 et 667 × 375)
+
+Une partie de la nuit 27 (sauvegarde v21, migrée) : fin du mois, palier 3 (qui annonce le Chat Noir), puis au lundi 29 le bilan de la semaine (« Le Chat Noir · Une carte de visite ») et, à 11 h, la carte « Une carte de visite noire ». L'enseigne du Chat Noir s'allume sur la façade voisine. L'onglet Relations montre « La concurrence » sous les acteurs ; la fiche présente Colette Vos, son humeur, vos rapports, et les trois réponses (63 % de chances de trêve au départ). Un faux client apparaît en soirée : bulle au chat noir devant la porte, carte à deux actions. Aucune erreur dans la console.
+
+### À surveiller
+
+- **La soirée feutrée n'est pas plus animée le soir** : la rivale joue surtout le lundi, en journée, et son seul coup du soir (le faux client) sort moins d'une fois par mois. Les cartes du quartier de la partie 5 doivent porter le soir.
+- **La porte stricte s'appauvrit toujours** au deuxième mois (−138 € à la nuit 56) : à reprendre au rééquilibrage final.
+- **Le débauchage** : rare et souvent sans suite pour un joueur attentif. À juger en jouant ; on peut abaisser les seuils de fragilité si l'histoire manque.

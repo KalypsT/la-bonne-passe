@@ -200,6 +200,8 @@ function positionMinuterie(a: Extract<Alerte, { type: 'minuterie' }>, partie: Et
     }
     case 'bruit':
       return POSITIONS.bulleQuai;
+    case 'sabotage':
+      return POSITIONS.bulleSabotage;
     case 'photographe':
       return POSITIONS.bullePhotographe;
     case 'bouteille':
@@ -317,6 +319,15 @@ function PictoMinuterie({ id }: { id: IdAlerte }) {
           <rect x="-5.5" y="-3" width="11" height="8" rx="1.5" fill="#1C1C22" />
           <rect x="-2" y="-5" width="4" height="2" fill="#1C1C22" />
           <circle cy="1" r="2.4" fill="#5FA3A8" />
+        </g>
+      );
+    case 'sabotage':
+      // Tête de chat noir
+      return (
+        <g>
+          <path d="M-5 5V-3L-3.5 -6.5L-1.5 -3.5H1.5L3.5 -6.5L5 -3V5Z" fill="#1C1C22" />
+          <circle cx="-2" cy="0" r="1" fill="#D4A64A" />
+          <circle cx="2" cy="0" r="1" fill="#D4A64A" />
         </g>
       );
     case 'pause':

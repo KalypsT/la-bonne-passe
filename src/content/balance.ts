@@ -622,6 +622,8 @@ export const ALERTES = {
   bouteille: { chance: 0.3, delai: 40, prix: 40 },
   /** Un photographe rôde sur le quai (palier 2, réputation assez haute, un client d'affaires présent). */
   photographe: { reputationMin: 30, chance: 0.5, delai: 50, billet: 20, satisfactionManquee: 3 },
+  /** Un faux client envoyé par le Chat Noir fait un scandale sur le quai (v0.5, décidé le lundi par la rivale). */
+  sabotage: { delai: 50, remboursement: 60, reussite: 0.6, reputation: 2, presse: -4, police: -3 },
   /** Une personne fatiguée demande une pause (`minutes` : durée de la pause, en temps de simulation). */
   pause: { fatigueMin: 50, chance: 0.9, delai: 60, minutes: 20, fatigue: 10, moral: 3, refus: 3, moralManque: 6, loyauteManque: 2 },
 };
@@ -733,4 +735,59 @@ export const QUARTIER_ARGENT = {
   fuiteAvocat: 300,
   portierSoir: 80,
   controleAvocat: 200,
+};
+
+// ——— v0.5 : la maison rivale, le Chat Noir (palier 3) ———
+
+/**
+ * Le Chat Noir, la maison chic qui débauche. Chaque lundi (à partir du premier lundi après le palier 3), son agressivité
+ * se rapproche d'une cible qui dit combien la maison lui fait de l'ombre, puis elle agit peut-être.
+ * Cible : (réputation − reputationNeutre) × parReputation + part des habitués et des clients d'affaires reçus
+ * ces dernières nuits (0 à 1) × parClientele, bornée entre 0 et 100.
+ */
+export const RIVALE = {
+  agressiviteDepart: 30,
+  relationDepart: 0,
+  reputationNeutre: 30,
+  parReputation: 2,
+  parClientele: 60,
+  /** Part du chemin vers la cible parcourue chaque lundi. */
+  rapprochement: 0.5,
+  /** Chance d’agir un lundi : agressivité / 100 × ce facteur (certaine à partir de 84). */
+  chanceAction: 1.2,
+  /** Poids de chaque action au tirage, et agressivité minimale pour qu'elle soit possible. */
+  actions: {
+    prix: { poids: 3, min: 0 },
+    rumeur: { poids: 3, min: 20 },
+    sabotage: { poids: 2, min: 50 },
+    debauchage: { poids: 2, min: 40 },
+  } as Record<string, { poids: number; min: number }>,
+  /** Au moins tant de jours entre deux tentatives de débauchage. */
+  debauchageRepit: 28,
+  /** Relation assez bonne : au lieu d'agir, elle propose parfois un échange de bons procédés. */
+  allianceRelation: 40,
+  allianceChance: 0.5,
+  /** Baisse de prix : demande des habitués et des clients d'affaires multipliée jusqu'au lundi suivant. */
+  prixConcurrence: 0.8,
+  /** La même semaine, si la maison offre une coupe à ses habitués. */
+  prixAttenue: 0.95,
+  /** Faux client : chance par heure d'ouverture qu'il se présente, une fois le sabotage décidé. */
+  sabotageChanceParHeure: 0.6,
+  /** Débauchage : sous ce moral ou cette loyauté, la personne reçoit une offre ferme. */
+  moralFragile: 45,
+  loyauteFragile: 50,
+  /** Réponses du joueur, une par semaine. */
+  reponseRepit: 7,
+  rumeur: { cout: 80, reussite: 0.55, concurrence: 1.1 },
+  treve: { cout: 200, jours: 14, chanceBase: 0.3, chanceRelation: 0.6 },
+  debaucher: { relation: -15, agressivite: 15 },
+};
+
+/** Les sommes en jeu dans les cartes du Chat Noir. */
+export const RIVALE_ARGENT = {
+  fleurs: 40,
+  coupeHabitues: 150,
+  dementi: 100,
+  primeDiscrete: 150,
+  contreOffre: 300,
 };

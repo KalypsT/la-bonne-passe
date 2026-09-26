@@ -6,6 +6,8 @@ import { INTRIGUES, trouverIntrigue, type ConditionIntrigue, type EtapeIntrigue,
 import type { Segment } from '../content/clientele';
 import type { IdActeur } from '../content/relations';
 import type { EvenementRelation } from './relations';
+import type { EvenementRivale } from './rivale';
+import { candidatRival, type EvenementRecrutement } from './recrutement';
 import type { EtatJeu } from './etat';
 import { appliquerEffet, effetPossible } from './effets';
 import type { Tirage } from './hasard';
@@ -55,7 +57,7 @@ export type EvenementIntrigue =
 export type OrdreIntrigue = { type: 'choixIntrigue'; choix: number };
 
 interface Sortie {
-  push(e: EvenementIntrigue | EvenementPersonnel | EvenementRelation): unknown;
+  push(e: EvenementIntrigue | EvenementPersonnel | EvenementRelation | EvenementRivale | EvenementRecrutement): unknown;
 }
 
 /** Instant absolu d'une heure de l'horloge, un jour donné (le jour commence à 5 h). */
@@ -73,14 +75,17 @@ export function conditionRemplie(etat: EtatJeu, c: ConditionIntrigue | undefined
   if (c.pointsMin !== undefined && points < c.pointsMin) return false;
   if (c.pointsMax !== undefined && points > c.pointsMax) return false;
   const e = etat.personnel.find((x) => x.id === (employeId ?? c.employe));
-  const personnelle = c.moralMin !== undefined || c.moralMax !== undefined || c.nuitsMin !== undefined || c.confirme;
+  const personnelle = c.moralMin !== undefined || c.moralMax !== undefined || c.nuitsMin !== undefined || c.confirme || c.fragile;
   if (personnelle && !e) return false;
   if (e) {
     if (c.moralMin !== undefined && e.moral < c.moralMin) return false;
     if (c.moralMax !== undefined && e.moral > c.moralMax) return false;
     if (c.nuitsMin !== undefined && e.nuitsTravaillees < c.nuitsMin) return false;
     if (c.confirme && e.finEssai !== null) return false;
+    if (c.fragile && e.moral >= B.RIVALE.moralFragile && e.loyaute >= B.RIVALE.loyauteFragile) return false;
   }
+  if (c.fragile && !e) return false;
+  if (c.rivaleRelationMin !== undefined && etat.rivale.relation < c.rivaleRelationMin) return false;
   return (
     (c.palierMin === undefined || etat.palier >= c.palierMin) &&
     (c.tapageMin === undefined || etat.quartier.tapage >= c.tapageMin) &&
@@ -126,12 +131,19 @@ function suivre(etat: EtatJeu, active: IntrigueActive, issue: Issue, evenements:
   else programmer(etat, active, issue.etape, issue.delai);
 }
 
-function demarrer(etat: EtatJeu, id: string, delai: number, employeId: string | null): void {
+function demarrer(etat: EtatJeu, id: string, delai: number, employeId: string | null, premiere?: string): void {
   const def = trouverIntrigue(id);
   if (!def || etat.intrigues.actives.some((a) => a.id === id)) return;
-  const active: IntrigueActive = { id, etape: def.premiere, echeance: 0, employeId, debut: etat.jour };
-  programmer(etat, active, def.premiere, delai);
+  const etape = premiere && def.etapes[premiere] ? premiere : def.premiere;
+  const active: IntrigueActive = { id, etape, echeance: 0, employeId, debut: etat.jour };
+  programmer(etat, active, etape, delai);
   etat.intrigues.actives.push(active);
+}
+
+/** Une intrigue démarrée de l'extérieur (la rivale qui débauche), avec sa cible et parfois une autre première carte. */
+export function demarrerIntrigue(etat: EtatJeu, id: string, delai: number, employeId: string | null, premiere?: string): void {
+  if (trouverIntrigue(id)?.genre !== 'intrigue') return;
+  demarrer(etat, id, delai, employeId, premiere);
 }
 
 /** Une suite différée, démarrée par un choix : elle ne compte pas parmi les intrigues actives. */
@@ -224,6 +236,7 @@ export function trancherIntrigue(
   appliquerEffet(etat, effet, { employeId: active.employeId }, {
     ajouterClient,
     demarrerSuite: (id, delai, employeId) => demarrerSuite(etat, id, delai, employeId),
+    candidatRival: () => candidatRival(etat, tirage, evenements),
     evenements,
   });
   evenements.push({ type: 'intrigueTranchee', id: active.id, etape: active.etape, choix, reussite, prenom });
