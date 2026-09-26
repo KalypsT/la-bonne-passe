@@ -48,7 +48,8 @@ describe('équilibrage des règles de la maison', () => {
 
   it('tarif −20 % : moins d’argent, des touristes plus nombreux et plus contents', () => {
     expect(argent('tarifBas')).toBeLessThan(argent('base'));
-    expect(satisfaction('tarifBas', 'touriste')).toBeGreaterThan(satisfaction('base', 'touriste') + 4);
+    // v0.6, partie 8 : +3,7 (linge et chambres entretenus, la satisfaction de base est plus haute et se tasse).
+    expect(satisfaction('tarifBas', 'touriste')).toBeGreaterThan(satisfaction('base', 'touriste') + 3);
     expect(part('tarifBas', 'touriste')).toBeGreaterThan(part('base', 'touriste'));
   });
 

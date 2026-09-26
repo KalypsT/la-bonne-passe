@@ -439,6 +439,8 @@ export interface EtatJeu {
   placement: Placement | null;
   /** Hasard du placement risqué, à part (v0.6). */
   hasardPlacement: number;
+  /** Jours des départs récents : le quartier en parle, les candidats se font rares et exigeants (v0.6, partie 8). */
+  departsRecents: number[];
   /** Palier 5 (v0.6, partie 7) : permis de la mairie, bâtiment voisin, gérante, deuxième maison. */
   permis: Permis;
   agrandissement: Agrandissement;
@@ -462,7 +464,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 33;
+export const VERSION_ETAT = 34;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -666,6 +668,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     niveauxEquipes: niveauxDeDepart(),
     placement: null,
     hasardPlacement: hasardPlacementDeDepart(options.graine ?? GRAINE_PAR_DEFAUT),
+    departsRecents: [],
     permis: permisDeDepart(),
     agrandissement: agrandissementDeDepart(),
     gerante: null,

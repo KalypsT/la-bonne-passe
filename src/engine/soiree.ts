@@ -35,6 +35,7 @@ import { revelerTraits, type EvenementRecrutement } from './recrutement';
 import { ecart, instant } from './temps';
 import { comptesVides, depenser, encaisser, journeeVide, recetteMaison } from './comptes';
 import { lundiFiscal, type EvenementFisc } from './fisc';
+import { prixEtat } from './amenagement';
 import { echeancePlacement, facteurMenage, incidentVip, prixConfort, qualiteGamme, type EvenementGamme } from './gamme';
 import {
   chambreEnService,
@@ -426,12 +427,16 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   const qualite = qualiteRdv(etat, chambreId, employe.id, rdv.modele, rdv.formule);
   // Le client paie selon la qualité ; il juge aussi le prix, surtout s'il y est sensible.
   const ressentie = borner(qualite + prixRessenti(etat, modele.segment), 0, 1);
-  const tarif = trouverOffre(etat.offre).prix * (1 + ecartTarif(etat)) * formule.prix * prixTheme(etat) * prixConfort(chambre);
-  const prix = Math.round((modele.budget * B.BUDGET_CLIENTS * tarif * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
-  const maison = Math.round(prix * (1 - employe.part));
+  // Une chambre défraîchie se paie moins cher, pour la maison comme pour la personne (v0.6, partie 8).
+  const tarif = trouverOffre(etat.offre).prix * (1 + ecartTarif(etat)) * formule.prix * prixTheme(etat) * prixConfort(chambre) * prixEtat(chambre);
+  const plein = Math.round((modele.budget * B.BUDGET_CLIENTS * tarif * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
+  // Des draps douteux : le client marchande, et c'est la maison, qui fournit le linge, qui en fait les frais.
+  const prix = etat.linge > 0 ? plein : Math.round((plein * B.PRIX_SANS_LINGE) / 5) * 5;
+  const part = Math.min(prix, plein - Math.round(plein * (1 - employe.part)));
   // Le client paie la maison, qui reverse aussitôt sa part à la personne qui l'a reçu.
   encaisser(etat, prix, 'rendezVous');
-  depenser(etat, prix - maison, 'partPersonnel');
+  depenser(etat, part, 'partPersonnel');
+  const maison = prix - part;
   const gain = gainReputation(etat.clientele.satisfaction[modele.segment], ressentie);
   const effet = gain > 0 ? gain * trouverOffre(etat.offre).reputation * boucheTheme(etat) : gain;
   changerSatisfaction(etat, modele.segment, effet * B.SATISFACTION_PAR_CLIENT);

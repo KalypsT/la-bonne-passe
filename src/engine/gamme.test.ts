@@ -26,14 +26,14 @@ const embauche = (def: typeof MILA) => creerEmploye({ ...def, part: 0.5, moral: 
 const ordre = (e: EtatJeu, o: Parameters<typeof appliquerOrdres>[1][number]) => appliquerOrdres(e, [o]);
 
 describe('palier 4, « Monter en gamme »', () => {
-  it('s’atteint avec 50 de réputation et 4 personnes ; VIP et couples partent de la réputation acquise', () => {
+  it('s’atteint avec 60 de réputation et 4 personnes ; VIP et couples partent de la réputation acquise', () => {
     const e = auPalier(3);
-    e.reputation = 52;
+    e.reputation = 62;
     const sorties: { type: string }[] = [];
     verifierPaliers(e, sorties);
     expect(e.palier).toBe(3);
     e.personnel = [e.personnel[0]!, embauche(MILA), embauche(JONAS), embauche(INES)];
-    e.reputation = 52;
+    e.reputation = 62;
     verifierPaliers(e, sorties);
     expect(e.palier).toBe(4);
     expect(e.systemes).toMatchObject({ vip: true, couples: true, confort: true, renommer: true, formations: false });

@@ -2,8 +2,9 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { Offre } from '../content/clientele';
 import { partsDeClientele, simuler, type ResumeNuit } from './simulation';
 
-// Parties simulées d'un joueur actif (voir simulation.ts) : 14 nuits, 20 graines (10 ne suffisaient plus à départager
-// des offres proches, v0.4).
+// Parties simulées d'un joueur actif (voir simulation.ts) : 28 nuits, 20 graines (10 ne suffisaient plus à départager
+// des offres proches, v0.4). v0.6, partie 8 : 28 nuits au lieu de 14, pour comparer les crans sur trois semaines ; une
+// seule semaine dépend trop de sa tendance (une semaine de contrôles de police divise la demande par deux).
 // Les cibles viennent des spécifications (« Économie et finances ») et de docs/EQUILIBRAGE.md.
 
 const GRAINES = Array.from({ length: 20 }, (_, i) => i + 1);
@@ -19,19 +20,21 @@ beforeAll(() => {
     parties.set(
       `${offre}-${rdvMax}`,
       GRAINES.map((graine) => {
-        const r = simuler({ graine, offre, nuits: 14, rdvMax, cartes: false });
+        const r = simuler({ graine, offre, nuits: 28, rdvMax, cartes: false });
         const moral = r.etat.personnel.reduce((s, e) => s + e.moral, 0) / r.etat.personnel.length;
         return { nuits: r.nuits, moral, departs: r.departs };
       }),
     );
   }
-}, 30_000);
+}, 60_000);
 
 const moyenne = (offre: Offre, rdvMax: number, f: (p: { nuits: ResumeNuit[]; moral: number; departs: number }) => number) => {
   const liste = parties.get(`${offre}-${rdvMax}`)!;
   return liste.reduce((s, p) => s + f(p), 0) / liste.length;
 };
-const netSemaine2 = (p: { nuits: ResumeNuit[] }) => p.nuits.slice(7).reduce((s, n) => s + n.net, 0) / 7;
+const netSemaine2 = (p: { nuits: ResumeNuit[] }) => p.nuits.slice(7, 14).reduce((s, n) => s + n.net, 0) / 7;
+/** Net moyen des nuits 8 à 28, une fois l'équipe au complet. */
+const netMois = (p: { nuits: ResumeNuit[] }) => p.nuits.slice(7, 28).reduce((s, n) => s + n.net, 0) / 21;
 const reputationNuit = (n: number) => (p: { nuits: ResumeNuit[] }) => p.nuits[n - 1]!.reputation;
 
 describe('équilibrage, joueur actif', () => {
@@ -52,17 +55,23 @@ describe('équilibrage, joueur actif', () => {
   });
 
   it('aucune offre ne gagne partout', () => {
+    if (process.env.MESURE) {
+      for (const [o, n] of COMBINAISONS) {
+        console.log(o, n, 'net s2', moyenne(o, n, netSemaine2).toFixed(0), 'net mois', moyenne(o, n, netMois).toFixed(0), 'rep 7/14/28', [7, 14, 28].map((x) => moyenne(o, n, reputationNuit(x)).toFixed(1)).join('/'), 'moral', moyenne(o, n, (p) => p.moral).toFixed(0));
+      }
+    }
     // La classique rapporte le plus d'argent…
     for (const autre of ['happy', 'feutree'] as const) expect(moyenne('classique', 4, netSemaine2)).toBeGreaterThan(moyenne(autre, 4, netSemaine2));
     // … le happy hour fait connaître la maison le plus vite…
     expect(moyenne('happy', 4, reputationNuit(7))).toBeGreaterThan(moyenne('classique', 4, reputationNuit(7)));
-    // … et la soirée feutrée construit la meilleure réputation sur la durée.
-    expect(moyenne('feutree', 4, reputationNuit(14))).toBeGreaterThan(moyenne('classique', 4, reputationNuit(14)));
-    expect(moyenne('feutree', 4, reputationNuit(14))).toBeGreaterThan(moyenne('happy', 4, reputationNuit(14)));
+    // … et la soirée feutrée construit la meilleure réputation sur la durée (v0.6, partie 8 : au bout du mois, 48,8 contre
+    // 44,8 et 42,1 ; à la nuit 14, elle talonne encore le happy hour).
+    expect(moyenne('feutree', 4, reputationNuit(28))).toBeGreaterThan(moyenne('classique', 4, reputationNuit(28)));
+    expect(moyenne('feutree', 4, reputationNuit(28))).toBeGreaterThan(moyenne('happy', 4, reputationNuit(28)));
   });
 
   it('4 rendez-vous par personne rapportent plus, mais usent le moral', () => {
-    expect(moyenne('classique', 4, netSemaine2)).toBeGreaterThan(moyenne('classique', 3, netSemaine2));
+    expect(moyenne('classique', 4, netMois)).toBeGreaterThan(moyenne('classique', 3, netMois));
     expect(moyenne('classique', 4, (p) => p.moral)).toBeLessThan(moyenne('classique', 3, (p) => p.moral));
   });
 

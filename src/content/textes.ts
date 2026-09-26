@@ -264,6 +264,9 @@ export const TEXTES = {
   recrutement: {
     candidats: 'Candidats',
     aucunCandidat: 'Personne en attente. Le marché se renouvelle chaque lundi.',
+    /** Après des départs récents (v0.6, partie 8). */
+    quartierParle: (n: number, points: number) =>
+      `Le quartier parle : ${n} départ${n > 1 ? 's' : ''} ces quatre dernières semaines. Moins de candidatures le lundi, et chacun demande ${points} points de part en plus.`,
     effectif: (n: number, max: number) => `Équipe : ${n} sur ${max}`,
     recevoir: 'Recevoir',
     source: {
@@ -619,6 +622,8 @@ export const TEXTES = {
     occupee: 'Occupée',
     inutilisable: 'Trop sale pour recevoir : la chambre est bloquée.',
     lingeStock: (n: number) => `${n} parure${n > 1 ? 's' : ''}, environ ${n} rendez-vous`,
+    /** Sans linge propre, le client paie moins (v0.6, partie 8). */
+    sansLinge: (remise: number) => `Plus de linge propre : chaque client paie ${remise} % de moins, et c’est la maison qui en fait les frais.`,
     lingeEnRoute: (n: number) => `${n} de plus à l’ouverture`,
     lingeSale: (n: number) => `${n} au lavage`,
     lingeAuto: (cible: number) => (cible > 0 ? `Commande automatique : jusqu’à ${cible} parures chaque soir (au briefing).` : 'Pas de commande automatique : à régler au briefing.'),

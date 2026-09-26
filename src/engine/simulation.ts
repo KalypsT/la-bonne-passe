@@ -24,7 +24,8 @@ import { IMPREVUS_QUARTIER } from '../content/imprevusQuartier';
 import { actionPossible } from './relations';
 import { reponsePossible } from './rivale';
 import { gagneNuit } from './comptes';
-import { valeurNette } from './banque';
+import { detteTotale, valeurNette } from './banque';
+import { prixFormation, prochainConfort } from './gamme';
 import { accepteGerance, optionsAgrandissement, peutDemanderPermis, peutPromouvoir } from './agrandir';
 
 const moyenne = (l: number[]) => (l.length ? l.reduce((a, b) => a + b, 0) / l.length : 0);
@@ -59,6 +60,10 @@ export interface ResumeNuit {
   personnel: number;
   chambres: number;
   palier: number;
+  /** Systèmes ouverts à la fermeture (v0.6, partie 8), toute la dette (rachat, emprunts, retard) et la valeur nette. */
+  systemesOuverts: number;
+  dette: number;
+  valeurNette: number;
   /** Tapage du quartier à la fermeture. */
   tapage: number;
   /** Imprévus tirés ce soir, dans l'ordre. */
@@ -99,12 +104,15 @@ export interface OptionsSimulation {
   equipeBar?: number;
   /** Accepter l'avance du grossiste. */
   avance?: boolean;
-  /** Commande automatique du linge réglée à cette cible (v0.6 ; par défaut, un pack de 5 sous 4 parures). */
+  /**
+   * Commande automatique du linge réglée à cette cible (v0.6). Par défaut, pour le joueur qui rénove, la plus petite cible qui
+   * couvre la soirée prévue (partie 8 : le joueur de référence manquait de linge) ; 0, ou le joueur passif : un pack de 5 sous 4.
+   */
   lingeAuto?: number;
   /** Aménager la buanderie et les loges dès qu'elles s'ouvrent et que la caisse le permet (v0.6). */
   buanderie?: boolean;
   loges?: boolean;
-  /** Rafraîchir une chambre dont l'état passe sous ce seuil (v0.6). */
+  /** Rafraîchir une chambre dont l'état passe sous ce seuil (v0.6 ; par défaut 30 pour le joueur qui rénove, 0 : jamais). */
   rafraichirSous?: number;
   /** Confier la gestion à Josée dès qu'elle s'ouvre, avec la réserve (v0.6). */
   gestionJosee?: boolean;
@@ -145,6 +153,10 @@ export interface OptionsSimulation {
   assurance?: number;
   /** Visibilité choisie dès qu'elle s'ouvre (v0.5). */
   visibilite?: B.IdVisibilite;
+  /** Palier 4 (v0.6) : améliorer le confort des chambres, former les équipes, placer l'excédent (prudent), si la caisse le permet largement. */
+  confort?: boolean;
+  former?: boolean;
+  placer?: boolean;
   /** Palier 5 (v0.6) : déposer le permis dès que possible, racheter chez le voisin, promouvoir une gérante, acheter la deuxième maison. */
   permis?: boolean;
   agrandir?: 'etages' | 'batiment';
@@ -152,7 +164,7 @@ export interface OptionsSimulation {
   etablissement?: boolean;
   /** Pour racheter chez le voisin, signer ce nouvel emprunt si la caisse ne suffit pas (v0.6). */
   empruntAgrandir?: { montant: number; duree: number };
-  /** Embaucher aussi les candidats du marché tant que l'équipe compte moins de personnes (v0.6). */
+  /** Embaucher aussi les candidats du marché tant que l'équipe compte moins de personnes (v0.6 ; 4 par défaut, pour remplacer qui part). */
   recruterJusqua?: number;
 }
 
@@ -170,8 +182,15 @@ export function simuler(options: OptionsSimulation): {
   intrigues: IntrigueFinie[];
   /** Bilans de fin de mois. */
   bilansMois: BilanMois[];
+  /** Ordres donnés par le joueur simulé, avec leur jour (v0.6, partie 8 : décisions par semaine). */
+  ordres: { jour: number; type: string }[];
 } {
   const { graine, nuits, recruter = true, renover = true, rdvMax = 3, equipeBar = 1, avance = true } = options;
+  // Le joueur actif (partie 8) : commande automatique du linge et chambres rafraîchies avant d'être défraîchies.
+  // La cible de linge couvre la soirée prévue (5, 10 ou 20 parures), comme le ferait un joueur attentif.
+  const cibleLinge = () =>
+    options.lingeAuto ?? (renover ? (B.CIBLES_LINGE_AUTO.find((c) => c >= etat.personnel.length * rdvMax) ?? 20) : 0);
+  const rafraichirSous = options.rafraichirSous ?? (renover ? B.CHAMBRE_DEFRAICHIE.seuil : 0);
   const etat = creerEtatInitial({ graine });
   const sansCartes = options.cartes === false;
   if (options.intrigues === false || sansCartes) {
@@ -201,7 +220,9 @@ export function simuler(options: OptionsSimulation): {
     return options.politique === 'hasard' ? hasard.choisir(indices) : indices[0]!;
   };
   // La simulation travaille sur sa propre copie de l'état, modifiée sur place : bien plus rapide.
+  const ordresJoues: { jour: number; type: string }[] = [];
   const jouer = (ordres: Ordre[]) => {
+    for (const o of ordres) ordresJoues.push({ jour: etat.jour, type: o.type });
     // Une carte peut faire partir quelqu'un : on compte aussi ces départs.
     departs += appliquerOrdresSurPlace(etat, ordres).filter((e) => e.type === 'depart').length;
   };
@@ -266,6 +287,9 @@ export function simuler(options: OptionsSimulation): {
           personnel: etat.personnel.length,
           chambres: etat.chambres.filter((c) => c.ouverte).length,
           palier: etat.palier,
+          systemesOuverts: Object.values(etat.systemes).filter(Boolean).length,
+          dette: detteTotale(etat),
+          valeurNette: valeurNette(etat),
           tapage: etat.quartier.tapage,
           imprevus: imprevusNuit,
           intrigues: intriguesNuit,
@@ -327,7 +351,9 @@ export function simuler(options: OptionsSimulation): {
     for (const id of [...etat.essaisATrancher]) jouer([{ type: 'trancherEssai', employeId: id, garder: true }]);
     if (recruter) {
       for (const c of [...etat.candidats]) {
-        if (c.source !== 'visite' && !(options.recruterJusqua && etat.personnel.length < options.recruterJusqua)) continue;
+        // Le joueur actif remplace aussi qui est parti, jusqu'à 4 personnes (v0.6, partie 8), ou davantage si on le lui demande.
+        const jusqua = options.recruterJusqua ?? B.PERSONNEL_MAX;
+        if (c.source !== 'visite' && etat.personnel.length >= jusqua) continue;
         jouer([{ type: 'questionCandidat', candidatId: c.id, question: 0 }]);
         jouer([{ type: 'proposer', candidatId: c.id, part: 0.5 }]);
         const encore = etat.candidats.find((x) => x.id === c.id);
@@ -358,14 +384,27 @@ export function simuler(options: OptionsSimulation): {
           jouer([{ type: 'renoverAnnexe', annexe }]);
         }
       }
-      if (options.rafraichirSous !== undefined && !ouvertMaintenant(etat)) {
+      if (rafraichirSous > 0 && etat.systemes.renovation && !ouvertMaintenant(etat)) {
         for (const c of etat.chambres) {
-          if (c.ouverte && c.travaux === null && c.etat < options.rafraichirSous && etat.tresorerie > B.RAFRAICHIR.prix + 1500) {
+          if (c.ouverte && c.travaux === null && c.etat < rafraichirSous && etat.tresorerie > B.RAFRAICHIR.prix + 1500) {
             jouer([{ type: 'rafraichir', chambreId: c.id }]);
           }
         }
       }
       if (options.permis && peutDemanderPermis(etat)) jouer([{ type: 'demanderPermis' }]);
+      if (options.confort && etat.systemes.confort && !ouvertMaintenant(etat)) {
+        for (const c of etat.chambres) {
+          const suivant = prochainConfort(c);
+          if (c.ouverte && c.travaux === null && suivant && etat.tresorerie > suivant.prix + 5000) jouer([{ type: 'ameliorerConfort', chambreId: c.id }]);
+        }
+      }
+      if (options.former && etat.systemes.formations) {
+        for (const equipe of ['menage', 'bar', 'accueil', 'securite'] as const) {
+          const prix = prixFormation(etat, equipe);
+          if (prix !== null && etat.equipes[equipe] > 0 && etat.tresorerie > prix + 5000) jouer([{ type: 'former', equipe }]);
+        }
+      }
+      if (options.placer && etat.systemes.placement && !etat.placement && etat.tresorerie > 15000) jouer([{ type: 'placer', montant: 5000, profil: 'prudent' }]);
       // Pour un gros achat, le joueur puise dans la réserve (Josée le lui fait remarquer).
       const payer = (prix: number) => {
         if (etat.tresorerie > prix + 3000) return true;
@@ -450,8 +489,8 @@ export function simuler(options: OptionsSimulation): {
         {
           type: 'validerBriefing',
           offre,
-          packLinge: options.lingeAuto ? 0 : etat.linge < 4 ? 5 : 0,
-          lingeAuto: options.lingeAuto,
+          packLinge: cibleLinge() ? 0 : etat.linge < 4 ? 5 : 0,
+          lingeAuto: cibleLinge(),
           commanderBar,
           repos,
           rdvMax,
@@ -461,7 +500,7 @@ export function simuler(options: OptionsSimulation): {
       ]);
     }
   }
-  return { nuits: resumes, etat, departs, bilans, tresorerieMin, intrigues: etat.intrigues.finies, bilansMois };
+  return { nuits: resumes, etat, departs, bilans, tresorerieMin, intrigues: etat.intrigues.finies, bilansMois, ordres: ordresJoues };
 }
 
 /** Part de chaque segment parmi les clients servis sur un ensemble de nuits, en %. */
@@ -558,3 +597,62 @@ const CARTES_EXTERIEURES = new Set([...EVENEMENTS_QUARTIER, ...CARTES_RIVALE, IN
 const IMPREVUS_EXTERIEURS = new Set(
   IMPREVUS_QUARTIER.filter((d) => d.condition?.systeme || d.condition?.relationMin || d.condition?.visibilite).map((d) => d.id),
 );
+
+// ——— Progression sur plusieurs mois (v0.6, partie 8) ———
+
+/** Ordres de gestion de l'argent : ce que le joueur décide dans l'onglet Finances et au bilan du lundi. */
+const ORDRES_FINANCES = new Set(['tauxReserve', 'retirerReserve', 'emprunter', 'placer', 'gestionJosee', 'assurance', 'avanceFournisseur']);
+/** Ordres d'investissement : travaux, confort, formations, agrandissement, deuxième maison. */
+const ORDRES_INVESTISSEMENT = new Set([
+  'renover',
+  'renoverBar',
+  'renoverAnnexe',
+  'rafraichir',
+  'changerDecor',
+  'ameliorerConfort',
+  'former',
+  'demanderPermis',
+  'agrandir',
+  'signerLieu',
+  'lancerTravauxEtablissement',
+]);
+
+export interface Progression {
+  /** Jour où chaque palier (1 à 5) est atteint, par partie (0 : jamais). */
+  paliers: number[][];
+  /** Systèmes ouverts à la fin de chaque semaine, en moyenne. */
+  systemesParSemaine: number[];
+  /** À la fin de chaque mois (28 nuits) : trésorerie, toute la dette, valeur nette (avoir moins les nouveaux emprunts), en moyenne. */
+  mois: { tresorerie: number; dette: number; valeur: number; reputation: number; personnel: number; chambres: number }[];
+  /** Décisions d'argent et d'investissement par semaine, en moyenne, à partir de la semaine donnée. */
+  financesParSemaine: number;
+  investissementsParSemaine: number;
+  faillites: number;
+}
+
+/** Joue une stratégie sur plusieurs mois et en tire la progression : paliers, systèmes ouverts, argent et dette, décisions. */
+export function mesurerProgression(graines: number[], options: Omit<OptionsSimulation, 'graine'>, depuisSemaine = 5): Progression {
+  const parties = graines.map((graine) => simuler({ ...options, graine }));
+  const n = parties.length;
+  const semaines = Math.floor(options.nuits / 7);
+  const moisN = Math.floor(options.nuits / 28);
+  const moyenne = (f: (p: (typeof parties)[number]) => number) => parties.reduce((t, p) => t + f(p), 0) / n;
+  const nuit = (p: (typeof parties)[number], i: number) => p.nuits[Math.min(i, p.nuits.length - 1)];
+  const compter = (types: Set<string>) =>
+    moyenne((p) => p.ordres.filter((o) => types.has(o.type) && o.jour > (depuisSemaine - 1) * 7).length) / Math.max(1, semaines - depuisSemaine + 1);
+  return {
+    paliers: parties.map((p) => [1, 2, 3, 4, 5].map((k) => p.nuits.find((x) => x.palier >= k)?.numero ?? 0)),
+    systemesParSemaine: Array.from({ length: semaines }, (_, s) => moyenne((p) => nuit(p, s * 7 + 6)?.systemesOuverts ?? 0)),
+    mois: Array.from({ length: moisN }, (_, m) => ({
+      tresorerie: moyenne((p) => nuit(p, m * 28 + 27)?.tresorerie ?? 0),
+      dette: moyenne((p) => nuit(p, m * 28 + 27)?.dette ?? 0),
+      valeur: moyenne((p) => nuit(p, m * 28 + 27)?.valeurNette ?? 0),
+      reputation: moyenne((p) => nuit(p, m * 28 + 27)?.reputation ?? 0),
+      personnel: moyenne((p) => nuit(p, m * 28 + 27)?.personnel ?? 0),
+      chambres: moyenne((p) => nuit(p, m * 28 + 27)?.chambres ?? 0),
+    })),
+    financesParSemaine: compter(ORDRES_FINANCES),
+    investissementsParSemaine: compter(ORDRES_INVESTISSEMENT),
+    faillites: parties.filter((p) => p.etat.finDePartie).length,
+  };
+}

@@ -7,6 +7,8 @@ export const TEXTES_AMENAGEMENT = {
   plaitAncien: 'Refait à neuf, un décor plaît davantage à sa clientèle.',
   rafraichir: (prix: string, heures: number) => `Rafraîchir la déco (${prix}, ${heures} h)`,
   rafraichirDetail: 'Peinture, tentures, literie : l’état revient à 90 %. La chambre ne reçoit pas pendant les travaux.',
+  /** Sous 30 % d'état (v0.6, partie 8). */
+  defraichie: (remise: number) => `Défraîchie : les clients paient ${remise} % de moins. Rafraîchis-la.`,
   refaire: (prix: string, heures: number) => `Refaire le décor (${prix}, ${heures} h)`,
   refaireDetail: 'Choisis le style : la chambre ne reçoit pas pendant les travaux, puis plaît davantage à sa clientèle.',
   decorEnCours: (nom: string) => `Travaux : nouveau décor ${nom.toLowerCase()}.`,

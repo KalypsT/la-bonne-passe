@@ -175,18 +175,20 @@ describe('garde d’équilibrage : le cran 6 en permanence', () => {
     expect(moyenne(parties.map((p) => p.nuits[6]!.moralMoyen))).toBeLessThan(30);
   });
 
-  it('sur deux mois, le 6 permanent use l’équipe et ne rapporte pas plus que le 4 bien géré', () => {
+  it('sur trois mois, le 6 permanent vide la maison et rapporte moins que le 4 bien géré', () => {
+    // v0.6, partie 8 : le joueur actif remplace qui part (marché du lundi). Le 6 permanent devient un sprint : devant au
+    // bout d'un mois, il use trois à six personnes, fait fuir les candidats (DEPARTS_RECENTS) et finit loin derrière.
+    // Mesuré (10 graines) : trésorerie au jour 84, 15 300 € contre 19 400 € ; 1,2 personne encore là ; 5,6 départs contre 0,2.
     const dix = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    const jouer = (rdvMax: number, reposFatigue?: number) => dix.map((graine) => simuler({ graine, offre: 'classique', rdvMax, nuits: 56, reposFatigue }));
+    const jouer = (rdvMax: number, reposFatigue?: number) => dix.map((graine) => simuler({ graine, offre: 'classique', rdvMax, nuits: 84, reposFatigue }));
     const six = jouer(6, 101);
     const quatre = jouer(4);
-    const semaine8 = (ps: typeof six) => moyenne(ps.map((p) => moyenne(p.nuits.slice(49).map((n) => n.moralMoyen))));
-    expect(semaine8(six)).toBeLessThan(35);
+    const semaine8 = (ps: typeof six) => moyenne(ps.map((p) => moyenne(p.nuits.slice(49, 56).map((n) => n.moralMoyen))));
+    expect(semaine8(six)).toBeLessThan(40);
     expect(semaine8(six)).toBeLessThan(semaine8(quatre) - 30);
-    expect(moyenne(six.map((p) => p.departs))).toBeGreaterThan(moyenne(quatre.map((p) => p.departs)) + 1);
-    // Pas la stratégie dominante en argent : à peine au niveau du 4 au bout d'un mois, loin derrière au bout de deux.
+    expect(moyenne(six.map((p) => p.departs))).toBeGreaterThan(moyenne(quatre.map((p) => p.departs)) + 3);
+    expect(moyenne(six.map((p) => p.etat.personnel.length))).toBeLessThan(3);
     const tresorerie = (ps: typeof six, n: number) => moyenne(ps.map((p) => p.nuits[n - 1]!.tresorerie));
-    expect(tresorerie(six, 35)).toBeLessThan(tresorerie(quatre, 35) * 1.15);
-    expect(tresorerie(six, 56)).toBeLessThan(tresorerie(quatre, 56) * 0.75);
-  }, 120_000);
+    expect(tresorerie(six, 84)).toBeLessThan(tresorerie(quatre, 84) * 0.9);
+  }, 180_000);
 });

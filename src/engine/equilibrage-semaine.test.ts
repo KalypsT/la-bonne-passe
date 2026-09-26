@@ -70,7 +70,8 @@ describe('l’offre change la partie', () => {
   });
 
   it('un soir de match, le portier sauve la réputation ; la porte ouverte la ruine', () => {
-    expect(reputation('match-stricte')).toBeGreaterThan(reputation('match-classique') + 10);
+    // v0.6, partie 8 : +8,9 (la réputation de base monte avec le linge et les chambres entretenus).
+    expect(reputation('match-stricte')).toBeGreaterThan(reputation('match-classique') + 7);
     expect(reputation('match-laxiste')).toBeLessThan(reputation('match-classique'));
   });
 

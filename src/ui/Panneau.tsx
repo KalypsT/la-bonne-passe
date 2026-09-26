@@ -1,4 +1,5 @@
 import {
+  CHAMBRE_DEFRAICHIE,
   DECOUVERT,
   GESTION_JOSEE,
   EMPRUNT_RACHAT,
@@ -11,6 +12,7 @@ import {
   TAUX_RESERVE,
   JOURS_ENTRE_PRIMES,
   PRIMES,
+  PRIX_SANS_LINGE,
   SEUIL_CHAMBRE_INUTILISABLE,
   SEUIL_EPUISEMENT,
   SEUIL_LINGE,
@@ -53,6 +55,7 @@ import { AmenagementChambre, FicheAnnexe, statutAnnexe } from './Amenagement';
 import { TEXTES_AMENAGEMENT } from '../content/amenagement';
 import { useInterface, type Fiche, type Onglet } from './store';
 import { personnelMax } from '../engine/agrandir';
+import { departsRecents, exigenceDuQuartier } from '../engine/recrutement';
 import { DeuxiemeMaison, FicheVoisin, Gerance, statutVoisin } from './Agrandir';
 import { TEXTES_AGRANDIR } from '../content/agrandir';
 
@@ -180,7 +183,7 @@ function Linge({ partie }: { partie: EtatJeu }) {
     <>
       <h3>{TEXTES.briefing.linge}</h3>
       <p className={partie.linge < SEUIL_LINGE ? 'sous negatif' : 'sous'}>
-        {a.lingeStock(partie.linge)}
+        {partie.linge < 1 ? a.sansLinge(Math.round((1 - PRIX_SANS_LINGE) * 100)) : a.lingeStock(partie.linge)}
         {partie.annexes.buanderie.ouverte && ` · ${a.lingeSale(partie.annexes.buanderie.sale)}`}
         {partie.lingeCommande > 0 && ` · ${a.lingeEnRoute(partie.lingeCommande)}`}
       </p>
@@ -429,7 +432,10 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
                 : t.sousDraps}
       </p>
       {chambre.ouverte && <Jauge nom={t.proprete} valeur={chambre.proprete} alerte={chambre.proprete < 40} />}
-      <Jauge nom={t.etat} valeur={chambre.etat} />
+      <Jauge nom={t.etat} valeur={chambre.etat} alerte={chambre.ouverte && chambre.etat < CHAMBRE_DEFRAICHIE.seuil} />
+      {chambre.ouverte && chambre.etat < CHAMBRE_DEFRAICHIE.seuil && (
+        <p className="sous negatif">{TEXTES_AMENAGEMENT.defraichie(Math.round((1 - CHAMBRE_DEFRAICHIE.prix) * 100))}</p>
+      )}
       {chambre.ouverte && chambre.proprete < SEUIL_CHAMBRE_INUTILISABLE && (
         <p className="sous negatif">{TEXTES.actions.inutilisable}</p>
       )}
@@ -674,6 +680,9 @@ function OngletPersonnel({ partie }: { partie: EtatJeu }) {
   return (
     <>
       <h3>{r.effectif(partie.personnel.length, personnelMax(partie))}</h3>
+      {partie.systemes.recrutement && departsRecents(partie) > 0 && (
+        <p className="sous negatif">{r.quartierParle(departsRecents(partie), Math.round(exigenceDuQuartier(partie) * 100))}</p>
+      )}
       {partie.personnel.map((e) => (
         <LigneEmploye key={e.id} partie={partie} employe={e} />
       ))}

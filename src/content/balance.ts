@@ -45,7 +45,8 @@ export const TRESORERIE_INITIALE = 3000;
 export const REPUTATION_INITIALE = 15;
 /** Propreté et état (en %) de la chambre en service au départ. */
 export const PROPRETE_CHAMBRE_OUVERTE = 80;
-export const ETAT_CHAMBRE_OUVERTE = 72;
+// v0.6, partie 8 : 72 auparavant ; à 90, le Boudoir se défraîchit après la première mensualité, pas juste avant.
+export const ETAT_CHAMBRE_OUVERTE = 90;
 /** État (en %) des chambres qui dorment sous des draps. */
 export const ETAT_CHAMBRE_FERMEE = 35;
 
@@ -186,8 +187,14 @@ export const MORAL_PAR_RDV = 2;
 /** Salissure d'une chambre après un rendez-vous, en points de propreté. */
 export const SALISSURE_MIN = 18;
 export const SALISSURE_MAX = 26;
-export const USURE_MIN = 1;
-export const USURE_MAX = 2.2;
+/**
+ * Usure d'une chambre par rendez-vous, en points d'état (v0.6, partie 8 : 1 à 2,2 auparavant, une chambre tombait à 0 % en
+ * deux semaines). À trois rendez-vous par nuit, une chambre rafraîchie tient un mois avant de se défraîchir.
+ */
+export const USURE_MIN = 0.6;
+export const USURE_MAX = 1.2;
+/** Sous cet état, la chambre est défraîchie : les clients paient moins (v0.6, partie 8). */
+export const CHAMBRE_DEFRAICHIE = { seuil: 30, prix: 0.85 };
 /** Sous ce seuil : alerte ; sous le second : la chambre ne reçoit plus. */
 export const SEUIL_CHAMBRE_SALE = 40;
 export const SEUIL_CHAMBRE_INUTILISABLE = 15;
@@ -287,7 +294,8 @@ export const NOUVELLE_ENSEIGNE = 500;
  * Palier 5 : la réputation pour déposer la demande de permis à la mairie, les frais du dossier, et la jauge
  * de la mairie qu'il faut au lundi de la réponse (en bons termes).
  */
-export const PALIER_5 = { reputation: 70, fraisDossier: 300, mairie: 40 };
+// v0.6, partie 8 : réputation 80 (70 auparavant), voir PALIER_4.
+export const PALIER_5 = { reputation: 80, fraisDossier: 300, mairie: 40 };
 /**
  * Agrandissement par le bâtiment voisin : ses deux étages (2 chambres), ou tout le bâtiment (3 chambres) ;
  * après les étages, le rez-de-chaussée peut suivre. Travaux en heures de jeu. Les chambres arrivent meublées.
@@ -330,13 +338,18 @@ export const ETABLISSEMENT = { offres: 3, variation: 0.1 };
 // Le linge se compte en parures (draps, housse, serviettes) : une par rendez-vous.
 export const LINGE_INITIAL = 4;
 export const LINGE_PAR_RDV = 1;
+/** Un rendez-vous sans parure propre : le client négocie ses draps douteux (v0.6, partie 8). */
+export const PRIX_SANS_LINGE = 0.85;
 /** Sous ce stock, l'alerte « plus de linge propre ». */
 export const SEUIL_LINGE = 1;
-/** Packs commandés au briefing, livrés à l'ouverture : plus le pack est gros, moins la parure coûte. */
+/**
+ * Packs commandés au briefing, livrés à l'ouverture : plus le pack est gros, moins la parure coûte.
+ * v0.6, partie 8 : 60, 110 et 200 € auparavant ; une parure doit coûter moins que ce que le client retient sans elle.
+ */
 export const PACKS_LINGE = [
-  { parures: 5, prix: 60 },
-  { parures: 10, prix: 110 },
-  { parures: 20, prix: 200 },
+  { parures: 5, prix: 50 },
+  { parures: 10, prix: 90 },
+  { parures: 20, prix: 160 },
 ] as const;
 /** Commande automatique : le stock est complété chaque soir jusqu'à cette cible (0 : pas de commande). */
 export const CIBLES_LINGE_AUTO = [0, 5, 10, 20] as const;
@@ -376,6 +389,12 @@ export const NUITS_POUR_REVELER_TRAIT = 2;
 export const MARCHE_BASE = 1;
 export const MARCHE_REPUTATION_PAR_CANDIDAT = 20;
 export const MARCHE_MAX = 5;
+/**
+ * Le quartier sait comment la maison traite son monde (v0.6, partie 8) : pendant `jours` après chaque départ, le marché du
+ * lundi compte un candidat de moins, et chaque candidat demande `partPlus` de plus (au plus `partMax`). User l'équipe et la
+ * remplacer ne doit pas devenir une stratégie.
+ */
+export const DEPARTS_RECENTS = { jours: 28, marcheMoins: 2, partPlus: 0.05, partMax: 0.1 };
 
 // ——— Personnel complet (palier 1) ———
 
@@ -493,8 +512,12 @@ export const IMPREVU_POIDS_BONUS = 3;
 
 /** Réputation qui déclenche le palier 2. */
 export const REPUTATION_PALIER_2 = 25;
-/** Palier 4, « Monter en gamme » (v0.6) : réputation et personnes suivies dans l'équipe. */
-export const PALIER_4 = { reputation: 50, personnel: 4 };
+/**
+ * Palier 4, « Monter en gamme » (v0.6) : réputation et personnes suivies dans l'équipe. Partie 8 : réputation 60 (50
+ * auparavant). Une maison au linge et aux chambres entretenus passe 50 avant la première mensualité : le palier 4
+ * tombait le même jour que le palier 3, et neuf systèmes s'ouvraient la même semaine.
+ */
+export const PALIER_4 = { reputation: 60, personnel: 4 };
 /** Un client d'un groupe arrive parfois avec un ami du même groupe. */
 export const GROUPE_CHANCE_ACCOMPAGNE = 0.5;
 /** Les groupes font monter le ton : chance de dispute multipliée par client de groupe sur le quai. */

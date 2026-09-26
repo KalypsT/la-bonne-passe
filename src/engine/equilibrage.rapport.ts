@@ -5,7 +5,7 @@ import { it } from 'vitest';
 import type { Offre, Segment } from '../content/clientele';
 import type { EtatJeu, Regles } from './etat';
 import { EVENEMENTS_QUARTIER } from '../content/quartier';
-import { choixAdaptatif, evenementsExterieurs, mesurerRenouvellement, partsDeClientele, simuler, type OptionsSimulation, type Renouvellement, type ResumeNuit } from './simulation';
+import { choixAdaptatif, evenementsExterieurs, mesurerProgression, mesurerRenouvellement, partsDeClientele, simuler, type OptionsSimulation, type Renouvellement, type ResumeNuit } from './simulation';
 
 const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const NUITS = 28;
@@ -237,6 +237,63 @@ function quartierVit(): string[] {
   return lignes;
 }
 
+/** La progression sur six mois (v0.6, partie 8) : paliers, systèmes ouverts chaque semaine, argent et dette, décisions. */
+function progression(): string[] {
+  const complet: Omit<OptionsSimulation, 'graine'> = {
+    offre: 'classique',
+    rdvMax: 3,
+    nuits: 168,
+    relations: 'entretien',
+    buanderie: true,
+    loges: true,
+    confort: true,
+    former: true,
+    placer: true,
+    permis: true,
+    agrandir: 'batiment',
+    empruntAgrandir: { montant: 20000, duree: 24 },
+    recruterJusqua: 8,
+    gerante: true,
+  };
+  const strategies: [string, Omit<OptionsSimulation, 'graine'>][] = [
+    ['Classique 3 (référence)', { offre: 'classique', rdvMax: 3, nuits: 168, permis: true }],
+    ['Classique 4', { offre: 'classique', rdvMax: 4, nuits: 168, permis: true }],
+    ['Feutrée 4', { offre: 'feutree', rdvMax: 4, nuits: 168, permis: true }],
+    ['Complet (tout ce qui s’ouvre, bâtiment à crédit)', complet],
+    ['Complet, cartes tranchées au hasard', { ...complet, politique: 'hasard' }],
+    ['Passif (sans recruter ni rénover)', { offre: 'classique', rdvMax: 4, nuits: 168, recruter: false, renover: false }],
+  ];
+  const virgule = (x: number, d = 1) => x.toFixed(d).replace('.', ',');
+  const paliers = [
+    '| Stratégie (168 nuits) | Palier 2 | Palier 3 | Palier 4 | Palier 5 | Faillites |',
+    '| --- | --- | --- | --- | --- | --- |',
+  ];
+  const semaines = ['| Stratégie | Systèmes ouverts en plus, semaines 1 à 16 | Semaines sans nouveauté (2 à 16) |', '| --- | --- | --- |'];
+  const argent = [
+    '| Stratégie | Trésorerie fin des mois 1 à 6 | Dette fin des mois 1 à 6 | Valeur nette fin des mois 1 à 6 | Réputation mois 1 à 6 | Personnes / chambres au mois 6 | Décisions d’argent / d’investissement par semaine (dès la semaine 5) |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+  ];
+  for (const [nom, o] of strategies) {
+    const p = mesurerProgression(GRAINES, o);
+    const jour = (k: number) => {
+      const j = p.paliers.map((x) => x[k]!).filter((x) => x > 0);
+      if (!j.length) return 'jamais';
+      const m = Math.round(j.reduce((a, b) => a + b, 0) / j.length);
+      return `${m} (${Math.min(...j)} à ${Math.max(...j)})${j.length < GRAINES.length ? `, ${j.length} sur ${GRAINES.length}` : ''}`;
+    };
+    paliers.push(`| ${nom} | ${jour(1)} | ${jour(2)} | ${jour(3)} | ${jour(4)} | ${p.faillites} |`);
+    const plus = p.systemesParSemaine.slice(0, 16).map((x, i) => x - (i === 0 ? x : p.systemesParSemaine[i - 1]!));
+    semaines.push(`| ${nom} | ${plus.map((x, i) => (i === 0 ? '—' : virgule(x))).join(' · ')} | ${plus.slice(1).filter((x) => x < 0.5).length} sur 15 |`);
+    const m = p.mois;
+    const f = (g: (x: (typeof m)[number]) => number) => m.map((x) => arrondi(g(x))).join(' / ');
+    const dernier = m[m.length - 1]!;
+    argent.push(
+      `| ${nom} | ${f((x) => x.tresorerie)} € | ${f((x) => x.dette)} € | ${f((x) => x.valeur)} € | ${m.map((x) => x.reputation.toFixed(0)).join(' / ')} | ${virgule(dernier.personnel)} / ${virgule(dernier.chambres)} | ${virgule(p.financesParSemaine, 2)} / ${virgule(p.investissementsParSemaine, 2)} |`,
+    );
+  }
+  return [...paliers, '', ...semaines, '', ...argent];
+}
+
 it('rapport d’équilibrage', () => {
   const lignes = [
     '| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |',
@@ -272,5 +329,6 @@ it('rapport d’équilibrage', () => {
   console.log(`\nLe quartier vit-il ? ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${quartierVit().join('\n')}\n`);
   console.log(`\nLes soirées du deuxième mois : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${deuxiemeMois().join('\n')}\n`);
   console.log(`\nÉquipes et assurance : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${equipes().join('\n')}\n`);
+  console.log(`\nLa progression sur six mois : ${GRAINES.length} graines, 168 nuits (jours d'atteinte des paliers : moyenne, puis extrêmes)\n\n${progression().join('\n')}\n`);
   console.log(`\nLe quartier : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard ; événements sur 10 parties)\n\n${quartier().join('\n')}\n`);
-}, 600_000);
+}, 1_800_000);
