@@ -27,6 +27,7 @@ import { PARTIE_PAR_DEFAUT } from '../content/partie';
 import { barDeDepart, reglesDeDepart, VERSION_ETAT, type EtatJeu } from '../engine/etat';
 import { intriguesDeDepart } from '../engine/intrigues';
 import { quartierDeDepart } from '../engine/quartier';
+import { moisDeDepart, prochainObjectif, statsDeDepart } from '../engine/bilans';
 
 type Donnees = Record<string, unknown>;
 
@@ -231,6 +232,32 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
   17: (d) => ({ ...d, version: 18, imprevusNuit: {} }),
   // v18 → v19 : les alertes minutées de la soirée. Aucune en cours.
   18: (d) => ({ ...d, version: 19, minuteries: [], hasardAlertes: (typeof d.hasard === 'number' ? d.hasard * 7 + 13 : 13) | 0 }),
+  // v19 → v20 : défis de la semaine (ouverts avec les tendances) et objectif du mois.
+  // Le premier défi tombera au prochain lundi ; l'objectif du mois en cours est fixé tout de suite.
+  19: (d) => {
+    const systemes = estObjet(d.systemes) ? d.systemes : {};
+    const tendances = systemes.tendances === true;
+    const semaine = estObjet(d.semaine) ? { ...d.semaine, stats: statsDeDepart() } : d.semaine;
+    const payees = typeof d.mensualitesPayees === 'number' ? d.mensualitesPayees : 0;
+    const palier = typeof d.palier === 'number' ? d.palier : 0;
+    const mois = payees === 0 ? moisDeDepart() : prochainObjectif(d as unknown as EtatJeu, payees + 1);
+    const nouveautes = [
+      ...(Array.isArray(d.nouveautes) ? d.nouveautes : []),
+      ...(palier >= 1 ? ['objectifs'] : []),
+      ...(tendances ? ['defis'] : []),
+    ];
+    return {
+      ...d,
+      version: 20,
+      systemes: { ...systemes, defis: tendances },
+      semaine,
+      defi: null,
+      mois,
+      bilanMois: null,
+      bilanMoisAVoir: false,
+      nouveautes,
+    };
+  },
 };
 
 /** Ambition d'une personne d'une ancienne sauvegarde : celle du contenu si elle est scénarisée. */
@@ -284,6 +311,10 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(d.imprevusNuit) &&
     Array.isArray(d.minuteries) &&
     typeof d.hasardAlertes === 'number' &&
+    estObjet(d.mois) &&
+    typeof d.bilanMoisAVoir === 'boolean' &&
+    estObjet(d.semaine) &&
+    estObjet(d.semaine.stats) &&
     Array.isArray(d.adieux) &&
     (d.didacticiel === null || typeof d.didacticiel === 'number') &&
     estObjet(d.clientele) &&

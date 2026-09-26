@@ -7,6 +7,7 @@ import { parSegment, segmentOuvert, type ParSegment } from './clientele';
 import { comptesVides, totalDepenses, totalRecettes, type Comptes } from './comptes';
 import type { EtatJeu } from './etat';
 import type { Tirage } from './hasard';
+import { conclureDefi, lancerDefi, statsDeDepart, type EvenementBilan, type ResultatDefi, type StatsSemaine } from './bilans';
 
 export interface Semaine {
   /** Numéro de la semaine : 1 pour les jours 1 à 7. */
@@ -20,6 +21,8 @@ export interface Semaine {
   satisfactionDebut: ParSegment;
   servis: number;
   perdus: number;
+  /** Ce que retiennent les défis (v0.4). */
+  stats: StatsSemaine;
 }
 
 /** Bilan d'une semaine écoulée, lu le lundi matin. */
@@ -46,9 +49,13 @@ export interface BilanSemaine {
   tendances: string[];
   /** Première semaine avec des tendances : Josée les présente. */
   premieresTendances: boolean;
+  /** Le défi de la semaine écoulée, jugé (v0.4). */
+  defi?: ResultatDefi | null;
+  /** Le défi de la semaine qui commence. */
+  nouveauDefi?: string | null;
 }
 
-export type EvenementSemaine = { type: 'bilanSemaine'; numero: number } | { type: 'tendance'; id: string };
+export type EvenementSemaine = { type: 'bilanSemaine'; numero: number } | { type: 'tendance'; id: string } | EvenementBilan;
 
 interface Sortie {
   push(e: EvenementSemaine): unknown;
@@ -64,6 +71,7 @@ export function nouvelleSemaine(etat: Pick<EtatJeu, 'reputation' | 'clientele'>,
     satisfactionDebut: { ...etat.clientele.satisfaction },
     servis: 0,
     perdus: 0,
+    stats: statsDeDepart(),
   };
 }
 
@@ -77,6 +85,7 @@ export function semaineDeDepart(reputation: number = B.REPUTATION_INITIALE): Sem
     satisfactionDebut: parSegment(reputation),
     servis: 0,
     perdus: 0,
+    stats: statsDeDepart(),
   };
 }
 
@@ -142,11 +151,15 @@ export function cloreSemaine(etat: EtatJeu, prochainesMensualites: number[], tir
   const avoir = etat.tresorerie + etat.reserve;
   const resultatCourant = recettes - (depenses - exceptionnel) - B.CHARGES_FIXES;
 
+  // Le défi de la semaine écoulée est jugé avant que la semaine ne se referme.
+  const defi = conclureDefi(etat, evenements);
+
   let premieresTendances = false;
-  // Au premier lundi après le palier 2 : les tendances, et les soirées à thème pour y répondre.
+  // Au premier lundi après le palier 2 : les tendances, les soirées à thème pour y répondre, et les défis.
   if (etat.palier >= 2 && !etat.systemes.tendances) {
     etat.systemes.tendances = true;
     etat.systemes.themes = true;
+    etat.systemes.defis = true;
     premieresTendances = true;
   }
   const tendances = etat.systemes.tendances ? tirerTendances(etat, tirage) : [];
@@ -166,11 +179,15 @@ export function cloreSemaine(etat: EtatJeu, prochainesMensualites: number[], tir
     projection: projeter(etat, avoir, resultatCourant, prochainesMensualites),
     tendances,
     premieresTendances,
+    defi,
+    nouveauDefi: null,
   };
   etat.bilanAVoir = true;
   etat.semaine = nouvelleSemaine(etat, s.numero + 1, tendances);
   evenements.push({ type: 'bilanSemaine', numero: s.numero });
   for (const id of tendances) evenements.push({ type: 'tendance', id });
+  lancerDefi(etat, evenements);
+  etat.bilanSemaine.nouveauDefi = etat.defi;
 }
 
 /** Un client compte aussi dans la fréquentation de la semaine. */

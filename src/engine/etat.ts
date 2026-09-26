@@ -24,6 +24,7 @@ import { semaineDeDepart, type BilanSemaine, type Semaine } from './semaine';
 import { intriguesDeDepart, type Intrigues } from './intrigues';
 import { quartierDeDepart, type Quartier } from './quartier';
 import type { AlerteMinutee } from './minuteries';
+import { moisDeDepart, type BilanMois, type Mois } from './bilans';
 
 /** Drapeaux d'ouverture des systèmes. L'interface masque ou verrouille ce qui est fermé. */
 export interface Systemes {
@@ -49,6 +50,8 @@ export interface Systemes {
   tendances: boolean;
   /** Soirées à thème, programmées au briefing (en même temps que les tendances). */
   themes: boolean;
+  /** Défis de la semaine, annoncés au bilan du lundi (en même temps que les tendances, v0.4). */
+  defis: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -327,6 +330,13 @@ export interface EtatJeu {
   themeDuSoir: string | null;
   /** Nouveautés arrivées avec une mise à jour du jeu, pour un palier déjà atteint : Josée les présente. */
   nouveautes: string[];
+  /** Défi de la semaine en cours (identifiant de src/content/defis.ts), ou null (v0.4). */
+  defi: string | null;
+  /** Objectif du mois en cours (v0.4). */
+  mois: Mois;
+  /** Bilan du dernier mois écoulé, et s'il attend d'être lu (carte en pause). */
+  bilanMois: BilanMois | null;
+  bilanMoisAVoir: boolean;
   /** Alertes minutées de la soirée en cours (v0.4). */
   minuteries: AlerteMinutee[];
   /** Générateur à part pour la naissance des alertes : elles ne décalent pas le reste du hasard de la soirée. */
@@ -342,7 +352,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 19;
+export const VERSION_ETAT = 20;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -362,6 +372,7 @@ export function systemesDeDepart(): Systemes {
     porte: false,
     tendances: false,
     themes: false,
+    defis: false,
   };
 }
 
@@ -499,6 +510,10 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     bilanAVoir: false,
     themeDuSoir: null,
     nouveautes: [],
+    defi: null,
+    mois: moisDeDepart(),
+    bilanMois: null,
+    bilanMoisAVoir: false,
     minuteries: [],
     hasardAlertes: ((options.graine ?? GRAINE_PAR_DEFAUT) * 7 + 13) | 0,
     intrigues: intriguesDeDepart(),

@@ -63,6 +63,7 @@ function ajouter(etat: EtatJeu, id: IdAlerte, cible: string | null, delai: numbe
 function demarrerDispute(etat: EtatJeu, evenements: Sortie): void {
   if (etat.dispute) return;
   etat.dispute = { expire: instant(etat) + B.DISPUTE_DELAI };
+  etat.semaine.stats.disputes += 1;
   evenements.push({ type: 'dispute' });
 }
 
@@ -94,6 +95,7 @@ function manquer(etat: EtatJeu, a: AlerteMinutee, evenements: Sortie): void {
       break;
     }
   }
+  etat.semaine.stats.alertesManquees += 1;
   evenements.push({ type: 'alerteManquee', id: a.id, prenom: prenomDe(etat, a) });
 }
 

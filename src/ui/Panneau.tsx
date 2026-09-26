@@ -17,6 +17,9 @@ import {
 } from '../content/balance';
 import { trouverIntrigue } from '../content/intrigues';
 import { trouverAmbition } from '../content/ambitions';
+import { OBJECTIFS_MOIS, trouverDefi } from '../content/defis';
+import { defiReussi, objectifReussi, valeurDefi, valeurObjectif } from '../engine/bilans';
+import { formaterMesure, texteDefi, texteObjectif } from './objectifs';
 import { PIECES_COMMUNES, trouverChambre, trouverPiece } from '../content/maison';
 import { JOSEE_RESERVE } from '../content/josee';
 import { PALIERS } from '../content/paliers';
@@ -139,6 +142,8 @@ function OngletVerrouille({ nom, numero, atteint }: { nom: string; numero: numbe
 function ProchainPalier({ partie }: { partie: EtatJeu }) {
   const suivant = PALIERS.find((p) => p.numero === partie.palier + 1);
   if (!suivant) return null;
+  // Le palier 3 viendra en v0.5 : une fois la première mensualité payée, on le dit.
+  const aVenir = suivant.numero === 3 && partie.mensualitesPayees >= 1;
   return (
     <div className="palier">
       <span className="palier-titre">{t.prochainPalier}</span>
@@ -146,7 +151,7 @@ function ProchainPalier({ partie }: { partie: EtatJeu }) {
         {suivant.numero}. {suivant.nom}
       </b>
       <span>{suivant.objectif}</span>
-      <span className="palier-ouvre">{suivant.ouvre}</span>
+      <span className="palier-ouvre">{aVenir ? TEXTES.bilanMois.palierAVenir : suivant.ouvre}</span>
     </div>
   );
 }
@@ -179,6 +184,7 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
   return (
     <>
       <ProchainPalier partie={partie} />
+      <Objectifs partie={partie} />
       <h3>{t.chambres}</h3>
       {partie.chambres.map((c) => {
         const def = trouverChambre(c.id);
@@ -212,6 +218,42 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
         />
       ))}
       <Voisinage partie={partie} />
+    </>
+  );
+}
+
+/** Le défi de la semaine et l'objectif du mois, avec où on en est. */
+function Objectifs({ partie }: { partie: EtatJeu }) {
+  const o = TEXTES.objectifs;
+  const def = partie.defi ? trouverDefi(partie.defi) : undefined;
+  if (partie.palier < 1 && !def) return null;
+  const mois = partie.mois;
+  const valeurMois = valeurObjectif(partie, mois);
+  const jourMensualite = jourProchaineMensualite(partie);
+  return (
+    <>
+      {def && (
+        <div className="objectif">
+          <span className="palier-titre">{o.defi}</span>
+          <b>{def.titre}</b>
+          <span>{texteDefi(def, partie)}</span>
+          <span className={defiReussi(def, valeurDefi(partie, def)) ? 'positif' : 'sous'}>
+            {o.progression(formaterMesure(def.mesure.type, valeurDefi(partie, def)), formaterMesure(def.mesure.type, def.cible), !!def.auPlus)}
+          </span>
+          <span className="palier-ouvre">{o.recompense(def.recompenseTexte)}</span>
+        </div>
+      )}
+      {jourMensualite !== null && (
+        <div className="objectif">
+          <span className="palier-titre">{o.mois(mois.numero)}</span>
+          <b>{OBJECTIFS_MOIS[mois.objectif].titre}</b>
+          <span>{texteObjectif(mois)}</span>
+          <span className={objectifReussi(mois, valeurMois) ? 'positif' : 'sous'}>
+            {o.progression(formaterMesure(mois.objectif, valeurMois), formaterMesure(mois.objectif, mois.cible), mois.objectif === 'equipe')}
+          </span>
+          <span className="palier-ouvre">{o.jugeLe(jourMensualite)}</span>
+        </div>
+      )}
     </>
   );
 }

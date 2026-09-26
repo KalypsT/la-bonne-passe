@@ -48,11 +48,12 @@ const arrondi = (n: number) => Math.round(n).toLocaleString('fr-FR');
 /** Les soirées se renouvellent-elles ? Une ligne par stratégie, cartes tranchées au hasard pour voir toutes les issues. */
 function renouvellement(): string[] {
   const lignes = [
-    '| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) |',
-    '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+    '| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) | Défis réussis | Objectif du mois 1 |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
   ];
   const noms = ['Classique, 3', 'Feutrée, 4', 'Adaptatif (suit les tendances), 3', 'Classique 3, sélection laxiste', 'Classique 3, sélection stricte'];
   const virgule = (x: number, d = 1) => x.toFixed(d).replace('.', ',');
+  const reussis = (liste: boolean[]) => (liste.length ? `${liste.filter(Boolean).length} sur ${liste.length}` : '—');
   for (const s of STRATEGIES.filter((x) => noms.includes(x.nom))) {
     const parties = GRAINES.map((graine) => simuler({ graine, nuits: NUITS, ...s, offre: s.offreSelon ?? s.offre, politique: 'hasard' }));
     const mesures = parties.map((p) => mesurerRenouvellement(p.nuits));
@@ -62,7 +63,9 @@ function renouvellement(): string[] {
       `| ${s.nom} | ${virgule(moy((m) => m.decisions))} | ${(moy((m) => m.soireesCalmes) * 100).toFixed(0)} % | ${virgule(moy((m) => m.alertes))} | ` +
         `${virgule(moy((m) => m.imprevus))} | ${virgule(moy((m) => m.imprevusDifferents))} | ${virgule(moy((m) => m.repetitionMax))} | ` +
         `${(moy((m) => m.dejaVus7) * 100).toFixed(0)} % | ${virgule(moy((m) => m.cartesIntrigue))} | ` +
-        `${voisin.length} sur ${parties.length}${voisin.length ? `, nuit ${(voisin.reduce((a, b) => a + b, 0) / voisin.length).toFixed(0)}` : ''} |`,
+        `${voisin.length} sur ${parties.length}${voisin.length ? `, nuit ${(voisin.reduce((a, b) => a + b, 0) / voisin.length).toFixed(0)}` : ''} | ` +
+        `${reussis(parties.flatMap((p) => p.bilans.flatMap((b) => (b.defi ? [b.defi.reussi] : []))))} | ` +
+        `${reussis(parties.flatMap((p) => p.bilansMois.filter((m) => m.numero === 1).map((m) => m.reussi)))} |`,
     );
   }
   return lignes;

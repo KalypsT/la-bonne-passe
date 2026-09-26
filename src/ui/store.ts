@@ -27,6 +27,7 @@ export type Carte =
   | 'nouveautes'
   | 'grossiste'
   | 'semaine'
+  | 'mois'
   | 'entretien'
   | 'essai'
   | 'imprevu'
@@ -128,6 +129,7 @@ function carteEnAttente(partie: EtatJeu | null): Carte | null {
   if (partie.imprevu) return 'imprevu';
   if (partie.intrigues.carte) return 'intrigue';
   if (partie.avance.statut === 'proposee') return 'grossiste';
+  if (partie.bilanMoisAVoir) return 'mois';
   if (partie.bilanAVoir) return 'semaine';
   if (partie.annonces.length > 0) return 'palier';
   if (partie.nouveautes.length > 0) return 'nouveautes';
@@ -142,7 +144,7 @@ function etapeDidacticiel(partie: EtatJeu | null) {
 }
 
 /** Événements qui mettent le jeu en pause et ouvrent une carte. */
-const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai', 'imprevu', 'intrigue', 'depart', 'grossiste', 'bilanSemaine']);
+const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai', 'imprevu', 'intrigue', 'depart', 'grossiste', 'bilanSemaine', 'bilanMois']);
 
 /** Traduit les événements en montants flottants et en cartes à ouvrir. Le journal, lui, vit dans la partie. */
 function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
@@ -161,6 +163,7 @@ function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
     if (e.type === 'intrigue') carte = 'intrigue';
     if (e.type === 'grossiste') carte = 'grossiste';
     if (e.type === 'bilanSemaine' && !carte) carte = 'semaine';
+    if (e.type === 'bilanMois' && !carte) carte = 'mois';
     if (e.type === 'depart' && !carte) carte = 'adieu';
     if (e.type === 'finEssai' && !carte) carte = 'essai';
     if (e.type === 'bilan') {
@@ -325,8 +328,12 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     const { partie, carte: actuelle } = get();
     let suite = carte ?? carteEnAttente(partie);
     // Fermer une annonce, des nouveautés ou un adieu : le moteur les marque comme vus, puis on passe à la suite.
-    const vus = { palier: 'annonceVue', nouveautes: 'nouveautesVues', adieu: 'adieuVu', semaine: 'bilanSemaineVu' } as const;
-    if (!carte && partie && (actuelle === 'palier' || actuelle === 'nouveautes' || actuelle === 'adieu' || actuelle === 'semaine')) {
+    const vus = { palier: 'annonceVue', nouveautes: 'nouveautesVues', adieu: 'adieuVu', semaine: 'bilanSemaineVu', mois: 'bilanMoisVu' } as const;
+    if (
+      !carte &&
+      partie &&
+      (actuelle === 'palier' || actuelle === 'nouveautes' || actuelle === 'adieu' || actuelle === 'semaine' || actuelle === 'mois')
+    ) {
       const resultat = appliquerOrdres(partie, [{ type: vus[actuelle] }]);
       set({ partie: resultat.etat });
       suite = carteEnAttente(resultat.etat);

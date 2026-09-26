@@ -3,6 +3,7 @@ import { CLIENTS } from '../content/clientele';
 import { trouverImprevu } from '../content/imprevus';
 import { trouverIntrigue } from '../content/intrigues';
 import { TEXTES_ALERTES } from '../content/alertes';
+import { trouverDefi } from '../content/defis';
 import { trouverTendance } from '../content/tendances';
 import { trouverTheme } from '../content/themes';
 import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS } from '../content/regles';
@@ -233,6 +234,16 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
               : (def.rate ?? '');
       return texte ? remplir(texte, partie, p) : null;
     }
+    case 'defi': {
+      const def = trouverDefi(evenement.id);
+      return def ? t.defi(def.titre) : null;
+    }
+    case 'defiConclu': {
+      const def = trouverDefi(evenement.id);
+      return def ? t.defiConclu(def.titre, evenement.reussi) : null;
+    }
+    case 'bilanMois':
+      return t.bilanMois(evenement.numero, evenement.reussi);
     case 'candidatVedette':
       return t.candidatVedette(evenement.prenom);
     case 'remboursement':

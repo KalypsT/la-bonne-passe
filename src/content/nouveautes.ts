@@ -38,6 +38,16 @@ export const NOUVEAUTES: Nouveaute[] = [
     palier: 2,
     texte: 'L’humeur du voisinage, dans l’onglet Maison : les soirs de fête s’entendent jusqu’au dernier étage.',
   },
+  {
+    id: 'objectifs',
+    palier: 1,
+    texte: 'Un objectif chaque mois, jugé le jour de la mensualité, avec un bilan de fin de mois. Il s’affiche dans l’onglet Maison.',
+  },
+  {
+    id: 'defis',
+    palier: 2,
+    texte: 'Un défi chaque semaine, annoncé au bilan du lundi et lié à ce qui se passe en ville. Réussi, il rapporte.',
+  },
 ];
 
 export function trouverNouveaute(id: string): Nouveaute | undefined {

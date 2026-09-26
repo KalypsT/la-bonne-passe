@@ -1673,3 +1673,23 @@ body {
 .intrigue-personne p {
   margin-top: 0;
 }
+
+/* Défi de la semaine et objectif du mois, dans l'onglet Maison. */
+.objectif {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(212, 166, 74, 0.5);
+  border-radius: 12px;
+}
+
+.objectif .positif {
+  color: var(--laiton);
+  font-weight: 600;
+}
+
+.defi-bilan {
+  margin: 6px 0;
+}

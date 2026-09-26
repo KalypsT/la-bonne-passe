@@ -15,6 +15,7 @@ import { ecart, instant } from './temps';
 import { depenser, encaisser, noterDepense } from './comptes';
 import { demandeTendance, disputeTendance } from './semaine';
 import { bruitDuSoir, changerTapage } from './quartier';
+import { conclureMois, type EvenementBilan } from './bilans';
 import { enPause, fermerMinuteries, vivreMinuteries, type EvenementMinuterie } from './minuteries';
 import {
   affluenceTheme,
@@ -82,7 +83,8 @@ export type EvenementSoiree =
   | EvenementRegle
   | EvenementBar
   | EvenementTheme
-  | EvenementMinuterie;
+  | EvenementMinuterie
+  | EvenementBilan;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -446,6 +448,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
       tirage.chance(B.DISPUTE_CHANCE_PAR_HEURE * etat.file.length * heures * facteurDispute(etat))
     ) {
       etat.dispute = { expire: maintenant + B.DISPUTE_DELAI };
+      etat.semaine.stats.disputes += 1;
       evenements.push({ type: 'dispute' });
     }
 
@@ -532,5 +535,6 @@ export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
       depuisReserve,
       restantes: NOMBRE_MENSUALITES - etat.mensualitesPayees,
     });
+    conclureMois(etat, depuisReserve, etat.mensualitesPayees < NOMBRE_MENSUALITES, evenements);
   }
 }

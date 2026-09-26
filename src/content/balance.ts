@@ -618,3 +618,35 @@ export const ALERTES = {
   photographe: { reputationMin: 30, chance: 0.5, delai: 25, billet: 20, satisfactionManquee: 3 },
   pause: { fatigueMin: 50, chance: 0.9, delai: 30, minutes: 20, fatigue: 10, moral: 3, refus: 3, moralManque: 6, loyauteManque: 2 },
 };
+
+/** Défis de la semaine (v0.4) : les cibles. Elles visent environ une semaine sur deux réussie pour un joueur attentif. */
+export const DEFIS = {
+  congres: 12, // clients d'affaires reçus
+  match: 3, // disputes sur le quai, au plus
+  hauteSaison: 28, // touristes reçus
+  evgBar: 2000, // recette du bar, en euros
+  evgGroupes: 25, // clients des groupes reçus
+  creuse: 55, // clients reçus malgré tout
+  habitues: 5, // points de satisfaction gagnés chez les habitués
+  attentive: 3, // alertes laissées filer, au plus
+  bar: 1800, // recette du bar, en euros
+  fidelite: 15, // part de clients perdus, au plus (%)
+  affluence: 80, // clients reçus
+  /** Un défi lié à une tendance de la semaine pèse tant de fois plus qu'un défi ordinaire au tirage. */
+  poidsLie: 3,
+}
+
+/** Objectifs du mois (v0.4), évalués le jour de la mensualité. */
+export const OBJECTIFS = {
+  /** Premier mois : la réputation à atteindre. */
+  reputationMois1: 52,
+  /** Mois suivants : réputation actuelle + tant (plafonnée à 90). */
+  reputationEnPlus: 8,
+  /** Fidéliser la clientèle principale (le segment le plus reçu ces dernières nuits) : sa satisfaction + tant (plafonnée à 90). */
+  satisfactionEnPlus: 8,
+  /** Avoir (trésorerie et réserve) à garder après la mensualité. */
+  avoir: 3000,
+  /** Récompense d'un objectif atteint. */
+  recompenseReputation: 2,
+  recompenseMoral: 4,
+};
