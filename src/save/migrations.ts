@@ -606,6 +606,9 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       hasardEtablissement: hasardEtablissementDeDepart(typeof d.hasard === 'number' ? d.hasard : 0),
     };
   },
+  // v33 → v34 : les départs récents (le quartier en parle), vides : on ne sait plus quand les anciens sont partis.
+  // Josée présente les nouvelles règles d'entretien (chambres défraîchies, linge, départs).
+  33: (d) => ({ ...d, version: 34, departsRecents: [], nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), 'entretien'] }),
 };
 
 
@@ -700,6 +703,7 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(d.annexes) &&
     estObjet(d.niveauxEquipes) &&
     typeof d.hasardPlacement === 'number' &&
+    Array.isArray(d.departsRecents) &&
     estObjet(d.permis) &&
     estObjet(d.agrandissement) &&
     Array.isArray(d.agrandissement.achete) &&

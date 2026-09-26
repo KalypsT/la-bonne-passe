@@ -111,6 +111,16 @@ export function arriveeVisites(etat: EtatJeu, evenements: Sortie): void {
   }
 }
 
+/** Départs des quatre dernières semaines : le quartier en parle. */
+export function departsRecents(etat: Pick<EtatJeu, 'departsRecents' | 'jour'>): number {
+  return etat.departsRecents.filter((j) => etat.jour - j < B.DEPARTS_RECENTS.jours).length;
+}
+
+/** Part en plus que demandent les candidats après des départs récents. */
+export function exigenceDuQuartier(etat: Pick<EtatJeu, 'departsRecents' | 'jour'>): number {
+  return Math.round(Math.min(B.DEPARTS_RECENTS.partMax, departsRecents(etat) * B.DEPARTS_RECENTS.partPlus) * 100) / 100;
+}
+
 /** Nombre de candidats sur le marché du lundi, selon la réputation. */
 export function tailleDuMarche(reputation: number): number {
   return Math.min(B.MARCHE_MAX, B.MARCHE_BASE + Math.floor(reputation / B.MARCHE_REPUTATION_PAR_CANDIDAT));
@@ -146,7 +156,8 @@ export function genererCandidat(etat: EtatJeu, tirage: Tirage, expire: number): 
   const questions = traits.map((trait) => ({ ...tirage.choisir(QUESTIONS_PAR_TRAIT[trait] ?? [{ question: '« Parle-moi de toi. »', reponse: '« Il y aurait trop à dire. »' }]), trait }));
 
   const total = TALENTS_LISTE.reduce((s, t) => s + talents[t], 0);
-  const partMin = total >= 13 ? 0.55 : talents[fort] >= 5 ? 0.5 : 0.45;
+  // Après des départs récents, le quartier se méfie : chacun demande davantage.
+  const partMin = (total >= 13 ? 0.55 : talents[fort] >= 5 ? 0.5 : 0.45) + exigenceDuQuartier(etat);
 
   const p = PIECES_SILHOUETTE;
   const tenue = tirage.choisir(p.tenues);
@@ -226,7 +237,7 @@ export function matinRecrutement(etat: EtatJeu, tirage: Tirage, evenements: Sort
   }
 
   if (etat.systemes.recrutement && etat.jour > 1 && jourDeLaSemaine(etat.jour) === 0) {
-    const nombre = tailleDuMarche(etat.reputation);
+    const nombre = Math.max(0, tailleDuMarche(etat.reputation) - departsRecents(etat) * B.DEPARTS_RECENTS.marcheMoins);
     for (let i = 0; i < nombre; i++) etat.candidats.push(genererCandidat(etat, tirage, etat.jour + 7));
     evenements.push({ type: 'marche', nombre });
   }

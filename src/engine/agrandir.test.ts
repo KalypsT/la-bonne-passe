@@ -30,7 +30,7 @@ function auPalier(palier: number, champs: Partial<EtatJeu> = {}): EtatJeu {
   const etat: EtatJeu = { ...creerEtatInitial({ graine: 71 }), jour: 44, minuteDuJour: h(10), briefingJour: 44, nuitsBouclees: 43, mensualitesPayees: 1 };
   for (let p = 1; p <= palier; p++) accorderPalier(etat, p);
   etat.personnel = [{ ...etat.personnel[0]!, nuitsTravaillees: 40 }, embauche(MILA), embauche(JONAS), embauche(INES)];
-  return { ...etat, annonces: [], visites: [], candidats: [], tresorerie: 30000, reputation: 72, ...champs };
+  return { ...etat, annonces: [], visites: [], candidats: [], tresorerie: 30000, reputation: 82, ...champs };
 }
 const ordre = (e: EtatJeu, o: Parameters<typeof appliquerOrdres>[1][number]) => appliquerOrdres(e, [o]);
 /** Le lundi suivant (jour 50), à 5 h. */
@@ -44,8 +44,8 @@ function attendre(e: EtatJeu, heures: number): EtatJeu {
 }
 
 describe('palier 5 : le permis de la mairie', () => {
-  it('se demande au palier 4, avec 70 de réputation, contre 300 € de dossier', () => {
-    expect(peutDemanderPermis(auPalier(4, { reputation: 65 }))).toBe(false);
+  it('se demande au palier 4, avec 80 de réputation, contre 300 € de dossier', () => {
+    expect(peutDemanderPermis(auPalier(4, { reputation: B.PALIER_5.reputation - 1 }))).toBe(false);
     expect(peutDemanderPermis(auPalier(3))).toBe(false);
     const { etat, evenements } = ordre(auPalier(4), { type: 'demanderPermis' });
     expect(etat.permis.statut).toBe('depose');

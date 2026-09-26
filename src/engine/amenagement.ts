@@ -182,3 +182,8 @@ export function avancerTravauxAnnexes(etat: EtatJeu, evenements: Sortie): void {
 export function decorDOrigine(chambreId: string): IdDecor {
   return trouverChambre(chambreId)?.decor ?? 'rose';
 }
+
+/** Une chambre défraîchie (état sous 30 %) : les clients marchandent (v0.6, partie 8). */
+export function prixEtat(chambre: EtatChambre | undefined): number {
+  return chambre && chambre.etat < B.CHAMBRE_DEFRAICHIE.seuil ? B.CHAMBRE_DEFRAICHIE.prix : 1;
+}

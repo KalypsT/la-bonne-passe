@@ -144,6 +144,7 @@ export function depart(etat: EtatJeu, e: Employe, evenements: Sortie): void {
   changerSatisfaction(etat, 'habitue', -B.DEPART_SATISFACTION_HABITUES);
   etat.adieux.push(e.prenom);
   etat.mois.departs += 1;
+  etat.departsRecents = [...etat.departsRecents.filter((j) => etat.jour - j < B.DEPARTS_RECENTS.jours), etat.jour];
   evenements.push({ type: 'depart', prenom: e.prenom });
 }
 

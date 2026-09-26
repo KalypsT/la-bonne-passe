@@ -59,7 +59,7 @@ export const PALIERS: DefinitionPalier[] = [
   {
     numero: 4,
     nom: 'Monter en gamme',
-    objectif: 'Réputation 50 et 4 personnes.',
+    objectif: 'Réputation 60 et 4 personnes.',
     ouvre: 'VIP et couples curieux, confort des chambres et jacuzzi, formations, placement, nouveau nom.',
     details: [
       'VIP : gros budgets, peu nombreux. Ils veulent de la discrétion, une chambre premium, du confort, et fuient les incidents.',
@@ -73,7 +73,7 @@ export const PALIERS: DefinitionPalier[] = [
   {
     numero: 5,
     nom: 'S’agrandir',
-    objectif: 'Réputation 70 et accord de la mairie : le dossier se dépose dans sa fiche (onglet Relations).',
+    objectif: 'Réputation 80 et accord de la mairie : le dossier se dépose dans sa fiche (onglet Relations).',
     ouvre: 'Le bâtiment voisin et jusqu’à 8 personnes, la gérance, une deuxième maison.',
     details: [
       'Le bâtiment voisin, à droite de la maison : ses deux étages (2 chambres) ou tout le bâtiment (3 chambres), meublés. Touche-le dans la scène.',

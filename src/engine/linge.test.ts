@@ -22,9 +22,9 @@ describe('le linge en parures', () => {
     expect(creerEtatInitial().linge).toBe(4);
   });
 
-  it('les gros packs coûtent moins cher par parure, sur la base de 12 € la parure', () => {
+  it('les gros packs coûtent moins cher par parure, sur la base de 10 € la parure (v0.6, partie 8)', () => {
     const unitaires = B.PACKS_LINGE.map((p) => p.prix / p.parures);
-    expect(unitaires[0]).toBe(12);
+    expect(unitaires[0]).toBe(10);
     for (let i = 1; i < unitaires.length; i++) expect(unitaires[i]).toBeLessThan(unitaires[i - 1]!);
     // L'express reste le plus cher.
     expect(B.LIVRAISON_EXPRESS_LINGE.prix / B.LIVRAISON_EXPRESS_LINGE.parures).toBeGreaterThan(unitaires[0]!);
@@ -32,20 +32,20 @@ describe('le linge en parures', () => {
 
   it('le prix d’une quantité suit le tarif du plus gros pack qu’elle atteint', () => {
     expect(prixLinge(0)).toBe(0);
-    expect(prixLinge(3)).toBe(36);
-    expect(prixLinge(5)).toBe(60);
-    expect(prixLinge(7)).toBe(84);
-    expect(prixLinge(10)).toBe(110);
-    expect(prixLinge(12)).toBe(132);
-    expect(prixLinge(20)).toBe(200);
-    expect(prixLinge(25)).toBe(250);
+    expect(prixLinge(3)).toBe(30);
+    expect(prixLinge(5)).toBe(50);
+    expect(prixLinge(7)).toBe(70);
+    expect(prixLinge(10)).toBe(90);
+    expect(prixLinge(12)).toBe(108);
+    expect(prixLinge(20)).toBe(160);
+    expect(prixLinge(25)).toBe(200);
   });
 
   it('un pack commandé au briefing se paie tout de suite et arrive à l’ouverture', () => {
     const { etat } = valider(briefing(), { packLinge: 10 });
     expect(etat.lingeCommande).toBe(10);
-    expect(etat.tresorerie).toBe(B.TRESORERIE_INITIALE - 110);
-    expect(etat.journee.comptes.depenses.linge).toBe(110);
+    expect(etat.tresorerie).toBe(B.TRESORERIE_INITIALE - 90);
+    expect(etat.journee.comptes.depenses.linge).toBe(90);
     const ouverte = tick({ ...etat, minuteDuJour: h(19, 55) }).etat;
     expect(ouverte.linge).toBe(B.LINGE_INITIAL + 10);
     // Un pack qui n'existe pas ne se commande pas.
@@ -61,7 +61,7 @@ describe('le linge en parures', () => {
     // Avec un pack de 5, il ne manque plus que 2 parures.
     const avecPack = valider(briefing({ linge: 3 }), { packLinge: 5, lingeAuto: 10 }).etat;
     expect(avecPack.lingeCommande).toBe(7);
-    expect(avecPack.tresorerie).toBe(B.TRESORERIE_INITIALE - 60 - prixLinge(2));
+    expect(avecPack.tresorerie).toBe(B.TRESORERIE_INITIALE - 50 - prixLinge(2));
     // Stock déjà plein : rien.
     expect(valider(briefing({ linge: 12 }), { lingeAuto: 10 }).etat.lingeCommande).toBe(0);
   });

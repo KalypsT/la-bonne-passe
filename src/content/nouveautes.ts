@@ -12,6 +12,12 @@ export interface Nouveaute {
 export const NOUVEAUTES: Nouveaute[] = [
   { id: 'impot', palier: 0, texte: TEXTES_BANQUE.nouveautes.impot },
   {
+    id: 'entretien',
+    palier: 0,
+    texte:
+      'L’entretien se voit dans la caisse : une chambre défraîchie (sous 30 % d’état) se paie 15 % de moins, et un client sans linge propre aussi, à tes frais. Les packs de linge baissent (50, 90 et 160 €), et les chambres s’usent deux fois moins vite. Autre chose : quand quelqu’un part, le quartier en parle pendant un mois. Moins de candidatures, et plus exigeantes.',
+  },
+  {
     id: 'amenagement',
     palier: 1,
     texte: 'Dans la fiche de chaque chambre ouverte : rafraîchir la déco, changer de décor (chacun plaît à sa clientèle), ou la fermer pour un soir.',

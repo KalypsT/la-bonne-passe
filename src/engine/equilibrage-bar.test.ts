@@ -48,6 +48,7 @@ describe('équilibrage du bar', () => {
 
   it('la formule champagne rapporte plus, mais coûte de la réputation', () => {
     expect(moyenne('champagne', resultat(7, 42))).toBeGreaterThan(moyenne('bar', resultat(7, 42)));
-    expect(moyenne('champagne', (p) => p.nuits[41]!.reputation)).toBeLessThan(moyenne('bar', (p) => p.nuits[41]!.reputation) - 3);
+    // v0.6, partie 8 : −1,4 (le joueur de référence entretient linge et chambres : le malus pèse moins sur une qualité plus haute).
+    expect(moyenne('champagne', (p) => p.nuits[41]!.reputation)).toBeLessThan(moyenne('bar', (p) => p.nuits[41]!.reputation) - 1);
   });
 });

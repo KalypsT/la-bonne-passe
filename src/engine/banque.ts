@@ -239,6 +239,12 @@ export function encours(etat: EtatJeu): number {
   return etat.banque.emprunts.reduce((t, e) => t + Math.round((e.montant * e.restantes) / e.duree), 0);
 }
 
+/** Toute la dette de la maison : le capital du rachat encore à rembourser, les nouveaux emprunts, et le retard. */
+export function detteTotale(etat: EtatJeu): number {
+  const rachat = Math.max(0, NOMBRE_ECHEANCES_RACHAT - etat.banque.echeances) * B.MENSUALITE + etat.banque.supplement;
+  return rachat + encours(etat) + etat.banque.retard;
+}
+
 /** Ce que la banque accepte encore de prêter, par tranches. */
 export function capaciteEmprunt(etat: EtatJeu): number {
   const reste = Math.max(0, B.EMPRUNT.max - encours(etat));

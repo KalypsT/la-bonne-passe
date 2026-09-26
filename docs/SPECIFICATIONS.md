@@ -127,8 +127,8 @@ Le joueur part presque de rien : une hôtesse, une chambre en état, un salon et
 | 1. Rouvrir | Première soirée bouclée | Recrutement, rénovation des chambres fermées, planning du soir, réserve de sécurité |
 | 2. Se faire un nom | Réputation 25 | Segments Affaires et Groupes, onglet Clientèle, tarifs et formules, sélection à l'entrée et priorité d'accueil ; bar à rénover, puis équipe Bar et avance fournisseur ; soirées à thème et tendances au premier lundi |
 | 3. Tenir la maison | Première mensualité payée | Onglet Relations (voisins, mairie, presse, police), première rivale qui réagit, équipes Accueil et Sécurité ; puis, lundi après lundi, l'assurance, la visibilité et le nouvel emprunt (v0.6) |
-| 4. Monter en gamme | Réputation 50 et 4 personnes | VIP et Couples curieux, niveaux de confort des chambres (Jacuzzi dans les chambres premium), changement de nom de la maison ; puis, lundi après lundi, les formations et le placement (v0.6) |
-| 5. S'agrandir | Réputation 70 et accord de la mairie | Le bâtiment voisin (2 ou 3 chambres) et jusqu'à 8 personnes ; puis, lundi après lundi, la gérance et le projet d'une deuxième maison (v0.6) |
+| 4. Monter en gamme | Réputation 60 et 4 personnes (50 avant la v0.6, partie 8) | VIP et Couples curieux, niveaux de confort des chambres (Jacuzzi dans les chambres premium), changement de nom de la maison ; puis, lundi après lundi, les formations et le placement (v0.6) |
+| 5. S'agrandir | Réputation 80 et accord de la mairie (70 avant la v0.6, partie 8) | Le bâtiment voisin (2 ou 3 chambres) et jusqu'à 8 personnes ; puis, lundi après lundi, la gérance et le projet d'une deuxième maison (v0.6) |
 
 - Environ un nouveau système par semaine de jeu, présenté par Josée à son ouverture.
 - Le palier suivant est toujours affiché, avec ce qu'il rapporte.
@@ -136,7 +136,7 @@ Le joueur part presque de rien : une hôtesse, une chambre en état, un salon et
 - Un palier riche s'ouvre par étapes : le palier 2 donne d'emblée la clientèle et les règles de la porte ; le bar se rouvre par des travaux, ce qui amène l'équipe Bar et l'offre du grossiste ; les soirées à thème arrivent au briefing du lundi suivant, avec les premières tendances.
 - Une partie qui a déjà passé un palier reçoit ce qu'une mise à jour y ajoute, présenté par Josée au chargement.
 - Chaque nouvel établissement repart petit, avec des paliers plus courts.
-- **Le palier 5 en v0.6** : au palier 4, avec 70 de réputation, le joueur dépose un dossier de permis dans la fiche de la mairie (onglet Relations, 300 €). La mairie répond au lundi suivant : elle accorde le permis si elle est en bons termes avec la maison (au-dessus de +40) et que la réputation tient ; sinon elle refuse et le joueur peut redéposer. Le permis accordé ouvre le palier 5 le jour même.
+- **Le palier 5 en v0.6** : au palier 4, avec 80 de réputation, le joueur dépose un dossier de permis dans la fiche de la mairie (onglet Relations, 300 €). La mairie répond au lundi suivant : elle accorde le permis si elle est en bons termes avec la maison (au-dessus de +40) et que la réputation tient ; sinon elle refuse et le joueur peut redéposer. Le permis accordé ouvre le palier 5 le jour même.
 - **Le deuxième établissement en v0.6 s'arrête au projet** : trois lieux proposés (tirés parmi cinq, prix à ±10 %, avec leur propre hasard), l'achat (29 000 à 53 000 €), puis les travaux (7 000 à 15 500 €, 5 à 10 jours). La maison attend ensuite sa gérante et son ouverture, qui viendront avec la v1.0 (fin du chapitre 1). L'achat et les travaux ont leur poste de dépenses, et n'entrent pas dans le bénéfice imposable (c'est un bien).
 
 ## Personnel
@@ -212,6 +212,8 @@ Le joueur démarre avec Sanne seule (29 ans, Conversation 5, traits Mère poule 
 - **Inès**, 31 ans, Audace 5, traits Tête brûlée et Fêtarde (jour 3, 11 h).
 
 Tous sont adultes et travaillent de leur plein gré : ils peuvent refuser, négocier et partir.
+
+**Le quartier en parle** (v0.6, partie 8) : pendant quatre semaines après chaque départ, le marché du lundi compte deux candidats de moins, et chaque candidat demande 5 points de part en plus (10 au plus). L'onglet Personnel le dit. User l'équipe et la remplacer ne devient pas une stratégie : au cran 6 permanent, la maison est devant au bout d'un mois, puis se vide et finit loin derrière au troisième.
 
 ## Clientèle et offre
 
@@ -321,8 +323,9 @@ L'aménagement sert surtout les autres systèmes : des pièces à thème dans un
   - Une fois agrandie, la maison peut accueillir jusqu'à 8 personnes (au salon, sur huit places plus serrées).
   - Dans la scène, un bouton « Chez le voisin › » fait glisser la vue le long de la rue (et « ‹ La maison » la ramène) ; il porte un point rose quand une chambre de l'autre côté réclame le ménage. Toucher une chambre dans le panneau y conduit la vue.
 - **Usure** : chaque rendez-vous salit la chambre (environ −20 % de propreté) et l'use un peu. Sous 40 % : alerte ; sous 15 % : la chambre ne reçoit plus. Le ménage traite la propreté ; l'état demande une rénovation payante.
+  - v0.6, partie 8 : 0,6 à 1,2 point d'état par rendez-vous, soit environ un mois à trois rendez-vous par nuit entre un rafraîchissement (90 %) et 30 %. Sous 30 % d'état, la chambre est **défraîchie** : chaque rendez-vous s'y paie 15 % de moins (la personne garde sa part du prix payé). La fiche de la chambre le dit. Le Boudoir démarre à 90 % d'état.
 - **Buanderie** (v0.6) : le linge tourne. Une parure utilisée part au sale ; le ménage la relave (0,5 parure par heure et par personne maison ouverte, 2 maison fermée) contre 3 € de lessive ; l'usure envoie une parure sur vingt-cinq au chiffon, sans hasard. La commande automatique compte le linge au lavage. Sans buanderie, on achète.
-- **Linge** (v0.6) : il se compte en parures, une par rendez-vous ; 4 au départ. Au briefing, des packs livrés à l'ouverture, moins chers par parure en gros : 5 parures pour 60 €, 10 pour 110 €, 20 pour 200 €. Une commande automatique (non, 5, 10 ou 20) complète chaque soir le stock jusqu'à la cible, au tarif des packs. Livraison express en soirée : 5 parures pour 90 €. Le briefing et le panneau affichent « N parures, environ N rendez-vous ». Plus tard, la buanderie fera tourner le stock : une parure utilisée devient sale, le ménage la relave (plus vite maison fermée), et chaque parure s'use ; sans buanderie, on garde l'achat simple.
+- **Linge** (v0.6) : il se compte en parures, une par rendez-vous ; 4 au départ. Au briefing, des packs livrés à l'ouverture, moins chers par parure en gros : 5 parures pour 50 €, 10 pour 90 €, 20 pour 160 € (60, 110 et 200 € avant la v0.6, partie 8). Un rendez-vous sans linge propre se paie 15 % de moins, et c'est la maison, qui fournit les draps, qui en fait les frais : la part de la personne se compte sur le prix plein. Une commande automatique (non, 5, 10 ou 20) complète chaque soir le stock jusqu'à la cible, au tarif des packs. Livraison express en soirée : 5 parures pour 90 €. Le briefing et le panneau affichent « N parures, environ N rendez-vous ». Plus tard, la buanderie fera tourner le stock : une parure utilisée devient sale, le ménage la relave (plus vite maison fermée), et chaque parure s'use ; sans buanderie, on garde l'achat simple.
 
 ## Économie et finances
 
@@ -529,10 +532,11 @@ Après la v1.0 : chapitres 2 à 4, chaleur, gérantes multi-maisons, Grand Gala 
 ## Questions ouvertes
 
 - [x] Rythme : 6 minutes par soirée à ×1 convient-il ? Non, trop long au téléphone : la soirée passe à 3 minutes en v0.5, avec le même nombre d'alertes et d'imprévus, et le même temps de réaction réel pour chacun.
-- [ ] Seuils des paliers (réputation 25, 50, 70) : à équilibrer en jeu.
+- [x] Seuils des paliers : réputation 25, 60 et 80 depuis la v0.6, partie 8 (50 et 70 auparavant : une maison bien tenue passait 50 avant la première mensualité, et le palier 4 tombait le même jour que le palier 3). À confirmer en jeu.
 - [ ] Durées visées des chapitres (6 à 8 h pour le premier) : réalistes pour des sessions de 15 à 20 minutes ?
 - [ ] Pays des chapitres 2 à 4 : la liste proposée convient-elle ?
 - [x] Le quartier vit-il ? (v0.5) Oui : au deuxième mois, 11 à 16 événements venus de dehors par semaine selon la maison, aucune semaine sans, des relations qui divergent selon le style (voisins de −33 à +36), une rivale qui frappe deux à trois fois par mois et d'autant plus fort qu'on lui prend sa clientèle. Détail dans docs/EQUILIBRAGE.md.
-- [ ] Le deuxième mois est-il trop dense à ×1 ? 6 à 10 alertes et 8 à 12 décisions par soirée de 3 minutes, contre 4 à 5 alertes au premier mois.
-- [ ] Les équipes Accueil et Sécurité valent-elles leur salaire ? Elles achètent du calme, pas de l'argent : une équipe coûte environ 1 800 à 2 600 € par mois.
+- [ ] Le deuxième mois est-il trop dense à ×1 ? v0.6, partie 8 : 4,4 à 8,1 alertes et 6,5 à 10,2 décisions par soirée de 3 minutes (une toutes les 18 à 28 secondes), contre 3,6 alertes au premier mois. Soutenu sans être intenable : à juger en main.
+- [x] Les équipes Accueil et Sécurité valent-elles leur salaire ? En argent, non : sur deux mois, l'accueil coûte environ 1 070 €, la sécurité 1 400 €, les deux 1 700 €. Elles achètent du calme et de la réputation (la sécurité : −1,3 alerte par soirée, +3 de réputation, et elle protège les VIP au palier 4). Un choix de confort, assumé (v0.6, partie 8).
+- [x] La progression sur un mois est-elle motivante ? (v0.6) Oui pour les deux premiers mois : palier 2 aux nuits 3 et 4, palier 3 au jour 28, palier 4 entre les jours 29 et 36, et 1,5 à 5 systèmes nouveaux par semaine de la quatrième à la huitième ; la dette du rachat passe de 30 000 à 15 000 € en six mois et la valeur nette du joueur classique de 2 400 à 19 000 €. Deux creux à combler en v1.0 : la troisième semaine, et les semaines 9 à 12 avant le palier 5 (jours 75 à 89). Détail dans docs/EQUILIBRAGE.md.
 - [x] Le découvert dès la première mensualité (v0.6, partie 2) : avec les vraies règles, un joueur actif paie sa première mensualité 9 fois sur 10 (2 parties sur 10 finissent le jour 28 à découvert), régularise la dixième dans le mois, ne fait jamais faillite en deux mois, et paie moins de 110 € d'agios. Le joueur passif (Sanne seule, rien rénové) ne la paie pas 7 fois sur 10, et fait faillite au jour 56 dans 7 parties sur 10 : « laisser faire » n'est plus un léger déficit mais une vraie menace, que « confier la gestion à Josée » (partie 4) ne fait que retarder d'un mois : il gagne moins que ses charges, et c'est au didacticiel final (v1.0) de lui apprendre à recruter et rénover. Détail dans docs/EQUILIBRAGE.md.

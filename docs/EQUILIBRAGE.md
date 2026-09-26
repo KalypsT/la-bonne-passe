@@ -1524,3 +1524,66 @@ Lecture :
 - **La deuxième maison** engloutit 40 000 à 65 000 € sans rien rapporter en v0.6 : c'est un projet, pas un placement. La valeur nette ne compte pas le bien acheté ; le rapport de fin de v0.6 devra le dire.
 
 Gardes : `equilibrage-agrandir.test.ts` (palier 5 entre le deuxième et le quatrième mois ; le bâtiment à crédit entre +30 % et +120 % par nuit ; la gérante sans perte par nuit et pas plus chère qu'environ son salaire).
+
+## Rééquilibrage et bilan de la v0.6 (partie 8)
+
+### Ce qui a été réglé
+
+Le joueur simulé de référence devient un vrai joueur actif : **commande automatique du linge** réglée sur la soirée prévue (5, 10 ou 20 parures), **chambres rafraîchies** sous 30 % d'état, et **départs remplacés** par le marché du lundi (jusqu'à 4 personnes). Ce joueur a révélé trois stratégies trop payantes, corrigées :
+
+| Constat | Correction |
+| --- | --- |
+| Ne jamais rafraîchir rapportait le plus (8 000 € de plus en trois mois) : une chambre usée ne coûtait que de la qualité, et la réputation sature. | Usure divisée par deux (0,6 à 1,2 point par rendez-vous : une chambre tient un mois) ; sous 30 % d'état, la chambre est **défraîchie** et se paie 15 % de moins. Le Boudoir démarre à 90 % (72 auparavant), pour ne pas se défraîchir juste avant la première mensualité. |
+| Acheter du linge coûtait plus (12 € la parure) que ce qu'il rapportait : ignorer l'alerte était le bon calcul. | Un rendez-vous sans linge propre se paie 15 % de moins, **aux frais de la seule maison** (la part de la personne se compte sur le prix plein). Packs moins chers : 50, 90 et 160 € (60, 110, 200). |
+| Avec des remplaçants, le cran 6 permanent devenait la meilleure stratégie : user l'équipe et la remplacer. | **Le quartier parle** : quatre semaines après chaque départ, deux candidats de moins au marché du lundi, et 5 points de part en plus demandés (10 au plus). Le cran 6 permanent reste devant un mois, puis la maison se vide (1,2 personne au jour 84, 5,6 départs) et finit 20 % derrière le cran 4. |
+| Une maison bien tenue passe 50 de réputation avant la première mensualité : le palier 4 tombait le même jour que le palier 3 (10 parties sur 10), neuf systèmes la même semaine. | **Palier 4 à 60** de réputation (50), **palier 5 à 80** (70). |
+
+Premières mesures, écartées : une remise « sans linge » partagée avec le personnel (la maison n'y perdait que 7 à 10 € par rendez-vous, moins qu'une parure) ; une remise « défraîchie » aux frais de la seule maison (piège de pauvreté : le joueur à la peine ne pouvait plus payer le rafraîchissement, 3 faillites sur 10 en quatre mois) ; trois candidats de moins par départ (au jour 84, l'équipe du cran 6 tombait à 0,2 personne).
+
+**La mairie**, qu'on croyait trop facile (partie 7), ne l'est que pour le joueur simulé prudent, qui choisit toujours la réponse vertueuse des cartes : un joueur qui tranche au hasard finit entre +13 et +55 au jour 120, souvent sous +40. L'accord de la mairie reste une vraie condition. Rien n'a changé.
+
+### Gardes déplacées
+
+- `equilibrage.test.ts` : 28 nuits au lieu de 14. Le cran 4 rapporte plus que le 3 sur les nuits 8 à 28 (794 € contre 738 €) : sur la seule semaine 2, une semaine de contrôles de police tirée au hasard suffisait à inverser l'ordre. La soirée feutrée construit la meilleure réputation au bout du mois (48,8 contre 44,8 et 42,1).
+- `plafond.test.ts` : la garde du cran 6 permanent passe à trois mois (voir plus haut).
+- `equilibrage-regles`, `-bar`, `-semaine` : les écarts de satisfaction se tassent d'un point ou deux, dans le même sens (touristes au tarif −20 % : +3,7 ; champagne : −1,4 de réputation ; portier un soir de match : +8,9).
+- `equilibrage-quartier.test.ts` : 0,8 service par partie en deux mois pour le joueur qui soigne le quartier (au moins 0,5).
+- `linge.test.ts` : nouveaux prix.
+
+### Le premier mois (10 graines, `npm run rapport`)
+
+Classique 3 : 2 382 € après la première mensualité (cible 0 à 4 000 €), palier 2 aux nuits 3 et 4, réputation 56 à la nuit 28. Classique 4 : 4 264 €, juste au-dessus de la cible. Le joueur passif : −1 338 €, et il fait toujours faillite (jours 56 à 84, 10 sur 10). Les alertes « plus de linge » disparaissent chez le joueur de référence : 5,3 décisions par soirée au premier mois (6,3 auparavant), 40 % de soirées sous 4 décisions.
+
+### Les trois questions de la v0.5
+
+- **Le deuxième mois est-il trop dense à ×1 ?** 4,4 à 8,1 alertes et 6,5 à 10,2 décisions par soirée de 3 minutes (nuits 36 à 56), soit une décision toutes les 18 à 28 secondes. C'est soutenu sans être intenable ; les influenceurs et la porte laxiste sont les plus chargés. À juger en main ; si c'est trop, baisser d'abord les alertes de quartier.
+- **Les équipes Accueil et Sécurité valent-elles leur salaire ?** En argent, pas sur deux mois : l'accueil coûte environ 1 070 €, la sécurité 1 400 €, les deux 1 700 €, deux de chaque 2 900 € (moins qu'en v0.5 : 1 100, 2 200 et 5 750 €). Elles achètent du calme et de la réputation : la sécurité retire 1,3 alerte par soirée et ajoute 3 points de réputation ; deux de chaque ramènent la soirée à 4,2 alertes. Au palier 4, la sécurité protège aussi les VIP. C'est un choix de confort, assumé.
+- **Le découvert** : tranché en partie 2 ; avec le rééquilibrage, 0 à 0,4 mensualité impayée par partie en deux mois pour un joueur qui tranche au hasard, aucune faillite en quatre mois.
+
+### La progression sur six mois
+
+Six stratégies, 10 graines, 168 nuits (tableau complet dans `npm run rapport`). Le joueur « complet » utilise tout ce qui s'ouvre : relations, buanderie, loges, confort, formations, placement, permis, tout le bâtiment voisin à crédit, 8 personnes et une gérante.
+
+| Stratégie | Palier 3 | Palier 4 | Palier 5 | Valeur nette, mois 1 / 2 / 3 / 4 / 5 / 6 | Dette, mois 1 / 3 / 6 |
+| --- | --- | --- | --- | --- | --- |
+| Classique 3 | 28 | 36 (28 à 47) | 89 (78 à 113) | 2 400 / 5 400 / 9 400 / 10 500 / 14 800 / 19 000 € | 27 500 / 22 500 / 15 000 € |
+| Classique 4 | 28 | 31 | 80 | 4 300 / 13 600 / 21 700 / 25 700 / 34 800 / 43 600 € | 27 500 / 22 500 / 15 000 € |
+| Feutrée 4 | 28 | 29 | 75 | 2 500 / 6 900 / 12 300 / 15 200 / 22 700 / 29 500 € | 27 500 / 22 500 / 15 000 € |
+| Complet | 28 | 35 | 85 (78 à 106) | 1 800 / 4 900 / 1 300 / −7 500 / 8 800 / 34 600 € | 27 500 / 28 250 / 32 250 € |
+| Complet, cartes au hasard | 28 | 89 (36 à 152) | jamais | 1 000 / 2 100 / 2 500 / 1 900 / 3 500 / 6 400 € | 27 500 / 22 750 / 15 000 € |
+| Passif | 28 | jamais | jamais | −1 300 / −7 900 / −13 600 € (faillite) | 27 500 € |
+
+Systèmes ouverts en plus chaque semaine (classique 3, semaines 2 à 16) : 3 · 0 · 5,4 · 2,7 · 2,7 · 2,5 · 1,5 · 0,2 · 0 · 0 · 0,2 · 0,7 · 0,8 · 0,7 · 0,2. La première semaine en ouvre onze (départ, paliers 1 et 2). Six semaines sur quinze n'apportent rien de nouveau : la troisième, et les semaines 9 à 12.
+
+Décisions : le joueur simulé prend moins d'une décision d'argent structurante par semaine (réserve, emprunt, placement, assurance : 0 à 0,2), et une à deux décisions d'investissement (travaux, confort, formations, agrandissement : 1,2 à 1,9). S'y ajoutent chaque soir les commandes du briefing, que la commande automatique allège.
+
+### La question de la v0.6 : la progression sur un mois est-elle motivante ?
+
+**Oui pour les deux premiers mois, avec un creux au troisième.**
+
+- **Un nouveau système environ chaque semaine, mais pas régulièrement** : 11 la première semaine, 3 la deuxième, aucun la troisième, puis 5 au palier 3 (jour 28) et 1,5 à 3 par semaine jusqu'à la huitième. Ensuite, plus rien jusqu'au palier 5, vers le jour 80 à 90 (semaines 12 à 15).
+- **Les paliers suivent le jeu** : palier 2 aux nuits 3 et 4, palier 3 au jour 28 (la première mensualité), palier 4 du jour 29 (soirée feutrée) au jour 36 (classique), palier 5 du jour 75 au jour 89 si le joueur dépose son dossier. Le joueur qui tranche au hasard met trois mois à atteindre le palier 4 et n'atteint jamais le 5 : les paliers récompensent le soin.
+- **L'argent se voit monter et la dette descendre** : la dette du rachat passe de 30 000 à 15 000 € en six mois ; la valeur nette du joueur classique passe de 2 400 € au premier mois à 19 000 € au sixième, et jusqu'à 44 000 € au cran 4. Le joueur complet traverse un vrai creux (−7 500 € au quatrième mois, avec l'emprunt du bâtiment voisin), puis finit devant tout le monde en valeur (34 600 € malgré 32 000 € de dette), avec 8 personnes et 7 chambres.
+- **Les décisions d'argent restent rares**, comme le voulaient les garde-fous : moins d'une par semaine, une à deux décisions d'investissement.
+
+À corriger en v1.0 : la **troisième semaine** (rien de neuf entre les soirées à thème et la première mensualité) et le **troisième mois** (semaines 9 à 12, entre les formations et le palier 5). Deux pistes : ouvrir la gérance ou une intrigue de personnage dans ces creux, ou faire arriver le palier 5 par étapes (dossier, enquête, permis) plutôt qu'en un lundi.
