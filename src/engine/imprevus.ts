@@ -2,12 +2,12 @@
 // Voir « Événements et intrigues » dans les spécifications.
 
 import * as B from '../content/balance';
-import { IMPREVUS, trouverImprevu, type DefinitionImprevu, type EffetImprevu } from '../content/imprevus';
+import { IMPREVUS, trouverImprevu, type DefinitionImprevu } from '../content/imprevus';
 import type { Employe, EtatJeu, ImprevuEnCours } from './etat';
-import { changerReputationGlobale } from './clientele';
-import { encaisser, noterDepense } from './comptes';
+import { appliquerEffet } from './effets';
 import type { Tirage } from './hasard';
-import { affinite, changerLoyaute, changerMoral, ajusterAffinite } from './personnel';
+import { demarrerSuite } from './intrigues';
+import { affinite } from './personnel';
 import { ecart, instant } from './temps';
 
 export type EvenementImprevu =
@@ -19,8 +19,6 @@ export type OrdreImprevu = { type: 'choixImprevu'; choix: number };
 interface Sortie {
   push(e: EvenementImprevu): unknown;
 }
-
-const borner = (v: number, min = 0, max = 100) => Math.min(max, Math.max(min, v));
 
 function disponible(etat: EtatJeu, e: Employe): boolean {
   return e.enServiceCeSoir && !e.repos && !etat.rendezVous.some((r) => r.employeId === e.id);
@@ -53,7 +51,7 @@ export function concernes(etat: EtatJeu, def: DefinitionImprevu): ImprevuEnCours
 
 /** Tire peut-être un imprévu pendant la soirée. Le tout premier de la partie est toujours le plus simple. */
 export function declencherImprevu(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
-  if (etat.imprevu || etat.dispute || !etat.nuit || etat.nuit.imprevus >= B.IMPREVUS_MAX_PAR_NUIT) return;
+  if (etat.imprevu || etat.intrigues.carte || etat.dispute || !etat.nuit || etat.nuit.imprevus >= B.IMPREVUS_MAX_PAR_NUIT) return;
   const maintenant = instant(etat);
   if (maintenant < etat.prochainImprevu) return;
   if (ecart(B.HEURE_OUVERTURE, etat.minuteDuJour) < B.IMPREVU_PREMIER_APRES) return;
@@ -77,39 +75,15 @@ export function declencherImprevu(etat: EtatJeu, tirage: Tirage, evenements: Sor
   evenements.push({ type: 'imprevu', ...choisi });
 }
 
-/** Applique l'effet d'un choix. `ajouterClient` fait entrer un client sur le quai. */
-function appliquerEffet(etat: EtatJeu, effet: EffetImprevu, imprevu: ImprevuEnCours, ajouterClient: () => void): void {
-  const e = etat.personnel.find((x) => x.id === imprevu.employeId);
-  const e2 = etat.personnel.find((x) => x.id === imprevu.employe2Id);
-  if (e) {
-    if (effet.moral) changerMoral(e, effet.moral);
-    if (effet.loyaute) changerLoyaute(e, effet.loyaute);
-    if (effet.fatigue) e.fatigue = borner(e.fatigue + effet.fatigue);
-    if (effet.part) e.part = Math.min(0.65, Math.round((e.part + effet.part) * 100) / 100);
-    if (effet.repos && !etat.rendezVous.some((r) => r.employeId === e.id)) e.repos = true;
-  }
-  if (e2 && effet.moral2) changerMoral(e2, effet.moral2);
-  if (e && e2 && effet.affinite) ajusterAffinite(etat, e.id, e2.id, effet.affinite);
-  if (effet.reputation) changerReputationGlobale(etat, effet.reputation);
-  const argent = effet.argent ?? 0;
-  if (argent > 0) {
-    encaisser(etat, argent, 'autres');
-    if (etat.nuit) etat.nuit.recettes += argent;
-  } else if (argent < 0) {
-    etat.tresorerie += argent;
-    noterDepense(etat, -argent, 'incidents');
-    if (etat.nuit) etat.nuit.depenses -= argent;
-  }
-  for (let i = 0; i < (effet.clients ?? 0); i++) ajouterClient();
-}
-
 export function trancherImprevu(etat: EtatJeu, choix: number, tirage: Tirage, ajouterClient: () => void, evenements: Sortie): void {
   const imprevu = etat.imprevu;
   const def = imprevu && trouverImprevu(imprevu.id);
   const option = def?.choix[choix];
   if (!imprevu || !option) return;
   const reussite = option.chance === undefined || tirage.chance(option.chance);
-  appliquerEffet(etat, reussite ? option.effet : (option.echec ?? {}), imprevu, ajouterClient);
+  appliquerEffet(etat, reussite ? option.effet : (option.echec ?? {}), imprevu, ajouterClient, (id, delai, employeId) =>
+    demarrerSuite(etat, id, delai, employeId),
+  );
   etat.imprevu = null;
   const prenom = etat.personnel.find((x) => x.id === imprevu.employeId)?.prenom;
   const prenom2 = etat.personnel.find((x) => x.id === imprevu.employe2Id)?.prenom;

@@ -249,6 +249,7 @@ export const TEXTES = {
     amitie: (a: string, b: string) => `${a} et ${b} sont désormais inséparables.`,
     rivalite: (a: string, b: string) => `Entre ${a} et ${b}, le courant ne passe plus.`,
     imprevu: (titre: string) => `Imprévu : ${titre.charAt(0).toLowerCase()}${titre.slice(1)}.`,
+    intrigue: (titre: string) => `${titre}.`,
   },
   recrutement: {
     candidats: 'Candidats',
@@ -302,6 +303,20 @@ export const TEXTES = {
       v >= 40 ? 'Amitié' : v >= 15 ? 'Complicité' : v > -15 ? 'Neutre' : v > -30 ? 'Froid' : 'Rivalité',
     titreEntretien: (prenom: string) => `Entretien avec ${prenom}`,
     fermer: 'Plus tard',
+  },
+  intrigue: {
+    /** Étiquette au-dessus du titre de la carte. */
+    etiquette: (titre: string) => `Intrigue · ${titre}`,
+    tropCher: 'Trésorerie insuffisante',
+    continuer: 'Continuer',
+    denouement: 'Dénouement',
+    enCours: 'Intrigues en cours',
+  },
+  voisinage: {
+    titre: 'Voisinage',
+    /** Calme, agacé (au-dessus du seuil de récidive), excédé (au-dessus du seuil de plainte). */
+    niveaux: ['Calme', 'Agacé : on entend des soupirs', 'Excédé : les fenêtres claquent'],
+    insonorise: 'salon insonorisé',
   },
   imprevu: {
     reussite: 'C’est passé.',

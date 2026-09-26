@@ -1,6 +1,7 @@
 import type { IdFormule, IdPriorite, IdSelection } from '../content/balance';
 import { CLIENTS } from '../content/clientele';
 import { trouverImprevu } from '../content/imprevus';
+import { trouverIntrigue } from '../content/intrigues';
 import { trouverTendance } from '../content/tendances';
 import { trouverTheme } from '../content/themes';
 import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS } from '../content/regles';
@@ -198,6 +199,23 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       const p1 = evenement.prenom ? { prenom: evenement.prenom, genre: genreDe(partie, evenement.prenom) } : undefined;
       const p2 = evenement.prenom2 ? { prenom: evenement.prenom2, genre: genreDe(partie, evenement.prenom2) } : undefined;
       return remplir(texte, partie, p1, p2);
+    }
+    case 'intrigue': {
+      const etape = trouverIntrigue(evenement.id)?.etapes[evenement.etape];
+      const e = partie.personnel.find((x) => x.id === evenement.employeId);
+      return etape ? t.intrigue(remplir(etape.titre, partie, e)) : null;
+    }
+    case 'intrigueTranchee': {
+      const choix = trouverIntrigue(evenement.id)?.etapes[evenement.etape]?.choix[evenement.choix];
+      if (!choix) return null;
+      const texte = evenement.reussite ? choix.journal : (choix.journalEchec ?? choix.journal);
+      const p = evenement.prenom ? { prenom: evenement.prenom, genre: genreDe(partie, evenement.prenom) } : undefined;
+      return remplir(texte, partie, p);
+    }
+    case 'intrigueFinie': {
+      const texte = trouverIntrigue(evenement.id)?.fins[evenement.fin]?.texte;
+      const p = evenement.prenom ? { prenom: evenement.prenom, genre: genreDe(partie, evenement.prenom) } : undefined;
+      return texte ? remplir(texte, partie, p) : null;
     }
     case 'bilan':
       return null;

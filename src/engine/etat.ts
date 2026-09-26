@@ -21,6 +21,8 @@ import { PARTIE_PAR_DEFAUT, type Genre } from '../content/partie';
 import type { EvenementMoteur } from './tick';
 import { clienteleDeDepart, type Clientele } from './clientele';
 import { semaineDeDepart, type BilanSemaine, type Semaine } from './semaine';
+import { intriguesDeDepart, type Intrigues } from './intrigues';
+import { quartierDeDepart, type Quartier } from './quartier';
 
 /** Drapeaux d'ouverture des systèmes. L'interface masque ou verrouille ce qui est fermé. */
 export interface Systemes {
@@ -314,6 +316,10 @@ export interface EtatJeu {
   themeDuSoir: string | null;
   /** Nouveautés arrivées avec une mise à jour du jeu, pour un palier déjà atteint : Josée les présente. */
   nouveautes: string[];
+  /** Intrigues en cours et terminées, et la carte qui attend ta décision (v0.4). */
+  intrigues: Intrigues;
+  /** Le quartier : tapage, insonorisation (v0.4). */
+  quartier: Quartier;
   /** Étape du didacticiel de Madame Josée, ou null s'il est fini ou passé. */
   didacticiel: number | null;
   /** État courant du générateur pseudo-aléatoire. */
@@ -321,7 +327,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 15;
+export const VERSION_ETAT = 16;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -476,6 +482,8 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     bilanAVoir: false,
     themeDuSoir: null,
     nouveautes: [],
+    intrigues: intriguesDeDepart(),
+    quartier: quartierDeDepart(),
     didacticiel: options.didacticiel ? 0 : null,
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,
   };

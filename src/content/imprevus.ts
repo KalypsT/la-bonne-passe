@@ -2,25 +2,9 @@
 // Les textes acceptent {prenom}, {prenom2} (une seconde personne), {joueur} et {maison},
 // et des accords : {e} (« e » si la personne est une femme), {Il} (« Elle » ou « Il »), {e2} pour la seconde.
 
-export interface EffetImprevu {
-  /** Moral, loyauté, fatigue de la personne concernée ({prenom}). */
-  moral?: number;
-  loyaute?: number;
-  fatigue?: number;
-  /** Moral de la seconde personne ({prenom2}). */
-  moral2?: number;
-  /** Affinité entre les deux personnes. */
-  affinite?: number;
-  /** La personne concernée se repose pour le reste de la nuit. */
-  repos?: boolean;
-  /** Points de part gardée en plus (0,05 = 5 points), plafonnée à 65 %. */
-  part?: number;
-  reputation?: number;
-  /** Argent gagné (positif) ou dépensé (négatif). */
-  argent?: number;
-  /** Clients qui arrivent aussitôt sur le quai. */
-  clients?: number;
-}
+import type { EffetCarte } from './effets';
+
+export type EffetImprevu = EffetCarte;
 
 export interface ChoixImprevu {
   texte: string;
@@ -169,8 +153,8 @@ export const IMPREVUS: DefinitionImprevu[] = [
       {
         texte: 'Refuser',
         detail: 'Personne ne réserve une personne entière ici',
-        effet: { reputation: -0.5, loyaute: 3 },
-        journal: 'Le client range son billet. {prenom} te fait un clin d’œil.',
+        effet: { reputation: -0.5, loyaute: 3, suite: { id: 'costume', delai: 3 } },
+        journal: 'Le client range son billet. {prenom} te fait un clin d’œil. Il reviendra, c’est sûr.',
       },
     ],
   },

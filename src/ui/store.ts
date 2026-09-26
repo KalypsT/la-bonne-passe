@@ -30,6 +30,7 @@ export type Carte =
   | 'entretien'
   | 'essai'
   | 'imprevu'
+  | 'intrigue'
   | 'entretienIndividuel'
   | 'adieu'
   | 'aide';
@@ -120,6 +121,7 @@ let prochainMontant = 1;
 function carteEnAttente(partie: EtatJeu | null): Carte | null {
   if (!partie) return null;
   if (partie.imprevu) return 'imprevu';
+  if (partie.intrigues.carte) return 'intrigue';
   if (partie.avance.statut === 'proposee') return 'grossiste';
   if (partie.bilanAVoir) return 'semaine';
   if (partie.annonces.length > 0) return 'palier';
@@ -135,7 +137,7 @@ function etapeDidacticiel(partie: EtatJeu | null) {
 }
 
 /** Événements qui mettent le jeu en pause et ouvrent une carte. */
-const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai', 'imprevu', 'depart', 'grossiste', 'bilanSemaine']);
+const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai', 'imprevu', 'intrigue', 'depart', 'grossiste', 'bilanSemaine']);
 
 /** Traduit les événements en montants flottants et en cartes à ouvrir. Le journal, lui, vit dans la partie. */
 function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
@@ -151,6 +153,7 @@ function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
       candidat = e.candidatId;
     }
     if (e.type === 'imprevu') carte = 'imprevu';
+    if (e.type === 'intrigue') carte = 'intrigue';
     if (e.type === 'grossiste') carte = 'grossiste';
     if (e.type === 'bilanSemaine' && !carte) carte = 'semaine';
     if (e.type === 'depart' && !carte) carte = 'adieu';

@@ -26,6 +26,8 @@ import {
 } from './recrutement';
 import { attendBriefing, estOuvert, instant, jourDeLaSemaine, MINUTES_PAR_JOUR } from './temps';
 import { cloreSemaine, type EvenementSemaine } from './semaine';
+import { avancerIntrigues, matinDesIntrigues, trancherIntrigue, type EvenementIntrigue, type OrdreIntrigue } from './intrigues';
+import { matinDuQuartier } from './quartier';
 
 /** Ordres envoyés par l'interface au moteur. */
 export type Ordre =
@@ -59,6 +61,7 @@ export type Ordre =
   | OrdreRecrutement
   | OrdrePersonnel
   | OrdreImprevu
+  | OrdreIntrigue
   | OrdreRegle
   | OrdreBar;
 
@@ -80,6 +83,7 @@ export type EvenementMoteur =
   | EvenementRecrutement
   | EvenementPersonnel
   | EvenementImprevu
+  | EvenementIntrigue
   | EvenementSemaine;
 
 /** Taille du journal gardé dans la sauvegarde. */
@@ -245,6 +249,12 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       etat.hasard = tirage.etat();
       return;
     }
+    case 'choixIntrigue': {
+      const tirage = creerTirage(etat.hasard);
+      trancherIntrigue(etat, ordre.choix, tirage, () => arrivee(etat, tirage, evenements), evenements);
+      etat.hasard = tirage.etat();
+      return;
+    }
     default:
       appliquerRecrutement(etat, ordre, evenements);
   }
@@ -296,6 +306,9 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     prelevementsDuMatin(etat, evenements);
     matinRecrutement(etat, tirage, evenements);
     matinDuPersonnel(etat, evenements);
+    // Le voisin se plaint de la nuit passée : les intrigues regardent le tapage avant que le quartier oublie.
+    matinDesIntrigues(etat);
+    matinDuQuartier(etat);
   }
   avancerTravaux(etat, evenements);
   avancerTravauxBar(etat, evenements);
@@ -307,6 +320,7 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     ouvrirNuit(etat, evenements);
     evenements.push({ type: 'ouverture', jour: etat.jour });
   }
+  avancerIntrigues(etat, evenements);
 
   vivre(etat, ouvert, tirage, evenements);
 

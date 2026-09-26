@@ -1638,3 +1638,24 @@ body {
   opacity: 0.45;
   cursor: default;
 }
+
+/* Intrigues : l'étiquette au-dessus du titre de la carte. */
+.carte-modale .etiquette-intrigue {
+  margin: 0 0 2px;
+  color: var(--laiton);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+}
+
+.intrigue-en-cours {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--neon);
+  background: rgba(255, 79, 139, 0.08);
+  border-radius: 4px;
+}
+
+.intrigue-en-cours strong {
+  display: block;
+}
