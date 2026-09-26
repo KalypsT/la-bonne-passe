@@ -53,6 +53,16 @@ export const NOUVEAUTES: Nouveaute[] = [
     palier: 3,
     texte: 'Le Chat Noir, de l’autre côté du canal : Colette Vos réagit chaque lundi à ce que tu lui prends. Sa fiche est dans l’onglet Relations, avec tes réponses.',
   },
+  {
+    id: 'equipes',
+    palier: 3,
+    texte: 'Équipes Accueil et Sécurité, dans l’onglet Personnel : elles règlent seules une partie des alertes du quai, contre un salaire.',
+  },
+  {
+    id: 'assurance',
+    palier: 3,
+    texte: 'L’assurance, dans l’onglet Finances : la casse, et même les amendes, remboursées contre une prime chaque lundi.',
+  },
 ];
 
 export function trouverNouveaute(id: string): Nouveaute | undefined {

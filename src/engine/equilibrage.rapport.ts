@@ -144,6 +144,39 @@ function rivale(): string[] {
   return lignes;
 }
 
+/** Équipes Accueil et Sécurité, et assurance (v0.5) : alertes des nuits 36 à 56, coût et remboursements. */
+function equipes(): string[] {
+  const lignes = [
+    '| Stratégie (56 nuits) | Alertes par soirée, nuits 36 à 56 | Décisions par soirée | Clients perdus, semaine 6 | Réputation, nuit 56 | Primes / remboursements d’assurance | Avoir, nuit 56 |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+  ];
+  const variantes: { nom: string; options: Partial<OptionsSimulation> }[] = [
+    { nom: 'Classique, 3', options: {} },
+    { nom: 'Classique 3, accueil 1', options: { accueil: 1 } },
+    { nom: 'Classique 3, sécurité 1', options: { securite: 1 } },
+    { nom: 'Classique 3, accueil 1 et sécurité 1', options: { accueil: 1, securite: 1 } },
+    { nom: 'Classique 3, accueil 2 et sécurité 2', options: { accueil: 2, securite: 2 } },
+    { nom: 'Classique 3, sélection stricte', options: { regles: { selection: 'stricte' } } },
+    { nom: 'Classique 3, sélection stricte, sécurité 1', options: { regles: { selection: 'stricte' }, securite: 1 } },
+    { nom: 'Classique 3, assurance casse', options: { assurance: 1 } },
+    { nom: 'Classique 3, assurance casse et amendes', options: { assurance: 2 } },
+  ];
+  const virgule = (x: number) => x.toFixed(1).replace('.', ',');
+  for (const v of variantes) {
+    const parties = GRAINES.map((graine) => simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 56, politique: 'hasard', ...v.options }));
+    const moy = (f: (p: (typeof parties)[number]) => number) => parties.reduce((t, p) => t + f(p), 0) / parties.length;
+    const mesures = parties.map((p) => mesurerRenouvellement(p.nuits.slice(35)));
+    const m = (f: (x: Renouvellement) => number) => mesures.reduce((t, x) => t + f(x), 0) / mesures.length;
+    const primes = moy((p) => p.bilans.reduce((t, b) => t + b.comptes.depenses.assurance, 0));
+    const rembourse = moy((p) => p.bilans.reduce((t, b) => t + b.comptes.recettes.assurance, 0));
+    lignes.push(
+      `| ${v.nom} | ${virgule(m((x) => x.alertes))} | ${virgule(m((x) => x.decisions))} | ${virgule(moy((p) => p.nuits.slice(35, 42).reduce((t, n) => t + n.perdus, 0)))} | ` +
+        `${moy((p) => p.nuits[55]?.reputation ?? 0).toFixed(0)} | ${primes > 0 ? `${arrondi(primes)} € / ${arrondi(rembourse)} €` : '—'} | ${arrondi(moy((p) => p.etat.tresorerie + p.etat.reserve))} € |`,
+    );
+  }
+  return lignes;
+}
+
 it('rapport d’équilibrage', () => {
   const lignes = [
     '| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |',
@@ -176,5 +209,6 @@ it('rapport d’équilibrage', () => {
   console.log(`\nRenouvellement des soirées : ${GRAINES.length} graines, ${NUITS} nuits (cartes tranchées au hasard)\n\n${r.lignes.join('\n')}\n`);
   console.log(`\nAlertes par soirée, selon leur type (mêmes parties)\n\n${r.types.join('\n')}\n`);
   console.log(`\nLa rivale : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${rivale().join('\n')}\n`);
+  console.log(`\nÉquipes et assurance : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${equipes().join('\n')}\n`);
   console.log(`\nLe quartier : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard ; événements sur 10 parties)\n\n${quartier().join('\n')}\n`);
-}, 300_000);
+}, 600_000);

@@ -7,6 +7,7 @@ import type { Segment } from '../content/clientele';
 import type { IdActeur } from '../content/relations';
 import type { EvenementRelation } from './relations';
 import type { EvenementRivale } from './rivale';
+import type { EvenementEquipe } from './equipes';
 import { candidatRival, type EvenementRecrutement } from './recrutement';
 import type { EtatJeu } from './etat';
 import { appliquerEffet, effetPossible } from './effets';
@@ -57,7 +58,7 @@ export type EvenementIntrigue =
 export type OrdreIntrigue = { type: 'choixIntrigue'; choix: number };
 
 interface Sortie {
-  push(e: EvenementIntrigue | EvenementPersonnel | EvenementRelation | EvenementRivale | EvenementRecrutement): unknown;
+  push(e: EvenementIntrigue | EvenementPersonnel | EvenementRelation | EvenementRivale | EvenementRecrutement | EvenementEquipe): unknown;
 }
 
 /** Instant absolu d'une heure de l'horloge, un jour donné (le jour commence à 5 h). */

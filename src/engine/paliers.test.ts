@@ -133,7 +133,7 @@ describe('équipe de ménage', () => {
     const sale = (menage: number) =>
       auPalier1({
         minuteDuJour: h(11, 55),
-        equipes: { menage, bar: 0 },
+        equipes: { menage, bar: 0, accueil: 0, securite: 0 },
         chambres: creerEtatInitial().chambres.map((c) => ({ ...c, ouverte: true, proprete: 20 })),
       });
     const un = tick(sale(1)).etat;

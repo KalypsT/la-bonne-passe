@@ -65,7 +65,7 @@ export const SUITES: DefinitionIntrigue[] = [
             chance: 0.75,
             effet: { reputation: 1, relations: { mairie: 4 } },
             journal: 'L’inspecteur passe les chambres au peigne fin et ne trouve rien. Il repart presque déçu.',
-            echec: { argent: -A.inspectionAmende, relations: { mairie: -4 } },
+            echec: { argent: -A.inspectionAmende, relations: { mairie: -4 }, sinistre: 'amende' },
             journalEchec: `Un extincteur périmé depuis 2019 : ${euros(A.inspectionAmende)} d’amende.`,
             suite: { fin: 'visite' },
           },

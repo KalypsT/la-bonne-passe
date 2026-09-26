@@ -12,6 +12,7 @@ import { changerReputationGlobale, changerSatisfaction } from './clientele';
 import { depenser, encaisser } from './comptes';
 import { changerLoyaute, changerMoral } from './personnel';
 import { changerTapage } from './quartier';
+import { equipeDe, partReglee, type EvenementEquipe } from './equipes';
 import { changerRelations, relationsOuvertes, type EvenementRelation } from './relations';
 import { ecart, instant } from './temps';
 
@@ -31,7 +32,8 @@ export type EvenementMinuterie =
   | { type: 'alerteTraitee'; id: IdAlerte; action: number; reussite: boolean; prenom?: string }
   | { type: 'alerteManquee'; id: IdAlerte; prenom?: string }
   | { type: 'dispute' }
-  | EvenementRelation;
+  | EvenementRelation
+  | EvenementEquipe;
 
 export type OrdreMinuterie = { type: 'traiterAlerte'; cle: string; action: number };
 
@@ -55,11 +57,44 @@ export function enPause(etat: EtatJeu, employeId: string): boolean {
   return !!e && (e.pauseJusqua ?? 0) > instant(etat);
 }
 
-function ajouter(etat: EtatJeu, id: IdAlerte, cible: string | null, delai: number, evenements: Sortie): void {
+function ajouter(etat: EtatJeu, id: IdAlerte, cible: string | null, delai: number, evenements: Sortie, tirage: Tirage): void {
   const maintenant = instant(etat);
   const a: AlerteMinutee = { id, cle: cible === null ? id : `${id}-${cible}`, cible, debut: maintenant, expire: maintenant + delai };
+  // L'équipe du domaine (Accueil, Sécurité) règle parfois l'affaire avant qu'une bulle n'apparaisse.
+  const equipe = equipeDe(id);
+  if (equipe && etat.equipes[equipe] > 0 && tirage.chance(partReglee(etat, equipe))) {
+    reglerSeule(etat, a);
+    evenements.push({ type: 'alerteReglee', id, equipe });
+    return;
+  }
   etat.minuteries.push(a);
   evenements.push({ type: 'alerteMinutee', id, prenom: prenomDe(etat, a) });
+}
+
+/** Ce que fait l'équipe, sans rien coûter de plus que son salaire. */
+function reglerSeule(etat: EtatJeu, a: AlerteMinutee): void {
+  const A = B.ALERTES;
+  switch (a.id) {
+    case 'presse': {
+      // L'accueil installe le client pressé au salon : il passe devant, sans faire attendre les autres plus longtemps.
+      const client = etat.file.find((c) => c.id === Number(a.cible));
+      if (client) {
+        etat.file = [client, ...etat.file.filter((c) => c !== client)];
+        client.prioritaire = true;
+      }
+      break;
+    }
+    case 'bruit':
+      changerTapage(etat, -A.bruit.rentrer);
+      break;
+    case 'ivre':
+      // La sécurité raccompagne le client éméché jusqu'à un taxi.
+      etat.file = etat.file.filter((c) => c.id !== Number(a.cible));
+      break;
+    case 'photographe':
+    case 'sabotage':
+      break;
+  }
 }
 
 function demarrerDispute(etat: EtatJeu, evenements: Sortie): void {
@@ -153,19 +188,19 @@ function naissances(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
   for (const c of etat.file) {
     if (c.alerte || segmentDe(c.modele) !== 'affaires' || c.patience > A.presse.seuilPatience) continue;
     c.alerte = true;
-    ajouter(etat, 'presse', String(c.id), c.patience, evenements);
+    ajouter(etat, 'presse', String(c.id), c.patience, evenements, tirage);
   }
 
   const groupeSurLeQuai = etat.file.some((c) => segmentDe(c.modele) === 'groupe');
   if (!active('bruit') && groupeSurLeQuai && etat.quartier.tapage >= A.bruit.seuilTapage && tirage.chance(A.bruit.chance * heures)) {
-    ajouter(etat, 'bruit', null, A.bruit.delai, evenements);
+    ajouter(etat, 'bruit', null, A.bruit.delai, evenements, tirage);
   }
 
   if (!active('ivre') && barSert(etat) && tirage.chance(A.ivre.chance * heures)) {
     const client = etat.file.find((c) => !c.alerte && ['groupe', 'touriste'].includes(segmentDe(c.modele) ?? ''));
     if (client) {
       client.alerte = true;
-      ajouter(etat, 'ivre', String(client.id), A.ivre.delai, evenements);
+      ajouter(etat, 'ivre', String(client.id), A.ivre.delai, evenements, tirage);
     }
   }
 
@@ -173,18 +208,18 @@ function naissances(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
     ['habitue', 'affaires'].includes(segmentDe(m) ?? ''),
   );
   if (!active('bouteille') && barSert(etat) && amateurs && tirage.chance(A.bouteille.chance * heures)) {
-    ajouter(etat, 'bouteille', null, A.bouteille.delai, evenements);
+    ajouter(etat, 'bouteille', null, A.bouteille.delai, evenements, tirage);
   }
 
   const affaires = etat.file.some((c) => segmentDe(c.modele) === 'affaires') || etat.rendezVous.some((r) => segmentDe(r.modele) === 'affaires');
   if (!active('photographe') && affaires && etat.reputation >= A.photographe.reputationMin && tirage.chance(A.photographe.chance * heures)) {
-    ajouter(etat, 'photographe', null, A.photographe.delai, evenements);
+    ajouter(etat, 'photographe', null, A.photographe.delai, evenements, tirage);
   }
 
   // Le faux client du Chat Noir, décidé le lundi par la rivale.
   if (etat.rivale.sabotage && !active('sabotage') && tirage.chance(B.RIVALE.sabotageChanceParHeure * heures)) {
     etat.rivale.sabotage = false;
-    ajouter(etat, 'sabotage', null, A.sabotage.delai, evenements);
+    ajouter(etat, 'sabotage', null, A.sabotage.delai, evenements, tirage);
   }
 
   if (!active('pause') && tirage.chance(A.pause.chance * heures)) {
@@ -198,7 +233,7 @@ function naissances(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
         e.fatigue >= A.pause.fatigueMin &&
         e.fatigue <= B.SEUIL_EPUISEMENT,
     );
-    if (fatiguee) ajouter(etat, 'pause', fatiguee.id, A.pause.delai, evenements);
+    if (fatiguee) ajouter(etat, 'pause', fatiguee.id, A.pause.delai, evenements, tirage);
   }
 }
 

@@ -56,6 +56,11 @@ export interface Systemes {
   defis: boolean;
   /** La maison rivale, le Chat Noir (palier 3, v0.5) : elle agit à partir du lundi suivant. */
   rivale: boolean;
+  /** Équipes Accueil et Sécurité (palier 3, v0.5). */
+  accueil: boolean;
+  securite: boolean;
+  /** Assurance (au premier lundi après le palier 3, v0.5). */
+  assurance: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -276,7 +281,8 @@ export interface EtatJeu {
   briefingJour: number;
   chambres: EtatChambre[];
   personnel: Employe[];
-  equipes: { menage: number; bar: number };
+  /** Effectifs des équipes ; Accueil et Sécurité au palier 3 (v0.5). */
+  equipes: { menage: number; bar: number; accueil: number; securite: number };
   bar: EtatBar;
   avance: Avance;
   /** Draps propres en stock. */
@@ -357,6 +363,8 @@ export interface EtatJeu {
   rivale: Rivale;
   /** Générateur à part pour la rivale (v0.5). */
   hasardRivale: number;
+  /** Niveau d'assurance (indice dans ASSURANCES) : 0 aucune, 1 casse, 2 casse et amendes (v0.5). */
+  assurance: number;
   /** Étape du didacticiel de Madame Josée, ou null s'il est fini ou passé. */
   didacticiel: number | null;
   /** État courant du générateur pseudo-aléatoire. */
@@ -364,7 +372,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 22;
+export const VERSION_ETAT = 23;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -386,6 +394,9 @@ export function systemesDeDepart(): Systemes {
     themes: false,
     defis: false,
     rivale: false,
+    accueil: false,
+    securite: false,
+    assurance: false,
   };
 }
 
@@ -441,7 +452,7 @@ export function suiviDeDepart() {
 export function soireeDeDepart() {
   return {
     personnel: [creerEmploye(SANNE)],
-    equipes: { menage: 1, bar: 0 },
+    equipes: { menage: 1, bar: 0, accueil: 0, securite: 0 },
     linge: LINGE_INITIAL,
     lingeCommande: 0,
     offre: 'classique' as Offre,
@@ -535,6 +546,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     hasardQuartier: ((options.graine ?? GRAINE_PAR_DEFAUT) * 31 + 7) | 0,
     rivale: rivaleDeDepart(),
     hasardRivale: ((options.graine ?? GRAINE_PAR_DEFAUT) * 17 + 3) | 0,
+    assurance: 0,
     didacticiel: options.didacticiel ? 0 : null,
     hasard: (options.graine ?? GRAINE_PAR_DEFAUT) | 0,
   };

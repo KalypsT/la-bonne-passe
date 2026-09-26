@@ -301,7 +301,7 @@ describe('migrations', () => {
     expect(migre?.version).toBe(VERSION_ETAT);
     expect(migre?.bar).toEqual({ ouvert: false, travaux: null, stock: 0, commande: 0 });
     expect(migre?.avance.statut).toBe('aVenir');
-    expect(migre?.equipes).toEqual({ menage: 2, bar: 0 });
+    expect(migre?.equipes).toEqual({ menage: 2, bar: 0, accueil: 0, securite: 0 });
     expect(migre?.nuit?.bar).toBe(0);
     expect(migre?.systemes.bar).toBe(true);
     expect(migre?.nouveautes[0]).toBe('bar');
@@ -450,12 +450,40 @@ describe('migrations', () => {
     expect(avant?.nouveautes).toEqual([]);
     const apres = migrer({ ...etat, version: 21, systemes: { ...systemes, relations: true }, palier: 3, annonces: [] });
     expect(apres?.systemes.rivale).toBe(true);
-    expect(apres?.nouveautes).toEqual(['rivale']);
+    expect(apres?.nouveautes).toEqual(['rivale', 'equipes']);
     expect(trouverNouveaute('rivale')?.palier).toBe(3);
     // Le palier 3 encore à annoncer : sa carte présente déjà le Chat Noir.
     const annonce = migrer({ ...etat, version: 21, systemes, palier: 3, annonces: [3] });
     expect(annonce?.nouveautes).toEqual([]);
     expect(migrer({ ...etat, version: 22, systemes })).toBeNull();
+  });
+
+  it('migre une sauvegarde v22 : équipes Accueil et Sécurité vides, pas d’assurance, et Josée présente ce qui est ouvert', () => {
+    const base = creerEtatInitial();
+    const { assurance: _a, ...etat } = base;
+    const { accueil: _ac, securite: _se, assurance: _as, ...systemes } = base.systemes;
+    const recettes = { ...base.semaine.comptes.recettes } as Record<string, number>;
+    const depenses = { ...base.semaine.comptes.depenses } as Record<string, number>;
+    delete recettes.assurance;
+    delete depenses.assurance;
+    const v22 = { ...etat, version: 22, systemes, equipes: { menage: 1, bar: 0 }, semaine: { ...base.semaine, comptes: { recettes, depenses } } };
+
+    const avant = migrer({ ...v22, palier: 2 });
+    expect(avant?.version).toBe(VERSION_ETAT);
+    expect(avant?.equipes).toEqual({ menage: 1, bar: 0, accueil: 0, securite: 0 });
+    expect(avant?.systemes).toMatchObject({ accueil: false, securite: false, assurance: false });
+    expect(avant?.assurance).toBe(0);
+    expect(avant?.semaine.comptes.recettes.assurance).toBe(0);
+    expect(avant?.nouveautes).toEqual([]);
+
+    const lundiPasse = { ...base.rivale, derniereAction: { id: 'visite', jour: 29 } };
+    const apres = migrer({ ...v22, palier: 3, annonces: [], rivale: lundiPasse });
+    expect(apres?.systemes).toMatchObject({ accueil: true, securite: true, assurance: true });
+    expect(apres?.nouveautes).toEqual(['equipes', 'assurance']);
+    const juste = migrer({ ...v22, palier: 3, annonces: [] });
+    expect(juste?.systemes.assurance).toBe(false);
+    expect(juste?.nouveautes).toEqual(['equipes']);
+    expect(migrer({ ...etat, version: 23, systemes })).toBeNull();
   });
 
   it('refuse une version future ou des données sans version', () => {

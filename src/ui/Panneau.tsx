@@ -41,6 +41,7 @@ import { remplir } from './modeles';
 import { etatDuBar, FicheBar } from './FicheBar';
 import { FicheRegles, FicheSegment, OngletClientele } from './OngletClientele';
 import { FicheActeur, FicheRivale, OngletRelations } from './OngletRelations';
+import { Assurance, EquipesQuartier } from './Equipes';
 import { useInterface, type Fiche, type Onglet } from './store';
 
 const t = TEXTES.panneau;
@@ -631,6 +632,7 @@ function OngletPersonnel({ partie }: { partie: EtatJeu }) {
           <Cadenas /> {t.recrutementVerrouille(recrutement.numero, recrutement.nom)}
         </p>
       )}
+      {partie.palier >= 2 && <EquipesQuartier partie={partie} />}
     </>
   );
 }
@@ -684,6 +686,7 @@ function OngletFinances({ partie }: { partie: EtatJeu }) {
         </dl>
       )}
       <Reserve partie={partie} />
+      <Assurance partie={partie} />
     </>
   );
 }

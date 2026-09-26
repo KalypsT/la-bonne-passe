@@ -17,6 +17,17 @@ import {
   type EvenementRelation,
 } from './relations';
 import { demandeRivale, type EvenementRivale } from './rivale';
+import {
+  disputeSecurite,
+  indemniser,
+  partReglee,
+  patienceAccueil,
+  portierInclus,
+  primeAssurance,
+  qualiteEquipes,
+  salairesEquipesQuartier,
+  type EvenementEquipe,
+} from './equipes';
 import { declencherImprevu, type EvenementImprevu } from './imprevus';
 import { aTrait, nuitDuPersonnel, type EvenementPersonnel } from './personnel';
 import { revelerTraits, type EvenementRecrutement } from './recrutement';
@@ -95,7 +106,8 @@ export type EvenementSoiree =
   | EvenementMinuterie
   | EvenementBilan
   | EvenementRelation
-  | EvenementRivale;
+  | EvenementRivale
+  | EvenementEquipe;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -150,7 +162,8 @@ export function ouvrirNuit(etat: EtatJeu, evenements: Sortie): void {
     evenements.push({ type: 'theme', id: etat.themeDuSoir, montant: cout });
   }
   // Sélection stricte : le portier se paie à l'ouverture.
-  const portier = selectionActive(etat).cout;
+  // Avec une équipe Sécurité, c'est elle qui tient la porte.
+  const portier = portierInclus(etat) ? 0 : selectionActive(etat).cout;
   if (portier > 0) {
     depenser(etat, portier, 'portier');
     evenements.push({ type: 'portier', montant: portier });
@@ -208,7 +221,9 @@ function fetardeEnService(etat: EtatJeu): boolean {
 /** Patience d'un client : la sienne, et une Fêtarde en service met l'ambiance. */
 function patienceClient(etat: EtatJeu, modele: ModeleClient): number {
   const base = (modele.patience ?? B.PATIENCE_CLIENT) * patienceTarif(etat);
-  return Math.round(base + (fetardeEnService(etat) ? B.TRAITS_EFFETS.fetardePatience : 0) + patienceBar(etat) + patienceTheme(etat));
+  return Math.round(
+    base + (fetardeEnService(etat) ? B.TRAITS_EFFETS.fetardePatience : 0) + patienceBar(etat) + patienceTheme(etat) + patienceAccueil(etat),
+  );
 }
 
 /**
@@ -352,7 +367,8 @@ export function qualiteRdv(
     (employe.recadre === etat.jour ? B.ENTRETIEN.recadrer.qualite : 0) +
     qualiteDesRegles(etat, modele.segment, formule) +
     qualiteBar(etat, modele.segment) +
-    qualiteTheme(etat, modele.segment);
+    qualiteTheme(etat, modele.segment) +
+    qualiteEquipes(etat, modele.segment);
   return borner(valeur, 0, 1);
 }
 
@@ -408,7 +424,7 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
 export function facteurDispute(etat: EtatJeu): number {
   const n = etat.personnel.filter((e) => e.enServiceCeSoir && !e.repos && aTrait(e, 'Tête brûlée')).length;
   const groupes = etat.file.filter((c) => modeleClient(c.modele).segment === 'groupe').length;
-  return Math.pow(B.TRAITS_EFFETS.teteBruleeDispute, n) * Math.pow(B.GROUPE_DISPUTE, groupes) * selectionActive(etat).dispute * disputeTendance(etat) * disputeTheme(etat);
+  return Math.pow(B.TRAITS_EFFETS.teteBruleeDispute, n) * Math.pow(B.GROUPE_DISPUTE, groupes) * selectionActive(etat).dispute * disputeTendance(etat) * disputeTheme(etat) * disputeSecurite(etat);
 }
 
 /** Un pas de 5 minutes de la vie de la maison. */
@@ -451,6 +467,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
     if (etat.dispute && maintenant >= etat.dispute.expire) {
       etat.dispute = null;
       depenser(etat, B.DISPUTE_CASSE, 'incidents');
+      indemniser(etat, B.DISPUTE_CASSE, 'casse', evenements);
       // La police en bons termes se contente d'un avertissement.
       if (!disputeSansReputation(etat)) changerReputationGlobale(etat, -B.DISPUTE_REPUTATION);
       if (relationsOuvertes(etat)) changerRelations(etat, B.RELATIONS.dispute, evenements);
@@ -461,9 +478,14 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
       etat.file.length >= 2 &&
       tirage.chance(B.DISPUTE_CHANCE_PAR_HEURE * etat.file.length * heures * facteurDispute(etat))
     ) {
-      etat.dispute = { expire: maintenant + B.DISPUTE_DELAI };
-      etat.semaine.stats.disputes += 1;
-      evenements.push({ type: 'dispute' });
+      // La sécurité étouffe parfois la dispute dans l'œuf : pas de bulle.
+      // (Sans équipe, on ne tire rien : le hasard de la partie ne bifurque pas.)
+      if (etat.equipes.securite > 0 && tirage.chance(partReglee(etat, 'securite'))) evenements.push({ type: 'disputeEvitee' });
+      else {
+        etat.dispute = { expire: maintenant + B.DISPUTE_DELAI };
+        etat.semaine.stats.disputes += 1;
+        evenements.push({ type: 'dispute' });
+      }
     }
 
     bruitDuSoir(etat, heures);
@@ -503,7 +525,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
 
   // Salaires à midi, charges fixes le lundi matin
   if (etat.minuteDuJour === B.HEURE_SALAIRES) {
-    const montant = etat.equipes.menage * B.SALAIRE_MENAGE + etat.equipes.bar * B.SALAIRE_BAR;
+    const montant = etat.equipes.menage * B.SALAIRE_MENAGE + etat.equipes.bar * B.SALAIRE_BAR + salairesEquipesQuartier(etat);
     if (montant > 0) {
       depenser(etat, montant, 'salaires');
       evenements.push({ type: 'salaires', montant });
@@ -534,6 +556,11 @@ export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
   if (etat.jour > 1 && (etat.jour - 1) % 7 === 0) {
     depenser(etat, B.CHARGES_FIXES, 'charges');
     evenements.push({ type: 'charges', montant: B.CHARGES_FIXES });
+    const prime = primeAssurance(etat);
+    if (prime > 0) {
+      depenser(etat, prime, 'assurance');
+      evenements.push({ type: 'primeAssurance', montant: prime });
+    }
   }
   rembourserAvance(etat, evenements);
   if (etat.jour === jourProchaineMensualite(etat)) {

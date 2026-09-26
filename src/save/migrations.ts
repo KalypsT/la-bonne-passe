@@ -314,6 +314,38 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       nouveautes,
     };
   },
+  // v22 → v23 : équipes Accueil et Sécurité (palier 3), et assurance (au premier lundi après le palier 3).
+  // Une partie déjà au palier 3, dont l'annonce a été vue, découvre les équipes (et l'assurance si un lundi est passé)
+  // par Josée au chargement.
+  22: (d) => {
+    const palier = typeof d.palier === 'number' ? d.palier : 0;
+    const annonces = Array.isArray(d.annonces) ? d.annonces : [];
+    const rivale = estObjet(d.rivale) ? d.rivale : {};
+    // La rivale s'est présentée : un lundi est passé depuis le palier 3.
+    const assurance = palier >= 3 && rivale.derniereAction !== null && rivale.derniereAction !== undefined;
+    const vus = palier >= 3 && !annonces.includes(3);
+    const nouveautes = [
+      ...(Array.isArray(d.nouveautes) ? d.nouveautes : []),
+      ...(vus ? ['equipes'] : []),
+      ...(vus && assurance ? ['assurance'] : []),
+    ];
+    const avecPostes = (c: unknown) =>
+      estObjet(c) && estObjet(c.depenses) && estObjet(c.recettes)
+        ? { ...c, recettes: { ...c.recettes, assurance: 0 }, depenses: { ...c.depenses, assurance: 0 } }
+        : c;
+    const semaine = estObjet(d.semaine) ? { ...d.semaine, comptes: avecPostes(d.semaine.comptes) } : d.semaine;
+    const bilanSemaine = estObjet(d.bilanSemaine) ? { ...d.bilanSemaine, comptes: avecPostes(d.bilanSemaine.comptes) } : d.bilanSemaine;
+    return {
+      ...d,
+      version: 23,
+      systemes: { ...(estObjet(d.systemes) ? d.systemes : {}), accueil: palier >= 3, securite: palier >= 3, assurance },
+      equipes: { ...(estObjet(d.equipes) ? d.equipes : {}), accueil: 0, securite: 0 },
+      assurance: 0,
+      semaine,
+      bilanSemaine,
+      nouveautes,
+    };
+  },
 };
 
 
@@ -384,6 +416,8 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(d.avance) &&
     estObjet(d.equipes) &&
     typeof d.equipes.bar === 'number' &&
+    typeof d.equipes.securite === 'number' &&
+    typeof d.assurance === 'number' &&
     estObjet(d.semaine) &&
     typeof d.bilanAVoir === 'boolean' &&
     (d.themeDuSoir === null || typeof d.themeDuSoir === 'string') &&

@@ -87,3 +87,13 @@ export const SILHOUETTE_MENAGE: Silhouette = {
   haut: '#5FA3A8',
   bas: '#3E6E72',
 };
+
+/** Équipes Accueil et Sécurité (v0.5), sur le quai : tenue de soirée pour l'accueil, costume sombre pour la sécurité. */
+export const SILHOUETTES_ACCUEIL: Silhouette[] = [
+  { teint: '#E8B894', cheveux: '#2A1A12', coiffure: 'chignon', haut: '#5C1530', bas: '#1C1C22', accent: '#D4A64A' },
+  { teint: '#8D5A3B', cheveux: '#111111', coiffure: 'courte', haut: '#5C1530', bas: '#1C1C22', accent: '#D4A64A' },
+];
+export const SILHOUETTES_SECURITE: Silhouette[] = [
+  { teint: '#6E4630', cheveux: '#111111', coiffure: 'courte', haut: '#16161C', bas: '#16161C', accent: '#3A3A44' },
+  { teint: '#F1C7A5', cheveux: '#3A2A1E', coiffure: 'courte', haut: '#16161C', bas: '#16161C', accent: '#3A3A44' },
+];

@@ -15,6 +15,7 @@ import type { Segment } from '../content/clientele';
 import type { IdActeur } from '../content/relations';
 import type { EvenementRelation } from './relations';
 import type { EvenementRivale } from './rivale';
+import type { EvenementEquipe } from './equipes';
 import { affinite, type EvenementPersonnel } from './personnel';
 import { ecart, instant } from './temps';
 
@@ -30,7 +31,7 @@ interface Sortie {
 
 /** Trancher un imprévu peut aussi faire partir quelqu'un, ou entrer une candidate. */
 interface SortieChoix {
-  push(e: EvenementImprevu | EvenementPersonnel | EvenementRecrutement | EvenementRelation | EvenementRivale): unknown;
+  push(e: EvenementImprevu | EvenementPersonnel | EvenementRecrutement | EvenementRelation | EvenementRivale | EvenementEquipe): unknown;
 }
 
 function disponible(etat: EtatJeu, e: Employe): boolean {

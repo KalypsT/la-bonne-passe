@@ -11,6 +11,7 @@ import { aTrait, changerLoyaute, changerMoral, ajusterAffinite, depart, type Eve
 import { changerTapage } from './quartier';
 import { changerRelations, type EvenementRelation } from './relations';
 import { changerAgressivite, changerRapports, type EvenementRivale } from './rivale';
+import { indemniser, type EvenementEquipe } from './equipes';
 
 const borner = (v: number, min = 0, max = 100) => Math.min(max, Math.max(min, v));
 
@@ -35,7 +36,7 @@ export interface OutilsEffet {
   candidatVedette?: () => void;
   /** Fait entrer une recrue débauchée au Chat Noir au salon (v0.5). */
   candidatRival?: () => void;
-  evenements?: { push(e: EvenementPersonnel | EvenementRelation | EvenementRivale): unknown };
+  evenements?: { push(e: EvenementPersonnel | EvenementRelation | EvenementRivale | EvenementEquipe): unknown };
   /** Multiplie les effets de réputation et de satisfaction (les imprévus, nombreux, pèsent moins lourd). */
   forceSatisfaction?: number;
 }
@@ -84,6 +85,7 @@ export function appliquerEffet(etat: EtatJeu, effet: EffetCarte, qui: Concernes,
     etat.tresorerie += argent;
     noterDepense(etat, -argent, 'incidents');
     if (etat.nuit && etat.nuitsBouclees < etat.nuit.numero) etat.nuit.depenses -= argent;
+    if (effet.sinistre) indemniser(etat, -argent, effet.sinistre, evenements);
   }
   if (effet.travaux) depenser(etat, effet.travaux, 'travaux');
   if (effet.tapage) changerTapage(etat, effet.tapage);

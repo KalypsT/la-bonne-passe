@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import * as B from '../content/balance';
 import { ACTEURS, ACTEURS_ORDRE } from '../content/relations';
-import { simuler, type OptionsSimulation } from './simulation';
+import { mesurerRenouvellement, simuler, type OptionsSimulation } from './simulation';
 
 // Le quartier vit-il ? (v0.5) Les relations réagissent au style de la maison, et les soigner coûte, mais rapporte.
 // La rivale frappe plus fort la maison qui lui prend sa clientèle, et une trêve la calme.
@@ -30,6 +30,9 @@ beforeAll(() => {
   jouer('soigneur', { relations: 'entretien', cibleRelations: 45 });
   jouer('feutree', { offre: 'feutree', rdvMax: 4 });
   jouer('treve', { rivale: 'treve' });
+  jouer('accueil', { accueil: 1 });
+  jouer('equipes', { accueil: 1, securite: 1 });
+  jouer('assurance', { assurance: 2 });
 }, 60_000);
 
 describe('le quartier réagit au style de la maison', () => {
@@ -97,5 +100,35 @@ describe('le Chat Noir', () => {
   it('une trêve la calme, et limite ses coups', () => {
     expect(moyenne('treve', (p) => fin(p).rivale.agressivite)).toBeLessThan(moyenne('classique', (p) => fin(p).rivale.agressivite) - 5);
     expect(moyenne('treve', coups)).toBeLessThan(moyenne('classique', coups));
+  });
+});
+
+describe('les équipes Accueil et Sécurité, et l’assurance', () => {
+  /** Alertes par soirée, des nuits 36 à 56 (les équipes sont engagées dès le jour 28). */
+  const alertes = (nom: string) => moyenne(nom, (p) => mesurerRenouvellement(p.nuits.slice(35)).alertes);
+  const avoir = (nom: string) => moyenne(nom, (p) => p.etat.tresorerie + p.etat.reserve);
+
+  it('règlent une partie des alertes, sans vider la soirée', () => {
+    console.log('alertes par soirée', ['classique', 'accueil', 'equipes'].map((n) => `${n} ${alertes(n).toFixed(1)}`).join(', '));
+    expect(alertes('equipes')).toBeLessThan(alertes('classique') - 0.5);
+    expect(alertes('equipes')).toBeGreaterThan(alertes('classique') * 0.6);
+  });
+
+  it('se paient : une équipe coûte 1 500 à 4 000 € sur le deuxième mois, deux davantage', () => {
+    const une = avoir('classique') - avoir('accueil');
+    const deux = avoir('classique') - avoir('equipes');
+    console.log('coût sur le mois 2', `une équipe ${une.toFixed(0)} €`, `deux ${deux.toFixed(0)} €`, `avoir classique ${avoir('classique').toFixed(0)} €`);
+    expect(une).toBeGreaterThan(1500);
+    expect(une).toBeLessThan(4000);
+    expect(deux).toBeGreaterThan(une);
+  });
+
+  it('l’assurance ne rapporte pas à un joueur prudent : les primes dépassent les remboursements', () => {
+    const assurance = parties.get('assurance')!;
+    const primes = assurance.reduce((t, p) => t + p.bilans.reduce((s, b) => s + b.comptes.depenses.assurance, 0), 0);
+    const rembourse = assurance.reduce((t, p) => t + p.bilans.reduce((s, b) => s + b.comptes.recettes.assurance, 0), 0);
+    console.log('assurance casse et amendes, 10 parties', `primes ${primes} €`, `remboursés ${rembourse} €`);
+    expect(rembourse).toBeGreaterThan(0);
+    expect(rembourse).toBeLessThan(primes);
   });
 });

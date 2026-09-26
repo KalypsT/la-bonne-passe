@@ -1079,3 +1079,51 @@ Une partie de la nuit 27 (sauvegarde v21, migrée) : fin du mois, palier 3 (qui 
 - **La soirée feutrée n'est pas plus animée le soir** : la rivale joue surtout le lundi, en journée, et son seul coup du soir (le faux client) sort moins d'une fois par mois. Les cartes du quartier de la partie 5 doivent porter le soir.
 - **La porte stricte s'appauvrit toujours** au deuxième mois (−138 € à la nuit 56) : à reprendre au rééquilibrage final.
 - **Le débauchage** : rare et souvent sans suite pour un joueur attentif. À juger en jouant ; on peut abaisser les seuils de fragilité si l'histoire manque.
+
+
+## Équipes Accueil et Sécurité, et assurance (v0.5, partie 4)
+
+Les équipes s'ouvrent au palier 3 (drapeaux `accueil` et `securite`), l'assurance au premier lundi suivant (drapeau `assurance`, présentée au bilan du lundi). Valeurs dans `EQUIPES` et `ASSURANCES` (`balance.ts`), moteur dans `src/engine/equipes.ts`.
+
+### Réglages
+
+- **Accueil** (100 € par jour et par personne, 2 au plus) : 12 minutes de patience sur le quai par personne ; règle seule 30 % des clients pressés et des groupes bruyants par personne.
+- **Sécurité** (130 €, 2 au plus) : −20 % de disputes par personne, +0,02 de qualité ressentie pour les clients d'affaires ; règle seule 30 % des clients éméchés, photographes, faux clients et disputes par personne ; la porte stricte n'a plus besoin de portier.
+- Une alerte réglée seule ne coûte rien et ne donne pas de bulle ; le journal le raconte. Sans équipe, rien n'est tiré au hasard : les parties sans équipe ne bifurquent pas.
+- Premier essai : l'Accueil ajoutait aussi 0,02 de qualité aux touristes. Retiré : la réputation gagnée par une équipe (+6 à +7 points au deuxième mois) venait surtout des alertes réglées et des clients moins souvent perdus, et le bonus brouillait la lecture.
+- **Assurance** : casse (80 € par semaine, 70 % de la casse remboursée) ; casse et amendes (200 €, tout remboursé). Casse : dispute qui dégénère, tireuse en panne. Amendes : inspection sanitaire, inspecteur, inspection surprise, condamnation dans l'affaire du voisin.
+
+### Mesures (10 graines, 56 nuits, cartes tranchées au hasard)
+
+| Stratégie (56 nuits) | Alertes par soirée, nuits 36 à 56 | Décisions par soirée | Clients perdus, semaine 6 | Réputation, nuit 56 | Primes / remboursements d’assurance | Avoir, nuit 56 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 7,1 | 8,5 | 18,0 | 47 | — | 4 383 € |
+| Classique 3, accueil 1 | 6,4 | 7,8 | 12,3 | 54 | — | 1 451 € |
+| Classique 3, sécurité 1 | 6,1 | 7,5 | 13,9 | 54 | — | 1 686 € |
+| Classique 3, accueil 1 et sécurité 1 | 6,8 | 8,2 | 21,6 | 53 | — | -662 € |
+| Classique 3, accueil 2 et sécurité 2 | 5,6 | 7,0 | 22,5 | 56 | — | -6 628 € |
+| Classique 3, sélection stricte | 4,5 | 6,0 | 10,6 | 51 | — | -138 € |
+| Classique 3, sélection stricte, sécurité 1 | 3,9 | 5,4 | 7,9 | 51 | — | -503 € |
+| Classique 3, assurance casse | 7,1 | 8,5 | 18,0 | 47 | 160 € / 21 € | 4 172 € |
+| Classique 3, assurance casse et amendes | 7,1 | 8,5 | 18,0 | 47 | 400 € / 185 € | 3 977 € |
+
+- **Une équipe règle une alerte sur dix de la soirée** (7,1 → 6,1 à 6,4 alertes) et fait perdre bien moins de clients, pour environ 2 700 à 2 900 € sur le deuxième mois : l'essentiel de la marge d'un joueur distrait.
+- **Deux équipes à deux personnes** mettent la maison dans le rouge (−6 600 € à la nuit 56) : c'est le mur.
+- **La sécurité ne sauve pas la porte stricte** : elle économise le portier (80 € par soir) mais coûte 130 € par jour.
+- **L'assurance coûte plus qu'elle ne rapporte** en moyenne (400 € de primes pour 185 € remboursés sur les deux semaines bouclées, casse et amendes) : c'est une protection contre le mauvais sort (une condamnation à 800 €), pas un placement.
+
+### Gardes (`equilibrage-quartier.test.ts`, joueur attentif)
+
+- Une équipe Accueil et une équipe Sécurité : au moins 0,5 alerte de moins par soirée, et plus de 60 % des alertes restent (7,5 contre 8,7).
+- Une équipe coûte 1 500 à 4 000 € sur le deuxième mois (2 100 € mesurés), deux davantage (5 200 €).
+- Assurance casse et amendes : des remboursements, mais moins que les primes (2 700 € pour 4 000 € sur 10 parties).
+
+### Dans le navigateur (vite preview, 844 × 390)
+
+Une partie de la nuit 27 : au lundi 29, le bilan de la semaine annonce l'assurance avec l'avis de Josée ; l'onglet Personnel montre « Équipes de la maison » (boutons de 40 px) ; une personne à l'Accueil et une à la Sécurité apparaissent de part et d'autre de la porte le soir ; l'onglet Finances propose les trois crans d'assurance, avec l'effet et l'avis de Josée. Aucune erreur dans la console.
+
+### À surveiller
+
+- **Le prix des équipes** : 100 et 130 € par jour, c'est lourd face à une marge de 4 000 à 8 000 € au deuxième mois. À juger au téléphone : est-ce que le calme acheté vaut son prix ?
+- **La réputation** monte de 6 à 7 points avec une équipe : le palier 4 (réputation 50) pourrait arriver plus tôt en v0.6.
+- **L'assurance** : utile surtout avec une porte laxiste, la rivale en guerre ou une mairie fâchée ; les imprévus du quartier (partie 5) lui donneront plus d'occasions de servir.

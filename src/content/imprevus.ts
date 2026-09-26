@@ -242,7 +242,7 @@ export const IMPREVUS: DefinitionImprevu[] = [
         chance: 0.7,
         effet: { reputation: 0.5, relations: { mairie: 3 } },
         journal: 'L’inspecteur coche toutes les cases et repart en complimentant les draps.',
-        echec: { argent: -A.inspectionAmende, reputation: -1, relations: { mairie: -4 } },
+        echec: { argent: -A.inspectionAmende, reputation: -1, relations: { mairie: -4 }, sinistre: 'amende' },
         journalEchec: `Une tache suspecte derrière une porte : ${euros(A.inspectionAmende)} d’amende.`,
       },
       {
@@ -318,7 +318,7 @@ export const IMPREVUS: DefinitionImprevu[] = [
       {
         texte: 'Appeler un réparateur de nuit',
         detail: `−${euros(A.reparateur)}, le bar tourne comme si de rien n’était`,
-        effet: { argent: -A.reparateur },
+        effet: { argent: -A.reparateur, sinistre: 'casse' },
         journal: 'Le réparateur arrive en scooter, change un joint et repart avec une bière offerte.',
       },
       {

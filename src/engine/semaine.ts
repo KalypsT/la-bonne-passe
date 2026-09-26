@@ -53,6 +53,8 @@ export interface BilanSemaine {
   defi?: ResultatDefi | null;
   /** Le défi de la semaine qui commence. */
   nouveauDefi?: string | null;
+  /** Outils qui s'ouvrent ce lundi, présentés par Josée (v0.5 : l'assurance). */
+  ouvertures?: string[];
 }
 
 export type EvenementSemaine = { type: 'bilanSemaine'; numero: number } | { type: 'tendance'; id: string } | EvenementBilan;

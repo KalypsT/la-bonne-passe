@@ -25,6 +25,9 @@ export const POSITIONS = {
   /** Places sur le quai, de la porte vers la droite. */
   file: [192, 218, 244, 270].map((x) => ({ x, y: 392 })),
   porte: { x: 135, y: 392 },
+  /** Équipes Accueil (à droite de la porte) et Sécurité (à gauche), v0.5. */
+  accueil: [{ x: 160, y: 394 }, { x: 172, y: 396 }],
+  securite: [{ x: 108, y: 394 }, { x: 92, y: 396 }],
   /** Places du personnel qui attend au salon. */
   salon: [{ x: 150, y: 304 }, { x: 184, y: 304 }, { x: 218, y: 304 }, { x: 252, y: 304 }],
   bulleLinge: { x: 112, y: 262 },

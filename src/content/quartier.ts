@@ -158,7 +158,7 @@ export const EVENEMENTS_QUARTIER: DefinitionIntrigue[] = [
             chance: 0.6,
             effet: { relations: { mairie: 8 } },
             journal: 'Les inspecteurs repartent bredouilles, presque vexés. Au dossier : « Rien à signaler. »',
-            echec: { argent: -Q.inspectionAmende, relations: { mairie: -4 } },
+            echec: { argent: -Q.inspectionAmende, relations: { mairie: -4 }, sinistre: 'amende' },
             journalEchec: `Une licence de bar mal affichée : ${euros(Q.inspectionAmende)} d’amende.`,
             suite: { fin: 'visite' },
           },
