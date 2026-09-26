@@ -9,6 +9,12 @@ export interface Nouveaute {
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    id: 'parures',
+    palier: 0,
+    texte:
+      'Le linge se compte en parures : une par rendez-vous. Au briefing, des packs de 5, 10 ou 20, moins chers en gros, et une commande automatique qui complète le stock chaque soir. J’ai arrondi ton stock au-dessus.',
+  },
+  {
     id: 'clientele',
     palier: 2,
     texte: 'Onglet Clientèle : chaque segment a sa satisfaction, et ta réputation en est la moyenne.',

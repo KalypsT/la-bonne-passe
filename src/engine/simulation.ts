@@ -352,7 +352,7 @@ export function simuler(options: OptionsSimulation): {
       const repos = etat.personnel.filter((e) => e.fatigue > 55 || e.promesseRepos !== null).map((e) => e.id);
       const commanderBar = etat.bar.ouvert && etat.equipes.bar > 0 && etat.bar.stock < (etat.regles.formule === 'champagne' ? 50 : 30);
       const theme = typeof options.theme === 'function' ? options.theme(etat) : (options.theme ?? null);
-      jouer([{ type: 'validerBriefing', offre, commanderLinge: etat.linge < 40, commanderBar, repos, rdvMax, theme }]);
+      jouer([{ type: 'validerBriefing', offre, packLinge: etat.linge < 4 ? 5 : 0, commanderBar, repos, rdvMax, theme }]);
     }
   }
   return { nuits: resumes, etat, departs, bilans, tresorerieMin, intrigues: etat.intrigues.finies, bilansMois };

@@ -297,7 +297,7 @@ L'aménagement sert surtout les autres systèmes : des pièces à thème dans un
 - **Actions** : rouvrir une chambre fermée (900 €, 8 h de travaux), nettoyage express (30 €), rafraîchir la déco (400 €, 6 h), changer de thème, fermer temporairement, améliorer d'un niveau.
 - **Agrandissement** : racheter le bâtiment voisin ou un étage, ce qui ajoute 2 à 3 pièces, avec l'accord de la mairie (palier 5).
 - **Usure** : chaque rendez-vous salit la chambre (environ −20 % de propreté) et l'use un peu. Sous 40 % : alerte ; sous 15 % : la chambre ne reçoit plus. Le ménage traite la propreté ; l'état demande une rénovation payante.
-- **Linge** : chaque rendez-vous consomme 10 draps. Commande au briefing (50 draps, 60 €, livrés à l'ouverture) ou livraison express en soirée (90 €).
+- **Linge** (v0.6) : il se compte en parures, une par rendez-vous ; 4 au départ. Au briefing, des packs livrés à l'ouverture, moins chers par parure en gros : 5 parures pour 60 €, 10 pour 110 €, 20 pour 200 €. Une commande automatique (non, 5, 10 ou 20) complète chaque soir le stock jusqu'à la cible, au tarif des packs. Livraison express en soirée : 5 parures pour 90 €. Le briefing et le panneau affichent « N parures, environ N rendez-vous ». Plus tard, la buanderie fera tourner le stock : une parure utilisée devient sale, le ménage la relave (plus vite maison fermée), et chaque parure s'use ; sans buanderie, on garde l'achat simple.
 
 ## Économie et finances
 

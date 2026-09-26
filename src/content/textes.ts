@@ -215,7 +215,9 @@ export const TEXTES = {
     disputeCalmee: (prenom: string) => `${prenom} a calmé le jeu avec autorité.`,
     disputeRatee: 'Tu as calmé le jeu… en prenant un parapluie dans l’épaule.',
     nettoyage: (deChambre: string, montant: string) => `Nettoyage express ${deChambre} (${montant}).`,
-    livraisonLinge: (montant: string) => `Livraison express : 50 draps propres (${montant}).`,
+    livraisonLinge: (montant: string) => `Livraison express : 5 parures de linge propre (${montant}).`,
+    commandeLingeAuto: (parures: number, montant: string) =>
+      `Commande automatique : ${parures} parure${parures > 1 ? 's' : ''} de linge (${montant}), livrée${parures > 1 ? 's' : ''} à l’ouverture.`,
     repos: (prenom: string) => `${prenom} se repose pour le reste de la nuit.`,
     palier: (numero: number, nom: string) => `Palier ${numero} atteint : ${nom}.`,
     debutTravaux: (deChambre: string, montant: string, heure: string) =>
@@ -376,8 +378,18 @@ export const TEXTES = {
     chambresEnService: (n: number, total: number) => `${n} chambre${n > 1 ? 's' : ''} en service sur ${total}`,
     planningVerrouille: (prenom: string) => `Le planning s’ouvre au palier 1. Ce soir, ${prenom} est seule.`,
     linge: 'Linge propre',
-    stockLinge: (n: number) => `Stock : ${n} draps`,
-    commanderLinge: (draps: number, prix: string) => `Commander ${draps} draps (${prix}), livrés à l’ouverture`,
+    /** « N parures, environ N rendez-vous » : une parure par rendez-vous. */
+    stockLinge: (n: number) => `${n} parure${n > 1 ? 's' : ''}, environ ${n} rendez-vous`,
+    stockLingeCommande: (n: number, commande: number) =>
+      commande > 0 ? `En stock : ${n} parure${n > 1 ? 's' : ''}, ${commande} de plus à l’ouverture` : `En stock : ${n} parure${n > 1 ? 's' : ''}`,
+    packLinge: 'Commander un pack, livré à l’ouverture',
+    pack: (parures: number, prix: string, unitaire: string) => `${parures} parures · ${prix} (${unitaire} l’une)`,
+    aucunPack: 'Rien',
+    lingeAuto: 'Commande automatique',
+    lingeAutoAide: 'Chaque soir, le stock est complété jusqu’à ce nombre, au prix des packs.',
+    cibleAuto: (n: number) => (n === 0 ? 'Non' : `${n}`),
+    apresCommande: (n: number, auto: number, prix: string) =>
+      auto > 0 ? `Ce soir : ${n} parures, dont ${auto} en commande automatique (${prix}).` : `Ce soir : ${n} parure${n > 1 ? 's' : ''}, environ ${n} rendez-vous.`,
     bar: 'Bar',
     stockBar: (n: number) => `Stock : ${n} bouteilles`,
     commanderBar: (bouteilles: number, prix: string) => `Commander ${bouteilles} bouteilles (${prix}), livrées à l’ouverture`,
@@ -585,10 +597,12 @@ export const TEXTES = {
   },
   actions: {
     nettoyageExpress: (prix: string) => `Nettoyage express (${prix})`,
-    livraisonLinge: (draps: number, prix: string) => `Livraison express : ${draps} draps (${prix})`,
+    livraisonLinge: (parures: number, prix: string) => `Livraison express : ${parures} parures (${prix})`,
     occupee: 'Occupée',
     inutilisable: 'Trop sale pour recevoir : la chambre est bloquée.',
-    lingeStock: (n: number) => `${n} draps propres`,
+    lingeStock: (n: number) => `${n} parure${n > 1 ? 's' : ''}, environ ${n} rendez-vous`,
+    lingeEnRoute: (n: number) => `${n} de plus à l’ouverture`,
+    lingeAuto: (cible: number) => (cible > 0 ? `Commande automatique : jusqu’à ${cible} parures chaque soir (au briefing).` : 'Pas de commande automatique : à régler au briefing.'),
   },
 } as const;
 

@@ -126,6 +126,8 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return t.nettoyage(trouverChambre(evenement.chambreId)?.de ?? '', formaterEuros(evenement.montant));
     case 'livraisonLinge':
       return t.livraisonLinge(formaterEuros(evenement.montant));
+    case 'commandeLingeAuto':
+      return t.commandeLingeAuto(evenement.parures, formaterEuros(evenement.montant));
     case 'repos':
       return t.repos(prenomEmploye(partie, evenement.employeId, evenement.prenom));
     case 'palier':

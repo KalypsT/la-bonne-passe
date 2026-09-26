@@ -32,13 +32,17 @@ import { agirRelation, matinDesRelations, type EvenementRelation, type OrdreRela
 import { lundiDeLaRivale, repondreRivale, type EvenementRivale, type OrdreRivale } from './rivale';
 import { changerAssurance, changerEquipe, type EvenementEquipe, type OrdreEquipe } from './equipes';
 import { traiterAlerte, type OrdreMinuterie } from './minuteries';
+import { changerCibleAuto, commanderAuto, commanderPack, livraisonExpress, type EvenementLinge } from './linge';
 
 /** Ordres envoyés par l'interface au moteur. */
 export type Ordre =
   | {
       type: 'validerBriefing';
       offre?: Offre;
-      commanderLinge?: boolean;
+      /** Pack de linge commandé (5, 10 ou 20 parures), livré à l'ouverture. */
+      packLinge?: number;
+      /** Commande automatique : cible du stock de linge, complété chaque soir (0 : aucune). */
+      lingeAuto?: number;
       /** Commande de bouteilles pour le bar, livrée à l'ouverture. */
       commanderBar?: boolean;
       /** Soirée à thème, payée tout de suite (null ou absent : pas de thème). */
@@ -81,7 +85,7 @@ export type EvenementMoteur =
   | { type: 'ouverture'; jour: number }
   | { type: 'fermeture'; jour: number }
   | { type: 'nettoyage'; chambreId: string; montant: number }
-  | { type: 'livraisonLinge'; montant: number }
+  | EvenementLinge
   | { type: 'repos'; employeId: string; prenom?: string }
   | { type: 'disputeReglee'; choix: 'verre' | 'calmer'; reussite: boolean }
   | { type: 'debutTravaux'; chambreId: string; montant: number; fin: number }
@@ -135,10 +139,9 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       if (!attendBriefing(etat)) return;
       etat.briefingJour = etat.jour;
       if (ordre.offre) etat.offre = ordre.offre;
-      if (ordre.commanderLinge) {
-        depenser(etat, B.COMMANDE_LINGE.prix, 'linge');
-        etat.lingeCommande += B.COMMANDE_LINGE.draps;
-      }
+      if (ordre.packLinge) commanderPack(etat, ordre.packLinge);
+      if (ordre.lingeAuto !== undefined) changerCibleAuto(etat, ordre.lingeAuto);
+      commanderAuto(etat, evenements);
       etat.themeDuSoir = null;
       const theme = ordre.theme ? B.THEMES[ordre.theme] : undefined;
       if (ordre.theme && theme && etat.systemes.themes && etat.tresorerie >= theme.cout) {
@@ -169,9 +172,7 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       return;
     }
     case 'livraisonLinge':
-      depenser(etat, B.LIVRAISON_EXPRESS_LINGE.prix, 'express');
-      etat.linge += B.LIVRAISON_EXPRESS_LINGE.draps;
-      evenements.push({ type: 'livraisonLinge', montant: B.LIVRAISON_EXPRESS_LINGE.prix });
+      livraisonExpress(etat, evenements);
       return;
     case 'repos': {
       const employe = etat.personnel.find((e) => e.id === ordre.employeId);

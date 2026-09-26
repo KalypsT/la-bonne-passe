@@ -8,6 +8,9 @@ import { migrer } from './migrations';
 import { ambitionDuMarche } from '../engine/recrutement';
 import { creerStockageMemoire, type Stockage } from './stockage';
 
+/** Les nouveautés apportées par la migration testée, sans celles des mises à jour suivantes (le linge en parures). */
+const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => n !== 'parures');
+
 const MAINTENANT = Date.UTC(2026, 8, 25, 20, 0);
 
 describe('emplacements de sauvegarde', () => {
@@ -338,7 +341,7 @@ describe('migrations', () => {
     expect(migre?.nouveautes[0]).toBe('themes');
     const avant = migrer({ ...etat, version: 14, systemes: { ...systemes, tendances: false }, semaine: ancienne, nouveautes: [] });
     expect(avant?.systemes.themes).toBe(false);
-    expect(avant?.nouveautes).toEqual([]);
+    expect(propres(avant?.nouveautes)).toEqual([]);
   });
 
   it('migre une sauvegarde v15 : aucune intrigue en cours, quartier calme', () => {
@@ -367,7 +370,7 @@ describe('migrations', () => {
     expect(migre?.personnel.map((e) => e.ambition)).toEqual(['gerante', 'affiche']);
     expect(migre?.candidats[0]?.ambition).toBe(ambitionDuMarche('c7'));
     expect(migre?.nouveautes.slice(0, 2)).toEqual(['ambitions', 'voisinage']);
-    expect(migrer({ ...base, version: 16, palier: 0, personnel: [sansAmbition(base.personnel[0]!)], nouveautes: [] })?.nouveautes).toEqual([]);
+    expect(propres(migrer({ ...base, version: 16, palier: 0, personnel: [sansAmbition(base.personnel[0]!)], nouveautes: [] })?.nouveautes)).toEqual([]);
     // Une sauvegarde v17 sans ambition est abîmée.
     expect(migrer({ ...base, personnel: [sansAmbition(base.personnel[0]!)] })).toBeNull();
   });
@@ -401,11 +404,11 @@ describe('migrations', () => {
     expect(avant?.defi).toBeNull();
     expect(avant?.mois).toMatchObject({ numero: 1, objectif: 'reputation' });
     expect(avant?.semaine.stats.disputes).toBe(0);
-    expect(avant?.nouveautes).toEqual(['objectifs', 'defis']);
+    expect(propres(avant?.nouveautes)).toEqual(['objectifs', 'defis']);
     const apres = migrer({ ...etat, version: 19, palier: 2, systemes: { ...systemes, tendances: false }, semaine, mensualitesPayees: 1, nouveautes: [] });
     expect(apres?.systemes.defis).toBe(false);
     expect(apres?.mois).toMatchObject({ numero: 2, objectif: 'satisfaction' });
-    expect(apres?.nouveautes).toEqual(['objectifs']);
+    expect(propres(apres?.nouveautes)).toEqual(['objectifs']);
     expect(migrer({ ...etat, version: 20, systemes, semaine })).toBeNull();
   });
 
@@ -447,14 +450,14 @@ describe('migrations', () => {
     expect(avant?.systemes.rivale).toBe(false);
     expect(avant?.rivale.derniereAction).toBeNull();
     expect(typeof avant?.hasardRivale).toBe('number');
-    expect(avant?.nouveautes).toEqual([]);
+    expect(propres(avant?.nouveautes)).toEqual([]);
     const apres = migrer({ ...etat, version: 21, systemes: { ...systemes, relations: true }, palier: 3, annonces: [] });
     expect(apres?.systemes.rivale).toBe(true);
-    expect(apres?.nouveautes).toEqual(['rivale', 'equipes']);
+    expect(propres(apres?.nouveautes)).toEqual(['rivale', 'equipes']);
     expect(trouverNouveaute('rivale')?.palier).toBe(3);
     // Le palier 3 encore à annoncer : sa carte présente déjà le Chat Noir.
     const annonce = migrer({ ...etat, version: 21, systemes, palier: 3, annonces: [3] });
-    expect(annonce?.nouveautes).toEqual([]);
+    expect(propres(annonce?.nouveautes)).toEqual([]);
     expect(migrer({ ...etat, version: 22, systemes })).toBeNull();
   });
 
@@ -474,15 +477,15 @@ describe('migrations', () => {
     expect(avant?.systemes).toMatchObject({ accueil: false, securite: false, assurance: false });
     expect(avant?.assurance).toBe(0);
     expect(avant?.semaine.comptes.recettes.assurance).toBe(0);
-    expect(avant?.nouveautes).toEqual([]);
+    expect(propres(avant?.nouveautes)).toEqual([]);
 
     const lundiPasse = { ...base.rivale, derniereAction: { id: 'visite', jour: 29 } };
     const apres = migrer({ ...v22, palier: 3, annonces: [], rivale: lundiPasse });
     expect(apres?.systemes).toMatchObject({ accueil: true, securite: true, assurance: true });
-    expect(apres?.nouveautes).toEqual(['equipes', 'assurance']);
+    expect(propres(apres?.nouveautes)).toEqual(['equipes', 'assurance']);
     const juste = migrer({ ...v22, palier: 3, annonces: [] });
     expect(juste?.systemes.assurance).toBe(false);
-    expect(juste?.nouveautes).toEqual(['equipes']);
+    expect(propres(juste?.nouveautes)).toEqual(['equipes']);
     expect(migrer({ ...etat, version: 23, systemes })).toBeNull();
   });
 
@@ -500,7 +503,7 @@ describe('migrations', () => {
     expect(tot?.semaine.comptes.depenses.visibilite).toBe(0);
     const tard = migrer({ ...v23, systemes: { ...systemes, assurance: true }, jour: 40, nouveautes: [] });
     expect(tard?.systemes.visibilite).toBe(true);
-    expect(tard?.nouveautes).toEqual(['visibilite']);
+    expect(propres(tard?.nouveautes)).toEqual(['visibilite']);
     expect(migrer({ ...base, version: 24, regles })).toBeNull();
   });
 
@@ -528,6 +531,22 @@ describe('migrations', () => {
     expect(fermee?.journee.comptes.recettes.rendezVous).toBe(0);
     expect(fermee?.journee.tresorerieAvant).toBe(5000);
     expect(migrer({ ...reste, version: 25 })).toBeNull();
+  });
+
+  it('migre une sauvegarde v25 : le linge en parures, arrondi au-dessus, et Josée le présente', () => {
+    const { lingeAuto: _a, ...base } = creerEtatInitial();
+    const v25 = { ...base, version: 25, linge: 35, lingeCommande: 50, nouveautes: [] };
+    const migre = migrer(v25);
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.linge).toBe(4);
+    expect(migre?.lingeCommande).toBe(5);
+    expect(migre?.lingeAuto).toBe(0);
+    expect(migre?.nouveautes).toEqual(['parures']);
+    expect(trouverNouveaute('parures')).toBeDefined();
+    expect(migrer({ ...v25, linge: 40 })?.linge).toBe(4);
+    expect(migrer({ ...v25, linge: 1 })?.linge).toBe(1);
+    expect(migrer({ ...v25, linge: 0 })?.linge).toBe(0);
+    expect(migrer({ ...base, version: 26 })).toBeNull();
   });
 
   it('refuse une version future ou des données sans version', () => {

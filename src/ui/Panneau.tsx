@@ -167,9 +167,13 @@ function Linge({ partie }: { partie: EtatJeu }) {
   return (
     <>
       <h3>{TEXTES.briefing.linge}</h3>
-      <p className={partie.linge < SEUIL_LINGE ? 'sous negatif' : 'sous'}>{a.lingeStock(partie.linge)}</p>
+      <p className={partie.linge < SEUIL_LINGE ? 'sous negatif' : 'sous'}>
+        {a.lingeStock(partie.linge)}
+        {partie.lingeCommande > 0 && ` · ${a.lingeEnRoute(partie.lingeCommande)}`}
+      </p>
+      <p className="sous">{a.lingeAuto(partie.lingeAuto)}</p>
       <button className="bouton discret pleine-largeur" onClick={() => ordonner({ type: 'livraisonLinge' })}>
-        {a.livraisonLinge(LIVRAISON_EXPRESS_LINGE.draps, formaterEuros(LIVRAISON_EXPRESS_LINGE.prix))}
+        {a.livraisonLinge(LIVRAISON_EXPRESS_LINGE.parures, formaterEuros(LIVRAISON_EXPRESS_LINGE.prix))}
       </button>
     </>
   );
