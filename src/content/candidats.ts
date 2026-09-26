@@ -33,6 +33,7 @@ export const MILA: DefinitionCandidat = {
   intro: 'Mila arrive avec vingt minutes de retard et des lunettes de soleil. Elle vient du Pink Palace, de l’autre côté du canal.',
   talents: { charme: 5, conversation: 2, audace: 3, discretion: 2 },
   traits: ['Diva', 'Ambitieuse'],
+  ambition: 'affiche',
   questions: [
     { question: '« Pourquoi quitter le Pink Palace ? »', reponse: '« Ils m’ont donné la chambre du fond. Moi. La chambre du fond. »', trait: 'Diva' },
     { question: '« Tu te vois où, dans deux ans ? »', reponse: '« Dans ton fauteuil, peut-être. Sans vouloir te vexer. »', trait: 'Ambitieuse' },
@@ -50,6 +51,7 @@ export const JONAS: DefinitionCandidat = {
   intro: 'Jonas se présente en chemise repassée, un bouquet pour Sanne à la main. Il sort d’une maison qui vient de fermer.',
   talents: { charme: 4, conversation: 4, audace: 2, discretion: 4 },
   traits: ['Solitaire', 'Fidèle'],
+  ambition: 'etudes',
   questions: [
     { question: '« Qu’est-ce que tu fais de tes soirs de repos ? »', reponse: '« Je lis. Seul. Avec un chat. C’est un problème ? »', trait: 'Solitaire' },
     { question: '« Pourquoi ta maison a fermé ? »', reponse: '« Le patron est parti avec la caisse. Moi, je suis resté jusqu’au bout. »', trait: 'Fidèle' },
@@ -67,6 +69,7 @@ export const INES: DefinitionCandidat = {
   intro: 'Inès entre en poussant la porte du pied, casque de scooter sous le bras. « On m’a dit que vous cherchiez du monde. »',
   talents: { charme: 3, conversation: 3, audace: 5, discretion: 2 },
   traits: ['Tête brûlée', 'Fêtarde'],
+  ambition: 'ibiza',
   questions: [
     { question: '« Ta dernière soirée mémorable ? »', reponse: '« Un karaoké, trois pompiers et une fontaine. Je n’en dirai pas plus. »', trait: 'Fêtarde' },
     { question: '« Tu réagis comment face à un client lourd ? »', reponse: '« Je le raccompagne. Parfois par la fenêtre. Je plaisante. À moitié. »', trait: 'Tête brûlée' },

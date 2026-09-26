@@ -15,6 +15,7 @@ import {
   VISITES_SCENARISEES,
   type DefinitionCandidat,
 } from '../content/candidats';
+import { AMBITIONS_DU_MARCHE } from '../content/ambitions';
 import { TRAITS_DU_MARCHE, type Silhouette, type Talent } from '../content/personnel';
 import { suiviDeDepart, type Candidat, type Employe, type EtatJeu } from './etat';
 import type { Tirage } from './hasard';
@@ -61,6 +62,7 @@ export function candidatDepuis(def: DefinitionCandidat, source: Candidat['source
     silhouette: { ...def.silhouette },
     talents: { ...def.talents },
     traits: [...def.traits],
+    ambition: def.ambition,
     intro: def.intro,
     questions: def.questions.map((q) => ({ ...q })),
     partMin: def.partMin,
@@ -110,6 +112,16 @@ export function tailleDuMarche(reputation: number): number {
   return Math.min(B.MARCHE_MAX, B.MARCHE_BASE + Math.floor(reputation / B.MARCHE_REPUTATION_PAR_CANDIDAT));
 }
 
+/**
+ * Ambition d'un candidat du marché, tirée de son identifiant : sans toucher au hasard de la partie,
+ * et la même pour une ancienne sauvegarde qui la découvre.
+ */
+export function ambitionDuMarche(id: string): string {
+  let somme = 0;
+  for (const c of id) somme = (somme * 31 + c.charCodeAt(0)) % 9973;
+  return AMBITIONS_DU_MARCHE[somme % AMBITIONS_DU_MARCHE.length]!;
+}
+
 /** Compose un candidat unique à partir des pièces du contenu. */
 export function genererCandidat(etat: EtatJeu, tirage: Tirage, expire: number): Candidat {
   const genre = tirage.chance(0.65) ? 'f' : 'm';
@@ -157,6 +169,7 @@ export function genererCandidat(etat: EtatJeu, tirage: Tirage, expire: number): 
     silhouette,
     talents,
     traits,
+    ambition: ambitionDuMarche(id),
     intro: INTROS[source](prenom),
     questions,
     partMin,
@@ -213,6 +226,7 @@ function embaucher(etat: EtatJeu, c: Candidat, part: number): Employe {
     silhouette: { ...c.silhouette },
     talents: { ...c.talents },
     traits: [...c.traits],
+    ambition: c.ambition,
     traitsConnus: question ? [question.trait] : [],
     finEssai: etat.jour + B.DUREE_ESSAI,
     nuitsTravaillees: 0,

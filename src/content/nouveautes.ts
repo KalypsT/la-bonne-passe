@@ -28,6 +28,16 @@ export const NOUVEAUTES: Nouveaute[] = [
     palier: 2,
     texte: 'Soirées à thème, au briefing : masquée, burlesque, jazz ou années folles. Chacune attire son monde.',
   },
+  {
+    id: 'ambitions',
+    palier: 1,
+    texte: 'Chaque personne a désormais une ambition, sur sa fiche. Certains rêves font des histoires.',
+  },
+  {
+    id: 'voisinage',
+    palier: 2,
+    texte: 'L’humeur du voisinage, dans l’onglet Maison : les soirs de fête s’entendent jusqu’au dernier étage.',
+  },
 ];
 
 export function trouverNouveaute(id: string): Nouveaute | undefined {
@@ -35,4 +45,4 @@ export function trouverNouveaute(id: string): Nouveaute | undefined {
 }
 
 export const JOSEE_NOUVEAUTES =
-  'Pendant ton absence, j’ai mis de l’ordre dans le carnet des clients. Une page par segment, et chacun ses caprices.';
+  'Pendant ton absence, la maison a continué de vivre. Je t’ai noté l’essentiel ; le reste, tu le découvriras en ouvrant les yeux.';

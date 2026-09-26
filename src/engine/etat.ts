@@ -125,6 +125,8 @@ export interface Identite {
   talents: Record<Talent, number>;
   /** Tous ses traits, connus ou non du joueur. */
   traits: string[];
+  /** Son rêve (identifiant de src/content/ambitions.ts), affiché sur sa fiche (v0.4). */
+  ambition: string;
 }
 
 export interface Employe extends Identite {
@@ -327,7 +329,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 16;
+export const VERSION_ETAT = 17;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -370,6 +372,7 @@ export function creerEmploye(def: DefinitionEmploye): Employe {
     silhouette: { ...def.silhouette },
     talents: { ...def.talents },
     traits: [...def.traits],
+    ambition: def.ambition,
     traitsConnus: [...def.traits],
     finEssai: null,
     nuitsTravaillees: 0,

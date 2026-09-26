@@ -2,7 +2,7 @@ import { PARTS_PROPOSEES, PERSONNEL_MAX } from '../content/balance';
 import { TRAITS } from '../content/personnel';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
-import { Portrait, Talents } from './Panneau';
+import { nomAmbition, Portrait, Talents } from './Panneau';
 import { useInterface } from './store';
 
 /** Entretien d'embauche : une question révèle un trait, puis une proposition de part. En pause. */
@@ -36,6 +36,7 @@ export function CarteEntretien({ partie }: { partie: EtatJeu }) {
                   {candidat.prenom} <small>{TEXTES.personnel.ans(candidat.age)}</small>
                 </h2>
                 <p className="sous">{candidat.accroche}</p>
+                <p className="sous laiton">{TEXTES.personnel.reve(nomAmbition(candidat))}</p>
               </div>
             </div>
             <p className="intro">{candidat.intro}</p>

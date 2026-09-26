@@ -111,7 +111,8 @@ export function simuler(options: OptionsSimulation): {
   };
   // La simulation travaille sur sa propre copie de l'état, modifiée sur place : bien plus rapide.
   const jouer = (ordres: Ordre[]) => {
-    appliquerOrdresSurPlace(etat, ordres);
+    // Une carte peut faire partir quelqu'un : on compte aussi ces départs.
+    departs += appliquerOrdresSurPlace(etat, ordres).filter((e) => e.type === 'depart').length;
   };
 
   for (let pas = 0; pas < nuits * 300 && resumes.length < nuits; pas++) {

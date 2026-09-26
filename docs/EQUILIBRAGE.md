@@ -429,3 +429,80 @@ Tableau d'équilibrage après la partie 1 (le voisin compris) : peu de changemen
 Partie jouée dans le navigateur (version compilée, 844 × 390 et 667 × 375) : une sauvegarde du jour 6, au palier 2, après une nuit bruyante. Le voisin sonne le lendemain à 11 h, la carte affiche l'issue du choix puis le dénouement ; le sonomètre tombe deux jours plus tard à 23 h, maison ouverte ; l'onglet Journal montre l'intrigue en cours, l'onglet Maison l'humeur du voisinage. Aucune erreur.
 
 `npm test` : 302 tests en 14 secondes environ.
+
+## Ambitions et arcs personnels (v0.4, partie 2)
+
+### Les ambitions
+
+Chaque personne a désormais une ambition, affichée sur sa fiche et à l'entretien d'embauche (`src/content/ambitions.ts`) : Sanne veut devenir gérante, Mila être la tête d'affiche, Jonas financer ses études, Inès partir une saison à Ibiza. Les candidats du marché en tirent une parmi sept, à partir de leur identifiant : ça ne touche pas au hasard de la partie, et une ancienne sauvegarde retrouve la même. Pour l'instant, seules celles de Mila et de Jonas portent un arc.
+
+### Le moteur, complété
+
+- **Conditions sur la personne de l'arc** : moral au moins ou au plus, nuits travaillées, période d'essai finie.
+- **Mémoire de l'intrigue** : chaque choix peut ajouter des points (`points`) ; une étape peut en exiger (`pointsMin`, `pointsMax`). Le dénouement dépend ainsi de l'ensemble des choix, pas seulement du dernier. Une avance d'argent est gardée en mémoire et remboursée plus tard (`avance`, `rembourser`).
+- **Nouveaux effets** : part minimale, talents, traits gagnés ou perdus, promesse de repos (la même qu'en entretien), départ.
+- Deux traits qu'on ne gagne qu'au bout d'un arc, jamais tirés pour un candidat : **Tête d'affiche** (habitués × 1,3 dans les arrivées quand elle travaille) et **Juriste** (amendes et arrangements divisés par deux, ceux du voisin compris).
+
+### Les deux arcs
+
+| Arc | Déclencheur | Étapes | Dénouements |
+| --- | --- | --- | --- |
+| Mila, la tête d'affiche | essai fini, 5 nuits travaillées | affiche en vitrine (120 €), photographe du Nachtblad (visibilité contre discrétion), 55 % de part, puis le sacre ou la valise | tête d'affiche, formatrice (conversation +1), amère, rentrée d'elle-même, retenue (55 %), partie |
+| Jonas et ses examens | essai fini, 6 nuits travaillées | un soir pour réviser, 600 € d'inscription, les résultats | juriste, contrats (discrétion +1), rattrapage, abandon |
+
+- Mila fait sa valise seulement si la maison ne l'a jamais mise en avant (points ≤ 0) et a refusé ses 55 %. Mise en avant au moins une fois, elle range sa valise d'elle-même. Au sacre, il lui faut au moins 45 de moral.
+- Jonas réussit s'il a pu réviser au calme et payer son inscription (3 points sur 4 : réviser au calme 2, au salon 1 ; inscription avancée 2, à moitié 1) et s'il a au moins 45 de moral. Sinon, il rate de peu, et une carte de plus tombe le lendemain.
+
+Premier réglage : avec des seuils de moral seuls, le joueur simulé (qui tient son équipe de bonne humeur) réussissait toujours, et Mila ne partait jamais. Avec les points, les dénouements varient :
+
+| Joueur, cartes tranchées… (28 nuits, 10 graines) | Mila | Jonas |
+| --- | --- | --- |
+| Classique, prudemment (premier choix) | tête d'affiche 10 fois, vers la nuit 10 | juriste 8 fois, vers la nuit 11 ; 2 arcs encore en cours |
+| Classique, au hasard | tête 4, partie 2, retenue 2, formatrice 2 | contrats 5, juriste 2, rattrapage 2, abandon 1 ; 1 en cours |
+| Adaptatif, au hasard | formatrice 5, rentrée 3, tête 2 | rattrapage 4, abandon 3, contrats 3 |
+
+Effet sur la partie (classique à 3, 28 nuits) : en tranchant prudemment, les histoires rapportent un peu (2 918 € contre 2 801 € sans intrigue, réputation 37 contre 35 : la Tête d'affiche attire des habitués) ; au hasard, elles coûtent (1 300 € contre 2 300 €, surtout l'amende du voisin et le départ de Mila).
+
+### Gardes
+
+Nouvelles gardes dans `equilibrage-renouvellement.test.ts` : les deux arcs commencent avant la nuit 20 dans au moins 8 parties sur 10, chacun atteint au moins 3 dénouements différents au hasard, et les histoires ne font pas perdre plus de 20 % de l'argent ni plus de 3 points de réputation à un joueur raisonnable.
+
+Comme les intrigues déplacent l'argent de plusieurs centaines d'euros selon les choix, les gardes du bar et de la semaine jouent maintenant sans intrigue (option `intrigues: false`), comme celles des règles et des thèmes depuis la partie 1. Sur 20 graines et 42 nuits, avec les intrigues, le bar finissait 250 € sous la maison sans bar, contre 100 € au-dessus sans intrigue. La Tête d'affiche et la patience du bar amènent encore du monde dans une maison déjà pleine, et plus de bruit pour le voisin.
+
+À surveiller :
+
+- **Deux intrigues au plus à la fois** : Mila et Jonas occupent les deux places des nuits 10 à 20 environ, et le voisin arrive plus tard (joueur adaptatif : 3 parties sur 10, contre 5 en partie 1). À revoir en partie 6 si les arcs se font trop attendre.
+- **Accepter les 55 % de Mila** reste le choix le plus sûr : il coûte 5 points de part, mais la Tête d'affiche rapporte des habitués.
+- Les cartes d'intrigue passent de 3 à 5 par mois à environ 10 à 11. La plupart tombent en journée : elles ne comptent pas encore dans les décisions de soirée (4,0 pour le joueur classique).
+
+| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 4,0 | 46 % | 2,2 | 1,6 | 5,7 | 15,5 | 87 % | 11,2 | 8 sur 10, nuit 15 |
+| Feutrée, 4 | 3,6 | 52 % | 1,8 | 1,7 | 5,8 | 15,7 | 86 % | 11,4 | 3 sur 10, nuit 24 |
+| Adaptatif (suit les tendances), 3 | 3,5 | 53 % | 1,7 | 1,6 | 5,6 | 15,1 | 86 % | 10,0 | 3 sur 10, nuit 14 |
+| Classique 3, sélection laxiste | 4,3 | 37 % | 2,5 | 1,7 | 5,9 | 16,2 | 86 % | 11,4 | 9 sur 10, nuit 8 |
+| Classique 3, sélection stricte | 3,4 | 51 % | 1,6 | 1,6 | 5,3 | 14,9 | 88 % | 10,2 | 0 sur 10 |
+
+| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 3 à 4 | 31 / 34 / 37 | 211 € | 849 € | 2 918 € | 30 % | 81 | 0,0 | 25 / 29 / 18 / 28 | 42 / 42 / 21 / 43 |
+| Classique, 4 | 3 à 4 | 33 / 38 / 40 | 415 € | 1 054 € | 5 547 € | 15 % | 76 | 0,4 | 24 / 27 / 18 / 31 | 44 / 44 / 22 / 48 |
+| Happy hour, 4 | 3 à 3 | 37 / 41 / 39 | 173 € | 816 € | 943 € | 28 % | 74 | 0,7 | 35 / 24 / 15 / 25 | 51 / 45 / 17 / 40 |
+| Feutrée, 4 | 3 à 4 | 33 / 42 / 49 | 226 € | 900 € | 3 413 € | 8 % | 81 | 0,0 | 19 / 42 / 13 / 26 | 48 / 60 / 33 / 52 |
+| Adaptatif (suit les tendances), 3 | 3 à 4 | 31 / 37 / 43 | 304 € | 943 € | 4 455 € | 22 % | 81 | 0,0 | 20 / 34 / 24 / 23 | 39 / 52 / 37 / 40 |
+| Classique 3, sans bar | 3 à 4 | 31 / 34 / 37 | 194 € | 686 € | 3 661 € | 27 % | 83 | 0,0 | 23 / 32 / 17 / 27 | 41 / 43 / 22 / 42 |
+| Classique 3, bar à 2, sans avance | 3 à 4 | 31 / 34 / 39 | 75 € | 852 € | 1 313 € | 29 % | 81 | 0,0 | 25 / 30 / 17 / 28 | 44 / 45 / 24 / 44 |
+| Classique 3, champagne | 3 à 4 | 31 / 33 / 34 | 343 € | 981 € | 4 011 € | 17 % | 86 | 0,0 | 19 / 28 / 23 / 30 | 24 / 37 / 32 / 44 |
+| Classique 3, tarif −20 % | 3 à 4 | 32 / 37 / 41 | 70 € | 642 € | -78 € | 36 % | 82 | 0,0 | 29 / 30 / 13 / 27 | 54 / 46 / 13 / 50 |
+| Classique 3, tarif +20 % | 3 à 4 | 29 / 31 / 29 | 342 € | 971 € | 4 167 € | 18 % | 84 | 0,0 | 20 / 28 / 24 / 29 | 17 / 38 / 30 / 30 |
+| Classique 3, formule courte | 3 à 4 | 32 / 39 / 46 | 108 € | 739 € | 1 288 € | 12 % | 85 | 0,0 | 21 / 27 / 28 / 25 | 46 / 44 / 43 / 51 |
+| Classique 3, soirée complète | 3 à 4 | 30 / 33 / 36 | 376 € | 999 € | 4 070 € | 30 % | 82 | 0,0 | 24 / 41 / 8 / 28 | 39 / 51 / 10 / 40 |
+| Classique 3, sélection laxiste | 3 à 4 | 29 / 32 / 29 | 211 € | 837 € | 1 742 € | 22 % | 83 | 0,0 | 30 / 25 / 14 / 31 | 37 / 29 / 6 / 47 |
+| Classique 3, sélection stricte | 3 à 4 | 31 / 39 / 45 | 27 € | 628 € | 1 016 € | 12 % | 83 | 0,0 | 19 / 41 / 23 / 17 | 43 / 56 / 40 / 35 |
+| Classique 3, habitués d’abord | 3 à 4 | 31 / 34 / 36 | 209 € | 842 € | 3 248 € | 27 % | 80 | 0,0 | 24 / 32 / 15 / 29 | 38 / 44 / 17 / 41 |
+| Classique 3, pressés d’abord | 3 à 4 | 31 / 34 / 38 | 216 € | 854 € | 2 679 € | 29 % | 80 | 0,0 | 24 / 29 / 19 / 28 | 42 / 41 / 24 / 42 |
+| Passif (classique, sans recruter ni rénover) | jamais | 15 / 9 / 6 | -154 € | 192 € | -1 614 € | 71 % | 42 | 0,0 | 56 / 44 / 0 / 0 | 7 / 4 / 0 / 0 |
+
+Parties jouées dans le navigateur (version compilée) : une sauvegarde du jour 9 avec Mila et Jonas confirmés. En 844 × 390, les deux arcs se déroulent sur 12 jours de jeu ; en choisissant de ne jamais mettre Mila en avant puis de refuser ses 55 %, elle fait sa valise et part, avec sa carte d'adieu ; Jonas, qui révise au salon et ne reçoit que la moitié de son inscription, rate son examen et repassera à l'automne. Une ancienne sauvegarde (version 16) reçoit les ambitions et l'humeur du voisinage, présentées par Josée ; la fiche de chaque personne montre son ambition. En 667 × 375, la carte d'arc la plus longue (portrait compris) tient en hauteur ; les cartes défilent désormais si un texte déborde. Aucune erreur.
+
+`npm test` : 321 tests en 11 secondes environ.

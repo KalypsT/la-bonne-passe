@@ -232,7 +232,7 @@ function perdreClient(etat: EtatJeu, segment: Segment, perte: number): void {
 }
 
 /** Poids d'un segment dans les arrivées, avant le tarif : offre du soir, satisfaction, sélection, Fêtarde. */
-function poidsSegment(etat: EtatJeu, segment: Segment): number {
+export function poidsSegment(etat: EtatJeu, segment: Segment): number {
   let p =
     (trouverOffre(etat.offre).attire[segment] ?? 1) *
     B.POIDS_SEGMENTS[segment] *
@@ -241,6 +241,9 @@ function poidsSegment(etat: EtatJeu, segment: Segment): number {
     (B.FORMULES[formuleActive(etat)].attire[segment] ?? 1) *
     attraitTheme(etat, segment);
   if (segment === 'groupe' && fetardeEnService(etat)) p *= B.FETARDE_ATTIRE_GROUPES;
+  if (segment === 'habitue' && etat.personnel.some((e) => e.enServiceCeSoir && !e.repos && aTrait(e, 'Tête d’affiche'))) {
+    p *= B.TRAITS_EFFETS.teteDAfficheHabitues;
+  }
   return p;
 }
 

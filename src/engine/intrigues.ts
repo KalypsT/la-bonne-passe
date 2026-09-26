@@ -6,6 +6,8 @@ import { INTRIGUES, trouverIntrigue, type ConditionIntrigue, type EtapeIntrigue,
 import type { EtatJeu } from './etat';
 import { appliquerEffet, effetPossible } from './effets';
 import type { Tirage } from './hasard';
+import { encaisser, depenser } from './comptes';
+import type { EvenementPersonnel } from './personnel';
 import { dansPlage, ecart, estOuvert, instant, MINUTES_PAR_JOUR } from './temps';
 
 export interface IntrigueActive {
@@ -18,6 +20,10 @@ export interface IntrigueActive {
   employeId: string | null;
   /** Jour de départ. */
   debut: number;
+  /** Argent avancé à la personne concernée, qu'elle rembourse peut-être plus tard. */
+  avance?: number;
+  /** Points accumulés par les choix : les étapes suivantes peuvent les exiger. */
+  points?: number;
 }
 
 export interface IntrigueFinie {
@@ -40,12 +46,13 @@ export function intriguesDeDepart(): Intrigues {
 export type EvenementIntrigue =
   | { type: 'intrigue'; id: string; etape: string; employeId: string | null }
   | { type: 'intrigueTranchee'; id: string; etape: string; choix: number; reussite: boolean; prenom?: string }
-  | { type: 'intrigueFinie'; id: string; fin: string; prenom?: string };
+  | { type: 'intrigueFinie'; id: string; fin: string; prenom?: string }
+  | { type: 'remboursement'; prenom: string; montant: number };
 
 export type OrdreIntrigue = { type: 'choixIntrigue'; choix: number };
 
 interface Sortie {
-  push(e: EvenementIntrigue): unknown;
+  push(e: EvenementIntrigue | EvenementPersonnel): unknown;
 }
 
 /** Instant absolu d'une heure de l'horloge, un jour donné (le jour commence à 5 h). */
@@ -57,8 +64,20 @@ function heureDeSoiree(heure: number): boolean {
   return dansPlage(heure, B.HEURE_OUVERTURE, B.HEURE_FERMETURE);
 }
 
-export function conditionRemplie(etat: EtatJeu, c: ConditionIntrigue | undefined): boolean {
+/** Une condition, lue pour la personne concernée par l'intrigue s'il y en a une. */
+export function conditionRemplie(etat: EtatJeu, c: ConditionIntrigue | undefined, employeId: string | null = null, points = 0): boolean {
   if (!c) return true;
+  if (c.pointsMin !== undefined && points < c.pointsMin) return false;
+  if (c.pointsMax !== undefined && points > c.pointsMax) return false;
+  const e = etat.personnel.find((x) => x.id === (employeId ?? c.employe));
+  const personnelle = c.moralMin !== undefined || c.moralMax !== undefined || c.nuitsMin !== undefined || c.confirme;
+  if (personnelle && !e) return false;
+  if (e) {
+    if (c.moralMin !== undefined && e.moral < c.moralMin) return false;
+    if (c.moralMax !== undefined && e.moral > c.moralMax) return false;
+    if (c.nuitsMin !== undefined && e.nuitsTravaillees < c.nuitsMin) return false;
+    if (c.confirme && e.finEssai !== null) return false;
+  }
   return (
     (c.palierMin === undefined || etat.palier >= c.palierMin) &&
     (c.tapageMin === undefined || etat.quartier.tapage >= c.tapageMin) &&
@@ -153,7 +172,7 @@ export function avancerIntrigues(etat: EtatJeu, evenements: Sortie): void {
       finir(etat, active, 'depart', evenements);
       continue;
     }
-    if (!conditionRemplie(etat, etape.condition)) {
+    if (!conditionRemplie(etat, etape.condition, active.employeId, active.points ?? 0)) {
       suivre(etat, active, etape.sinon ?? { fin: 'oubliee' }, evenements);
       continue;
     }
@@ -180,8 +199,24 @@ export function trancherIntrigue(etat: EtatJeu, choix: number, tirage: Tirage, a
   const issue = reussite ? option.suite : (option.suiteEchec ?? option.suite);
   const prenom = prenomDe(etat, active.employeId);
   etat.intrigues.carte = null;
-  appliquerEffet(etat, effet, { employeId: active.employeId }, ajouterClient, (id, delai, employeId) =>
-    demarrerSuite(etat, id, delai, employeId),
+  if (effet.points) active.points = (active.points ?? 0) + effet.points;
+  // L'avance et son remboursement passent par la mémoire de l'intrigue.
+  if (effet.avance) {
+    depenser(etat, effet.avance, 'personnel');
+    active.avance = (active.avance ?? 0) + effet.avance;
+  }
+  if (effet.rembourser && active.avance) {
+    encaisser(etat, active.avance, 'autres');
+    evenements.push({ type: 'remboursement', prenom: prenom ?? '', montant: active.avance });
+    active.avance = 0;
+  }
+  appliquerEffet(
+    etat,
+    effet,
+    { employeId: active.employeId },
+    ajouterClient,
+    (id, delai, employeId) => demarrerSuite(etat, id, delai, employeId),
+    evenements,
   );
   evenements.push({ type: 'intrigueTranchee', id: active.id, etape: active.etape, choix, reussite, prenom });
   suivre(etat, active, issue, evenements);

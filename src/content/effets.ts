@@ -2,6 +2,7 @@
 // Les valeurs sont écrites dans les contenus ; le moteur les applique (src/engine/effets.ts).
 
 import type { Segment } from './clientele';
+import type { Talent } from './personnel';
 
 export interface EffetCarte {
   /** Moral, loyauté, fatigue de la personne concernée ({prenom}). */
@@ -32,6 +33,25 @@ export interface EffetCarte {
   tapage?: number;
   /** La maison est insonorisée : le tapage monte moins vite, pour de bon. */
   insonoriser?: boolean;
+  /** La personne concernée garde au moins cette part (0,55 = 55 %). */
+  partMin?: number;
+  /** Talents de la personne concernée (+1 = un point), entre 1 et 5. */
+  talent?: Partial<Record<Talent, number>>;
+  /** Traits gagnés ou perdus par la personne concernée (un trait gagné est connu du joueur). */
+  ajouterTrait?: string;
+  retirerTrait?: string;
+  /** Promesse d'un soir de repos, à placer au planning sous quelques jours (comme en entretien). */
+  promesseRepos?: boolean;
+  /** La personne concernée quitte la maison. */
+  depart?: boolean;
+  /** Avance d'argent à la personne concernée : sortie de la trésorerie, gardée en mémoire par l'intrigue. */
+  avance?: number;
+  /** La personne rembourse l'avance que l'intrigue garde en mémoire. */
+  rembourser?: boolean;
+  /** Frais de justice (amende, arrangement) : une personne Juriste dans l'équipe les réduit. */
+  juridique?: boolean;
+  /** Points gardés en mémoire par l'intrigue : ses étapes suivantes peuvent les exiger (dénouement selon les choix). */
+  points?: number;
   /** Démarre une suite différée (une intrigue courte), dans tant de jours, avec la même personne. */
   suite?: { id: string; delai: number };
 }
