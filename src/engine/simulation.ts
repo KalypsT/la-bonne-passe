@@ -15,6 +15,9 @@ import { choixPossibles, etapeCourante, type IntrigueFinie } from './intrigues';
 import { estOuvert } from './temps';
 import { TEXTES_ALERTES } from '../content/alertes';
 import { ACTEURS_ORDRE, type IdActeur } from '../content/relations';
+import { EVENEMENTS_QUARTIER } from '../content/quartier';
+import { CARTES_RIVALE, INTRIGUE_CHAT_NOIR } from '../content/rivale';
+import { IMPREVUS_QUARTIER } from '../content/imprevusQuartier';
 import { actionPossible } from './relations';
 import { reponsePossible } from './rivale';
 
@@ -425,3 +428,17 @@ export function mesurerRenouvellement(nuits: ResumeNuit[]): Renouvellement {
     cartesIntrigue: somme((x) => x.intrigues.length),
   };
 }
+
+/** Ce qui vient de dehors (v0.5) : cartes du quartier, cartes de la rivale, imprévus du quartier, alertes du quartier. */
+export function evenementsExterieurs(nuit: ResumeNuit): number {
+  const cartes = nuit.intrigues.map((x) => x.split(':')[0]!).filter((id) => CARTES_EXTERIEURES.has(id)).length;
+  const imprevus = nuit.imprevus.filter((id) => IMPREVUS_EXTERIEURS.has(id)).length;
+  const alertes = (nuit.alertes.journaliste ?? 0) + (nuit.alertes.fenetre ?? 0) + (nuit.alertes.sabotage ?? 0);
+  return cartes + imprevus + alertes;
+}
+
+const CARTES_EXTERIEURES = new Set([...EVENEMENTS_QUARTIER, ...CARTES_RIVALE, INTRIGUE_CHAT_NOIR].map((d) => d.id));
+/** Les imprévus du quartier qui viennent de dehors (la panne, le pianiste ou la retraite d'un habitué n'en sont pas). */
+const IMPREVUS_EXTERIEURS = new Set(
+  IMPREVUS_QUARTIER.filter((d) => d.condition?.systeme || d.condition?.relationMin || d.condition?.visibilite).map((d) => d.id),
+);

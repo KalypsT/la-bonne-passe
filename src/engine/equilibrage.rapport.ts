@@ -5,7 +5,7 @@ import { it } from 'vitest';
 import type { Offre, Segment } from '../content/clientele';
 import type { EtatJeu, Regles } from './etat';
 import { EVENEMENTS_QUARTIER } from '../content/quartier';
-import { choixAdaptatif, mesurerRenouvellement, partsDeClientele, simuler, type OptionsSimulation, type Renouvellement, type ResumeNuit } from './simulation';
+import { choixAdaptatif, evenementsExterieurs, mesurerRenouvellement, partsDeClientele, simuler, type OptionsSimulation, type Renouvellement, type ResumeNuit } from './simulation';
 
 const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const NUITS = 28;
@@ -207,6 +207,36 @@ function deuxiemeMois(): string[] {
   return lignes;
 }
 
+/** « Le quartier vit-il ? » (v0.5) : ce qui vient de dehors, semaine par semaine, au deuxième mois (nuits 29 à 56). */
+function quartierVit(): string[] {
+  const lignes = [
+    '| Stratégie (nuits 29 à 56) | Événements venus de dehors par semaine | Semaines sans | Voisins / mairie / presse / police, nuit 56 | Rivale : agressivité, coups au mois 2 | Décisions par soirée |',
+    '| --- | --- | --- | --- | --- | --- |',
+  ];
+  const variantes: { nom: string; options: Partial<OptionsSimulation> }[] = [
+    { nom: 'Classique, 3', options: {} },
+    { nom: 'Feutrée, 4', options: { offre: 'feutree', rdvMax: 4 } },
+    { nom: 'Classique 3, sélection stricte', options: { regles: { selection: 'stricte' } } },
+    { nom: 'Classique 3, sélection laxiste', options: { regles: { selection: 'laxiste' } } },
+    { nom: 'Classique 3, influenceurs', options: { visibilite: 'influenceurs' } },
+    { nom: 'Classique 3, relations soignées et trêve', options: { relations: 'entretien', cibleRelations: 45, rivale: 'treve' } },
+  ];
+  const virgule = (x: number) => x.toFixed(1).replace('.', ',');
+  for (const v of variantes) {
+    const parties = GRAINES.map((graine) => simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 56, politique: 'hasard', ...v.options }));
+    const moy = (f: (p: (typeof parties)[number]) => number) => parties.reduce((t, p) => t + f(p), 0) / parties.length;
+    const semaines = parties.flatMap((p) => [0, 1, 2, 3].map((k) => p.nuits.slice(28 + 7 * k, 35 + 7 * k).reduce((t, n) => t + evenementsExterieurs(n), 0)));
+    const jauge = (a: 'voisins' | 'mairie' | 'presse' | 'police') => moy((p) => p.nuits[55]?.relations[a] ?? 0).toFixed(0);
+    lignes.push(
+      `| ${v.nom} | ${virgule(semaines.reduce((a, b) => a + b, 0) / semaines.length)} | ${((semaines.filter((x) => x === 0).length / semaines.length) * 100).toFixed(0)} % | ` +
+        `${jauge('voisins')} / ${jauge('mairie')} / ${jauge('presse')} / ${jauge('police')} | ` +
+        `${moy((p) => p.nuits[55]?.rivale.agressivite ?? 0).toFixed(0)}, ${virgule(moy((p) => p.nuits.slice(28).flatMap((n) => n.rivale.actions).filter((a) => a !== 'visite').length))} | ` +
+        `${virgule(moy((p) => mesurerRenouvellement(p.nuits.slice(28)).decisions))} |`,
+    );
+  }
+  return lignes;
+}
+
 it('rapport d’équilibrage', () => {
   const lignes = [
     '| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |',
@@ -239,6 +269,7 @@ it('rapport d’équilibrage', () => {
   console.log(`\nRenouvellement des soirées : ${GRAINES.length} graines, ${NUITS} nuits (cartes tranchées au hasard)\n\n${r.lignes.join('\n')}\n`);
   console.log(`\nAlertes par soirée, selon leur type (mêmes parties)\n\n${r.types.join('\n')}\n`);
   console.log(`\nLa rivale : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${rivale().join('\n')}\n`);
+  console.log(`\nLe quartier vit-il ? ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${quartierVit().join('\n')}\n`);
   console.log(`\nLes soirées du deuxième mois : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${deuxiemeMois().join('\n')}\n`);
   console.log(`\nÉquipes et assurance : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${equipes().join('\n')}\n`);
   console.log(`\nLe quartier : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard ; événements sur 10 parties)\n\n${quartier().join('\n')}\n`);

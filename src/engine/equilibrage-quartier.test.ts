@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import * as B from '../content/balance';
 import { ACTEURS, ACTEURS_ORDRE } from '../content/relations';
-import { mesurerRenouvellement, simuler, type OptionsSimulation } from './simulation';
+import { evenementsExterieurs, mesurerRenouvellement, simuler, type OptionsSimulation } from './simulation';
 
 // Le quartier vit-il ? (v0.5) Les relations réagissent au style de la maison, et les soigner coûte, mais rapporte.
 // La rivale frappe plus fort la maison qui lui prend sa clientèle, et une trêve la calme.
@@ -154,5 +154,21 @@ describe('les soirées du deuxième mois (v0.5, partie 5)', () => {
     }
     // Et la maison la plus animée ne déborde pas.
     expect(moy('laxiste', (m) => m.alertes)).toBeLessThanOrEqual(10);
+  });
+});
+
+describe('le quartier vit-il ? (v0.5, partie 6)', () => {
+  /** Événements venus de dehors, par semaine du deuxième mois (nuits 29 à 56). */
+  const semaines = (nom: string) =>
+    parties.get(nom)!.flatMap((p) => [0, 1, 2, 3].map((k) => p.nuits.slice(28 + 7 * k, 35 + 7 * k).reduce((t, n) => t + evenementsExterieurs(n), 0)));
+
+  it('chaque semaine, le quartier, la rivale ou la presse frappent à la porte', () => {
+    for (const nom of ['classique', 'feutree', 'stricte', 'laxiste']) {
+      const s = semaines(nom);
+      const moyenne = s.reduce((a, b) => a + b, 0) / s.length;
+      console.log('dehors', nom, moyenne.toFixed(1), 'par semaine,', s.filter((x) => x === 0).length, 'semaines sans');
+      expect(moyenne, nom).toBeGreaterThanOrEqual(5);
+      expect(s.filter((x) => x === 0).length, nom).toBe(0);
+    }
   });
 });
