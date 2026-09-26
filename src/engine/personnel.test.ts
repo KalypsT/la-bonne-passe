@@ -10,6 +10,7 @@ import { affinite, cleAffinite, delaiMenace } from './personnel';
 import { candidatDepuis } from './recrutement';
 import { facteurDispute, qualiteRdv } from './soiree';
 import { appliquerOrdres, tick, type EvenementMoteur, type Ordre } from './tick';
+import { comptesVides } from './comptes';
 
 const h = (heures: number, minutes = 0) => heures * 60 + minutes;
 
@@ -52,7 +53,7 @@ function avantFermeture(etat: EtatJeu, champs: Partial<EtatJeu> = {}): EtatJeu {
     minuteDuJour: h(3, 55),
     briefingJour: etat.jour,
     personnel: etat.personnel.map((e) => ({ ...e, enServiceCeSoir: true })),
-    nuit: { numero: 3, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: etat.reputation, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0, bar: 0 },
+    nuit: { numero: 3, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 0, perdus: 0, reputationDebut: etat.reputation, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 },
     ...champs,
   };
 }

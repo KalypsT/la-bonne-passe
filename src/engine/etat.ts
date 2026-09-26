@@ -28,6 +28,7 @@ import { relationsDeDepart, type Relations } from './relations';
 import { rivaleDeDepart, type Rivale } from './rivale';
 import type { AlerteMinutee } from './minuteries';
 import { moisDeDepart, type BilanMois, type Mois } from './bilans';
+import { journeeVide, type Comptes, type Journee } from './comptes';
 
 /** Drapeaux d'ouverture des systèmes. L'interface masque ou verrouille ce qui est fermé. */
 export interface Systemes {
@@ -231,12 +232,19 @@ export interface Avis {
   qualite: number;
 }
 
-/** Comptes de la nuit en cours, pour le bilan de fermeture. */
+/** La nuit en cours, pour le bilan de fermeture. */
 export interface Nuit {
   numero: number;
-  recettes: number;
-  partPersonnel: number;
-  depenses: number;
+  /**
+   * Comptes de la nuit, par poste : ceux de sa journée (salaires de midi, commandes du briefing, thème…)
+   * recopiés à la fermeture. Les charges du lundi et la mensualité restent au bilan de la semaine.
+   */
+  comptes: Comptes;
+  /** Trésorerie au début de la journée, après les prélèvements du matin ; et après la fermeture. */
+  tresorerieAvant: number;
+  tresorerieApres: number;
+  /** Retiré de la réserve dans la journée. */
+  retraitReserve: number;
   servis: number;
   perdus: number;
   reputationDebut: number;
@@ -246,8 +254,6 @@ export interface Nuit {
   reserve: number;
   /** Imprévus tranchés cette nuit. */
   imprevus: number;
-  /** Recette du bar (comprise dans les recettes). */
-  bar: number;
 }
 
 /** Imprévu en attente de ta décision (carte en pause). */
@@ -337,6 +343,8 @@ export interface EtatJeu {
   regles: Regles;
   /** Semaine en cours : comptes par poste, tendances, situation de départ. */
   semaine: Semaine;
+  /** Comptes de la journée en cours, recopiés dans la nuit à sa fermeture (v0.6). */
+  journee: Journee;
   /** Bilan de la dernière semaine écoulée. */
   bilanSemaine: BilanSemaine | null;
   /** Le bilan du lundi attend d'être lu (carte en pause). */
@@ -377,7 +385,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 24;
+export const VERSION_ETAT = 25;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -536,6 +544,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     regles: reglesDeDepart(),
     ...barDeDepart(),
     semaine: semaineDeDepart(),
+    journee: journeeVide(TRESORERIE_INITIALE),
     bilanSemaine: null,
     bilanAVoir: false,
     themeDuSoir: null,

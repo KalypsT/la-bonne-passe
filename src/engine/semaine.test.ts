@@ -29,7 +29,9 @@ describe('comptes par poste', () => {
     expect(etat.semaine.comptes.recettes.rendezVous).toBeGreaterThan(0);
     etat = appliquerOrdres(etat, [{ type: 'nettoyageExpress', chambreId: 'boudoir' }, { type: 'livraisonLinge' }]).etat;
     expect(etat.semaine.comptes.depenses.menage).toBe(B.NETTOYAGE_EXPRESS);
-    expect(etat.semaine.comptes.depenses.linge).toBe(B.LIVRAISON_EXPRESS_LINGE.prix);
+    expect(etat.semaine.comptes.depenses.express).toBe(B.LIVRAISON_EXPRESS_LINGE.prix);
+    expect(etat.semaine.comptes.depenses.linge).toBe(0);
+    expect(etat.semaine.comptes.depenses.partPersonnel).toBeGreaterThan(0);
     const midi = tick({ ...etat, minuteDuJour: h(11, 55) }).etat;
     expect(midi.semaine.comptes.depenses.salaires).toBe(B.SALAIRE_MENAGE);
   });

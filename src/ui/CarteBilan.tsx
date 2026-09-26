@@ -2,19 +2,26 @@ import { SEGMENTS } from '../content/clientele';
 import { trouverTheme } from '../content/themes';
 import { TEXTES } from '../content/textes';
 import { segmentsOuverts } from '../engine/clientele';
+import { gagneNuit, POSTES_DEPENSES, POSTES_RECETTES, recetteMaison, totalDepenses, totalRecettes } from '../engine/comptes';
 import type { EtatJeu } from '../engine/etat';
 import { formaterEuros } from './format';
 import { Jauge } from './Jauge';
 import { useInterface } from './store';
 
-/** Bilan de fermeture : un écran, en pause. */
+/** Bilan de fermeture : le compte de la nuit poste par poste d'abord, puis la salle et le personnel. En pause. */
 export function CarteBilan({ partie }: { partie: EtatJeu }) {
   const bilan = useInterface((s) => s.bilan);
   const ouvrirCarte = useInterface((s) => s.ouvrirCarte);
   if (!bilan) return null;
   const t = TEXTES.bilan;
   const ecart = Math.round(partie.reputation - bilan.reputationDebut);
-  const conseil = bilan.perdus > bilan.servis ? t.conseilPerdus : bilan.recettes >= 400 ? t.conseilBon : t.conseilMoyen;
+  const c = bilan.comptes;
+  const recettes = POSTES_RECETTES.filter((p) => c.recettes[p] !== 0);
+  // Les salaires de midi se lisent sur une ligne à part, après les dépenses de la nuit.
+  const depenses = [...POSTES_DEPENSES.filter((p) => p !== 'salaires'), 'salaires' as const].filter((p) => c.depenses[p] !== 0);
+  const pourcentagePart = c.recettes.rendezVous > 0 ? Math.round((c.depenses.partPersonnel / c.recettes.rendezVous) * 100) : 0;
+  const gagne = gagneNuit(c);
+  const conseil = bilan.perdus > bilan.servis ? t.conseilPerdus : recetteMaison(c) >= 400 ? t.conseilBon : t.conseilMoyen;
 
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-bilan">
@@ -23,54 +30,84 @@ export function CarteBilan({ partie }: { partie: EtatJeu }) {
           {t.titre(bilan.numero)}
         </h2>
         <div className="carte-colonnes">
-          <dl className="chiffres">
-            <div>
-              <dt>{t.recettes}</dt>
-              <dd>{formaterEuros(bilan.recettes)}</dd>
-            </div>
-            {bilan.bar > 0 && (
-              <div>
-                <dt>{t.bar}</dt>
-                <dd>{formaterEuros(bilan.bar)}</dd>
+          <section className="compte-nuit">
+            <h3>{t.recettes}</h3>
+            <dl className="comptes">
+              {recettes.map((p) => (
+                <div key={p}>
+                  <dt>{p === 'rendezVous' ? t.postesRecettes.rendezVous(bilan.servis) : t.postesRecettes[p]}</dt>
+                  <dd>{formaterEuros(c.recettes[p])}</dd>
+                </div>
+              ))}
+              <div className="total">
+                <dt>{t.totalRecettes}</dt>
+                <dd>{formaterEuros(totalRecettes(c))}</dd>
               </div>
-            )}
-            <div>
-              <dt>{t.partPersonnel}</dt>
-              <dd>{formaterEuros(bilan.partPersonnel)}</dd>
-            </div>
-            <div>
-              <dt>{t.depenses}</dt>
-              <dd>{formaterEuros(bilan.depenses)}</dd>
-            </div>
-            {bilan.reserve > 0 && (
-              <div>
-                <dt>{t.reserve}</dt>
-                <dd>{formaterEuros(bilan.reserve)}</dd>
+            </dl>
+            <h3>{t.depenses}</h3>
+            <dl className="comptes">
+              {depenses.map((p) => (
+                <div key={p} className={p === 'salaires' ? 'a-part' : undefined}>
+                  <dt>{p === 'partPersonnel' ? t.postesDepenses.partPersonnel(pourcentagePart) : t.postesDepenses[p]}</dt>
+                  <dd>−{formaterEuros(c.depenses[p])}</dd>
+                </div>
+              ))}
+              <div className="total">
+                <dt>{t.totalDepenses}</dt>
+                <dd>−{formaterEuros(totalDepenses(c))}</dd>
               </div>
-            )}
-            {partie.themeDuSoir && (
+            </dl>
+            <dl className="comptes resultat">
               <div>
-                <dt>{t.theme}</dt>
-                <dd>{trouverTheme(partie.themeDuSoir)?.nom}</dd>
+                <dt>{t.gagne}</dt>
+                <dd className={gagne < 0 ? 'negatif' : 'positif'}>{formaterEuros(gagne)}</dd>
               </div>
-            )}
-            <div>
-              <dt>{t.servis}</dt>
-              <dd>{bilan.servis}</dd>
-            </div>
-            <div>
-              <dt>{t.perdus}</dt>
-              <dd>{bilan.perdus}</dd>
-            </div>
-            <div>
-              <dt>{t.reputation}</dt>
-              <dd>
-                ★ {Math.floor(partie.reputation)} ({ecart >= 0 ? '+' : '−'}
-                {Math.abs(ecart)})
-              </dd>
-            </div>
-          </dl>
+            </dl>
+            <dl className="comptes">
+              {bilan.reserve > 0 && (
+                <div>
+                  <dt>{t.dontReserve}</dt>
+                  <dd>{formaterEuros(bilan.reserve)}</dd>
+                </div>
+              )}
+              {bilan.retraitReserve > 0 && (
+                <div>
+                  <dt>{t.retraitReserve}</dt>
+                  <dd>{formaterEuros(bilan.retraitReserve)}</dd>
+                </div>
+              )}
+              <div>
+                <dt>{t.tresorerie}</dt>
+                <dd>
+                  {formaterEuros(bilan.tresorerieAvant)} → {formaterEuros(bilan.tresorerieApres)}
+                </dd>
+              </div>
+            </dl>
+          </section>
           <section>
+            <dl className="chiffres serre">
+              {partie.themeDuSoir && (
+                <div>
+                  <dt>{t.theme}</dt>
+                  <dd>{trouverTheme(partie.themeDuSoir)?.nom}</dd>
+                </div>
+              )}
+              <div>
+                <dt>{t.servis}</dt>
+                <dd>{bilan.servis}</dd>
+              </div>
+              <div>
+                <dt>{t.perdus}</dt>
+                <dd>{bilan.perdus}</dd>
+              </div>
+              <div>
+                <dt>{t.reputation}</dt>
+                <dd>
+                  ★ {Math.floor(partie.reputation)} ({ecart >= 0 ? '+' : '−'}
+                  {Math.abs(ecart)})
+                </dd>
+              </div>
+            </dl>
             {bilan.meilleurAvis && (
               <>
                 <h3>{t.meilleurAvis}</h3>

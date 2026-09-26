@@ -4,7 +4,7 @@ import type { EffetCarte } from '../content/effets';
 import type { Segment } from '../content/clientele';
 import type { EtatJeu } from './etat';
 import { changerReputationGlobale, changerSatisfaction, segmentOuvert } from './clientele';
-import { depenser, encaisser, noterDepense } from './comptes';
+import { depenser, encaisser } from './comptes';
 import * as B from '../content/balance';
 import type { Talent } from '../content/personnel';
 import { aTrait, changerLoyaute, changerMoral, ajusterAffinite, depart, type EvenementPersonnel } from './personnel';
@@ -80,11 +80,8 @@ export function appliquerEffet(etat: EtatJeu, effet: EffetCarte, qui: Concernes,
   const argent = Math.round((effet.argent ?? 0) * (juriste ? B.TRAITS_EFFETS.juristeRemise : 1));
   if (argent > 0) {
     encaisser(etat, argent, 'autres');
-    if (etat.nuit && etat.nuitsBouclees < etat.nuit.numero) etat.nuit.recettes += argent;
   } else if (argent < 0) {
-    etat.tresorerie += argent;
-    noterDepense(etat, -argent, 'incidents');
-    if (etat.nuit && etat.nuitsBouclees < etat.nuit.numero) etat.nuit.depenses -= argent;
+    depenser(etat, -argent, 'incidents');
     if (effet.sinistre) indemniser(etat, -argent, effet.sinistre, evenements);
   }
   if (effet.travaux) depenser(etat, effet.travaux, 'travaux');

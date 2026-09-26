@@ -67,10 +67,6 @@ export function venteBar(etat: EtatJeu, segment: Segment, evenements: Sortie): n
   const montant = Math.round(B.BAR_RECETTE[segment] * barTheme(etat));
   retirerStock(etat, B.BAR_CONSO[segment] * barTheme(etat), evenements);
   encaisser(etat, montant, 'bar');
-  if (etat.nuit) {
-    etat.nuit.recettes += montant;
-    etat.nuit.bar += montant;
-  }
   return montant;
 }
 
@@ -133,7 +129,7 @@ export function appliquerBar(etat: EtatJeu, ordre: OrdreBar, evenements: Sortie)
     }
     case 'livraisonBar':
       if (!etat.bar.ouvert) return;
-      depenser(etat, B.LIVRAISON_EXPRESS_BAR.prix, 'bar');
+      depenser(etat, B.LIVRAISON_EXPRESS_BAR.prix, 'express');
       etat.bar.stock += B.LIVRAISON_EXPRESS_BAR.bouteilles;
       evenements.push({ type: 'livraisonBar', montant: B.LIVRAISON_EXPRESS_BAR.prix });
       return;

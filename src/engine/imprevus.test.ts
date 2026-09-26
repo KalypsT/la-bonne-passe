@@ -10,6 +10,7 @@ import { circonstances, concernes, declencherImprevu, favorise, poidsImprevus } 
 import { accorderPalier } from './paliers';
 import { candidatDepuis } from './recrutement';
 import { appliquerOrdres, type EvenementMoteur, type Ordre } from './tick';
+import { comptesVides } from './comptes';
 
 const h = (heures: number, minutes = 0) => heures * 60 + minutes;
 const def = (id: string) => trouverImprevu(id)!;
@@ -25,7 +26,7 @@ function soiree(champs: Partial<EtatJeu> = {}): EtatJeu {
   for (const e of etat.personnel) e.enServiceCeSoir = true;
   etat.bar = { ouvert: true, travaux: null, stock: 40, commande: 0 };
   etat.equipes.bar = 1;
-  etat.nuit = { numero: 9, recettes: 0, partPersonnel: 0, depenses: 0, servis: 0, perdus: 0, reputationDebut: 32, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0, bar: 0 };
+  etat.nuit = { numero: 9, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 0, perdus: 0, reputationDebut: 32, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 };
   etat.imprevusVus = ['touriste'];
   return { ...etat, ...champs };
 }

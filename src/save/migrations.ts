@@ -31,6 +31,7 @@ import { relationsDeDepart } from '../engine/relations';
 import { rivaleDeDepart } from '../engine/rivale';
 import { JOUR_PREMIERE_MENSUALITE, RELATIONS, TAPAGE } from '../content/balance';
 import { moisDeDepart, prochainObjectif, statsDeDepart } from '../engine/bilans';
+import { comptesVides, journeeVide } from '../engine/comptes';
 
 type Donnees = Record<string, unknown>;
 
@@ -365,6 +366,32 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(ouverte ? ['visibilite'] : [])],
     };
   },
+  // v24 → v25 : les comptes de la nuit par poste (bilan de fermeture). La part du personnel devient un poste de
+  // dépense, les rendez-vous se comptent pleins ; la journée en cours tient ses comptes.
+  24: (d) => {
+    const tresorerie = typeof d.tresorerie === 'number' ? d.tresorerie : 0;
+    const avecPoste = (c: unknown) => (estObjet(c) && estObjet(c.depenses) ? { ...c, depenses: { partPersonnel: 0, express: 0, ...c.depenses } } : c);
+    const semaine = estObjet(d.semaine) ? { ...d.semaine, comptes: avecPoste(d.semaine.comptes) } : d.semaine;
+    const bilanSemaine = estObjet(d.bilanSemaine) ? { ...d.bilanSemaine, comptes: avecPoste(d.bilanSemaine.comptes) } : d.bilanSemaine;
+    const journee = journeeVide(tresorerie);
+    let nuit = d.nuit;
+    if (estObjet(nuit)) {
+      // Une nuit en cours reprend ce qu'elle a déjà gagné ; le détail de ses dépenses passées est perdu.
+      const nombre = (v: unknown) => (typeof v === 'number' ? v : 0);
+      const { recettes, partPersonnel, depenses, bar, ...reste } = nuit;
+      const comptes = comptesVides();
+      comptes.recettes.bar = nombre(bar);
+      comptes.recettes.rendezVous = nombre(recettes) - nombre(bar) + nombre(partPersonnel);
+      comptes.depenses.partPersonnel = nombre(partPersonnel);
+      const enCours = typeof d.nuitsBouclees === 'number' && typeof nuit.numero === 'number' && d.nuitsBouclees < nuit.numero;
+      if (enCours) {
+        journee.comptes = structuredClone(comptes);
+        journee.tresorerieAvant = tresorerie - nombre(recettes) + nombre(depenses);
+      }
+      nuit = { ...reste, comptes, retraitReserve: 0, tresorerieAvant: tresorerie - nombre(recettes) + nombre(depenses), tresorerieApres: tresorerie };
+    }
+    return { ...d, version: 25, semaine, bilanSemaine, journee, nuit };
+  },
 };
 
 
@@ -439,6 +466,7 @@ function estEtatValide(d: Donnees): boolean {
     typeof d.equipes.securite === 'number' &&
     typeof d.assurance === 'number' &&
     estObjet(d.semaine) &&
+    estObjet(d.journee) &&
     typeof d.bilanAVoir === 'boolean' &&
     (d.themeDuSoir === null || typeof d.themeDuSoir === 'string') &&
     estObjet(d.intrigues) &&
