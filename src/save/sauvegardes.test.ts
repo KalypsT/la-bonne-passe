@@ -737,6 +737,20 @@ describe('migrations', () => {
     expect(migre?.nouveautes).toContain('chronique');
   });
 
+  it('migre une sauvegarde v36 : le mode libre, ouvert si le chapitre est déjà bouclé', () => {
+    const base = creerEtatInitial();
+    const { modeLibre: _m, hasardModeLibre: _h, ...reste } = base;
+    const { modeLibre: _s, ...systemes } = base.systemes;
+    const v36 = { ...reste, version: 36, systemes };
+    const migre = migrer(v36);
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.systemes.modeLibre).toBe(false);
+    expect(migre?.modeLibre).toMatchObject({ objectif: null, historique: [], presente: false });
+    expect(typeof migre?.hasardModeLibre).toBe('number');
+    const fini = migrer({ ...v36, finChapitre: { jour: 200, titre: 'velours', recettes: 0, tempsJoue: 0, reputation: 90, fideles: [], partis: [], moments: [], lieu: 'club', gerante: 'Margot' } });
+    expect(fini?.systemes.modeLibre).toBe(true);
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

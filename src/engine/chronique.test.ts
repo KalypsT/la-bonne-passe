@@ -122,6 +122,8 @@ describe('la fin du chapitre 1', () => {
     expect(f.fideles).toEqual(['Sanne', 'Mila', 'Inès']);
     expect(f.moments.some((m) => m.type === 'inauguration')).toBe(true);
     expect(etat.finChapitreAVoir).toBe(true);
+    // Le mode libre commence : dès lundi, un objectif par semaine.
+    expect(etat.systemes.modeLibre).toBe(true);
   });
 
   it('pas avant l’inauguration, ni sous 70 de réputation ; une seule fois', () => {

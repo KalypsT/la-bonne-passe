@@ -9,6 +9,7 @@ import { avoirNet, echeancesEmprunts } from './banque';
 import { impotEstime, jourProchainImpot, noterSemaineFiscale } from './fisc';
 import type { EtatJeu } from './etat';
 import type { BilanMaison } from './maison2';
+import type { ObjectifLibre, ResultatLibre } from './modeLibre';
 import type { Tirage } from './hasard';
 import { conclureDefi, lancerDefi, statsDeDepart, type EvenementBilan, type ResultatDefi, type StatsSemaine } from './bilans';
 
@@ -66,6 +67,8 @@ export interface BilanSemaine {
   impot?: { jour: number; montant: number; paye: boolean };
   /** Ce que la gérante de la deuxième maison raconte de sa semaine (v1.0). */
   maison2?: BilanMaison;
+  /** Le mode libre : l'objectif de la semaine écoulée, jugé, et celui qui commence (v1.0). */
+  modeLibre?: { resultat: ResultatLibre | null; nouveau: ObjectifLibre | null };
 }
 
 export type EvenementSemaine = { type: 'bilanSemaine'; numero: number } | { type: 'tendance'; id: string } | EvenementBilan;

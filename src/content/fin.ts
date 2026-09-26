@@ -70,7 +70,7 @@ export const TEXTES_FIN = {
   gerante: (prenom: string, quartier: string) => `${prenom} tient la maison de ${quartier}.`,
   titreIntro: 'Dans le quartier, on t’appelle déjà :',
   conclusion:
-    'Moi, je rentre à Delft, chez ma sœur. Enfin, je repasserai : on ne quitte jamais tout à fait une maison. La tienne continue, et toi aussi. Les chapitres suivants t’attendent ailleurs, plus tard.',
+    'Moi, je rentre à Delft, chez ma sœur. Enfin, je repasserai : on ne quitte jamais tout à fait une maison. La tienne continue, et toi aussi : dès lundi, je te donnerai un objectif par semaine, pour le plaisir. Les chapitres suivants t’attendent ailleurs, plus tard.',
   avertissement:
     'Cette histoire est une fiction. Les lois, les lieux, les maisons et les personnages sont simplifiés ou inventés. Dans le jeu, chaque personne travaille librement : elle choisit, négocie, refuse ou s’en va.',
   continuer: 'Continuer la partie',

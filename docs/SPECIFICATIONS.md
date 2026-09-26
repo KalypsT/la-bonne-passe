@@ -115,6 +115,15 @@ La campagne s'achève quand les 4 chapitres sont bouclés et l'emprunt de rachat
 
 Le joueur peut continuer la même partie sans nouveau chapitre. Des objectifs simplifiés tournent chaque semaine, tirés au sort : une recette à atteindre, une semaine sans incident, un segment à reconquérir, un record à battre. Les intrigues continuent, mais plus aucun palier ne s'ouvre.
 
+En v1.0, le mode libre commence le soir où le chapitre se boucle ; Josée le présente au bilan du lundi suivant. Chaque lundi, l'objectif de la semaine écoulée est jugé et un nouveau est tiré (avec son propre hasard, jamais deux fois le même d'affilée quand il y a le choix). Il remplace le défi de la semaine ; l'objectif du mois continue. L'onglet Maison le montre avec sa progression, le bilan du lundi dit s'il est réussi, la série en cours et le compte depuis la fin du chapitre.
+
+| Objectif | Cible | Récompense |
+| --- | --- | --- |
+| Une belle semaine | La recette d'activité (rendez-vous, bar, divers ; sans la deuxième maison) des 4 dernières semaines en moyenne, +5 % | +1 de réputation |
+| Une semaine sans histoire | Aucune dispute qui dégénère, aucune alerte manquée | +4 de moral pour l'équipe, +1 de réputation |
+| Reconquérir | Le segment ouvert le moins content, s'il est sous 85, gagne 3 points de satisfaction dans la semaine | +4 de satisfaction pour lui |
+| Battre un record | Une recette d'activité au-dessus de la meilleure des 4 dernières semaines | +5 de moral pour l'équipe, +2 de réputation |
+
 En version 1.0, seul le chapitre 1 est jouable, avec sa propre fin de chapitre et le mode libre.
 
 ### La fin du chapitre 1 (v1.0)

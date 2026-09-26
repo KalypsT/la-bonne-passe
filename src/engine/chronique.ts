@@ -251,5 +251,7 @@ export function verifierFinChapitre(etat: EtatJeu, evenements: { push(e: Eveneme
     gerante: g?.employe.prenom ?? '',
   };
   etat.finChapitreAVoir = true;
+  // Le mode libre commence : dès lundi, un objectif par semaine (partie 3).
+  etat.systemes.modeLibre = true;
   evenements.push({ type: 'finChapitre', jour: etat.jour, titre });
 }

@@ -1,6 +1,7 @@
 // Équipes Accueil et Sécurité, et assurance (v0.5, palier 3) : textes de l'interface et du journal.
 // Valeurs dans balance.ts (EQUIPES, ASSURANCES).
 
+import { TEXTES_MODE_LIBRE } from './modeLibre';
 import { ASSURANCES, EQUIPES } from './balance';
 import { TEXTES_BANQUE } from './banque';
 import { TEXTES_AGRANDIR } from './agrandir';
@@ -66,6 +67,7 @@ export const OUVERTURES_LUNDI: Record<string, { titre: string; josee: string }> 
   placement: TEXTES_GAMME.ouvertures.placement,
   gerante: TEXTES_AGRANDIR.ouvertures.gerante,
   etablissement: TEXTES_AGRANDIR.ouvertures.etablissement,
+  modeLibre: TEXTES_MODE_LIBRE.ouverture,
   assurance: { titre: TEXTES_EQUIPES.assurance.ouverture, josee: TEXTES_EQUIPES.assurance.ouvertureJosee },
   visibilite: {
     titre: 'Nouveau ce lundi : la visibilité, dans les règles de la maison (onglet Clientèle).',

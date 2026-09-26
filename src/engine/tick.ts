@@ -36,6 +36,7 @@ import { changerGestionJosee, emprunter, surveillerDecouvert } from './banque';
 import { appliquerGamme, type OrdreGamme } from './gamme';
 import { appliquerAgrandir, avancerAgrandissement, reponseDuPermis, tirerOffres, type EvenementAgrandir, type OrdreAgrandir } from './agrandir';
 import { accorderPalier } from './paliers';
+import { lundiModeLibre, type EvenementModeLibre } from './modeLibre';
 import { noterChronique, noterSemaineChronique, verifierFinChapitre, type EvenementChronique } from './chronique';
 import { appliquerMaison2, matinMaison2, semaineMaison2, type EvenementMaison2, type OrdreMaison2 } from './maison2';
 import { appliquerAmenagement, avancerTravauxAnnexes, type OrdreAmenagement } from './amenagement';
@@ -127,7 +128,8 @@ export type EvenementMoteur =
   | EvenementEquipe
   | EvenementAgrandir
   | EvenementMaison2
-  | EvenementChronique;
+  | EvenementChronique
+  | EvenementModeLibre;
 
 /** Taille du journal gardé dans la sauvegarde. */
 export const TAILLE_JOURNAL = 50;
@@ -431,6 +433,8 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
       cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
       if (bilanMaison && etat.bilanSemaine) etat.bilanSemaine.maison2 = bilanMaison;
       noterSemaineChronique(etat);
+      // Le mode libre juge l'objectif de la semaine écoulée et tire le suivant (v1.0).
+      lundiModeLibre(etat, evenements);
       // Palier 5 (v0.6) : la mairie répond au dossier ; au deuxième lundi, la deuxième maison ; au premier, la gérance.
       reponseDuPermis(etat, evenements);
       if (etat.palier === 4 && etat.permis.statut === 'accorde') {

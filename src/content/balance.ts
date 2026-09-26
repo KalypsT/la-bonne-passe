@@ -398,6 +398,33 @@ export type IdConsigne = keyof typeof MAISON2.consignes;
  * Titres selon le style : réputation pour le velours ; parts des soirées (feutrées ; happy hours et thèmes) ;
  * personnes pour la bâtisseuse (avec le bâtiment voisin) ; embauches sans aucun départ pour la famille.
  */
+/**
+ * Le mode libre (v1.0, partie 3) : après la fin du chapitre, un objectif par semaine, tiré au sort, à la place du défi.
+ * Recette : la recette d'activité (rendez-vous, bar, divers) des 4 dernières semaines en moyenne, plus `recetteHausse`.
+ * Calme : aucun incident (dispute qui dégénère, alerte manquée). Segment : le segment ouvert le moins content (sous
+ * `segmentSous`) doit gagner `segmentGain` points. Record : une recette d'activité au-dessus de la
+ * meilleure des `recordSemaines` dernières semaines. Récompenses modestes : la réussite se voit surtout dans la série.
+ * Mesures (partie 3, joueur simulé qui ne cherche pas à les remplir) : un record en clients reçus était impossible (une
+ * maison de 4 personnes au cran 4 plafonne à 112 clients par semaine) : 1 réussi sur 61 ; il porte désormais sur la
+ * recette, que les tarifs, les thèmes et le champagne peuvent pousser. Gagner 5 points de satisfaction en une semaine :
+ * 0 sur 15 (une semaine fait bouger un segment de −4 à +4) ; 3 points désormais. Le record sur les 8 dernières semaines :
+ * 15 % de réussite, 19 % en montant les tarifs la semaine visée ; sur les 4 dernières, 21 % et 24 %. Il reste le plus dur.
+ */
+export const MODE_LIBRE = {
+  recetteHausse: 1.05,
+  recetteSemaines: 4,
+  segmentSous: 85,
+  segmentGain: 3,
+  recordSemaines: 4,
+  historique: 8,
+  recompenses: {
+    recette: { reputation: 1 },
+    calme: { moralEquipe: 4, reputation: 1 },
+    segment: { satisfaction: 4 },
+    record: { moralEquipe: 5, reputation: 2 },
+  },
+};
+
 export const FIN_CHAPITRE = {
   reputation: 70,
   /** Nuits dans la maison pour compter parmi les fidèles. */

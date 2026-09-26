@@ -41,6 +41,7 @@ import {
   type Etablissement,
   type Permis,
 } from './agrandir';
+import { hasardModeLibreDeDepart, modeLibreDeDepart, type ModeLibre } from './modeLibre';
 import { chroniqueDeDepart, type Chronique, type FinChapitre } from './chronique';
 import { hasardMaison2DeDepart, maison2DeDepart, type Maison2 } from './maison2';
 import { hasardPlacementDeDepart, niveauxDeDepart, type NiveauxEquipes, type Placement } from './gamme';
@@ -102,6 +103,8 @@ export interface Systemes {
   etablissement: boolean;
   /** v1.0 : la deuxième maison, une fois ses travaux finis (gérante, inauguration, consigne, bilan du lundi). */
   maison2: boolean;
+  /** v1.0 : le mode libre, après la fin du chapitre (un objectif par semaine à la place du défi). */
+  modeLibre: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -462,6 +465,10 @@ export interface EtatJeu {
   /** La fin du chapitre 1, figée le soir où il se boucle, et si elle attend d'être lue (v1.0). */
   finChapitre: FinChapitre | null;
   finChapitreAVoir: boolean;
+  /** Le mode libre : l'objectif de la semaine, la série, l'historique des semaines (v1.0). */
+  modeLibre: ModeLibre;
+  /** Hasard du mode libre, à part (v1.0). */
+  hasardModeLibre: number;
   /** Gestion confiée à Josée (v0.6, partie 4). */
   gestionJosee: boolean;
   /** Impôt trimestriel : bénéfice du trimestre en cours (v0.6, partie 4). */
@@ -477,7 +484,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 36;
+export const VERSION_ETAT = 37;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -517,6 +524,7 @@ export function systemesDeDepart(): Systemes {
     gerante: false,
     etablissement: false,
     maison2: false,
+    modeLibre: false,
   };
 }
 
@@ -693,6 +701,8 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     chronique: chroniqueDeDepart(),
     finChapitre: null,
     finChapitreAVoir: false,
+    modeLibre: modeLibreDeDepart(),
+    hasardModeLibre: hasardModeLibreDeDepart(options.graine ?? GRAINE_PAR_DEFAUT),
     finDePartie: null,
     assurance: 0,
     didacticiel: options.didacticiel ? 0 : null,

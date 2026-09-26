@@ -1645,3 +1645,30 @@ Le joueur simulé ne programme jamais de thème ni de happy hour : « nuits blan
 
 - **Le temps réel** est compté par l'interface, pauses et cartes comprises, au plus un quart d'heure d'un coup (un téléphone oublié sur une carte ne compte pas des heures). Il servira à mesurer la durée réelle du chapitre sur téléphone.
 - **La durée du chapitre** reste le problème de la partie 1 (jour 175 à 250) : à régler en partie 6.
+
+### Le mode libre (partie 3)
+
+Un objectif par semaine après la fin du chapitre, à la place du défi (`MODE_LIBRE`). Le joueur simulé ne cherche pas à les remplir : il continue comme avant, en répondant à toutes les alertes à l'instant.
+
+**Deux objectifs impossibles au premier jet** :
+
+- un record en **clients reçus** : une maison de 4 personnes au cran 4 plafonne à 112 clients par semaine (4 × 4 × 7), et le record à battre était déjà 112 : 1 réussi sur 61. Le record porte désormais sur la **recette**, que les tarifs, les thèmes et le champagne peuvent pousser ;
+- **gagner 5 points** de satisfaction sur le segment le moins content : 0 sur 15. Une semaine fait bouger un segment de −4 à +4. La cible passe à 3 points.
+
+Le record se compare à la meilleure des 8 dernières semaines (15 % de réussite ; 19 % en montant les tarifs de 20 % la semaine visée), puis des 4 dernières (21 % ; 24 %). Il reste l'objectif le plus dur. La belle semaine (+5 % sur la moyenne) passe de 38 % à 68 % pour qui monte ses tarifs la semaine visée : l'objectif récompense l'effort.
+
+**Mesures** (`npm run rapport`, 10 graines, 336 nuits ; « tirés, réussis » par type) :
+
+| Stratégie | Parties en mode libre | Semaines | Belle semaine | Sans histoire | Reconquérir | Record | Réussite | Meilleure série | Cartes et imprévus par semaine, 8 semaines avant / après la fin | Valeur nette gagnée, 1 / 2 / 3 mois après la fin |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique 4 | 10 sur 10 | 189 | 56, 21 | 61, 61 | 10, 2 | 62, 13 | 51 % | 5 | 18,0 / 18,4 | +8 700 / +24 100 / +41 100 € |
+| Feutrée 4 | 7 sur 10 | 78 | 26, 14 | 26, 26 | 0, 0 | 26, 6 | 59 % | 4 | 18,7 / 18,8 | +9 500 / +19 000 / +33 400 € |
+| Classique 4, cartes au hasard | 4 sur 10 | 31 | 7, 1 | 8, 0 | 6, 2 | 10, 2 | 16 % | 1 | 18,0 / 19,0 | +13 500 / +23 300 / +32 700 € |
+
+Lecture :
+
+- **Le mode libre tient sur un mois et au-delà** : un objectif chaque semaine, les quatre types tirés, environ une réussite sur deux pour le joueur attentif. Les cartes et les imprévus ne faiblissent pas après la fin (18 par semaine, comme avant) : les intrigues, le quartier et la rivale continuent. L'argent continue de monter, ce qui laisse le joueur sans vrai but financier : c'est le rôle des chapitres suivants.
+- **La semaine sans histoire** mesure l'attention : 100 % pour le joueur simulé, qui répond à tout, 0 % pour celui qui tranche au hasard. En main, entre les deux.
+- **Reconquérir** sort rarement : dans une maison bien tenue, tous les segments dépassent 85. C'est voulu : on ne reconquiert que ce qu'on a perdu.
+
+Gardes : `modeLibre.test.ts` (règles), `equilibrage-modeLibre.test.ts` (4 graines, 266 nuits : au moins 12 objectifs, 3 types, 30 à 80 % de réussite, aucune semaine sans carte ni imprévu après la fin).

@@ -58,6 +58,7 @@ import { personnelMax } from '../engine/agrandir';
 import { departsRecents, exigenceDuQuartier } from '../engine/recrutement';
 import { DeuxiemeMaison, FicheVoisin, Gerance, statutVoisin } from './Agrandir';
 import { statutMaison2 } from './Maison2';
+import { ObjectifLibrePanneau } from './ModeLibre';
 import { TEXTES_FIN } from '../content/fin';
 import { FIN_CHAPITRE } from '../content/balance';
 import { TEXTES_AGRANDIR } from '../content/agrandir';
@@ -286,6 +287,7 @@ function Objectifs({ partie }: { partie: EtatJeu }) {
   const jourMensualite = jourProchaineMensualite(partie);
   return (
     <>
+      <ObjectifLibrePanneau partie={partie} />
       {def && (
         <div className="objectif">
           <span className="palier-titre">{o.defi}</span>

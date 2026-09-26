@@ -38,6 +38,7 @@ import { annexesDeDepart } from '../engine/amenagement';
 import { hasardPlacementDeDepart, niveauxDeDepart } from '../engine/gamme';
 import { hasardMaison2DeDepart, maison2DeDepart } from '../engine/maison2';
 import { chroniqueDeDepart, type Moment } from '../engine/chronique';
+import { hasardModeLibreDeDepart, modeLibreDeDepart } from '../engine/modeLibre';
 import { INTRIGUES_PRINCIPALES } from '../content/intrigues';
 import { INTRIGUE_CHAT_NOIR } from '../content/rivale';
 
@@ -660,6 +661,18 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     const nouveautes = [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), 'chronique'];
     return { ...d, version: 36, chronique, finChapitre: null, finChapitreAVoir: false, nouveautes };
   },
+  // v36 → v37 : le mode libre (v1.0, partie 3). Une partie dont le chapitre est déjà bouclé y entre au prochain lundi,
+  // où Josée le présente ; l'historique des semaines repart de zéro.
+  36: (d) => {
+    const systemes = estObjet(d.systemes) ? d.systemes : {};
+    return {
+      ...d,
+      version: 37,
+      systemes: { ...systemes, modeLibre: estObjet(d.finChapitre) },
+      modeLibre: modeLibreDeDepart(),
+      hasardModeLibre: hasardModeLibreDeDepart(typeof d.hasard === 'number' ? d.hasard : 0),
+    };
+  },
 };
 
 
@@ -769,6 +782,9 @@ function estEtatValide(d: Donnees): boolean {
     Array.isArray(d.chronique.moments) &&
     (d.finChapitre === null || estObjet(d.finChapitre)) &&
     typeof d.finChapitreAVoir === 'boolean' &&
+    estObjet(d.modeLibre) &&
+    Array.isArray(d.modeLibre.historique) &&
+    typeof d.hasardModeLibre === 'number' &&
     typeof d.gestionJosee === 'boolean' &&
     estObjet(d.systemes)
   );

@@ -352,6 +352,57 @@ function deuxiemeMaison(): string[] {
   return lignes;
 }
 
+/**
+ * Le mode libre (v1.0, partie 3) : après la fin du chapitre, les objectifs de la semaine tiennent-ils ?
+ * Le joueur simulé ne cherche pas à les remplir : leur taux de réussite est celui d'un joueur qui continue comme avant.
+ */
+function modeLibre(): string[] {
+  const NUITS_LIBRE = 336;
+  const base = { nuits: NUITS_LIBRE, permis: true, etablissement: true, maison2: 'externe' as const };
+  const strategies: [string, Omit<OptionsSimulation, 'graine'>][] = [
+    ['Classique 4', { ...base, offre: 'classique', rdvMax: 4 }],
+    ['Feutrée 4', { ...base, offre: 'feutree', rdvMax: 4 }],
+    ['Classique 4, cartes au hasard', { ...base, offre: 'classique', rdvMax: 4, politique: 'hasard' }],
+  ];
+  const TYPES = ['recette', 'calme', 'segment', 'record'] as const;
+  const lignes = [
+    `| Stratégie (${NUITS_LIBRE} nuits) | Parties en mode libre | Semaines en mode libre | ${TYPES.map((t) => `${t} (tirés, réussis)`).join(' | ')} | Réussite | Meilleure série | Cartes et imprévus par semaine, avant / après la fin | Valeur nette, par mois de mode libre |`,
+    `| --- | --- | --- | ${TYPES.map(() => '---').join(' | ')} | --- | --- | --- | --- |`,
+  ];
+  const virgule = (x: number, d = 1) => x.toFixed(d).replace('.', ',');
+  for (const [nom, o] of strategies) {
+    const parties = GRAINES.map((graine) => simuler({ ...o, graine }));
+    const libres = parties.filter((p) => p.etat.finChapitre);
+    const resultats = libres.flatMap((p) => p.bilans.flatMap((b) => (b.modeLibre?.resultat ? [b.modeLibre.resultat] : [])));
+    const semaines = resultats.length;
+    const parType = TYPES.map((t) => {
+      const r = resultats.filter((x) => x.type === t);
+      return `${r.length}, ${r.filter((x) => x.reussi).length}`;
+    });
+    const reussite = semaines ? `${Math.round((100 * resultats.filter((x) => x.reussi).length) / semaines)} %` : '—';
+    const serie = libres.length ? Math.max(...libres.map((p) => p.etat.modeLibre.meilleureSerie)) : 0;
+    // Cartes (intrigues, quartier, rivale) et imprévus par semaine, les 8 semaines avant la fin et toutes celles d'après.
+    const parSemaine = (f: (n: ResumeNuit, fin: number) => boolean) => {
+      const nuits = libres.flatMap((p) => p.nuits.filter((n) => f(n, p.etat.finChapitre!.jour)));
+      return nuits.length ? (7 * nuits.reduce((t, n) => t + n.intrigues.length + n.imprevus.length, 0)) / nuits.length : 0;
+    };
+    const avant = parSemaine((n, fin) => n.numero < fin && n.numero >= fin - 56);
+    const apres = parSemaine((n, fin) => n.numero > fin);
+    const mois = [1, 2, 3].map((k) => {
+      const v = libres.flatMap((p) => {
+        const n = p.nuits.find((x) => x.numero === p.etat.finChapitre!.jour + 28 * k);
+        const d = p.nuits.find((x) => x.numero === p.etat.finChapitre!.jour);
+        return n && d ? [n.valeurNette - d.valeurNette] : [];
+      });
+      return v.length ? `${v.reduce((a, b) => a + b, 0) / v.length > 0 ? '+' : ''}${arrondi(v.reduce((a, b) => a + b, 0) / v.length)} €` : '—';
+    });
+    lignes.push(
+      `| ${nom} | ${libres.length} sur ${GRAINES.length} | ${semaines} | ${parType.join(' | ')} | ${reussite} | ${serie} | ${virgule(avant)} / ${virgule(apres)} | ${mois.join(' / ')} |`,
+    );
+  }
+  return lignes;
+}
+
 it('rapport d’équilibrage', () => {
   const lignes = [
     '| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |',
@@ -389,5 +440,6 @@ it('rapport d’équilibrage', () => {
   console.log(`\nÉquipes et assurance : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${equipes().join('\n')}\n`);
   console.log(`\nLa progression sur six mois : ${GRAINES.length} graines, 168 nuits (jours d'atteinte des paliers : moyenne, puis extrêmes)\n\n${progression().join('\n')}\n`);
   console.log(`\nLa deuxième maison et la fin du chapitre 1 : ${GRAINES.length} graines, 336 nuits\n\n${deuxiemeMaison().join('\n')}\n`);
+  console.log(`\nLe mode libre : ${GRAINES.length} graines, 336 nuits\n\n${modeLibre().join('\n')}\n`);
   console.log(`\nLe quartier : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard ; événements sur 10 parties)\n\n${quartier().join('\n')}\n`);
 }, 1_800_000);
