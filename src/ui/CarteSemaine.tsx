@@ -8,6 +8,7 @@ import { segmentsOuverts } from '../engine/clientele';
 import { POSTES_DEPENSES, POSTES_RECETTES, totalDepenses, totalRecettes } from '../engine/comptes';
 import type { EtatJeu } from '../engine/etat';
 import { formaterEuros } from './format';
+import { TEXTES_BANQUE } from '../content/banque';
 import { JoseeLigne } from './Josee';
 import { useInterface } from './store';
 import { trouverDefi } from '../content/defis';
@@ -64,6 +65,14 @@ export function CarteSemaine({ partie }: { partie: EtatJeu }) {
                 <dd className={b.resultat < 0 ? 'negatif' : 'positif'}>{formaterEuros(b.resultat)}</dd>
               </div>
             </dl>
+            {(b.empruntRecu ?? 0) > 0 && (
+              <dl className="comptes">
+                <div>
+                  <dt>{TEXTES_BANQUE.emprunt.recu}</dt>
+                  <dd>{formaterEuros(b.empruntRecu ?? 0)}</dd>
+                </div>
+              </dl>
+            )}
             <p className="sous">
               {t.reputation} {t.reputationDetail(Math.floor(b.reputationDebut), Math.floor(b.reputationFin))} ·{' '}
               {t.clients(b.servis, b.perdus)}

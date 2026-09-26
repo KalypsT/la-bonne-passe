@@ -33,7 +33,7 @@ import { aTrait, nuitDuPersonnel, type EvenementPersonnel } from './personnel';
 import { revelerTraits, type EvenementRecrutement } from './recrutement';
 import { ecart, instant } from './temps';
 import { comptesVides, depenser, encaisser, journeeVide, recetteMaison } from './comptes';
-import { echeance, payerSalaires, prelevementAgios, regulariser, type EvenementBanque } from './banque';
+import { echeance, empruntsDus, payerSalaires, prelevementAgios, regulariser, type EvenementBanque } from './banque';
 import { demandeTendance, disputeTendance } from './semaine';
 import { bruitDuSoir, changerTapage } from './quartier';
 import { conclureMois, type EvenementBilan } from './bilans';
@@ -132,6 +132,7 @@ function nouvelleNuit(etat: EtatJeu): Nuit {
     tresorerieAvant: etat.journee.tresorerieAvant,
     tresorerieApres: etat.tresorerie,
     retraitReserve: 0,
+    empruntRecu: 0,
     servis: 0,
     perdus: 0,
     reputationDebut: etat.reputation,
@@ -197,6 +198,7 @@ export function fermerNuit(etat: EtatJeu, tirage: Tirage, evenements: Sortie): v
     etat.nuit.tresorerieAvant = etat.journee.tresorerieAvant;
     etat.nuit.tresorerieApres = etat.tresorerie;
     etat.nuit.retraitReserve = etat.journee.retraitReserve;
+    etat.nuit.empruntRecu = etat.journee.empruntRecu;
   }
   if (etat.nuit) evenements.push({ type: 'bilan', nuit: structuredClone(etat.nuit) });
   verifierPaliers(etat, evenements);
@@ -587,21 +589,25 @@ export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
   rembourserAvance(etat, evenements);
   // Une mensualité en retard se régularise dès que possible ; la première payée ouvre le palier 3.
   if (regulariser(etat, evenements)) verifierPaliers(etat, evenements);
-  if (etat.jour === jourProchaineMensualite(etat)) {
+  const rachat = etat.jour === jourProchaineMensualite(etat);
+  if (rachat || empruntsDus(etat).length > 0) {
     // La réserve paie en premier, la trésorerie complète, dans la limite du découvert autorisé.
-    const issue = echeance(etat, evenements);
+    // Les échéances des emprunts tombent le même jour que la mensualité du rachat.
+    const issue = echeance(etat, rachat, evenements);
     if ('faillite' in issue) return;
-    if (issue.payee) {
+    if (issue.payee && rachat) {
       evenements.push({
         type: 'mensualite',
         montant: B.MENSUALITE,
-        depuisReserve: issue.depuisReserve,
+        depuisReserve: Math.min(issue.depuisReserve, B.MENSUALITE),
         restantes: NOMBRE_MENSUALITES - etat.banque.echeances,
       });
     }
-    conclureMois(etat, issue.payee ? issue.depuisReserve : 0, etat.banque.echeances < NOMBRE_MENSUALITES, evenements, !issue.payee);
-    // La première mensualité payée ouvre le palier 3, présenté après le bilan du mois.
-    verifierPaliers(etat, evenements);
+    if (rachat) {
+      conclureMois(etat, issue.payee ? issue.depuisReserve : 0, etat.banque.echeances < NOMBRE_MENSUALITES, evenements, !issue.payee, issue.montant);
+      // La première mensualité payée ouvre le palier 3, présenté après le bilan du mois.
+      verifierPaliers(etat, evenements);
+    }
   }
   // La journée commence : ses comptes, ceux de la nuit à venir, partent de zéro.
   etat.journee = journeeVide(etat.tresorerie);

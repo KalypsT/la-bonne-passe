@@ -53,7 +53,7 @@ function avantFermeture(etat: EtatJeu, champs: Partial<EtatJeu> = {}): EtatJeu {
     minuteDuJour: h(3, 55),
     briefingJour: etat.jour,
     personnel: etat.personnel.map((e) => ({ ...e, enServiceCeSoir: true })),
-    nuit: { numero: 3, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 0, perdus: 0, reputationDebut: etat.reputation, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 },
+    nuit: { numero: 3, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, empruntRecu: 0, servis: 0, perdus: 0, reputationDebut: etat.reputation, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 },
     ...champs,
   };
 }

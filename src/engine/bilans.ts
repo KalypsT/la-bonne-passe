@@ -191,7 +191,14 @@ export function prochainObjectif(etat: EtatJeu, numero: number): Mois {
 }
 
 /** Le jour de la mensualité, une fois qu'elle est payée : l'objectif est jugé, le mois suivant commence. */
-export function conclureMois(etat: EtatJeu, depuisReserve: number, reste: boolean, evenements: Sortie, impayee = false): void {
+export function conclureMois(
+  etat: EtatJeu,
+  depuisReserve: number,
+  reste: boolean,
+  evenements: Sortie,
+  impayee = false,
+  montant: number = B.MENSUALITE,
+): void {
   const mois = etat.mois;
   const valeur = valeurObjectif(etat, mois);
   const reussi = objectifReussi(mois, valeur);
@@ -202,7 +209,7 @@ export function conclureMois(etat: EtatJeu, depuisReserve: number, reste: boolea
   const prochain = reste ? prochainObjectif(etat, mois.numero + 1) : null;
   etat.bilanMois = {
     numero: mois.numero,
-    mensualite: B.MENSUALITE,
+    mensualite: montant,
     depuisReserve,
     avoir: Math.round(etat.tresorerie + etat.reserve),
     decouvert: etat.tresorerie < 0,

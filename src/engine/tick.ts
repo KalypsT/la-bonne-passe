@@ -32,7 +32,7 @@ import { agirRelation, matinDesRelations, type EvenementRelation, type OrdreRela
 import { lundiDeLaRivale, repondreRivale, type EvenementRivale, type OrdreRivale } from './rivale';
 import { changerAssurance, changerEquipe, type EvenementEquipe, type OrdreEquipe } from './equipes';
 import { traiterAlerte, type OrdreMinuterie } from './minuteries';
-import { surveillerDecouvert } from './banque';
+import { emprunter, surveillerDecouvert } from './banque';
 import { appliquerPlafond, type AccordPlafond, type EvenementPlafond } from './plafond';
 import { changerCibleAuto, commanderAuto, commanderPack, livraisonExpress, type EvenementLinge } from './linge';
 
@@ -62,6 +62,8 @@ export type Ordre =
   | { type: 'renover'; chambreId: string }
   | { type: 'tauxReserve'; taux: number }
   | { type: 'retirerReserve' }
+  /** Nouvel emprunt (v0.6) : montant par tranches de 5 000 €, durée en mois. */
+  | { type: 'emprunter'; montant: number; duree: number }
   | { type: 'equipeMenage'; effectif: number }
   | { type: 'annonceVue' }
   /** Josée a présenté les nouveautés d'une mise à jour. */
@@ -220,6 +222,9 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       evenements.push({ type: 'tauxReserve', taux: ordre.taux });
       return;
     }
+    case 'emprunter':
+      emprunter(etat, ordre.montant, ordre.duree, evenements);
+      return;
     case 'retirerReserve': {
       if (etat.reserve <= 0) return;
       const montant = etat.reserve;
@@ -349,6 +354,11 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     // Le lundi, la semaine écoulée se referme en bilan avant les charges de la nouvelle.
     if (jourDeLaSemaine(etat.jour) === 0) {
       cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
+      // Le lundi après la visibilité : le nouvel emprunt (v0.6). Avant elle dans le code, pour attendre une semaine.
+      if (etat.systemes.visibilite && !etat.systemes.emprunt) {
+        etat.systemes.emprunt = true;
+        if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'emprunt'];
+      }
       // Le deuxième lundi après le palier 3 : la visibilité ; le premier : l'assurance. Présentées au bilan du lundi.
       if (etat.systemes.assurance && !etat.systemes.visibilite) {
         etat.systemes.visibilite = true;

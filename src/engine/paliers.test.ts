@@ -146,7 +146,7 @@ describe('équipe de ménage', () => {
 });
 
 describe('réserve de sécurité', () => {
-  const nuit = { numero: 2, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, servis: 3, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 };
+  const nuit = { numero: 2, comptes: comptesVides(), tresorerieAvant: 0, tresorerieApres: 0, retraitReserve: 0, empruntRecu: 0, servis: 3, perdus: 0, reputationDebut: 15, meilleurAvis: null, pireAvis: null, reserve: 0, imprevus: 0 };
 
   it('ne se règle pas avant le palier 1', () => {
     expect(ordonner(partieA(h(10)), { type: 'tauxReserve', taux: 0.2 }).etat.tauxReserve).toBe(0);

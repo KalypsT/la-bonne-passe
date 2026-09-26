@@ -66,6 +66,52 @@ export const TEXTES_BANQUE = {
     titreEcran: 'Écran titre',
   },
 
+  emprunt: {
+    titre: 'Nouvel emprunt',
+    detail: 'Par tranches de 5 000 €. Les échéances tombent avec la mensualité, tous les 28 jours.',
+    montant: 'Montant',
+    moins: 'Retirer 5 000 €',
+    plus: 'Ajouter 5 000 €',
+    duree: 'Durée',
+    mois: (n: number) => `${n} mois`,
+    apercu: (taux: string, mensualite: string, cout: string) => `Taux ${taux} · mensualité ${mensualite} · intérêts ${cout} en tout`,
+    derniere: (premiere: number, derniere: number, mois: number) => `Première échéance au jour ${premiere}, dernière au jour ${derniere} (mois ${mois})`,
+    projection: (sans: string, avec: string) => `Dans 4 semaines : ${avec} (${sans} sans cet emprunt)`,
+    signer: (montant: string) => `Signer pour ${montant}`,
+    capacite: (montant: string) => `La banque prête encore jusqu’à ${montant}.`,
+    plafond: 'La banque ne prête plus : 40 000 € d’encours au plus.',
+    enCours: 'Emprunts en cours',
+    ligne: (montant: string, taux: string, mensualite: string, restantes: number) =>
+      `${montant} à ${taux} : ${mensualite} par mois, ${restantes} échéance${restantes > 1 ? 's' : ''} encore`,
+    verrouille: 'Le nouvel emprunt s’ouvre au lundi qui suit la visibilité (palier 3).',
+    recu: 'Emprunt reçu',
+  },
+
+  /** L'avis de Josée sur l'emprunt envisagé, du plus grave au plus doux. */
+  joseeEmprunt: {
+    retard: 'La banque ne prête pas à qui lui doit déjà. Régularise d’abord.',
+    trop: 'Ta maison ne gagne pas de quoi payer ça tous les mois. Tu signerais ta faillite à l’encre fraîche.',
+    cher: 'À ce taux-là, la banque te fait payer ta réputation. Fais-toi un nom d’abord, ça coûte moins cher.',
+    long: 'Sur deux ans, c’est plus doux chaque mois, mais tu paies deux fois les intérêts. Seulement si tu n’as pas le choix.',
+    sage: 'Emprunter pour rouvrir une chambre ou le bar, oui. Pour boucher un trou, une fois, jamais deux.',
+  },
+
+  journalEmprunt: {
+    signe: (montant: string, taux: string, duree: number, mensualite: string) =>
+      `Emprunt signé : ${montant} à ${taux} sur ${duree} mois, ${mensualite} par échéance.`,
+    echeance: (montant: string) => `La banque prélève les échéances des emprunts : ${montant}.`,
+    rembourse: (montant: string) => `Emprunt de ${montant} remboursé. Un tiroir de moins à ouvrir.`,
+  },
+
+  ouvertureLundi: {
+    titre: 'Nouveau ce lundi : le nouvel emprunt, dans l’onglet Finances.',
+    josee:
+      'La banque veut bien te prêter, maintenant qu’elle connaît la maison. Par tranches de 5 000 €, à un taux qui dépend de ta réputation, et de tes retards. Lis bien la mensualité avant de signer.',
+  },
+
+  nouveauteEmprunt:
+    'Nouvel emprunt, dans l’onglet Finances : par tranches de 5 000 €, sur 6, 12 ou 24 mois, à un taux qui suit ta réputation. La mensualité s’affiche avant de signer.',
+
   nouveaute:
     'La banque ne plaisante plus : découvert toléré jusqu’à −2 000 €, avec 1 % d’agios par jour. Au-delà, plus de salaires pour les équipes. Une mensualité impayée, c’est une lettre ; deux, c’est la faillite.',
 

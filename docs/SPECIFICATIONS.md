@@ -126,7 +126,7 @@ Le joueur part presque de rien : une hôtesse, une chambre en état, un salon et
 | Départ | — | Sanne seule ; 1 chambre en état (Boudoir) sur 4, les autres sous des draps ; le salon et le bureau ; 1 personne au ménage. Onglets Maison, Personnel, Finances, Journal. Touristes et Habitués. |
 | 1. Rouvrir | Première soirée bouclée | Recrutement, rénovation des chambres fermées, planning du soir, réserve de sécurité |
 | 2. Se faire un nom | Réputation 25 | Segments Affaires et Groupes, onglet Clientèle, tarifs et formules, sélection à l'entrée et priorité d'accueil ; bar à rénover, puis équipe Bar et avance fournisseur ; soirées à thème et tendances au premier lundi |
-| 3. Tenir la maison | Première mensualité payée | Onglet Relations (voisins, mairie, presse, police), première rivale qui réagit, équipes Accueil et Sécurité, assurance ; l'emprunt arrive avec les finances complètes (v0.6) |
+| 3. Tenir la maison | Première mensualité payée | Onglet Relations (voisins, mairie, presse, police), première rivale qui réagit, équipes Accueil et Sécurité ; puis, lundi après lundi, l'assurance, la visibilité et le nouvel emprunt (v0.6) |
 | 4. Monter en gamme | Réputation 50 et 4 personnes | VIP et Couples curieux, formations, chambres de luxe (Jacuzzi) et niveaux de confort, placement, changement de nom de la maison |
 | 5. S'agrandir | Réputation 70 et accord de la mairie | Agrandissement, jusqu'à 8 personnes, promotion en gérante, deuxième établissement |
 
@@ -325,11 +325,11 @@ Cibles : une soirée correcte rapporte 600 à 1 000 € net à la maison (recett
 | Outil | Ce que le joueur décide | Effet | Palier |
 | --- | --- | --- | --- |
 | Bilan de fin de nuit | rien, il le lit | Le compte de la journée poste par poste : recettes (rendez-vous comptés pleins, bar, autres, assurance), dépenses (part du personnel avec son pourcentage, commandes du briefing, thème, portier, visibilité, relations, incidents, livraisons express, et les salaires de midi sur une ligne à part), gagné cette nuit dont mis en réserve, trésorerie avant → après. Les charges du lundi et la mensualité restent au bilan de la semaine | Départ |
-| Bilan du lundi | rien, il le lit | Recettes et dépenses par poste, résultat de la semaine, trésorerie projetée sur 4 semaines (mensualités et remboursements compris) ; carte en pause le lundi à 5 h, à revoir dans l'onglet Finances | Départ |
+| Bilan du lundi | rien, il le lit | Recettes et dépenses par poste, résultat de la semaine, trésorerie projetée sur 4 semaines (mensualités, échéances des emprunts et remboursements compris, mensualité en retard et salaires dus déduits ; emprunt reçu affiché à part) ; carte en pause le lundi à 5 h, à revoir dans l'onglet Finances | Départ |
 | Réserve de sécurité | 0, 10 ou 20 % de la recette du soir mis de côté | Couvre la mensualité ; y toucher hors urgence vaut une remarque de Josée | 1 |
 | Tarifs et formules | 3 crans de tarif général, une formule | ±20 % de recette par rendez-vous, effet inverse sur la demande selon le segment | 2 |
 | Avance fournisseur | accepter ou refuser une offre du grossiste | 1 500 € de stock du bar sans payer, remboursés +10 % sous 2 semaines | 2 |
-| Nouvel emprunt | montant par tranches de 5 000 € (jusqu'à 40 000 €), durée 6, 12 ou 24 mois | Taux de 4 à 9 % selon la réputation et les retards passés | 3 |
+| Nouvel emprunt | montant par tranches de 5 000 € (jusqu'à 40 000 € d'encours), durée 6, 12 ou 24 mois | Taux de 9 % (réputation 20 ou moins) à 4 % (80 et plus), au demi-point, +2 points par mensualité restée impayée. L'argent arrive tout de suite, sans compter comme une recette ; les échéances tombent avec la mensualité du rachat, tous les 28 jours, sur leur propre poste, et se paient ou restent impayées avec elle. Avant de signer : taux, mensualité, intérêts, première et dernière échéance, trésorerie dans 4 semaines avec et sans, et l'avis de Josée | 3, au lundi qui suit la visibilité (v0.6) |
 | Assurance | aucune, casse, ou casse + amendes | 80 à 200 € par semaine ; rembourse 70 à 100 % des sinistres couverts (casse : 70 % à 80 €, casse et amendes : 100 % à 200 €) | 3, au premier lundi |
 | Placement de l'excédent | une somme bloquée 4 semaines, prudent ou risqué | +2 % sûr, ou −5 à +8 % selon les contextes de la semaine | 4 |
 

@@ -5,6 +5,7 @@ import * as B from '../content/balance';
 import type { Segment } from '../content/clientele';
 import { parSegment, segmentOuvert, type ParSegment } from './clientele';
 import { comptesVides, totalDepenses, totalRecettes, type Comptes } from './comptes';
+import { avoirNet, echeancesEmprunts } from './banque';
 import type { EtatJeu } from './etat';
 import type { Tirage } from './hasard';
 import { conclureDefi, lancerDefi, statsDeDepart, type EvenementBilan, type ResultatDefi, type StatsSemaine } from './bilans';
@@ -23,6 +24,8 @@ export interface Semaine {
   perdus: number;
   /** Ce que retiennent les défis (v0.4). */
   stats: StatsSemaine;
+  /** Emprunts reçus dans la semaine : ni recette ni résultat, mais la trésorerie les a reçus (v0.6). */
+  empruntRecu: number;
 }
 
 /** Bilan d'une semaine écoulée, lu le lundi matin. */
@@ -55,6 +58,8 @@ export interface BilanSemaine {
   nouveauDefi?: string | null;
   /** Outils qui s'ouvrent ce lundi, présentés par Josée (v0.5 : l'assurance). */
   ouvertures?: string[];
+  /** Emprunts reçus dans la semaine (v0.6). */
+  empruntRecu?: number;
 }
 
 export type EvenementSemaine = { type: 'bilanSemaine'; numero: number } | { type: 'tendance'; id: string } | EvenementBilan;
@@ -74,6 +79,7 @@ export function nouvelleSemaine(etat: Pick<EtatJeu, 'reputation' | 'clientele'>,
     servis: 0,
     perdus: 0,
     stats: statsDeDepart(),
+    empruntRecu: 0,
   };
 }
 
@@ -88,6 +94,7 @@ export function semaineDeDepart(reputation: number = B.REPUTATION_INITIALE): Sem
     servis: 0,
     perdus: 0,
     stats: statsDeDepart(),
+    empruntRecu: 0,
   };
 }
 
@@ -131,10 +138,17 @@ export function tirerTendances(etat: EtatJeu, tirage: Tirage): string[] {
 }
 
 /**
- * Projection de l'avoir sur les semaines à venir : le résultat courant de la semaine écoulée,
- * moins les mensualités et le remboursement de l'avance qui tombent dans l'intervalle.
+ * Projection de l'avoir (net des dettes) sur les 4 semaines à venir : le résultat courant de la semaine
+ * écoulée, moins les mensualités, les échéances des emprunts et le remboursement de l'avance qui tombent
+ * dans l'intervalle. `emprunts` : les échéances à venir (et celles d'un emprunt envisagé).
  */
-export function projeter(etat: EtatJeu, avoir: number, resultatCourant: number, prochainesMensualites: number[]): number[] {
+export function projeter(
+  etat: EtatJeu,
+  avoir: number,
+  resultatCourant: number,
+  prochainesMensualites: number[],
+  emprunts: { jour: number; montant: number }[] = echeancesEmprunts(etat),
+): number[] {
   const projection: number[] = [];
   let courant = avoir;
   for (let k = 1; k <= B.SEMAINES_PROJETEES; k++) {
@@ -142,6 +156,7 @@ export function projeter(etat: EtatJeu, avoir: number, resultatCourant: number, 
     const fin = debut + 7;
     courant += resultatCourant;
     for (const j of prochainesMensualites) if (j >= debut && j < fin) courant -= B.MENSUALITE;
+    for (const e of emprunts) if (e.jour >= debut && e.jour < fin) courant -= e.montant;
     const a = etat.avance;
     if (a.statut === 'acceptee' && a.echeance !== null && a.echeance >= debut && a.echeance < fin) courant -= a.montant;
     projection.push(Math.round(courant));
@@ -158,8 +173,9 @@ export function cloreSemaine(etat: EtatJeu, prochainesMensualites: number[], tir
   const recettes = totalRecettes(s.comptes);
   const depenses = totalDepenses(s.comptes);
   const d = s.comptes.depenses;
-  const exceptionnel = d.travaux + d.mensualite + d.avance + d.charges;
-  const avoir = etat.tresorerie + etat.reserve;
+  // Mensualités, remboursements et emprunts se projettent à part, échéance par échéance.
+  const exceptionnel = d.travaux + d.mensualite + d.emprunts + d.avance + d.charges;
+  const avoir = avoirNet(etat);
   const resultatCourant = recettes - (depenses - exceptionnel) - B.CHARGES_FIXES;
 
   // Le défi de la semaine écoulée est jugé avant que la semaine ne se referme.
@@ -192,6 +208,7 @@ export function cloreSemaine(etat: EtatJeu, prochainesMensualites: number[], tir
     premieresTendances,
     defi,
     nouveauDefi: null,
+    empruntRecu: s.empruntRecu,
   };
   etat.bilanAVoir = true;
   etat.semaine = nouvelleSemaine(etat, s.numero + 1, tendances);

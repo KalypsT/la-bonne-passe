@@ -5,6 +5,7 @@ import { segmentsOuverts } from '../engine/clientele';
 import { gagneNuit, POSTES_DEPENSES, POSTES_RECETTES, recetteMaison, totalDepenses, totalRecettes } from '../engine/comptes';
 import type { EtatJeu } from '../engine/etat';
 import { formaterEuros } from './format';
+import { TEXTES_BANQUE } from '../content/banque';
 import { Jauge } from './Jauge';
 import { useInterface } from './store';
 
@@ -68,6 +69,12 @@ export function CarteBilan({ partie }: { partie: EtatJeu }) {
                 <div>
                   <dt>{t.dontReserve}</dt>
                   <dd>{formaterEuros(bilan.reserve)}</dd>
+                </div>
+              )}
+              {bilan.empruntRecu > 0 && (
+                <div>
+                  <dt>{TEXTES_BANQUE.emprunt.recu}</dt>
+                  <dd>{formaterEuros(bilan.empruntRecu)}</dd>
                 </div>
               )}
               {bilan.retraitReserve > 0 && (

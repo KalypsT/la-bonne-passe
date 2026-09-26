@@ -8,8 +8,8 @@ import { migrer } from './migrations';
 import { ambitionDuMarche } from '../engine/recrutement';
 import { creerStockageMemoire, type Stockage } from './stockage';
 
-/** Les nouveautés apportées par la migration testée, sans celles des mises à jour suivantes (v0.6 : parures, crans, banque). */
-const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => !['parures', 'crans', 'banque'].includes(n));
+/** Les nouveautés apportées par la migration testée, sans celles des mises à jour suivantes (v0.6 : parures, crans, banque, emprunt). */
+const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => !['parures', 'crans', 'banque', 'emprunt'].includes(n));
 
 const MAINTENANT = Date.UTC(2026, 8, 25, 20, 0);
 
@@ -572,12 +572,30 @@ describe('migrations', () => {
     const v27 = { ...base, version: 27, mensualitesPayees: 1, tresorerie: -500, nouveautes: [], semaine: { ...base.semaine, comptes: sansAgios(base.semaine.comptes) } };
     const migre = migrer(v27);
     expect(migre?.version).toBe(VERSION_ETAT);
-    expect(migre?.banque).toEqual({ echeances: 1, retard: 0, impayees: 0, salairesDus: 0, joursImpayes: 0, alerte: 1 });
+    expect(migre?.banque).toMatchObject({ echeances: 1, retard: 0, impayees: 0, salairesDus: 0, joursImpayes: 0, alerte: 1 });
     expect(migre?.finDePartie).toBeNull();
     expect(migre?.semaine.comptes.depenses.agios).toBe(0);
     expect(migre?.nouveautes).toContain('banque');
     expect(trouverNouveaute('banque')).toBeDefined();
     expect(migrer({ ...base, version: 28 })).toBeNull();
+  });
+
+  it('migre une sauvegarde v28 : le nouvel emprunt, ouvert si la visibilité l’est, et Josée le présente', () => {
+    const base = creerEtatInitial();
+    const { emprunt: _e, ...systemes } = base.systemes;
+    const { emprunts: _l, retardRachat: _r, ...banque } = base.banque;
+    const v28 = { ...base, version: 28, systemes, banque: { ...banque, retard: 2500 }, nouveautes: [] };
+    const ferme = migrer(v28);
+    expect(ferme?.version).toBe(VERSION_ETAT);
+    expect(ferme?.systemes.emprunt).toBe(false);
+    expect(ferme?.banque.emprunts).toEqual([]);
+    expect(ferme?.banque.retardRachat).toBe(true);
+    expect(ferme?.semaine.comptes.depenses.emprunts).toBe(0);
+    expect(ferme?.semaine.empruntRecu).toBe(0);
+    expect(ferme?.journee.empruntRecu).toBe(0);
+    const ouvert = migrer({ ...v28, systemes: { ...systemes, visibilite: true } });
+    expect(ouvert?.systemes.emprunt).toBe(true);
+    expect(ouvert?.nouveautes).toContain('emprunt');
   });
 
   it('refuse une version future ou des données sans version', () => {
