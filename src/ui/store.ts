@@ -18,6 +18,7 @@ export type Onglet = 'maison' | 'personnel' | 'clientele' | 'finances' | 'relati
 export type Fiche =
   | { type: 'chambre'; id: string }
   | { type: 'piece'; id: 'salon' | 'bar' | 'bureau' }
+  | { type: 'annexe'; id: 'loges' | 'buanderie' }
   | { type: 'employe'; id: string }
   | { type: 'segment'; id: Segment }
   | { type: 'regles'; id: 'regles' }

@@ -1829,3 +1829,11 @@ body {
   font-size: 17px;
   font-variant-numeric: tabular-nums;
 }
+
+/* Les quatre décors d'une chambre, en deux rangées */
+.grille-decors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 4px 0 6px;
+}

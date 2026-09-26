@@ -33,6 +33,7 @@ import { lundiDeLaRivale, repondreRivale, type EvenementRivale, type OrdreRivale
 import { changerAssurance, changerEquipe, type EvenementEquipe, type OrdreEquipe } from './equipes';
 import { traiterAlerte, type OrdreMinuterie } from './minuteries';
 import { changerGestionJosee, emprunter, surveillerDecouvert } from './banque';
+import { appliquerAmenagement, avancerTravauxAnnexes, type OrdreAmenagement } from './amenagement';
 import { appliquerPlafond, type AccordPlafond, type EvenementPlafond } from './plafond';
 import { changerCibleAuto, commanderAuto, commanderPack, livraisonExpress, type EvenementLinge } from './linge';
 
@@ -85,7 +86,8 @@ export type Ordre =
   | OrdreBar
   | OrdreRelation
   | OrdreRivale
-  | OrdreEquipe;
+  | OrdreEquipe
+  | OrdreAmenagement;
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -133,8 +135,15 @@ function avancerTravaux(etat: EtatJeu, evenements: EvenementMoteur[]): void {
     chambre.ouverte = true;
     chambre.proprete = B.PROPRETE_APRES_TRAVAUX;
     chambre.etat = B.ETAT_APRES_TRAVAUX;
+    // Un changement de décor pose le nouveau décor (v0.6).
+    if (chambre.decorAVenir) {
+      chambre.decor = chambre.decorAVenir;
+      chambre.decorAVenir = null;
+      chambre.decorRefait = true;
+    }
     evenements.push({ type: 'finTravaux', chambreId: chambre.id });
   }
+  avancerTravauxAnnexes(etat, evenements);
 }
 
 export interface ResultatTick {
@@ -299,6 +308,12 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       return;
     case 'assurance':
       changerAssurance(etat, ordre.niveau, evenements);
+      return;
+    case 'rafraichir':
+    case 'changerDecor':
+    case 'fermerChambre':
+    case 'renoverAnnexe':
+      appliquerAmenagement(etat, ordre, evenements);
       return;
     case 'reponseRivale':
       repondreRivale(etat, ordre.reponse, evenements);

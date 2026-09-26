@@ -7,7 +7,7 @@ import {
   REPUTATION_INITIALE,
   TRESORERIE_INITIALE,
 } from '../content/balance';
-import { CHAMBRES } from '../content/maison';
+import { CHAMBRES, trouverChambre } from '../content/maison';
 import { SANNE } from '../content/personnel';
 import {
   creerEmploye,
@@ -34,6 +34,7 @@ import { moisDeDepart, prochainObjectif, statsDeDepart } from '../engine/bilans'
 import { comptesVides, journeeVide } from '../engine/comptes';
 import { banqueDeDepart } from '../engine/banque';
 import { fiscDeDepart } from '../engine/fisc';
+import { annexesDeDepart } from '../engine/amenagement';
 
 type Donnees = Record<string, unknown>;
 
@@ -505,6 +506,30 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       ],
     };
   },
+  // v30 → v31 : l'aménagement. Chaque chambre garde son décor d'origine ; buanderie (palier 2) et loges (palier 3)
+  // à ouvrir par des travaux, présentées par Josée aux parties qui ont passé ces paliers.
+  30: (d) => {
+    const palier = typeof d.palier === 'number' ? d.palier : 0;
+    const systemes = estObjet(d.systemes) ? d.systemes : {};
+    const chambres = Array.isArray(d.chambres)
+      ? d.chambres.map((c: unknown) =>
+          estObjet(c) ? { ...c, decor: trouverChambre(String(c.id))?.decor ?? 'rose', decorAVenir: null, decorRefait: false, fermee: false } : c,
+        )
+      : d.chambres;
+    return {
+      ...d,
+      version: 31,
+      chambres,
+      annexes: annexesDeDepart(),
+      systemes: { ...systemes, buanderie: palier >= 2, loges: palier >= 3 },
+      nouveautes: [
+        ...(Array.isArray(d.nouveautes) ? d.nouveautes : []),
+        ...(palier >= 1 ? ['amenagement'] : []),
+        ...(palier >= 2 ? ['buanderie'] : []),
+        ...(palier >= 3 ? ['loges'] : []),
+      ],
+    };
+  },
 };
 
 
@@ -596,6 +621,7 @@ function estEtatValide(d: Donnees): boolean {
     typeof d.hasardPlafond === 'number' &&
     estObjet(d.banque) &&
     estObjet(d.fisc) &&
+    estObjet(d.annexes) &&
     typeof d.gestionJosee === 'boolean' &&
     estObjet(d.systemes)
   );

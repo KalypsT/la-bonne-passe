@@ -22,7 +22,7 @@ import { trouverAmbition } from '../content/ambitions';
 import { OBJECTIFS_MOIS, trouverDefi } from '../content/defis';
 import { defiReussi, objectifReussi, valeurDefi, valeurObjectif } from '../engine/bilans';
 import { formaterMesure, texteDefi, texteObjectif } from './objectifs';
-import { PIECES_COMMUNES, trouverChambre, trouverPiece } from '../content/maison';
+import { ANNEXES, DECORS, PIECES_COMMUNES, trouverChambre, trouverPiece } from '../content/maison';
 import { JOSEE_RESERVE } from '../content/josee';
 import { PALIERS } from '../content/paliers';
 import { TALENTS, TRAITS, type Talent } from '../content/personnel';
@@ -49,6 +49,8 @@ import { FicheRegles, FicheSegment, OngletClientele } from './OngletClientele';
 import { FicheActeur, FicheRivale, OngletRelations } from './OngletRelations';
 import { Assurance, EquipesQuartier } from './Equipes';
 import { NouvelEmprunt } from './Emprunt';
+import { AmenagementChambre, FicheAnnexe, statutAnnexe } from './Amenagement';
+import { TEXTES_AMENAGEMENT } from '../content/amenagement';
 import { useInterface, type Fiche, type Onglet } from './store';
 
 const t = TEXTES.panneau;
@@ -176,6 +178,7 @@ function Linge({ partie }: { partie: EtatJeu }) {
       <h3>{TEXTES.briefing.linge}</h3>
       <p className={partie.linge < SEUIL_LINGE ? 'sous negatif' : 'sous'}>
         {a.lingeStock(partie.linge)}
+        {partie.annexes.buanderie.ouverte && ` · ${a.lingeSale(partie.annexes.buanderie.sale)}`}
         {partie.lingeCommande > 0 && ` · ${a.lingeEnRoute(partie.lingeCommande)}`}
       </p>
       <p className="sous">{a.lingeAuto(partie.lingeAuto)}</p>
@@ -214,6 +217,8 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
                 ? TEXTES.actions.occupee
                 : c.travaux !== null
                   ? t.travaux
+                  : c.fermee
+                  ? TEXTES_AMENAGEMENT.fermee
                   : c.ouverte
                   ? `${t.enService} · ${t.proprete.toLowerCase()} ${Math.round(c.proprete)} %`
                   : t.sousDraps
@@ -233,6 +238,12 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
           fiche={{ type: 'piece', id: p.id }}
         />
       ))}
+      {(partie.systemes.buanderie || partie.systemes.loges) && <h3>{TEXTES_AMENAGEMENT.annexes}</h3>}
+      {(['buanderie', 'loges'] as const)
+        .filter((id) => partie.systemes[id])
+        .map((id) => (
+          <Ligne key={id} titre={ANNEXES[id].nom} detail={statutAnnexe(partie, id)} fiche={{ type: 'annexe', id }} />
+        ))}
       <Voisinage partie={partie} />
     </>
   );
@@ -358,6 +369,14 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
   );
 
   if (fiche.type === 'employe' || fiche.type === 'segment' || fiche.type === 'regles') return retour;
+  if (fiche.type === 'annexe') {
+    return (
+      <div className="fiche">
+        {retour}
+        <FicheAnnexe partie={partie} id={fiche.id} />
+      </div>
+    );
+  }
   if (fiche.type === 'piece') {
     const piece = trouverPiece(fiche.id);
     return (
@@ -380,9 +399,17 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
       <h2>
         {def.nom} {def.premium && <span className="pastille premium">{t.premium}</span>}
       </h2>
-      <p className="sous">{def.theme}</p>
+      <p className="sous">{DECORS[chambre.decor].theme}</p>
       <p className="statut">
-        {occupee ? TEXTES.actions.occupee : chambre.ouverte ? t.enService : chambre.travaux !== null ? t.travaux : t.sousDraps}
+        {occupee
+          ? TEXTES.actions.occupee
+          : chambre.travaux !== null
+            ? t.travaux
+            : chambre.fermee
+              ? TEXTES_AMENAGEMENT.fermee
+              : chambre.ouverte
+                ? t.enService
+                : t.sousDraps}
       </p>
       {chambre.ouverte && <Jauge nom={t.proprete} valeur={chambre.proprete} alerte={chambre.proprete < 40} />}
       <Jauge nom={t.etat} valeur={chambre.etat} />
@@ -393,6 +420,7 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
         <BoutonNettoyage chambreId={chambre.id} desactive={occupee || chambre.proprete >= 100} />
       )}
       <Renovation partie={partie} chambreId={chambre.id} />
+      <AmenagementChambre partie={partie} chambre={chambre} />
     </div>
   );
 }

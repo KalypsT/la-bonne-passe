@@ -26,8 +26,10 @@ export function prixLinge(parures: number, facteur = 1): number {
 }
 
 /** Ce que la commande automatique ajoutera ce soir, au vu du stock et de ce qui est déjà commandé. */
-export function manqueAuto(etat: Pick<EtatJeu, 'linge' | 'lingeCommande' | 'lingeAuto'>, dejaCommande = 0): number {
-  return Math.max(0, etat.lingeAuto - (etat.linge + etat.lingeCommande + dejaCommande));
+export function manqueAuto(etat: Pick<EtatJeu, 'linge' | 'lingeCommande' | 'lingeAuto'> & { annexes?: EtatJeu['annexes'] }, dejaCommande = 0): number {
+  // Avec la buanderie, le linge sale compte : il sera propre pour la soirée.
+  const sale = etat.annexes?.buanderie.ouverte ? etat.annexes.buanderie.sale : 0;
+  return Math.max(0, etat.lingeAuto - (etat.linge + sale + etat.lingeCommande + dejaCommande));
 }
 
 /** Commande au briefing : un pack, livré à l'ouverture. */

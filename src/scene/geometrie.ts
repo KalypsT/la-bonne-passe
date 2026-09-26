@@ -14,6 +14,16 @@ export const GEOMETRIE_CHAMBRES: Record<string, Rect> = {
   miroirs: { x: 302, y: 156, w: 202, h: 72 },
 };
 
+/** Pièces annexes (v0.6) : les loges dans le pignon, la buanderie derrière la fenêtre de droite du rez-de-chaussée.
+ * Zones tactiles un peu plus hautes que le dessin, pour tenir 40 px en 667 × 375. */
+export const GEOMETRIE_ANNEXES: Record<'loges' | 'buanderie', Rect> = {
+  loges: { x: 200, y: 4, w: 200, h: 66 },
+  buanderie: { x: 364, y: 314, w: 140, h: 66 },
+};
+
+/** Chambre d'origine de chaque décor : son dessin y est calé. */
+export const CHAMBRE_DU_DECOR: Record<string, string> = { rose: 'boudoir', orientale: 'orientale', velours: 'velours', miroirs: 'miroirs' };
+
 export const GEOMETRIE_PIECES: Record<'salon' | 'bar' | 'bureau', Rect> = {
   salon: { x: 96, y: 236, w: 234, h: 70 },
   bar: { x: 334, y: 236, w: 96, h: 70 },

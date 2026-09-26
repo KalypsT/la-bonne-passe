@@ -27,7 +27,9 @@ const PIECES_COMMUNES = ['salon', 'bar', 'bureau'] as const;
 
 function ficheDe(id: string): Fiche {
   const piece = PIECES_COMMUNES.find((p) => p === id);
-  return piece ? { type: 'piece', id: piece } : { type: 'chambre', id };
+  if (piece) return { type: 'piece', id: piece };
+  if (id === 'loges' || id === 'buanderie') return { type: 'annexe', id };
+  return { type: 'chambre', id };
 }
 
 /** Écran principal : barre du haut, maison à gauche, panneau de gestion à droite. */

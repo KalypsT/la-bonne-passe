@@ -19,6 +19,7 @@ export const PALIERS: DefinitionPalier[] = [
     details: [
       'Recrutement : des candidats vont passer dans la journée.',
       'Rénovation des chambres sous les draps : 900\u00a0€, 8\u00a0h de travaux.',
+      'Aménagement des chambres ouvertes : rafraîchir la déco, changer de décor, fermer pour un soir.',
       'Une deuxième personne au ménage.',
       'Planning du soir, au briefing.',
       'Réserve de sécurité, dans l’onglet Finances.',
@@ -35,6 +36,7 @@ export const PALIERS: DefinitionPalier[] = [
       'Onglet Clientèle : la satisfaction de chaque segment, et ce qui les fait revenir.',
       'Règles de la maison : tarif, formule, sélection à l’entrée et priorité d’accueil.',
       'Le bar peut rouvrir (1 200 €, 8 h de travaux) : une équipe Bar, du stock, la formule champagne.',
+      'La buanderie peut ouvrir (1 200 €, 8 h de travaux) : le linge se relave au lieu de s’acheter.',
       'Dès lundi : les tendances de la semaine en ville, et les soirées à thème au briefing.',
     ],
   },
@@ -50,6 +52,7 @@ export const PALIERS: DefinitionPalier[] = [
       'Le quartier se manifeste : fête des voisins, pétition, inspection, portrait, fuite, contrôle.',
       'Le Chat Noir, la maison chic d’en face : dès lundi, Colette Vos réagit à ce que tu lui prends. Tu peux lui répondre.',
       'Équipes Accueil et Sécurité, dans l’onglet Personnel : elles règlent seules une partie des alertes du quai.',
+      'Les loges du personnel peuvent ouvrir sous les combles (1 500 €, 10 h de travaux) : on s’y repose mieux.',
       'Dès lundi, l’assurance, dans l’onglet Finances.',
     ],
   },

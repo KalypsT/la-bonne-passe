@@ -204,6 +204,28 @@ export const RENOVATION = { prix: 900, heures: 8 };
 export const PROPRETE_APRES_TRAVAUX = 100;
 export const ETAT_APRES_TRAVAUX = 90;
 
+// ——— Aménagement (v0.6, partie 5) ———
+
+/** Rafraîchir la déco d'une chambre en service : elle ferme le temps des travaux et retrouve son éclat. */
+export const RAFRAICHIR = { prix: 400, heures: 6 };
+/**
+ * Refaire le décor d'une chambre : un décor refait à neuf plaît davantage à un segment (qualité en plus quand un
+ * client de ce segment y est reçu). Les décors d'origine, défraîchis, ne donnent rien : le bonus se choisit.
+ */
+export const CHANGER_DECOR = { prix: 600, heures: 8 };
+export const DECORS_EFFETS = { qualite: 0.06 };
+/**
+ * Les loges du personnel (palier 3) : on s'y repose entre deux clients et les soirs de repos ;
+ * le moral remonte plus haut de lui-même.
+ */
+export const LOGES = { prix: 1500, heures: 10, recuperationEnService: 2, recuperationAuRepos: 1.25, moralPlafond: 10 };
+/**
+ * La buanderie (palier 2) : le linge tourne. Une parure utilisée devient sale ; le ménage la relave (parures par heure
+ * et par personne, plus vite maison fermée), contre un peu de lessive ; chaque passage l'use, et une parure sur
+ * vingt-cinq finit en chiffon (usure cumulée, sans hasard).
+ */
+export const BUANDERIE = { prix: 1200, heures: 8, lavageOuvert: 0.5, lavageFerme: 2, lessive: 3, usure: 0.04 };
+
 // Le linge se compte en parures (draps, housse, serviettes) : une par rendez-vous.
 export const LINGE_INITIAL = 4;
 export const LINGE_PAR_RDV = 1;

@@ -34,6 +34,15 @@ import { revelerTraits, type EvenementRecrutement } from './recrutement';
 import { ecart, instant } from './temps';
 import { comptesVides, depenser, encaisser, journeeVide, recetteMaison } from './comptes';
 import { lundiFiscal, type EvenementFisc } from './fisc';
+import {
+  chambreEnService,
+  facteurRecuperation,
+  laver,
+  plafondMoralNaturel,
+  qualiteDecor,
+  utiliserParure,
+  type EvenementAmenagement,
+} from './amenagement';
 import { commissionJosee, echeance, empruntsDus, payerSalaires, prelevementAgios, regulariser, type EvenementBanque } from './banque';
 import { demandeTendance, disputeTendance } from './semaine';
 import { bruitDuSoir, changerTapage } from './quartier';
@@ -113,7 +122,8 @@ export type EvenementSoiree =
   | EvenementRivale
   | EvenementEquipe
   | EvenementBanque
-  | EvenementFisc;
+  | EvenementFisc
+  | EvenementAmenagement;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -231,7 +241,7 @@ export function employeDisponible(etat: EtatJeu, id: string): boolean {
 
 export function chambreDisponible(etat: EtatJeu, id: string): boolean {
   const c = etat.chambres.find((x) => x.id === id);
-  return !!c && c.ouverte && c.proprete >= B.SEUIL_CHAMBRE_INUTILISABLE && !occupes(etat).chambres.has(id);
+  return !!c && chambreEnService(c) && c.proprete >= B.SEUIL_CHAMBRE_INUTILISABLE && !occupes(etat).chambres.has(id);
 }
 
 function fetardeEnService(etat: EtatJeu): boolean {
@@ -389,7 +399,8 @@ export function qualiteRdv(
     qualiteDesRegles(etat, modele.segment, formule) +
     qualiteBar(etat, modele.segment) +
     qualiteTheme(etat, modele.segment) +
-    qualiteEquipes(etat, modele.segment);
+    qualiteEquipes(etat, modele.segment) +
+    qualiteDecor(etat, chambreId, modele.segment);
   return borner(valeur, 0, 1);
 }
 
@@ -424,7 +435,7 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   employe.moral = borner(employe.moral - B.MORAL_PAR_RDV * formule.charge);
   // Au-delà de 4 rendez-vous dans la nuit, chacun pèse davantage sur le moral.
   if (employe.rdvCeSoir > B.PLAFOND.confort) employe.moral = borner(employe.moral - B.PLAFOND.moralAuDela);
-  etat.linge = Math.max(0, etat.linge - B.LINGE_PAR_RDV);
+  utiliserParure(etat, evenements);
   chambre.proprete = borner(chambre.proprete - tirage.entre(B.SALISSURE_MIN, B.SALISSURE_MAX) * formule.salissure);
   chambre.etat = borner(chambre.etat - tirage.entre(B.USURE_MIN, B.USURE_MAX));
 
@@ -533,18 +544,21 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
     capacite -= gain;
   }
 
+  // Buanderie : le ménage relave le linge sale.
+  laver(etat, heures, ouvert);
+
   // Personnel : récupération et moral
   const auTravail = occupes(etat).employes;
   for (const e of etat.personnel) {
     if (!auTravail.has(e.id)) {
+      const enService = ouvert && !e.repos;
       const recup =
-        ouvert && !e.repos
-          ? B.RECUPERATION_EN_SERVICE
-          : B.RECUPERATION_AU_REPOS * (aTrait(e, 'Solitaire') ? B.TRAITS_EFFETS.solitaireRepos : 1);
+        (enService ? B.RECUPERATION_EN_SERVICE : B.RECUPERATION_AU_REPOS * (aTrait(e, 'Solitaire') ? B.TRAITS_EFFETS.solitaireRepos : 1)) *
+        facteurRecuperation(etat, enService);
       e.fatigue = borner(e.fatigue - recup * heures);
     }
     if (e.fatigue > B.SEUIL_FATIGUE) e.moral = borner(e.moral - B.MORAL_PERTE_FATIGUE * heures);
-    else if (e.moral < B.MORAL_PLAFOND_NATUREL) e.moral = Math.min(B.MORAL_PLAFOND_NATUREL, e.moral + B.MORAL_REMONTEE * heures);
+    else if (e.moral < plafondMoralNaturel(etat)) e.moral = Math.min(plafondMoralNaturel(etat), e.moral + B.MORAL_REMONTEE * heures);
   }
 
   // Salaires à midi, charges fixes le lundi matin

@@ -31,6 +31,8 @@ import { moisDeDepart, type BilanMois, type Mois } from './bilans';
 import { journeeVide, type Comptes, type Journee } from './comptes';
 import { banqueDeDepart, type Banque } from './banque';
 import { fiscDeDepart, type Fisc } from './fisc';
+import { annexesDeDepart, type Annexes } from './amenagement';
+import type { IdDecor } from '../content/maison';
 
 /** Drapeaux d'ouverture des systèmes. L'interface masque ou verrouille ce qui est fermé. */
 export interface Systemes {
@@ -71,6 +73,9 @@ export interface Systemes {
   emprunt: boolean;
   /** Les fournisseurs, cinquième acteur des relations (au lundi qui suit l'emprunt, v0.6). */
   fournisseurs: boolean;
+  /** Pièces annexes à ouvrir par des travaux : la buanderie (palier 2), les loges (palier 3), v0.6. */
+  buanderie: boolean;
+  loges: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -108,6 +113,13 @@ export interface EtatChambre {
   etat: number;
   /** Travaux en cours : instant (en minutes absolues) où ils se terminent. */
   travaux: number | null;
+  /** Décor de la chambre, et celui que posent les travaux en cours (v0.6). */
+  decor: IdDecor;
+  decorAVenir: IdDecor | null;
+  /** Le décor a été refait à neuf : il plaît à sa clientèle (v0.6). */
+  decorRefait: boolean;
+  /** Fermée temporairement par le joueur : elle ne reçoit pas (v0.6). */
+  fermee: boolean;
 }
 
 /** Le bar, sous des draps au départ, à rénover au palier 2. */
@@ -392,6 +404,8 @@ export interface EtatJeu {
   hasardPlafond: number;
   /** La banque : échéances, retards, salaires dus (v0.6). */
   banque: Banque;
+  /** Loges et buanderie (v0.6, partie 5). */
+  annexes: Annexes;
   /** Gestion confiée à Josée (v0.6, partie 4). */
   gestionJosee: boolean;
   /** Impôt trimestriel : bénéfice du trimestre en cours (v0.6, partie 4). */
@@ -407,7 +421,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 30;
+export const VERSION_ETAT = 31;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -435,6 +449,8 @@ export function systemesDeDepart(): Systemes {
     visibilite: false,
     emprunt: false,
     fournisseurs: false,
+    buanderie: false,
+    loges: false,
   };
 }
 
@@ -445,6 +461,10 @@ export function chambresDeDepart(): EtatChambre[] {
     proprete: c.ouverteAuDepart ? PROPRETE_CHAMBRE_OUVERTE : 0,
     etat: c.ouverteAuDepart ? ETAT_CHAMBRE_OUVERTE : ETAT_CHAMBRE_FERMEE,
     travaux: null,
+    decor: c.decor,
+    decorAVenir: null,
+    decorRefait: false,
+    fermee: false,
   }));
 }
 
@@ -590,6 +610,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     banque: banqueDeDepart(),
     gestionJosee: false,
     fisc: fiscDeDepart(),
+    annexes: annexesDeDepart(),
     finDePartie: null,
     assurance: 0,
     didacticiel: options.didacticiel ? 0 : null,

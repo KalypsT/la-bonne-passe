@@ -300,8 +300,17 @@ L'aménagement sert surtout les autres systèmes : des pièces à thème dans un
 - **Chambres** : un thème, une propreté, un état et un niveau de confort. Velours et Miroirs sont premium. Le thème attire certains segments.
 - **Pièces communes** : le salon (où le personnel attend), le bar (stock, recettes), les loges du personnel (récupération, moral) et le bureau, où apparaît l'avatar du joueur.
 - **Actions** : rouvrir une chambre fermée (900 €, 8 h de travaux), nettoyage express (30 €), rafraîchir la déco (400 €, 6 h), changer de thème, fermer temporairement, améliorer d'un niveau.
+- **En v0.6**, dans la fiche de chaque chambre ouverte (dès le palier 1) :
+  - rafraîchir la déco (400 €, 6 h) : la chambre ne reçoit pas pendant les travaux, puis son état remonte à 90 % ;
+  - refaire le décor (600 €, 8 h), en 4 styles : rose poudré (touristes), orientale (groupes), velours (habitués), miroirs (clients d'affaires). Les décors d'origine, défraîchis, ne donnent rien ; refait à neuf, un décor ajoute 0,06 de qualité aux clients de son segment. On peut refaire à neuf le décor d'origine ;
+  - fermer pour l'instant, et rouvrir : une chambre fermée ne reçoit plus, ne s'use plus et ne donne plus l'alerte ;
+  - l'amélioration d'un niveau de confort vient avec le palier 4.
+- **Pièces annexes** (v0.6), à aménager par des travaux, visibles dans la maison en coupe et l'onglet Maison :
+  - la buanderie (palier 2, 1 200 €, 8 h), derrière la fenêtre de droite du rez-de-chaussée ;
+  - les loges du personnel (palier 3, 1 500 €, 10 h), sous les combles, derrière l'œil-de-bœuf. On s'y repose : récupération doublée entre deux clients, +25 % les soirs de repos, et le moral remonte seul jusqu'à 70 au lieu de 60.
 - **Agrandissement** : racheter le bâtiment voisin ou un étage, ce qui ajoute 2 à 3 pièces, avec l'accord de la mairie (palier 5).
 - **Usure** : chaque rendez-vous salit la chambre (environ −20 % de propreté) et l'use un peu. Sous 40 % : alerte ; sous 15 % : la chambre ne reçoit plus. Le ménage traite la propreté ; l'état demande une rénovation payante.
+- **Buanderie** (v0.6) : le linge tourne. Une parure utilisée part au sale ; le ménage la relave (0,5 parure par heure et par personne maison ouverte, 2 maison fermée) contre 3 € de lessive ; l'usure envoie une parure sur vingt-cinq au chiffon, sans hasard. La commande automatique compte le linge au lavage. Sans buanderie, on achète.
 - **Linge** (v0.6) : il se compte en parures, une par rendez-vous ; 4 au départ. Au briefing, des packs livrés à l'ouverture, moins chers par parure en gros : 5 parures pour 60 €, 10 pour 110 €, 20 pour 200 €. Une commande automatique (non, 5, 10 ou 20) complète chaque soir le stock jusqu'à la cible, au tarif des packs. Livraison express en soirée : 5 parures pour 90 €. Le briefing et le panneau affichent « N parures, environ N rendez-vous ». Plus tard, la buanderie fera tourner le stock : une parure utilisée devient sale, le ménage la relave (plus vite maison fermée), et chaque parure s'use ; sans buanderie, on garde l'achat simple.
 
 ## Économie et finances

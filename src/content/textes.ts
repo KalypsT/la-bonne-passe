@@ -611,6 +611,7 @@ export const TEXTES = {
     inutilisable: 'Trop sale pour recevoir : la chambre est bloquée.',
     lingeStock: (n: number) => `${n} parure${n > 1 ? 's' : ''}, environ ${n} rendez-vous`,
     lingeEnRoute: (n: number) => `${n} de plus à l’ouverture`,
+    lingeSale: (n: number) => `${n} au lavage`,
     lingeAuto: (cible: number) => (cible > 0 ? `Commande automatique : jusqu’à ${cible} parures chaque soir (au briefing).` : 'Pas de commande automatique : à régler au briefing.'),
   },
 } as const;
