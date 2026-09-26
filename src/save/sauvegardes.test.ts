@@ -9,7 +9,7 @@ import { ambitionDuMarche } from '../engine/recrutement';
 import { creerStockageMemoire, type Stockage } from './stockage';
 
 /** Les nouveautés apportées par la migration testée, sans celles des mises à jour suivantes (v0.6 : parures, crans, banque, emprunt, impôt, gestion, fournisseurs). */
-const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => !['parures', 'crans', 'banque', 'emprunt', 'impot', 'gestionJosee', 'fournisseurs'].includes(n));
+const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => !['parures', 'crans', 'banque', 'emprunt', 'impot', 'gestionJosee', 'fournisseurs', 'amenagement', 'buanderie', 'loges'].includes(n));
 
 const MAINTENANT = Date.UTC(2026, 8, 25, 20, 0);
 
@@ -627,6 +627,24 @@ describe('migrations', () => {
     const tot = migrer({ ...v29, systemes: { ...systemes, reserve: false, emprunt: false } });
     expect(tot?.systemes.fournisseurs).toBe(false);
     expect(tot?.nouveautes).toEqual(['impot']);
+  });
+
+  it('migre une sauvegarde v30 : décors d’origine, loges et buanderie à aménager, présentés par Josée', () => {
+    const base = creerEtatInitial();
+    const { annexes: _a, ...reste } = base;
+    const { buanderie: _b, loges: _l, ...systemes } = base.systemes;
+    const chambres = base.chambres.map(({ decor: _d, decorAVenir: _v, decorRefait: _r, fermee: _f, ...c }) => c);
+    const v30 = { ...reste, version: 30, systemes, chambres, nouveautes: [] };
+    const migre = migrer({ ...v30, palier: 3 });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.chambres.map((c) => c.decor)).toEqual(['rose', 'orientale', 'velours', 'miroirs']);
+    expect(migre?.chambres.every((c) => !c.fermee && !c.decorRefait && c.decorAVenir === null)).toBe(true);
+    expect(migre?.annexes.buanderie).toMatchObject({ ouverte: false, sale: 0 });
+    expect(migre?.systemes).toMatchObject({ buanderie: true, loges: true });
+    expect(migre?.nouveautes).toEqual(['amenagement', 'buanderie', 'loges']);
+    const debut = migrer({ ...v30, palier: 1 });
+    expect(debut?.systemes).toMatchObject({ buanderie: false, loges: false });
+    expect(debut?.nouveautes).toEqual(['amenagement']);
   });
 
   it('refuse une version future ou des données sans version', () => {

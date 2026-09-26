@@ -13,6 +13,9 @@ import { trouverImprevu } from '../content/imprevus';
 import { INTRIGUES } from '../content/intrigues';
 import { choixPossibles, etapeCourante, type IntrigueFinie } from './intrigues';
 import { estOuvert } from './temps';
+
+/** La maison est-elle ouverte (on ne lance pas de travaux en pleine soirée) ? */
+const ouvertMaintenant = (etat: EtatJeu) => estOuvert(etat) || etat.minuteDuJour >= B.HEURE_BRIEFING - 6 * 60;
 import { TEXTES_ALERTES } from '../content/alertes';
 import { ACTEURS_ORDRE, type IdActeur } from '../content/relations';
 import { EVENEMENTS_QUARTIER } from '../content/quartier';
@@ -93,6 +96,13 @@ export interface OptionsSimulation {
   equipeBar?: number;
   /** Accepter l'avance du grossiste. */
   avance?: boolean;
+  /** Commande automatique du linge réglée à cette cible (v0.6 ; par défaut, un pack de 5 sous 4 parures). */
+  lingeAuto?: number;
+  /** Aménager la buanderie et les loges dès qu'elles s'ouvrent et que la caisse le permet (v0.6). */
+  buanderie?: boolean;
+  loges?: boolean;
+  /** Rafraîchir une chambre dont l'état passe sous ce seuil (v0.6). */
+  rafraichirSous?: number;
   /** Confier la gestion à Josée dès qu'elle s'ouvre, avec la réserve (v0.6). */
   gestionJosee?: boolean;
   /** Signer ce nouvel emprunt dès qu'il s'ouvre (v0.6). */
@@ -325,6 +335,20 @@ export function simuler(options: OptionsSimulation): {
       if (etat.bar.ouvert && etat.equipes.bar !== equipeBar) jouer([{ type: 'equipeBar', effectif: equipeBar }]);
       const ouvertes = etat.chambres.filter((c) => c.ouverte).length;
       if (etat.systemes.recrutement && ouvertes >= 3 && etat.equipes.menage < 2) jouer([{ type: 'equipeMenage', effectif: 2 }]);
+      for (const annexe of ['buanderie', 'loges'] as const) {
+        const prix = annexe === 'loges' ? B.LOGES.prix : B.BUANDERIE.prix;
+        const a = etat.annexes[annexe];
+        if (options[annexe] && etat.systemes[annexe] && !a.ouverte && a.travaux === null && etat.tresorerie > prix + 1500) {
+          jouer([{ type: 'renoverAnnexe', annexe }]);
+        }
+      }
+      if (options.rafraichirSous !== undefined && !ouvertMaintenant(etat)) {
+        for (const c of etat.chambres) {
+          if (c.ouverte && c.travaux === null && c.etat < options.rafraichirSous && etat.tresorerie > B.RAFRAICHIR.prix + 1500) {
+            jouer([{ type: 'rafraichir', chambreId: c.id }]);
+          }
+        }
+      }
       if (options.gestionJosee && etat.systemes.reserve && !etat.gestionJosee) jouer([{ type: 'gestionJosee', active: true }]);
       if (etat.systemes.reserve && etat.tauxReserve === 0) jouer([{ type: 'tauxReserve', taux: 0.1 }]);
       if (options.relations === 'entretien' && etat.systemes.relations) {
@@ -378,7 +402,19 @@ export function simuler(options: OptionsSimulation): {
       const accords = Object.fromEntries(etat.personnel.map((e) => [e.id, options.accepterNegociations ? 'accepter' : 'refuser'] as const));
       const commanderBar = etat.bar.ouvert && etat.equipes.bar > 0 && etat.bar.stock < (etat.regles.formule === 'champagne' ? 50 : 30);
       const theme = typeof options.theme === 'function' ? options.theme(etat) : (options.theme ?? null);
-      jouer([{ type: 'validerBriefing', offre, packLinge: etat.linge < 4 ? 5 : 0, commanderBar, repos, rdvMax, theme, accords }]);
+      jouer([
+        {
+          type: 'validerBriefing',
+          offre,
+          packLinge: options.lingeAuto ? 0 : etat.linge < 4 ? 5 : 0,
+          lingeAuto: options.lingeAuto,
+          commanderBar,
+          repos,
+          rdvMax,
+          theme,
+          accords,
+        },
+      ]);
     }
   }
   return { nuits: resumes, etat, departs, bilans, tresorerieMin, intrigues: etat.intrigues.finies, bilansMois };

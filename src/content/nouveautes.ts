@@ -11,6 +11,17 @@ export interface Nouveaute {
 
 export const NOUVEAUTES: Nouveaute[] = [
   { id: 'impot', palier: 0, texte: TEXTES_BANQUE.nouveautes.impot },
+  {
+    id: 'amenagement',
+    palier: 1,
+    texte: 'Dans la fiche de chaque chambre ouverte : rafraîchir la déco, changer de décor (chacun plaît à sa clientèle), ou la fermer pour un soir.',
+  },
+  {
+    id: 'buanderie',
+    palier: 2,
+    texte: 'La buanderie, derrière la fenêtre de droite du rez-de-chaussée : 1 200 € de travaux, et le linge se relave au lieu de s’acheter.',
+  },
+  { id: 'loges', palier: 3, texte: 'Les loges du personnel, sous les combles : 1 500 € de travaux, et l’équipe se repose deux fois mieux entre deux clients.' },
   { id: 'gestionJosee', palier: 1, texte: TEXTES_BANQUE.nouveautes.gestionJosee },
   { id: 'fournisseurs', palier: 3, texte: TEXTES_BANQUE.nouveautes.fournisseurs },
   {

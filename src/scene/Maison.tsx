@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { trouverChambre, trouverPiece } from '../content/maison';
+import { ANNEXES, trouverChambre, trouverPiece } from '../content/maison';
 import { TEXTES } from '../content/textes';
 import type { EtatChambre, EtatJeu } from '../engine/etat';
 import { estOuvert, heureDeInstant, momentDeLaJournee } from '../engine/temps';
@@ -8,7 +8,7 @@ import type { Alerte } from '../engine/alertes';
 import { Avatar } from './Avatar';
 import { DecorChambre } from './DecorChambres';
 import { DecorTheme } from './DecorTheme';
-import { GEOMETRIE_CHAMBRES, GEOMETRIE_PIECES, type Rect } from './geometrie';
+import { CHAMBRE_DU_DECOR, GEOMETRIE_ANNEXES, GEOMETRIE_CHAMBRES, GEOMETRIE_PIECES, type Rect } from './geometrie';
 import { Vie, type Montant } from './Vie';
 
 interface Props {
@@ -209,6 +209,9 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
         <circle cx="470" cy="355" r="3.4" />
       </g>
 
+      <Loges partie={partie} />
+      <Buanderie partie={partie} />
+
       {/* Soirée à thème : le salon s'habille, une affichette dans la vitrine */}
       {ouvert && partie.themeDuSoir && <DecorTheme id={partie.themeDuSoir} />}
 
@@ -233,7 +236,11 @@ export function Maison({ partie, alertes, montants, onAlerte, selection, onChois
 
       {/* Zones tactiles */}
       <g className="zones">
-        {[...Object.entries(GEOMETRIE_CHAMBRES), ...Object.entries(GEOMETRIE_PIECES)].map(([id, r]) => (
+        {[
+          ...Object.entries(GEOMETRIE_CHAMBRES),
+          ...Object.entries(GEOMETRIE_PIECES),
+          ...Object.entries(GEOMETRIE_ANNEXES).filter(([id]) => partie.systemes[id as 'loges' | 'buanderie']),
+        ].map(([id, r]) => (
           <rect
             key={id}
             x={r.x}
@@ -270,10 +277,19 @@ function Chambre({ chambre }: { chambre: EtatChambre }) {
   if (!r || !def) return null;
   return (
     <g>
-      <DecorChambre id={chambre.id} />
+      <DecorDeplace chambre={chambre} r={r} />
       <Etiquette x={r.x + 5} y={r.y + r.h - 3}>
         {def.nom}
       </Etiquette>
+      {/* Fermée pour l'instant : rideaux tirés, lumière éteinte (v0.6) */}
+      {chambre.ouverte && chambre.fermee && chambre.travaux === null && (
+        <g>
+          <rect x={r.x} y={r.y} width={r.w} height={r.h} fill="#05080A" opacity=".6" />
+          <text x={r.x + r.w / 2} y={r.y + r.h / 2} textAnchor="middle" fontFamily="Jost, sans-serif" fontSize="8" fill="#F4DCC8" opacity=".85">
+            {TEXTES.scene.chambreFermee(def.nom)}
+          </text>
+        </g>
+      )}
       {/* Poussière : plus la chambre est sale, plus elle se voile */}
       {chambre.ouverte && <rect x={r.x} y={r.y} width={r.w} height={r.h} fill="#3A2A10" opacity={((100 - chambre.proprete) / 100) * 0.55} />}
       {!chambre.ouverte && (
@@ -288,6 +304,67 @@ function Chambre({ chambre }: { chambre: EtatChambre }) {
       )}
       {chambre.travaux !== null && <Chantier rect={r} />}
       <Lambrequin rect={r} />
+    </g>
+  );
+}
+
+/** Le décor d'une chambre, dessiné là où il est né puis déplacé dans la chambre qui le porte (v0.6). */
+function DecorDeplace({ chambre, r }: { chambre: EtatChambre; r: Rect }) {
+  const origine = GEOMETRIE_CHAMBRES[CHAMBRE_DU_DECOR[chambre.decor] ?? chambre.id] ?? r;
+  return (
+    <g transform={`translate(${r.x - origine.x} ${r.y - origine.y})`}>
+      <DecorChambre id={CHAMBRE_DU_DECOR[chambre.decor] ?? chambre.id} />
+    </g>
+  );
+}
+
+/** Les loges, dans le pignon : l'œil-de-bœuf s'allume, des ampoules de loge autour (v0.6). */
+function Loges({ partie }: { partie: EtatJeu }) {
+  const a = partie.annexes.loges;
+  if (!partie.systemes.loges) return null;
+  return (
+    <g>
+      {a.ouverte && (
+        <>
+          <circle cx="300" cy="44" r="24" fill="url(#chaud)" opacity=".8" />
+          <circle cx="300" cy="44" r="9" fill="#F2C46A" opacity=".85" />
+          <g fill="#FFE3A0">
+            {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <circle key={i} cx={300 + 13 * Math.cos((i * Math.PI) / 4)} cy={44 + 13 * Math.sin((i * Math.PI) / 4)} r="1.2" />
+            ))}
+          </g>
+        </>
+      )}
+      {a.travaux !== null && <rect x="272" y="60" width="56" height="4" fill="#D4A64A" />}
+      <Etiquette x={318} y={66}>
+        {ANNEXES.loges.nom}
+      </Etiquette>
+    </g>
+  );
+}
+
+/** La buanderie, derrière la fenêtre de droite : des draps sur le fil, et une lessiveuse (v0.6). */
+function Buanderie({ partie }: { partie: EtatJeu }) {
+  const b = partie.annexes.buanderie;
+  if (!partie.systemes.buanderie) return null;
+  const draps = Math.min(6, b.sale);
+  return (
+    <g>
+      {b.ouverte && (
+        <>
+          <rect x="372" y="336" width="106" height="22" fill="#F4DCC8" opacity=".18" />
+          <path d="M374 340H476" stroke="#D9CBB8" strokeWidth=".6" />
+          {Array.from({ length: draps }, (_, i) => (
+            <rect key={i} x={378 + i * 16} y="340" width="10" height="9" fill={i % 2 ? '#F2D2C0' : '#FF9BBE'} opacity=".9" />
+          ))}
+          <circle cx="468" cy="354" r="5" fill="#D8D4CC" stroke="#6A6A70" strokeWidth=".8" />
+          <circle cx="468" cy="354" r="2.5" fill="#5FA3A8" />
+        </>
+      )}
+      {b.travaux !== null && <rect x="372" y="352" width="106" height="4" fill="#D4A64A" />}
+      <Etiquette x={374} y={332}>
+        {ANNEXES.buanderie.nom}
+      </Etiquette>
     </g>
   );
 }

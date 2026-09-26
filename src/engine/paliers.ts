@@ -11,8 +11,8 @@ export type EvenementPalier = { type: 'palier'; numero: number };
 /** Systèmes ouverts par chaque palier. */
 export const SYSTEMES_PAR_PALIER: Record<number, (keyof Systemes)[]> = {
   1: ['recrutement', 'renovation', 'planning', 'reserve'],
-  2: ['affaires', 'groupes', 'clientele', 'tarifs', 'porte', 'bar'],
-  3: ['relations', 'rivale', 'accueil', 'securite'],
+  2: ['affaires', 'groupes', 'clientele', 'tarifs', 'porte', 'bar', 'buanderie'],
+  3: ['relations', 'rivale', 'accueil', 'securite', 'loges'],
 };
 
 /** Condition pour atteindre chaque palier, vérifiée à chaque fermeture (et le jour de la mensualité). Le palier 4 viendra en v0.6. */

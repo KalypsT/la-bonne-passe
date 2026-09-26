@@ -1443,3 +1443,25 @@ Lecture :
 - **L'impôt** coûte l'équivalent de deux à trois soirées par trimestre à un joueur classique, davantage à celui qui gagne bien : il ronge l'avance du cran 4 (4 300 €) sans l'annuler. Les joueurs à la peine (porte stricte) passent la mensualité du jour 112 plus souvent en retard (0,7 impayée en quatre mois), sans faillite. Garde : `equilibrage-banque.test.ts` (1 000 à 3 000 € au premier trimestre, aucune faillite en quatre mois).
 - **Josée** coûte environ 800 € en quatre mois, et son joueur ne s'en porte pas plus mal (1 813 € de valeur nette contre 1 347 €, dans l'écart d'une graine à l'autre) : la réserve fixe à 10 % évite quelques retards. Son sursis ne sauve pas le joueur passif : il repousse la faillite d'un mois (jour 84 au lieu de 56). Le joueur qui ne recrute ni ne rénove gagne moins que ses charges et sa mensualité ; aucun outil financier n'y peut rien. C'est un problème de conseil (Josée devrait lui dire de recruter et rénover), à traiter avec le didacticiel final (v1.0).
 - **Les fournisseurs** montent à +15 à +25 chez un joueur qui commande régulièrement, sans atteindre les bons termes (+40) : les prix d'ami se gagnent avec les deux actions. Ils tombent sous zéro chez les joueurs à la peine (salaires impayés), et au plus bas chez le joueur passif.
+
+### L'aménagement (partie 5)
+
+**Le décor** : une première version faisait plaire chaque décor d'origine à un segment (qualité et demande en plus). C'était un gain pour tout le monde, sans rien choisir, et quatre gardes basculaient à la moindre variation, par effet papillon sur les tirages. Désormais seul un décor refait à neuf (600 €) plaît à sa clientèle (+0,06 de qualité) : le jeu de base ne bouge pas, le bonus se choisit.
+
+Un joueur classique à 4 rendez-vous, bien approvisionné en linge (commande automatique à 20), cartes au hasard, 10 graines, 84 nuits :
+
+| Aménagement | Linge et express | Travaux | Fatigue / moral (mois 3) | Réputation jour 84 | État moyen des chambres jour 84 | Valeur nette jour 84 | Départs |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Aucun | 10 495 € | 3 990 € | 47 / 64 | 62,8 | 0 % | 12 331 € | 0,4 |
+| Buanderie (dès le palier 2) | 5 080 € | 5 190 € | 47 / 64 | 62,8 | 0 % | 17 265 € | 0,4 |
+| Loges (dès le palier 3) | 10 648 € | 5 490 € | 42 / 73 | 65,6 | 0 % | 12 038 € | 0,3 |
+| Rafraîchir sous 30 % d'état | 10 073 € | 10 700 € | 45 / 62 | 66,2 | 38 % | 4 047 € | 0,5 |
+| Rafraîchir sous 15 % d'état | 9 781 € | 9 100 € | 46 / 60 | 62,0 | 36 % | 2 579 € | 1,0 |
+
+Lecture :
+
+- **La buanderie** divise le coût du linge par deux (environ 65 € par nuit d'économie, lessive et usure payées) : amortie en deux semaines, elle rapporte près de 5 000 € en trois mois. Un bon investissement, sans être écrasant.
+- **Les loges** achètent du calme : moral +9, fatigue −5, réputation +3, presque neutres en argent.
+- **Rafraîchir** achète de la réputation (+3 à +4) au prix fort : l'usure (1 à 2,2 points par rendez-vous, `USURE_MIN`, `USURE_MAX`) vide une chambre en deux semaines, et le joueur simulé repeint chaque chambre tous les 12 à 15 jours. Il y perd 8 000 à 10 000 € en trois mois, en partie parce qu'il rénove les chambres fermées plus tard, faute de caisse. Sans rafraîchir, toutes les chambres finissent à 0 % d'état au deuxième mois : la qualité perd jusqu'à 0,135. **À trancher en partie 8** : ralentir l'usure (une chambre tiendrait un mois) ou baisser le prix du rafraîchissement, et remesurer toutes les gardes.
+- Le joueur de référence des gardes ne touche à rien de tout ça : leurs mesures restent valables. Nouvelle option de simulation : `lingeAuto`, `buanderie`, `loges`, `rafraichirSous`.
+- **Le joueur de référence manque de linge** : il achète un pack de 5 parures quand il lui en reste moins de 4, soit environ 4,5 parures par nuit pour 12 rendez-vous. Beaucoup de rendez-vous se font sans linge (qualité −0,12). C'est hérité des premières versions (50 draps sous 40) ; à revoir avec le rééquilibrage de la partie 8.

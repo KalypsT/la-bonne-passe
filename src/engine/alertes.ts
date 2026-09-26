@@ -1,3 +1,4 @@
+import { chambreEnService } from './amenagement';
 import * as B from '../content/balance';
 import type { IdAlerte } from '../content/alertes';
 import type { EtatJeu } from './etat';
@@ -18,7 +19,7 @@ export function alertes(etat: EtatJeu): Alerte[] {
   const liste: Alerte[] = [];
   const ouvert = estOuvert(etat);
   for (const c of etat.chambres) {
-    if (c.ouverte && c.proprete < B.SEUIL_CHAMBRE_SALE) {
+    if (chambreEnService(c) && c.proprete < B.SEUIL_CHAMBRE_SALE) {
       liste.push({ type: 'chambreSale', chambreId: c.id, inutilisable: c.proprete < B.SEUIL_CHAMBRE_INUTILISABLE });
     }
   }

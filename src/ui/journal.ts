@@ -10,7 +10,8 @@ import { trouverTendance } from '../content/tendances';
 import { trouverTheme } from '../content/themes';
 import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS, TEXTES_VISIBILITES } from '../content/regles';
 import { JOSEE_RESERVE } from '../content/josee';
-import { trouverChambre } from '../content/maison';
+import { ANNEXES, DECORS, trouverChambre } from '../content/maison';
+import { TEXTES_AMENAGEMENT } from '../content/amenagement';
 import { PALIERS } from '../content/paliers';
 import { TEXTES_ACTIONS_RELATIONS, TEXTES_SEUILS_RELATIONS } from '../content/relations';
 import { TEXTES_JOURNAL_RIVALE, TEXTES_REPONSES_RIVALE } from '../content/rivale';
@@ -187,6 +188,20 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return TEXTES_BANQUE.gestion.journalSursis(formaterEuros(evenement.montant));
     case 'expressRatee':
       return evenement.quoi === 'linge' ? TEXTES_BANQUE.fournisseurs.expressLinge : TEXTES_BANQUE.fournisseurs.expressBar;
+    case 'rafraichir':
+      return TEXTES_AMENAGEMENT.journal.rafraichir(trouverChambre(evenement.chambreId)?.dans ?? '', formaterEuros(evenement.montant));
+    case 'changerDecor':
+      return TEXTES_AMENAGEMENT.journal.changerDecor(trouverChambre(evenement.chambreId)?.dans ?? '', DECORS[evenement.decor].nom, formaterEuros(evenement.montant));
+    case 'fermerChambre': {
+      const nom = trouverChambre(evenement.chambreId)?.nom ?? '';
+      return evenement.fermee ? TEXTES_AMENAGEMENT.journal.fermer(nom) : TEXTES_AMENAGEMENT.journal.rouvrir(nom);
+    }
+    case 'travauxAnnexe':
+      return TEXTES_AMENAGEMENT.journal.travauxAnnexe(ANNEXES[evenement.annexe].nom, formaterEuros(evenement.montant));
+    case 'finTravauxAnnexe':
+      return TEXTES_AMENAGEMENT.journal.finTravauxAnnexe(ANNEXES[evenement.annexe].nom);
+    case 'parureUsee':
+      return TEXTES_AMENAGEMENT.journal.parureUsee;
     case 'empruntRembourse':
       return TEXTES_BANQUE.journalEmprunt.rembourse(formaterEuros(evenement.montant));
     case 'equipeMenage':
