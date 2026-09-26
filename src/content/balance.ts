@@ -149,7 +149,7 @@ export const LIVRAISON_EXPRESS_LINGE = { draps: 50, prix: 90 };
 
 export const SALAIRE_MENAGE = 110; // par jour et par personne, à midi
 export const HEURE_SALAIRES = 12 * 60;
-export const CHARGES_FIXES = 1350; // chaque lundi
+export const CHARGES_FIXES = 1000; // chaque lundi
 /** Dispute sur le quai : chance par heure et par client en file au-delà du premier. */
 export const DISPUTE_CHANCE_PAR_HEURE = 0.05;
 export const DISPUTE_DELAI = 40; // minutes avant que ça dégénère
@@ -247,10 +247,20 @@ export const AFFINITE = {
 };
 
 /** Imprévus : environ 2 par soirée, en pause. */
-export const IMPREVU_CHANCE_PAR_HEURE = 0.35;
+export const IMPREVU_CHANCE_PAR_HEURE = 0.5;
 export const IMPREVUS_MAX_PAR_NUIT = 3;
 export const IMPREVU_ECART_MIN = 75; // minutes entre deux imprévus
 export const IMPREVU_PREMIER_APRES = 30; // minutes après l'ouverture, au plus tôt
+/**
+ * Force des effets de réputation et de satisfaction écrits sur les imprévus. Avec 24 cartes et environ
+ * 45 imprévus par mois, des effets pleins faisaient grimper la réputation de 12 points en un mois.
+ */
+export const IMPREVU_FORCE_SATISFACTION = 0.5;
+/** Un imprévu vu ne revient pas avant tant de nuits (sauf s'il n'y a rien d'autre à tirer). */
+export const IMPREVU_REPOS_NUITS = 8;
+/** Poids d'un imprévu jamais vu, et facteur quand les circonstances le favorisent (tendance, thème, règle). */
+export const IMPREVU_POIDS_NOUVEAU = 3;
+export const IMPREVU_POIDS_BONUS = 3;
 
 // ——— Palier 2 : se faire un nom ———
 
@@ -379,7 +389,7 @@ export const LIVRAISON_EXPRESS_BAR = { bouteilles: 20, prix: 200 };
 /** Sous ce stock, le bar donne l'alerte. */
 export const SEUIL_BAR = 6;
 /** Chaque client reçu passe au bar : recette (en €, toute à la maison) et bouteilles bues, selon son segment. */
-export const BAR_RECETTE: Record<Segment, number> = { touriste: 14, habitue: 10, affaires: 24, groupe: 30 };
+export const BAR_RECETTE: Record<Segment, number> = { touriste: 15, habitue: 11, affaires: 26, groupe: 33 };
 export const BAR_CONSO: Record<Segment, number> = { touriste: 0.5, habitue: 0.4, affaires: 0.5, groupe: 1.2 };
 /** Un bar qui sert : qualité ressentie en plus selon le segment ; la deuxième personne au bar ajoute BAR_DEUXIEME partout. */
 export const BAR_QUALITE: Record<Segment, number> = { touriste: 0.03, habitue: 0.02, affaires: 0.02, groupe: 0.06 };
@@ -559,4 +569,32 @@ export const ARC_JONAS = {
   moralReussite: 45,
   /** Points de préparation qu'il lui faut (réviser au calme : 2, au salon : 1 ; inscription payée : 2, à moitié : 1). */
   preparation: 3,
+};
+
+/** Imprévus : une candidate ou un candidat remarquable se présente (talents hauts, part exigée). */
+export const CANDIDAT_VEDETTE = { talentFort: 5, talentSecond: 4, partMin: 0.6 };
+
+/** Imprévus de la v0.4 : les sommes en jeu (les effets sur le moral et la satisfaction sont écrits dans les cartes). */
+export const IMPREVU_ARGENT = {
+  inspectionAmende: 150,
+  inspectionNormes: 150,
+  evgCommission: 60,
+  reparateur: 60,
+  critiqueChampagne: 60,
+  anniversaireChampagne: 45,
+  privatisation: 500,
+  privatisationNegociee: 800,
+  remboursementSupplement: 60,
+  cachetJazz: 80,
+  caveNegociant: 150,
+  caveNegociee: 100,
+  caveBouteilles: 30,
+  geste: 40,
+  dedommagement: 50,
+  veterinaire: 40,
+  champagneEchevin: 30,
+  // Suites
+  afficheArticle: 60,
+  bridgeTable: 120,
+  galaTenue: 80,
 };

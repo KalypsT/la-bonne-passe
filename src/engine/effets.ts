@@ -23,18 +23,22 @@ export function effetPossible(etat: EtatJeu, effet: EffetCarte | undefined): boo
   return !effet?.travaux || etat.tresorerie >= effet.travaux;
 }
 
-/**
- * Applique l'effet d'un choix. `ajouterClient` fait entrer un client sur le quai ;
- * `demarrerSuite` programme une suite différée avec la même personne.
- */
-export function appliquerEffet(
-  etat: EtatJeu,
-  effet: EffetCarte,
-  qui: Concernes,
-  ajouterClient: () => void,
-  demarrerSuite: (id: string, delai: number, employeId: string | null) => void,
-  evenements: { push(e: EvenementPersonnel): unknown } = [],
-): void {
+/** Ce dont un effet a besoin hors de l'état : le hasard de la soirée, les suites, la sortie des événements. */
+export interface OutilsEffet {
+  /** Fait entrer un client sur le quai, d'un segment donné ou au hasard. */
+  ajouterClient: (segment?: Segment) => void;
+  /** Programme une suite différée avec la même personne. */
+  demarrerSuite: (id: string, delai: number, employeId: string | null) => void;
+  /** Fait entrer une candidate ou un candidat remarquable au salon. */
+  candidatVedette?: () => void;
+  evenements?: { push(e: EvenementPersonnel): unknown };
+  /** Multiplie les effets de réputation et de satisfaction (les imprévus, nombreux, pèsent moins lourd). */
+  forceSatisfaction?: number;
+}
+
+/** Applique l'effet d'un choix. */
+export function appliquerEffet(etat: EtatJeu, effet: EffetCarte, qui: Concernes, outils: OutilsEffet): void {
+  const evenements = outils.evenements ?? [];
   const e = etat.personnel.find((x) => x.id === qui.employeId);
   const e2 = etat.personnel.find((x) => x.id === qui.employe2Id);
   if (e) {
@@ -60,9 +64,12 @@ export function appliquerEffet(
   if (e2 && effet.moral2) changerMoral(e2, effet.moral2);
   if (e && e2 && effet.affinite) ajusterAffinite(etat, e.id, e2.id, effet.affinite);
   if (effet.moralEquipe) for (const x of etat.personnel) changerMoral(x, effet.moralEquipe);
-  if (effet.reputation) changerReputationGlobale(etat, effet.reputation);
+  if (effet.fatigueEquipe) for (const x of etat.personnel) if (x.enServiceCeSoir) x.fatigue = borner(x.fatigue + effet.fatigueEquipe);
+  if (effet.stockBar && etat.bar.ouvert) etat.bar.stock = Math.max(0, etat.bar.stock + effet.stockBar);
+  const force = outils.forceSatisfaction ?? 1;
+  if (effet.reputation) changerReputationGlobale(etat, effet.reputation * force);
   for (const [segment, delta] of Object.entries(effet.satisfaction ?? {}) as [Segment, number][]) {
-    if (segmentOuvert(etat, segment)) changerSatisfaction(etat, segment, delta);
+    if (segmentOuvert(etat, segment)) changerSatisfaction(etat, segment, delta * force);
   }
   const juriste = effet.juridique && etat.personnel.some((x) => aTrait(x, 'Juriste'));
   const argent = Math.round((effet.argent ?? 0) * (juriste ? B.TRAITS_EFFETS.juristeRemise : 1));
@@ -77,8 +84,9 @@ export function appliquerEffet(
   if (effet.travaux) depenser(etat, effet.travaux, 'travaux');
   if (effet.tapage) changerTapage(etat, effet.tapage);
   if (effet.insonoriser) etat.quartier.insonorise = true;
-  for (let i = 0; i < (effet.clients ?? 0); i++) ajouterClient();
-  if (effet.suite) demarrerSuite(effet.suite.id, effet.suite.delai, qui.employeId);
+  for (let i = 0; i < (effet.clients ?? 0); i++) outils.ajouterClient(effet.clientsSegment);
+  if (effet.candidatVedette) outils.candidatVedette?.();
+  if (effet.suite) outils.demarrerSuite(effet.suite.id, effet.suite.delai, qui.employeId);
   // Le départ en dernier : la personne a reçu ce que le choix lui réservait.
   if (e && effet.depart && etat.personnel.includes(e)) depart(etat, e, evenements);
 }

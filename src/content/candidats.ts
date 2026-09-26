@@ -106,6 +106,10 @@ export const ACCROCHES = [
   'Ne se vexe jamais. Enfin, presque.',
 ];
 
+/** Candidate ou candidat remarquable, entré au salon pendant un imprévu. */
+export const INTRO_VEDETTE = (prenom: string, genre: 'f' | 'm') =>
+  `${prenom} a passé la soirée au bar à observer la maison. ${genre === 'f' ? 'Elle' : 'Il'} a travaillé dans les plus belles maisons de Paris, et ${genre === 'f' ? 'elle' : 'il'} le sait.`;
+
 export const INTROS = {
   annonce: (prenom: string) => `${prenom} a répondu à ta petite annonce. Le papier est encore plié dans sa poche.`,
   boucheAOreille: (prenom: string) => `${prenom} vient de la part d’une amie de Sanne. « Il paraît que la maison est correcte. »`,

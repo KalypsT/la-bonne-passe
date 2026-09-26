@@ -245,13 +245,13 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       return;
     case 'choixImprevu': {
       const tirage = creerTirage(etat.hasard);
-      trancherImprevu(etat, ordre.choix, tirage, () => arrivee(etat, tirage, evenements), evenements);
+      trancherImprevu(etat, ordre.choix, tirage, (segment) => arrivee(etat, tirage, evenements, segment), evenements);
       etat.hasard = tirage.etat();
       return;
     }
     case 'choixIntrigue': {
       const tirage = creerTirage(etat.hasard);
-      trancherIntrigue(etat, ordre.choix, tirage, () => arrivee(etat, tirage, evenements), evenements);
+      trancherIntrigue(etat, ordre.choix, tirage, (segment) => arrivee(etat, tirage, evenements, segment), evenements);
       etat.hasard = tirage.etat();
       return;
     }

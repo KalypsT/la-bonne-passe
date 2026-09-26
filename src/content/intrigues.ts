@@ -9,6 +9,7 @@
 
 import * as B from './balance';
 import type { EffetCarte } from './effets';
+import { SUITES } from './suites';
 
 const euros = (n: number) => `${n.toLocaleString('fr-FR')} €`;
 
@@ -80,7 +81,7 @@ export interface DefinitionIntrigue {
 
 const H = (h: number, m = 0) => h * 60 + m;
 
-export const INTRIGUES: DefinitionIntrigue[] = [
+export const INTRIGUES_PRINCIPALES: DefinitionIntrigue[] = [
   {
     id: 'voisin',
     titre: 'Le voisin du dessus',
@@ -492,44 +493,10 @@ export const INTRIGUES: DefinitionIntrigue[] = [
       abandon: { texte: 'Jonas a rangé ses manuels. Il sourit toujours aux clients, un peu moins aux autres.' },
     },
   },
-  {
-    // Suite de l'imprévu « Un client généreux », quand la maison a refusé.
-    id: 'costume',
-    titre: 'L’homme au costume',
-    genre: 'suite',
-    premiere: 'retour',
-    etapes: {
-      retour: {
-        heure: H(21, 30),
-        titre: 'L’homme au costume revient',
-        texte:
-          'L’habitué au costume trois-pièces est de retour, un bouquet de pivoines à la main. « Pour {prenom}. Pour m’excuser de l’autre soir. Je voudrais seulement lui parler. »',
-        enCours: 'L’homme au costume n’a pas dit son dernier mot.',
-        choix: [
-          {
-            texte: 'Laisser {prenom} décider',
-            detail: 'Un pourboire, peut-être ; {prenom} appréciera',
-            chance: 0.6,
-            effet: { argent: B.COSTUME_POURBOIRE, moral: 6, satisfaction: { habitue: 3 } },
-            journal: '{prenom} accepte les pivoines et un verre au salon. Le costume laisse un pourboire royal.',
-            suite: { fin: 'reconcilie' },
-            echec: { moral: 3 },
-            journalEchec: '{prenom} prend les fleurs, pas le client. Il repart, digne.',
-            suiteEchec: { fin: 'econduit' },
-          },
-          {
-            texte: 'Le raccompagner',
-            detail: 'Les habitués jasent un peu ; {prenom} te remercie',
-            effet: { satisfaction: { habitue: -2 }, loyaute: 4 },
-            journal: 'Tu raccompagnes le costume jusqu’au quai. {prenom} t’adresse un regard reconnaissant.',
-            suite: { fin: 'econduit' },
-          },
-        ],
-      },
-    },
-    fins: { reconcilie: {}, econduit: {} },
-  },
 ];
+
+/** Toutes les intrigues, et les suites différées des imprévus. */
+export const INTRIGUES: DefinitionIntrigue[] = [...INTRIGUES_PRINCIPALES, ...SUITES];
 
 export function trouverIntrigue(id: string): DefinitionIntrigue | undefined {
   return INTRIGUES.find((i) => i.id === id);

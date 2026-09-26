@@ -301,6 +301,8 @@ export interface EtatJeu {
   imprevu: ImprevuEnCours | null;
   /** Imprévus déjà vus au moins une fois. */
   imprevusVus: string[];
+  /** Numéro de la dernière nuit où chaque imprévu est sorti (v0.4), pour ne pas le revoir trop tôt. */
+  imprevusNuit: Record<string, number>;
   /** Instant à partir duquel un nouvel imprévu peut tomber. */
   prochainImprevu: number;
   /** Personnes parties, dont la carte d'adieu reste à montrer. */
@@ -329,7 +331,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 17;
+export const VERSION_ETAT = 18;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -445,6 +447,7 @@ export function personnelDeDepart() {
     affinites: {} as Record<string, number>,
     imprevu: null as ImprevuEnCours | null,
     imprevusVus: [] as string[],
+    imprevusNuit: {} as Record<string, number>,
     prochainImprevu: 0,
     adieux: [] as string[],
   };

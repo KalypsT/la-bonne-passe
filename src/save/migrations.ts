@@ -227,6 +227,8 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       nouveautes,
     };
   },
+  // v17 → v18 : la dernière nuit de chaque imprévu. On ne sait pas quand les anciens sont sortis : ils peuvent revenir.
+  17: (d) => ({ ...d, version: 18, imprevusNuit: {} }),
 };
 
 /** Ambition d'une personne d'une ancienne sauvegarde : celle du contenu si elle est scénarisée. */
@@ -277,6 +279,7 @@ function estEtatValide(d: Donnees): boolean {
     typeof d.rdvMax === 'number' &&
     estObjet(d.affinites) &&
     Array.isArray(d.imprevusVus) &&
+    estObjet(d.imprevusNuit) &&
     Array.isArray(d.adieux) &&
     (d.didacticiel === null || typeof d.didacticiel === 'number') &&
     estObjet(d.clientele) &&

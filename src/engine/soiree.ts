@@ -195,14 +195,20 @@ function patienceClient(etat: EtatJeu, modele: ModeleClient): number {
   return Math.round(base + (fetardeEnService(etat) ? B.TRAITS_EFFETS.fetardePatience : 0) + patienceBar(etat) + patienceTheme(etat));
 }
 
-export function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie): void {
+/**
+ * Un client arrive. Avec un segment imposé (un imprévu fait entrer quelqu'un), il vient de ce segment
+ * et passe la porte sans sélection : la maison l'a invité.
+ */
+export function arrivee(etat: EtatJeu, tirage: Tirage, evenements: Sortie, segment?: Segment): void {
   const presents = new Set([...etat.file.map((c) => c.modele), ...etat.rendezVous.map((r) => r.modele)]);
-  const possibles = CLIENTS.filter((c) => !presents.has(c.id) && segmentOuvert(etat, c.segment));
+  const possibles = CLIENTS.filter(
+    (c) => !presents.has(c.id) && segmentOuvert(etat, c.segment) && (segment === undefined || c.segment === segment),
+  );
   if (possibles.length === 0) return;
   const poids = possibles.map((c) => poidsSegment(etat, c.segment) * demandeSegment(etat, c.segment));
   const modele = tirage.choisir(possibles, poids);
   // Sélection à l'entrée : la porte se referme poliment.
-  const refus = selectionActive(etat).refus[modele.segment] ?? 0;
+  const refus = segment === undefined ? (selectionActive(etat).refus[modele.segment] ?? 0) : 0;
   if (refus > 0 && tirage.chance(refus)) {
     changerSatisfaction(etat, modele.segment, -B.REFUS_SATISFACTION * B.SATISFACTION_PAR_CLIENT);
     evenements.push({ type: 'refuse', client: modele.nom });

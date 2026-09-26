@@ -370,6 +370,15 @@ describe('migrations', () => {
     expect(migrer({ ...base, personnel: [sansAmbition(base.personnel[0]!)] })).toBeNull();
   });
 
+  it('migre une sauvegarde v17 : les anciens imprévus peuvent revenir', () => {
+    const { imprevusNuit: _i, ...etat } = creerEtatInitial();
+    const migre = migrer({ ...etat, version: 17, imprevusVus: ['touriste', 'pluie'] });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.imprevusNuit).toEqual({});
+    expect(migre?.imprevusVus).toEqual(['touriste', 'pluie']);
+    expect(migrer({ ...etat, version: 18 })).toBeNull();
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

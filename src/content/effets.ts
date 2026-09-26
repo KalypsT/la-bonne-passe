@@ -27,8 +27,15 @@ export interface EffetCarte {
   argent?: number;
   /** Travaux payés (comptés en travaux) : le choix n'est possible que si la trésorerie les couvre. */
   travaux?: number;
-  /** Clients qui arrivent aussitôt sur le quai. */
+  /** Clients qui arrivent aussitôt sur le quai (d'un segment donné, sinon au hasard). */
   clients?: number;
+  clientsSegment?: Segment;
+  /** Fatigue de toute l'équipe en service ce soir. */
+  fatigueEquipe?: number;
+  /** Bouteilles ajoutées au stock du bar (ou retirées), s'il est ouvert. */
+  stockBar?: number;
+  /** Une candidate ou un candidat remarquable attend au salon (onglet Personnel). */
+  candidatVedette?: boolean;
   /** Tapage du quartier (voir src/engine/quartier.ts). */
   tapage?: number;
   /** La maison est insonorisée : le tapage monte moins vite, pour de bon. */

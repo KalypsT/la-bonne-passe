@@ -43,7 +43,7 @@ function aLEtape(etat: EtatJeu, id: string, etape: string, employeId: string | n
   return etat;
 }
 
-const rien = () => {};
+const outils = { ajouterClient: () => {}, demarrerSuite: () => {} };
 
 describe('les ambitions', () => {
   it('chaque personnage scénarisé a la sienne, chaque candidat du marché aussi', () => {
@@ -73,8 +73,7 @@ describe('les effets des arcs', () => {
       etat,
       { partMin: 0.55, talent: { charme: 3, conversation: 1 }, ajouterTrait: 'Tête d’affiche', retirerTrait: 'Diva', promesseRepos: true },
       { employeId: 'mila' },
-      rien,
-      rien,
+      outils,
     );
     const mila = perso(etat, 'mila');
     expect(mila.part).toBe(0.55);
@@ -85,14 +84,14 @@ describe('les effets des arcs', () => {
     expect(mila.traits).not.toContain('Diva');
     expect(mila.promesseRepos).toBe(etat.jour + B.ENTRETIEN.delaiPromesse);
     // Une part déjà plus haute ne baisse pas.
-    appliquerEffet(etat, { partMin: 0.5 }, { employeId: 'mila' }, rien, rien);
+    appliquerEffet(etat, { partMin: 0.5 }, { employeId: 'mila' }, outils);
     expect(perso(etat, 'mila').part).toBe(0.55);
   });
 
   it('un départ fait partir la personne, avec sa carte d’adieu', () => {
     const etat = maison();
     const evenements: EvenementMoteur[] = [];
-    appliquerEffet(etat, { depart: true }, { employeId: 'mila' }, rien, rien, evenements);
+    appliquerEffet(etat, { depart: true }, { employeId: 'mila' }, { ...outils, evenements });
     expect(etat.personnel.some((e) => e.id === 'mila')).toBe(false);
     expect(etat.adieux).toContain('Mila');
     expect(evenements).toContainEqual({ type: 'depart', prenom: 'Mila' });
@@ -102,7 +101,7 @@ describe('les effets des arcs', () => {
     const payer = (juriste: boolean, juridique: boolean) => {
       const etat = maison();
       if (juriste) perso(etat, 'jonas').traits.push('Juriste');
-      appliquerEffet(etat, { argent: -800, juridique }, { employeId: null }, rien, rien);
+      appliquerEffet(etat, { argent: -800, juridique }, { employeId: null }, outils);
       return 5_000 - etat.tresorerie;
     };
     expect(payer(false, true)).toBe(800);
