@@ -4,6 +4,7 @@
 import * as B from '../content/balance';
 import type { Segment } from '../content/clientele';
 import { depenser, encaisser } from './comptes';
+import { acteurOuvert, changerRelation, expressRatee, prixFournisseur } from './relations';
 import type { EtatJeu } from './etat';
 import { barTheme } from './themes';
 import { instant, MINUTES_PAR_JOUR } from './temps';
@@ -19,6 +20,7 @@ export type EvenementBar =
   | { type: 'finTravauxBar' }
   | { type: 'equipeBar'; effectif: number }
   | { type: 'livraisonBar'; montant: number }
+  | { type: 'expressRatee'; quoi: 'linge' | 'bar' }
   | { type: 'barVide' }
   | { type: 'grossiste' }
   | { type: 'avanceFournisseur'; accepter: boolean; montant: number; echeance: number | null }
@@ -106,6 +108,8 @@ export function rembourserAvance(etat: EtatJeu, evenements: Sortie): void {
   if (a.statut !== 'acceptee' || a.echeance === null || etat.jour < a.echeance) return;
   depenser(etat, a.montant, 'avance');
   a.statut = 'remboursee';
+  // Une avance rendue à l'heure : le grossiste s'en souvient.
+  if (acteurOuvert(etat, 'fournisseurs')) changerRelation(etat, 'fournisseurs', B.FOURNISSEURS.avanceRemboursee);
   evenements.push({ type: 'remboursementAvance', montant: a.montant });
 }
 
@@ -129,9 +133,16 @@ export function appliquerBar(etat: EtatJeu, ordre: OrdreBar, evenements: Sortie)
     }
     case 'livraisonBar':
       if (!etat.bar.ouvert) return;
-      depenser(etat, B.LIVRAISON_EXPRESS_BAR.prix, 'express');
-      etat.bar.stock += B.LIVRAISON_EXPRESS_BAR.bouteilles;
-      evenements.push({ type: 'livraisonBar', montant: B.LIVRAISON_EXPRESS_BAR.prix });
+      if (expressRatee(etat)) {
+        evenements.push({ type: 'expressRatee', quoi: 'bar' });
+        return;
+      }
+      {
+        const prix = prixFournisseur(etat, B.LIVRAISON_EXPRESS_BAR.prix);
+        depenser(etat, prix, 'express');
+        etat.bar.stock += B.LIVRAISON_EXPRESS_BAR.bouteilles;
+        evenements.push({ type: 'livraisonBar', montant: prix });
+      }
       return;
     case 'avanceFournisseur': {
       const a = etat.avance;

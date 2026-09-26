@@ -28,11 +28,11 @@ import { attendBriefing, estOuvert, instant, jourDeLaSemaine, MINUTES_PAR_JOUR }
 import { cloreSemaine, type EvenementSemaine } from './semaine';
 import { avancerIntrigues, matinDesIntrigues, trancherIntrigue, type EvenementIntrigue, type OrdreIntrigue } from './intrigues';
 import { matinDuQuartier } from './quartier';
-import { agirRelation, matinDesRelations, type EvenementRelation, type OrdreRelation } from './relations';
+import { agirRelation, commandeFournisseurs, matinDesRelations, prixFournisseur, type EvenementRelation, type OrdreRelation } from './relations';
 import { lundiDeLaRivale, repondreRivale, type EvenementRivale, type OrdreRivale } from './rivale';
 import { changerAssurance, changerEquipe, type EvenementEquipe, type OrdreEquipe } from './equipes';
 import { traiterAlerte, type OrdreMinuterie } from './minuteries';
-import { emprunter, surveillerDecouvert } from './banque';
+import { changerGestionJosee, emprunter, surveillerDecouvert } from './banque';
 import { appliquerPlafond, type AccordPlafond, type EvenementPlafond } from './plafond';
 import { changerCibleAuto, commanderAuto, commanderPack, livraisonExpress, type EvenementLinge } from './linge';
 
@@ -64,6 +64,8 @@ export type Ordre =
   | { type: 'retirerReserve' }
   /** Nouvel emprunt (v0.6) : montant par tranches de 5 000 €, durée en mois. */
   | { type: 'emprunter'; montant: number; duree: number }
+  /** Confier la gestion à Josée, ou la reprendre (v0.6). */
+  | { type: 'gestionJosee'; active: boolean }
   | { type: 'equipeMenage'; effectif: number }
   | { type: 'annonceVue' }
   /** Josée a présenté les nouveautés d'une mise à jour. */
@@ -157,8 +159,9 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
         etat.semaine.themes.push(ordre.theme);
       }
       if (ordre.commanderBar && etat.bar.ouvert) {
-        depenser(etat, B.COMMANDE_BAR.prix, 'bar');
+        depenser(etat, prixFournisseur(etat, B.COMMANDE_BAR.prix), 'bar');
         etat.bar.commande += B.COMMANDE_BAR.bouteilles;
+        commandeFournisseurs(etat);
       }
       if (etat.systemes.planning) {
         if (ordre.rdvMax !== undefined && (B.RDV_MAX_CRANS as readonly number[]).includes(ordre.rdvMax)) etat.rdvMax = ordre.rdvMax;
@@ -216,7 +219,7 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       return;
     }
     case 'tauxReserve': {
-      if (!etat.systemes.reserve || !(B.TAUX_RESERVE as readonly number[]).includes(ordre.taux)) return;
+      if (!etat.systemes.reserve || etat.gestionJosee || !(B.TAUX_RESERVE as readonly number[]).includes(ordre.taux)) return;
       if (etat.tauxReserve === ordre.taux) return;
       etat.tauxReserve = ordre.taux;
       evenements.push({ type: 'tauxReserve', taux: ordre.taux });
@@ -224,6 +227,9 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     }
     case 'emprunter':
       emprunter(etat, ordre.montant, ordre.duree, evenements);
+      return;
+    case 'gestionJosee':
+      changerGestionJosee(etat, ordre.active, evenements);
       return;
     case 'retirerReserve': {
       if (etat.reserve <= 0) return;
@@ -354,6 +360,11 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     // Le lundi, la semaine écoulée se referme en bilan avant les charges de la nouvelle.
     if (jourDeLaSemaine(etat.jour) === 0) {
       cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
+      // Le lundi après l'emprunt : les fournisseurs rejoignent les relations (v0.6).
+      if (etat.systemes.emprunt && !etat.systemes.fournisseurs) {
+        etat.systemes.fournisseurs = true;
+        if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'fournisseurs'];
+      }
       // Le lundi après la visibilité : le nouvel emprunt (v0.6). Avant elle dans le code, pour attendre une semaine.
       if (etat.systemes.visibilite && !etat.systemes.emprunt) {
         etat.systemes.emprunt = true;

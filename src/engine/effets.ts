@@ -71,6 +71,7 @@ export function appliquerEffet(etat: EtatJeu, effet: EffetCarte, qui: Concernes,
   if (effet.moralEquipe) for (const x of etat.personnel) changerMoral(x, effet.moralEquipe);
   if (effet.fatigueEquipe) for (const x of etat.personnel) if (x.enServiceCeSoir) x.fatigue = borner(x.fatigue + effet.fatigueEquipe);
   if (effet.stockBar && etat.bar.ouvert) etat.bar.stock = Math.max(0, etat.bar.stock + effet.stockBar);
+  if (effet.linge) etat.linge = Math.max(0, etat.linge + effet.linge);
   const force = outils.forceSatisfaction ?? 1;
   if (effet.reputation) changerReputationGlobale(etat, effet.reputation * force);
   for (const [segment, delta] of Object.entries(effet.satisfaction ?? {}) as [Segment, number][]) {

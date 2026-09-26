@@ -33,7 +33,8 @@ import { aTrait, nuitDuPersonnel, type EvenementPersonnel } from './personnel';
 import { revelerTraits, type EvenementRecrutement } from './recrutement';
 import { ecart, instant } from './temps';
 import { comptesVides, depenser, encaisser, journeeVide, recetteMaison } from './comptes';
-import { echeance, empruntsDus, payerSalaires, prelevementAgios, regulariser, type EvenementBanque } from './banque';
+import { lundiFiscal, type EvenementFisc } from './fisc';
+import { commissionJosee, echeance, empruntsDus, payerSalaires, prelevementAgios, regulariser, type EvenementBanque } from './banque';
 import { demandeTendance, disputeTendance } from './semaine';
 import { bruitDuSoir, changerTapage } from './quartier';
 import { conclureMois, type EvenementBilan } from './bilans';
@@ -111,7 +112,8 @@ export type EvenementSoiree =
   | EvenementRelation
   | EvenementRivale
   | EvenementEquipe
-  | EvenementBanque;
+  | EvenementBanque
+  | EvenementFisc;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -570,6 +572,8 @@ export function prochainesMensualites(etat: EtatJeu, n: number): number[] {
 
 /** Jour de la prochaine mensualité, ou null si l'emprunt est remboursé. */
 export function jourProchaineMensualite(etat: EtatJeu): number | null {
+  // Le sursis de Josée a reporté une échéance après la dernière mensualité.
+  if (etat.banque.echeances >= NOMBRE_MENSUALITES && etat.banque.supplement > 0) return B.JOUR_PREMIERE_MENSUALITE + NOMBRE_MENSUALITES * B.JOURS_PAR_MOIS;
   if (etat.banque.echeances >= NOMBRE_MENSUALITES) return null;
   return B.JOUR_PREMIERE_MENSUALITE + etat.banque.echeances * B.JOURS_PAR_MOIS;
 }
@@ -585,6 +589,8 @@ export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
       depenser(etat, prime, 'assurance');
       evenements.push({ type: 'primeAssurance', montant: prime });
     }
+    if (etat.bilanSemaine) commissionJosee(etat, recetteMaison(etat.bilanSemaine.comptes), evenements);
+    lundiFiscal(etat, evenements);
   }
   rembourserAvance(etat, evenements);
   // Une mensualité en retard se régularise dès que possible ; la première payée ouvre le palier 3.

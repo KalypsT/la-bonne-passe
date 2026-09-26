@@ -84,6 +84,31 @@ export const EMPRUNT = {
   reputationHaute: 80,
 };
 
+/**
+ * Impôt trimestriel (v0.6) : 20 % du bénéfice du trimestre (12 semaines, jours 1 à 84, puis 85 à 168…). Le lundi qui
+ * clôt le trimestre (jour 85, 169…), Josée annonce le montant exact ; il est prélevé seul deux semaines plus tard
+ * (jour 99, 183…), loin de la mensualité. Le bénéfice : recettes moins dépenses, sans les mensualités, les échéances
+ * des emprunts ni l'impôt lui-même. Une perte ne se reporte pas.
+ */
+export const IMPOT = {
+  taux: 0.2,
+  /** Durée d'un trimestre, en jours. */
+  trimestre: 84,
+  /** Délai entre l'annonce (clôture du trimestre) et le prélèvement, en jours. */
+  preavis: 14,
+};
+
+/**
+ * Confier la gestion à Josée (v0.6, avec la réserve au palier 1) : réserve à 10 %, jamais d'emprunt ni de placement,
+ * une commission sur la recette de la maison chaque lundi. En échange, une fois dans la partie, elle obtient de la
+ * banque un sursis : la mensualité en retard est reportée en fin de prêt au lieu de mener à la faillite.
+ */
+export const GESTION_JOSEE = {
+  reserve: 0.1,
+  /** Part de la recette de la maison de la semaine (rendez-vous et bar, moins la part du personnel). */
+  commission: 0.01,
+};
+
 /** Salaires impayés : moral perdu par chaque personne suivie, chaque jour sans paie ; départ d'un membre d'équipe ensuite. */
 export const SALAIRES_IMPAYES = {
   moral: 6,
@@ -742,7 +767,7 @@ export const OBJECTIFS = {
  */
 export const RELATIONS = {
   /** Valeurs de départ : Josée a laissé de bons souvenirs à la mairie, et le quartier la connaît. */
-  depart: { voisins: 10, mairie: 10, presse: 0, police: 5 } as Record<string, number>,
+  depart: { voisins: 10, mairie: 10, presse: 0, police: 5, fournisseurs: 0 } as Record<string, number>,
   bons: 40,
   mauvais: -40,
   /**
@@ -796,7 +821,29 @@ export const ACTIONS_RELATIONS: Record<
   soireePresse: { acteur: 'presse', cout: 200, gain: 10, risque: { chance: 0.25, effet: { presse: -14 }, reputation: -0.5 } },
   cafeCommissariat: { acteur: 'police', cout: 30, gain: 4 },
   tournoiPolice: { acteur: 'police', cout: 220, gain: 12, autres: { voisins: 2 } },
+  ardoiseFournisseurs: { acteur: 'fournisseurs', cout: 150, gain: 10 },
+  negocierFournisseurs: { acteur: 'fournisseurs', cout: 40, gain: 8, risque: { chance: 0.35, effet: { fournisseurs: -8 } } },
 };
+
+/**
+ * Les fournisseurs (v0.6), cinquième acteur des relations, au lundi qui suit le nouvel emprunt. En bons termes, le linge,
+ * le bar et les livraisons express coûtent moins cher ; en mauvais termes, plus cher, et une livraison express sur trois
+ * n'arrive pas. Ils aiment les commandes régulières et une avance remboursée à temps ; ils fuient les maisons qui ne
+ * paient plus (salaires impayés, mensualité en retard).
+ */
+export const FOURNISSEURS = {
+  prixBons: 0.9,
+  prixMauvais: 1.15,
+  expressRatee: 1 / 3,
+  /** Chaque commande du briefing (pack de linge, commande automatique, bouteilles du bar). */
+  commande: 0.6,
+  avanceRemboursee: 8,
+  salairesImpayes: -3,
+  mensualiteImpayee: -10,
+};
+
+/** Événements des fournisseurs (v0.6). */
+export const FOURNISSEURS_ARGENT = { saison: 180, saisonParures: 25, autreFournisseur: 130, autreParures: 5, ardoise: 250 };
 
 /** Les sommes en jeu dans les événements du quartier (v0.5). */
 export const QUARTIER_ARGENT = {

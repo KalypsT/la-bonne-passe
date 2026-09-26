@@ -14,7 +14,9 @@ beforeAll(() => {
   jouer('classique', {});
   jouer('quatre', { rdvMax: 4 });
   jouer('stricte', { regles: { selection: 'stricte' } });
-}, 120_000);
+  // v0.6, partie 4 : quatre mois, pour l'impôt du premier trimestre (annoncé au jour 85, prélevé au jour 99).
+  jouer('quatreMois', { nuits: 112 });
+}, 180_000);
 
 const moyenne = (nom: string, f: (p: Partie) => number) => {
   const l = parties.get(nom)!;
@@ -22,15 +24,24 @@ const moyenne = (nom: string, f: (p: Partie) => number) => {
 };
 
 describe('équilibrage de la banque', () => {
+  it('l’impôt du premier trimestre pèse sans ruiner : 1 000 à 3 000 €, jamais de faillite sur quatre mois', () => {
+    const impot = moyenne('quatreMois', (p) => p.bilans.reduce((t, b) => t + b.comptes.depenses.impots, 0));
+    expect(impot).toBeGreaterThan(1000);
+    expect(impot).toBeLessThan(3000);
+    expect(parties.get('quatreMois')!.filter((p) => p.etat.finDePartie).length).toBe(0);
+  });
+
+  const DEUX_MOIS = ['classique', 'quatre', 'stricte'];
+
   it('le joueur actif ne fait jamais faillite en deux mois, et paie presque toujours à l’heure', () => {
-    for (const nom of parties.keys()) {
+    for (const nom of DEUX_MOIS) {
       expect(parties.get(nom)!.filter((p) => p.etat.finDePartie).length).toBe(0);
       expect(moyenne(nom, (p) => p.etat.banque.impayees)).toBeLessThanOrEqual(0.2);
     }
   });
 
   it('les agios restent une piqûre de rappel : moins de 200 € en deux mois', () => {
-    for (const nom of parties.keys()) {
+    for (const nom of DEUX_MOIS) {
       const agios = moyenne(nom, (p) => p.bilans.reduce((t, b) => t + b.comptes.depenses.agios, 0) + p.etat.semaine.comptes.depenses.agios);
       expect(agios).toBeLessThan(200);
     }

@@ -5,6 +5,7 @@ import * as B from '../content/balance';
 import { depenser, noterDepense } from './comptes';
 import type { EtatJeu } from './etat';
 import { changerMoral } from './personnel';
+import { acteurOuvert, changerRelation } from './relations';
 
 /** Un emprunt signé en cours de partie (v0.6). */
 export interface Emprunt {
@@ -20,6 +21,9 @@ export interface Emprunt {
   prochaine: number;
   jourSignature: number;
 }
+
+/** Nombre de mensualités du rachat (le même que dans soiree.ts, sans l'importer). */
+const NOMBRE_ECHEANCES_RACHAT = Math.ceil(B.EMPRUNT_RACHAT / B.MENSUALITE);
 
 export interface Banque {
   /** Mensualités échues (payées ou non) : le calendrier des échéances ne dépend pas des paiements. */
@@ -38,6 +42,10 @@ export interface Banque {
   joursImpayes: number;
   /** Ce que Josée a déjà signalé : 0 rien, 1 le découvert, 2 le découvert dépassé. */
   alerte: 0 | 1 | 2;
+  /** Le sursis obtenu par Josée (une fois par partie) a servi (v0.6, partie 4). */
+  sursis: boolean;
+  /** Échéance reportée en fin de prêt par le sursis, payée après la dernière mensualité du rachat. */
+  supplement: number;
 }
 
 export type EvenementBanque =
@@ -51,14 +59,17 @@ export type EvenementBanque =
   | { type: 'emprunt'; montant: number; taux: number; duree: number; mensualite: number }
   | { type: 'echeanceEmprunts'; montant: number }
   | { type: 'empruntRembourse'; montant: number }
-  | { type: 'faillite'; jour: number };
+  | { type: 'faillite'; jour: number }
+  | { type: 'sursis'; montant: number }
+  | { type: 'gestionJosee'; active: boolean }
+  | { type: 'commissionJosee'; montant: number };
 
 interface Sortie {
   push(e: EvenementBanque): unknown;
 }
 
 export function banqueDeDepart(): Banque {
-  return { echeances: 0, retard: 0, retardRachat: false, emprunts: [], impayees: 0, salairesDus: 0, joursImpayes: 0, alerte: 0 };
+  return { echeances: 0, retard: 0, retardRachat: false, emprunts: [], impayees: 0, salairesDus: 0, joursImpayes: 0, alerte: 0, sursis: false, supplement: 0 };
 }
 
 /** La trésorerie peut-elle payer ce montant sans passer sous le découvert autorisé ? */
@@ -112,6 +123,8 @@ export function payerSalaires(etat: EtatJeu, montant: number, evenements: Sortie
   b.salairesDus += montant;
   b.joursImpayes += 1;
   for (const e of etat.personnel) changerMoral(e, -B.SALAIRES_IMPAYES.moral);
+  // Le quartier sait vite qui ne paie plus : les fournisseurs se méfient.
+  if (acteurOuvert(etat, 'fournisseurs')) changerRelation(etat, 'fournisseurs', B.FOURNISSEURS.salairesImpayes);
   evenements.push({ type: 'salairesImpayes', montant, dus: b.salairesDus });
   if (b.joursImpayes >= B.SALAIRES_IMPAYES.joursAvantDepart) {
     // Une personne d'équipe s'en va ; la dernière du ménage reste, par attachement à la maison.
@@ -160,15 +173,28 @@ export function empruntsDus(etat: EtatJeu): Emprunt[] {
 export function echeance(etat: EtatJeu, rachat: boolean, evenements: Sortie): IssueEcheance {
   const b = etat.banque;
   if (b.retard > 0) {
-    etat.finDePartie = { raison: 'faillite', jour: etat.jour };
-    evenements.push({ type: 'faillite', jour: etat.jour });
-    return { faillite: true };
+    if (etat.gestionJosee && !b.sursis) {
+      // Josée obtient de la banque, une fois, que l'échéance en retard passe en fin de prêt.
+      b.sursis = true;
+      b.supplement += b.retard;
+      if (b.retardRachat) etat.mensualitesPayees += 1;
+      evenements.push({ type: 'sursis', montant: b.retard });
+      b.retard = 0;
+      b.retardRachat = false;
+    } else {
+      etat.finDePartie = { raison: 'faillite', jour: etat.jour };
+      evenements.push({ type: 'faillite', jour: etat.jour });
+      return { faillite: true };
+    }
   }
   const emprunts = empruntsDus(etat);
-  const partRachat = rachat ? B.MENSUALITE : 0;
+  // Après la dernière mensualité du rachat, reste parfois l'échéance reportée par le sursis.
+  const supplement = rachat && b.echeances >= NOMBRE_ECHEANCES_RACHAT;
+  const partRachat = !rachat ? 0 : supplement ? b.supplement : B.MENSUALITE;
+  if (supplement) b.supplement = 0;
   const partEmprunts = emprunts.reduce((t, e) => t + e.mensualite, 0);
   const montant = partRachat + partEmprunts;
-  if (rachat) b.echeances += 1;
+  if (rachat && !supplement) b.echeances += 1;
   for (const e of emprunts) {
     e.restantes -= 1;
     e.prochaine += B.JOURS_PAR_MOIS;
@@ -177,12 +203,13 @@ export function echeance(etat: EtatJeu, rachat: boolean, evenements: Sortie): Is
   let depuisReserve = 0;
   if (payee) {
     depuisReserve = payerDepuisReserve(etat, partRachat, 'mensualite') + payerDepuisReserve(etat, partEmprunts, 'emprunts');
-    if (rachat) etat.mensualitesPayees += 1;
+    if (rachat && !supplement) etat.mensualitesPayees += 1;
     if (partEmprunts > 0) evenements.push({ type: 'echeanceEmprunts', montant: partEmprunts });
   } else {
     b.retard = montant;
-    b.retardRachat = rachat;
+    b.retardRachat = rachat && !supplement;
     b.impayees += 1;
+    if (acteurOuvert(etat, 'fournisseurs')) changerRelation(etat, 'fournisseurs', B.FOURNISSEURS.mensualiteImpayee);
     evenements.push({ type: 'mensualiteImpayee', montant, limite: etat.jour + B.JOURS_PAR_MOIS });
   }
   for (const e of emprunts) if (e.restantes === 0) evenements.push({ type: 'empruntRembourse', montant: e.montant });
@@ -242,11 +269,12 @@ export function apercuEmprunt(etat: EtatJeu, montant: number, duree: number): Ap
   return { taux, mensualite, cout: mensualite * duree - montant, premiere, derniere: premiere + (duree - 1) * B.JOURS_PAR_MOIS };
 }
 
-export type RefusEmprunt = 'ferme' | 'retard' | 'montant' | 'duree' | null;
+export type RefusEmprunt = 'ferme' | 'josee' | 'retard' | 'montant' | 'duree' | null;
 
 /** La banque refuse-t-elle ? Outil pas ouvert, échéance en retard, montant hors tranches ou au-delà de la capacité. */
 export function refusEmprunt(etat: EtatJeu, montant: number, duree: number): RefusEmprunt {
   if (!etat.systemes.emprunt || etat.finDePartie) return 'ferme';
+  if (etat.gestionJosee) return 'josee';
   if (etat.banque.retard > 0) return 'retard';
   if (montant <= 0 || montant % B.EMPRUNT.tranche !== 0 || montant > capaciteEmprunt(etat)) return 'montant';
   if (!(B.EMPRUNT.durees as readonly number[]).includes(duree)) return 'duree';
@@ -293,4 +321,23 @@ export function avoirNet(etat: Pick<EtatJeu, 'tresorerie' | 'reserve' | 'banque'
 /** Pour mesurer une stratégie : l'avoir net, moins le capital encore dû sur les nouveaux emprunts. */
 export function valeurNette(etat: EtatJeu): number {
   return avoirNet(etat) - encours(etat);
+}
+
+// ——— Confier la gestion à Josée ———
+
+/** Confier (ou reprendre) la gestion : réserve à 10 %, plus d'emprunt, une commission le lundi, un sursis une fois. */
+export function changerGestionJosee(etat: EtatJeu, active: boolean, evenements: Sortie): void {
+  if (!etat.systemes.reserve || etat.gestionJosee === active) return;
+  etat.gestionJosee = active;
+  if (active) etat.tauxReserve = B.GESTION_JOSEE.reserve;
+  evenements.push({ type: 'gestionJosee', active });
+}
+
+/** Le lundi : Josée prend sa commission sur la recette de la maison de la semaine écoulée. */
+export function commissionJosee(etat: EtatJeu, recetteMaison: number, evenements: Sortie): void {
+  if (!etat.gestionJosee) return;
+  const montant = Math.round(Math.max(0, recetteMaison) * B.GESTION_JOSEE.commission);
+  if (montant <= 0) return;
+  depenser(etat, montant, 'gestion');
+  evenements.push({ type: 'commissionJosee', montant });
 }

@@ -1,5 +1,6 @@
 import {
   DECOUVERT,
+  GESTION_JOSEE,
   EMPRUNT_RACHAT,
   LIVRAISON_EXPRESS_LINGE,
   MENAGE_MAX,
@@ -32,6 +33,8 @@ import { quotaAtteint } from '../engine/regles';
 import { totalDepenses, totalRecettes } from '../engine/comptes';
 import { jourProchaineMensualite, NOMBRE_MENSUALITES } from '../engine/soiree';
 import { agiosDuJour, majorationTaux } from '../engine/banque';
+import { prixFournisseur } from '../engine/relations';
+import { impotEstime, jourProchainImpot } from '../engine/fisc';
 import { TEXTES_BANQUE } from '../content/banque';
 import { estOuvert, heureDeInstant, jourDeLaSemaine } from '../engine/temps';
 import { Figurine } from '../scene/Figurine';
@@ -177,7 +180,7 @@ function Linge({ partie }: { partie: EtatJeu }) {
       </p>
       <p className="sous">{a.lingeAuto(partie.lingeAuto)}</p>
       <button className="bouton discret pleine-largeur" onClick={() => ordonner({ type: 'livraisonLinge' })}>
-        {a.livraisonLinge(LIVRAISON_EXPRESS_LINGE.parures, formaterEuros(LIVRAISON_EXPRESS_LINGE.prix))}
+        {a.livraisonLinge(LIVRAISON_EXPRESS_LINGE.parures, formaterEuros(prixFournisseur(partie, LIVRAISON_EXPRESS_LINGE.prix)))}
       </button>
     </>
   );
@@ -694,6 +697,7 @@ function OngletFinances({ partie }: { partie: EtatJeu }) {
           </div>
         </dl>
       )}
+      <Impot partie={partie} />
       <Reserve partie={partie} />
       <Assurance partie={partie} />
       <NouvelEmprunt partie={partie} />
@@ -758,6 +762,39 @@ function Banque({ partie }: { partie: EtatJeu }) {
   );
 }
 
+/** L'impôt du trimestre : bénéfice des semaines closes, estimation et jour du prélèvement (v0.6). */
+function Impot({ partie }: { partie: EtatJeu }) {
+  const ti = TEXTES_BANQUE.impot;
+  const f = partie.fisc;
+  return (
+    <>
+      <h3>{ti.titre}</h3>
+      <p className="sous">{ti.detail}</p>
+      <dl className="chiffres">
+        {f.du > 0 && (
+          <div>
+            <dt>{ti.annonce(f.jourDu)}</dt>
+            <dd className="negatif">{formaterEuros(f.du)}</dd>
+          </div>
+        )}
+        {f.semaines > 0 && (
+          <div>
+            <dt>{ti.benefice(f.semaines)}</dt>
+            <dd className={f.benefice < 0 ? 'negatif' : ''}>{formaterEuros(Math.round(f.benefice))}</dd>
+          </div>
+        )}
+        {f.du === 0 && f.semaines > 0 && (
+          <div>
+            <dt>{ti.estimation(jourProchainImpot(partie))}</dt>
+            <dd>{formaterEuros(impotEstime(partie))}</dd>
+          </div>
+        )}
+      </dl>
+      {f.du === 0 && f.semaines === 0 && <p className="sous">{ti.aucune}</p>}
+    </>
+  );
+}
+
 function Reserve({ partie }: { partie: EtatJeu }) {
   const ordonner = useInterface((s) => s.ordonner);
   if (!partie.systemes.reserve) {
@@ -769,8 +806,24 @@ function Reserve({ partie }: { partie: EtatJeu }) {
     );
   }
   const indice = Math.max(0, TAUX_RESERVE.findIndex((x) => x === partie.tauxReserve));
+  const g = TEXTES_BANQUE.gestion;
+  const josee = partie.gestionJosee;
   return (
     <>
+      <h3>{g.titre}</h3>
+      <div className="boutons-ligne" role="group" aria-label={g.titre}>
+        <button className={!josee ? 'choix-court choisi' : 'choix-court'} aria-pressed={!josee} onClick={() => ordonner({ type: 'gestionJosee', active: false })}>
+          {g.moi}
+        </button>
+        <button className={josee ? 'choix-court choisi' : 'choix-court'} aria-pressed={josee} onClick={() => ordonner({ type: 'gestionJosee', active: true })}>
+          {g.josee}
+        </button>
+      </div>
+      <p className="sous">
+        {josee ? g.detailJosee(Math.round(GESTION_JOSEE.commission * 100)) : g.detailMoi}
+        {josee && partie.banque.sursis && ` ${g.sursisUtilise}`}
+      </p>
+      <JoseeLigne texte={josee ? g.joseeJosee : g.joseeMoi} />
       <h3>{t.reserve}</h3>
       <p className="sous">{t.reserveDetail}</p>
       <div className="boutons-ligne" role="group" aria-label={t.reserve}>
@@ -780,13 +833,14 @@ function Reserve({ partie }: { partie: EtatJeu }) {
             className={partie.tauxReserve === taux ? 'choix-court choisi' : 'choix-court'}
             aria-pressed={partie.tauxReserve === taux}
             aria-label={t.reserveTauxLabel(Math.round(taux * 100))}
+            disabled={josee && partie.tauxReserve !== taux}
             onClick={() => ordonner({ type: 'tauxReserve', taux })}
           >
             {t.reserveTaux(Math.round(taux * 100))}
           </button>
         ))}
       </div>
-      <JoseeLigne texte={JOSEE_RESERVE.taux[indice] ?? ''} />
+      {!josee && <JoseeLigne texte={JOSEE_RESERVE.taux[indice] ?? ''} />}
       <dl className="chiffres">
         <div>
           <dt>{t.reserveMontant}</dt>
