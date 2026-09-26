@@ -34,6 +34,8 @@ import { changerAssurance, changerEquipe, type EvenementEquipe, type OrdreEquipe
 import { traiterAlerte, type OrdreMinuterie } from './minuteries';
 import { changerGestionJosee, emprunter, surveillerDecouvert } from './banque';
 import { appliquerGamme, type OrdreGamme } from './gamme';
+import { appliquerAgrandir, avancerAgrandissement, reponseDuPermis, tirerOffres, type EvenementAgrandir, type OrdreAgrandir } from './agrandir';
+import { accorderPalier } from './paliers';
 import { appliquerAmenagement, avancerTravauxAnnexes, type OrdreAmenagement } from './amenagement';
 import { appliquerPlafond, type AccordPlafond, type EvenementPlafond } from './plafond';
 import { changerCibleAuto, commanderAuto, commanderPack, livraisonExpress, type EvenementLinge } from './linge';
@@ -89,7 +91,8 @@ export type Ordre =
   | OrdreRivale
   | OrdreEquipe
   | OrdreAmenagement
-  | OrdreGamme;
+  | OrdreGamme
+  | OrdreAgrandir;
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -114,7 +117,8 @@ export type EvenementMoteur =
   | EvenementSemaine
   | EvenementRelation
   | EvenementRivale
-  | EvenementEquipe;
+  | EvenementEquipe
+  | EvenementAgrandir;
 
 /** Taille du journal gardé dans la sauvegarde. */
 export const TAILLE_JOURNAL = 50;
@@ -151,6 +155,7 @@ function avancerTravaux(etat: EtatJeu, evenements: EvenementMoteur[]): void {
     evenements.push({ type: 'finTravaux', chambreId: chambre.id });
   }
   avancerTravauxAnnexes(etat, evenements);
+  avancerAgrandissement(etat, evenements);
 }
 
 export interface ResultatTick {
@@ -328,6 +333,14 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'renommerMaison':
       appliquerGamme(etat, ordre, evenements);
       return;
+    case 'demanderPermis':
+    case 'agrandir':
+    case 'promouvoir':
+    case 'retrograder':
+    case 'signerLieu':
+    case 'lancerTravauxEtablissement':
+      appliquerAgrandir(etat, ordre, evenements);
+      return;
     case 'reponseRivale':
       repondreRivale(etat, ordre.reponse, evenements);
       return;
@@ -388,6 +401,21 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     // Le lundi, la semaine écoulée se referme en bilan avant les charges de la nouvelle.
     if (jourDeLaSemaine(etat.jour) === 0) {
       cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
+      // Palier 5 (v0.6) : la mairie répond au dossier ; au deuxième lundi, la deuxième maison ; au premier, la gérance.
+      reponseDuPermis(etat, evenements);
+      if (etat.palier === 4 && etat.permis.statut === 'accorde') {
+        accorderPalier(etat, 5);
+        evenements.push({ type: 'palier', numero: 5 });
+      }
+      if (etat.systemes.gerante && !etat.systemes.etablissement) {
+        etat.systemes.etablissement = true;
+        tirerOffres(etat);
+        if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'etablissement'];
+      }
+      if (etat.palier >= 5 && etat.systemes.agrandissement && !etat.systemes.gerante && etat.permis.jour < etat.jour) {
+        etat.systemes.gerante = true;
+        if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'gerante'];
+      }
       // Palier 4 (v0.6) : au deuxième lundi, le placement ; au premier, les formations.
       if (etat.systemes.formations && !etat.systemes.placement) {
         etat.systemes.placement = true;

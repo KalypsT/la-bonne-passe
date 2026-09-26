@@ -552,6 +552,7 @@ body {
 }
 
 .scene {
+  position: relative;
   flex: 1;
   min-width: 0;
   display: flex;
@@ -1871,4 +1872,52 @@ body {
 
 .formation {
   margin: 4px 0 6px;
+}
+
+/* Palier 5 (v0.6) : effets de la gérance, lieux de la deuxième maison, parts du bâtiment voisin. */
+.liste-effets {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  color: var(--attenue);
+  font-size: 13px;
+}
+
+.lieu,
+.option-voisin {
+  margin: 6px 0 10px;
+}
+
+/* Palier 5 : la vue glisse vers le bâtiment voisin. Purement visuel. */
+.monde {
+  transition: transform 0.5s ease;
+}
+
+.defiler {
+  position: absolute;
+  top: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--laiton, #d4a64a);
+  border-radius: 22px;
+  background: rgba(14, 34, 41, 0.85);
+  color: #f4dcc8;
+  font: 600 13px Jost, sans-serif;
+}
+
+.defiler.droite {
+  right: 8px;
+}
+
+.defiler.gauche {
+  left: 8px;
+}
+
+.defiler.alerte::after {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: #ff4f8b;
 }

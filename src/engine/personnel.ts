@@ -2,7 +2,7 @@
 // Voir « Personnel » dans les spécifications.
 
 import * as B from '../content/balance';
-import { CHAMBRES } from '../content/maison';
+import { trouverChambre } from '../content/maison';
 import type { Employe, EtatJeu } from './etat';
 import { changerSatisfaction } from './clientele';
 import { depenser } from './comptes';
@@ -93,7 +93,7 @@ function evolutionAffinite(a: Employe, b: Employe, tirage: Tirage): number {
 // ——— Nuit et matin ———
 
 export function premiumOuverte(etat: EtatJeu): boolean {
-  return etat.chambres.some((c) => c.ouverte && CHAMBRES.find((d) => d.id === c.id)?.premium);
+  return etat.chambres.some((c) => c.ouverte && trouverChambre(c.id)?.premium);
 }
 
 /** À la fermeture : effets des traits, repos, affinités. */

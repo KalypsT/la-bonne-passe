@@ -128,7 +128,7 @@ Le joueur part presque de rien : une hôtesse, une chambre en état, un salon et
 | 2. Se faire un nom | Réputation 25 | Segments Affaires et Groupes, onglet Clientèle, tarifs et formules, sélection à l'entrée et priorité d'accueil ; bar à rénover, puis équipe Bar et avance fournisseur ; soirées à thème et tendances au premier lundi |
 | 3. Tenir la maison | Première mensualité payée | Onglet Relations (voisins, mairie, presse, police), première rivale qui réagit, équipes Accueil et Sécurité ; puis, lundi après lundi, l'assurance, la visibilité et le nouvel emprunt (v0.6) |
 | 4. Monter en gamme | Réputation 50 et 4 personnes | VIP et Couples curieux, niveaux de confort des chambres (Jacuzzi dans les chambres premium), changement de nom de la maison ; puis, lundi après lundi, les formations et le placement (v0.6) |
-| 5. S'agrandir | Réputation 70 et accord de la mairie | Agrandissement, jusqu'à 8 personnes, promotion en gérante, deuxième établissement |
+| 5. S'agrandir | Réputation 70 et accord de la mairie | Le bâtiment voisin (2 ou 3 chambres) et jusqu'à 8 personnes ; puis, lundi après lundi, la gérance et le projet d'une deuxième maison (v0.6) |
 
 - Environ un nouveau système par semaine de jeu, présenté par Josée à son ouverture.
 - Le palier suivant est toujours affiché, avec ce qu'il rapporte.
@@ -136,6 +136,8 @@ Le joueur part presque de rien : une hôtesse, une chambre en état, un salon et
 - Un palier riche s'ouvre par étapes : le palier 2 donne d'emblée la clientèle et les règles de la porte ; le bar se rouvre par des travaux, ce qui amène l'équipe Bar et l'offre du grossiste ; les soirées à thème arrivent au briefing du lundi suivant, avec les premières tendances.
 - Une partie qui a déjà passé un palier reçoit ce qu'une mise à jour y ajoute, présenté par Josée au chargement.
 - Chaque nouvel établissement repart petit, avec des paliers plus courts.
+- **Le palier 5 en v0.6** : au palier 4, avec 70 de réputation, le joueur dépose un dossier de permis dans la fiche de la mairie (onglet Relations, 300 €). La mairie répond au lundi suivant : elle accorde le permis si elle est en bons termes avec la maison (au-dessus de +40) et que la réputation tient ; sinon elle refuse et le joueur peut redéposer. Le permis accordé ouvre le palier 5 le jour même.
+- **Le deuxième établissement en v0.6 s'arrête au projet** : trois lieux proposés (tirés parmi cinq, prix à ±10 %, avec leur propre hasard), l'achat (29 000 à 53 000 €), puis les travaux (7 000 à 15 500 €, 5 à 10 jours). La maison attend ensuite sa gérante et son ouverture, qui viendront avec la v1.0 (fin du chapitre 1). L'achat et les travaux ont leur poste de dépenses, et n'entrent pas dans le bénéfice imposable (c'est un bien).
 
 ## Personnel
 
@@ -172,6 +174,8 @@ Les traits modifient les règles. Exemples : une Diva perd du moral tant qu'aucu
 2. **Entretien individuel** : écouter, promettre, recadrer. 2 ou 3 réponses, avec des effets sur le moral et la loyauté.
 3. **Argent** : prime, part reversée, avance sur salaire.
 4. **Évolution** : formations (langues, conversation, danse), promotion en gérante.
+
+**La gérance (v0.6)**, au lundi qui suit le palier 5, dans la fiche de chaque personne confirmée ayant au moins 10 nuits dans la maison. La personne peut refuser : elle accepte si c'est son ambition (+15 de moral), ou si sa loyauté (50 et plus) ou son moral (60 et plus) le permettent. Une seule gérante à la fois. Elle ne reçoit plus et sort du planning ; elle touche 110 € par jour à midi, avec les salaires. En échange : elle règle seule 20 % des alertes du quartier (en plus des équipes, même sans elles), chaque rendez-vous fatigue l'équipe 20 % de moins, le moral de chacun remonte de 2 par nuit (jusqu'à 80), et elle met au repos avant l'ouverture qui dépasse 70 de fatigue. Sous 40 de loyauté, la caisse perd chaque nuit 3 % de la recette de la maison, sur une ligne du bilan (« Caisse qui ne tombe pas juste »). On peut la rendre au salon (−10 de moral).
 5. **Séparation** : licenciement, avec un coût en moral pour les autres et un risque de rumeurs.
 
 ### Recrutement
@@ -313,6 +317,9 @@ L'aménagement sert surtout les autres systèmes : des pièces à thème dans un
   - la buanderie (palier 2, 1 200 €, 8 h), derrière la fenêtre de droite du rez-de-chaussée ;
   - les loges du personnel (palier 3, 1 500 €, 10 h), sous les combles, derrière l'œil-de-bœuf. On s'y repose : récupération doublée entre deux clients, +25 % les soirs de repos, et le moral remonte seul jusqu'à 70 au lieu de 60.
 - **Agrandissement** : racheter le bâtiment voisin ou un étage, ce qui ajoute 2 à 3 pièces, avec l'accord de la mairie (palier 5).
+  - En v0.6 : le bâtiment voisin, étroit, à droite de la maison ; le Chat Noir s'éloigne d'une maison. Deux choix dans sa fiche (le toucher dans la scène, ou l'onglet Maison) : ses deux étages (14 000 €, 3 jours de travaux : l'Atelier, premium, et la chambre du canal) ou tout le bâtiment (22 000 €, 5 jours : la chambre du jardin en plus). Après les étages, le rez-de-chaussée peut suivre (9 000 €, 2 jours). Les chambres arrivent meublées, décor refait, confort 1.
+  - Une fois agrandie, la maison peut accueillir jusqu'à 8 personnes (au salon, sur huit places plus serrées).
+  - Dans la scène, un bouton « Chez le voisin › » fait glisser la vue le long de la rue (et « ‹ La maison » la ramène) ; il porte un point rose quand une chambre de l'autre côté réclame le ménage. Toucher une chambre dans le panneau y conduit la vue.
 - **Usure** : chaque rendez-vous salit la chambre (environ −20 % de propreté) et l'use un peu. Sous 40 % : alerte ; sous 15 % : la chambre ne reçoit plus. Le ménage traite la propreté ; l'état demande une rénovation payante.
 - **Buanderie** (v0.6) : le linge tourne. Une parure utilisée part au sale ; le ménage la relave (0,5 parure par heure et par personne maison ouverte, 2 maison fermée) contre 3 € de lessive ; l'usure envoie une parure sur vingt-cinq au chiffon, sans hasard. La commande automatique compte le linge au lavage. Sans buanderie, on achète.
 - **Linge** (v0.6) : il se compte en parures, une par rendez-vous ; 4 au départ. Au briefing, des packs livrés à l'ouverture, moins chers par parure en gros : 5 parures pour 60 €, 10 pour 110 €, 20 pour 200 €. Une commande automatique (non, 5, 10 ou 20) complète chaque soir le stock jusqu'à la cible, au tarif des packs. Livraison express en soirée : 5 parures pour 90 €. Le briefing et le panneau affichent « N parures, environ N rendez-vous ». Plus tard, la buanderie fera tourner le stock : une parure utilisée devient sale, le ménage la relave (plus vite maison fermée), et chaque parure s'use ; sans buanderie, on garde l'achat simple.

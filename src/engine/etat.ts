@@ -32,6 +32,15 @@ import { journeeVide, type Comptes, type Journee } from './comptes';
 import { banqueDeDepart, type Banque } from './banque';
 import { fiscDeDepart, type Fisc } from './fisc';
 import { annexesDeDepart, type Annexes } from './amenagement';
+import {
+  agrandissementDeDepart,
+  etablissementDeDepart,
+  hasardEtablissementDeDepart,
+  permisDeDepart,
+  type Agrandissement,
+  type Etablissement,
+  type Permis,
+} from './agrandir';
 import { hasardPlacementDeDepart, niveauxDeDepart, type NiveauxEquipes, type Placement } from './gamme';
 import type { IdDecor } from '../content/maison';
 
@@ -85,6 +94,10 @@ export interface Systemes {
   renommer: boolean;
   formations: boolean;
   placement: boolean;
+  /** Palier 5 (v0.6) : le bâtiment voisin ; au lundi suivant, la gérance ; au deuxième, la deuxième maison. */
+  agrandissement: boolean;
+  gerante: boolean;
+  etablissement: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -426,6 +439,14 @@ export interface EtatJeu {
   placement: Placement | null;
   /** Hasard du placement risqué, à part (v0.6). */
   hasardPlacement: number;
+  /** Palier 5 (v0.6, partie 7) : permis de la mairie, bâtiment voisin, gérante, deuxième maison. */
+  permis: Permis;
+  agrandissement: Agrandissement;
+  /** Identifiant de la gérante, ou null. */
+  gerante: string | null;
+  etablissement: Etablissement;
+  /** Hasard des lieux proposés pour la deuxième maison, à part (v0.6). */
+  hasardEtablissement: number;
   /** Gestion confiée à Josée (v0.6, partie 4). */
   gestionJosee: boolean;
   /** Impôt trimestriel : bénéfice du trimestre en cours (v0.6, partie 4). */
@@ -441,7 +462,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 32;
+export const VERSION_ETAT = 33;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -477,6 +498,9 @@ export function systemesDeDepart(): Systemes {
     renommer: false,
     formations: false,
     placement: false,
+    agrandissement: false,
+    gerante: false,
+    etablissement: false,
   };
 }
 
@@ -642,6 +666,11 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     niveauxEquipes: niveauxDeDepart(),
     placement: null,
     hasardPlacement: hasardPlacementDeDepart(options.graine ?? GRAINE_PAR_DEFAUT),
+    permis: permisDeDepart(),
+    agrandissement: agrandissementDeDepart(),
+    gerante: null,
+    etablissement: etablissementDeDepart(),
+    hasardEtablissement: hasardEtablissementDeDepart(options.graine ?? GRAINE_PAR_DEFAUT),
     finDePartie: null,
     assurance: 0,
     didacticiel: options.didacticiel ? 0 : null,

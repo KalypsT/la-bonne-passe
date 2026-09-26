@@ -19,6 +19,7 @@ export type Fiche =
   | { type: 'chambre'; id: string }
   | { type: 'piece'; id: 'salon' | 'bar' | 'bureau' }
   | { type: 'annexe'; id: 'loges' | 'buanderie' }
+  | { type: 'voisin'; id: 'voisin' }
   | { type: 'employe'; id: string }
   | { type: 'segment'; id: Segment }
   | { type: 'regles'; id: 'regles' }

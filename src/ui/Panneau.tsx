@@ -6,7 +6,6 @@ import {
   MENAGE_MAX,
   MENSUALITE,
   NETTOYAGE_EXPRESS,
-  PERSONNEL_MAX,
   RENOVATION,
   SALAIRE_MENAGE,
   TAUX_RESERVE,
@@ -53,6 +52,9 @@ import { ConfortChambre, Formation, PlacementExcedent, RenommerMaison } from './
 import { AmenagementChambre, FicheAnnexe, statutAnnexe } from './Amenagement';
 import { TEXTES_AMENAGEMENT } from '../content/amenagement';
 import { useInterface, type Fiche, type Onglet } from './store';
+import { personnelMax } from '../engine/agrandir';
+import { DeuxiemeMaison, FicheVoisin, Gerance, statutVoisin } from './Agrandir';
+import { TEXTES_AGRANDIR } from '../content/agrandir';
 
 const t = TEXTES.panneau;
 
@@ -245,6 +247,9 @@ function OngletMaison({ partie }: { partie: EtatJeu }) {
         .map((id) => (
           <Ligne key={id} titre={ANNEXES[id].nom} detail={statutAnnexe(partie, id)} fiche={{ type: 'annexe', id }} />
         ))}
+      {partie.systemes.agrandissement && (
+        <Ligne titre={TEXTES_AGRANDIR.agrandissement.titre} detail={statutVoisin(partie)} fiche={{ type: 'voisin', id: 'voisin' }} />
+      )}
       <Voisinage partie={partie} />
     </>
   );
@@ -371,6 +376,14 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
   );
 
   if (fiche.type === 'employe' || fiche.type === 'segment' || fiche.type === 'regles') return retour;
+  if (fiche.type === 'voisin') {
+    return (
+      <div className="fiche">
+        {retour}
+        <FicheVoisin partie={partie} />
+      </div>
+    );
+  }
   if (fiche.type === 'annexe') {
     return (
       <div className="fiche">
@@ -388,6 +401,7 @@ function FichePiece({ partie, fiche }: { partie: EtatJeu; fiche: Fiche }) {
         <p className="sous">{fiche.id === 'bar' && partie.bar.ouvert ? (piece.descriptionOuverte ?? piece.description) : piece.description}</p>
         {fiche.id === 'bar' && <FicheBar partie={partie} />}
         {fiche.id === 'bureau' && <RenommerMaison partie={partie} />}
+        {fiche.id === 'bureau' && <DeuxiemeMaison partie={partie} />}
       </div>
     );
   }
@@ -445,6 +459,7 @@ function BoutonNettoyage({ chambreId, desactive }: { chambreId: string; desactiv
 
 function statutEmploye(partie: EtatJeu, e: Employe): string {
   const st = TEXTES.personnel.statuts;
+  if (partie.gerante === e.id) return TEXTES_AGRANDIR.gerante.statut(e.genre === 'm' ? '' : 'e');
   if (partie.rendezVous.some((r) => r.employeId === e.id)) return st.rdv;
   if (e.repos) return st.repos;
   if (!estOuvert(partie)) return st.horsService;
@@ -541,6 +556,7 @@ function FicheEmploye({ partie, id }: { partie: EtatJeu; id: string }) {
           <b>{p.traitCache}</b> {p.traitCacheDetail}
         </p>
       ))}
+      <Gerance partie={partie} employe={employe} />
       <h3>{p.ambition}</h3>
       <Ambition personne={employe} />
       <p className="sous">{p.part(Math.round(employe.part * 100))}</p>
@@ -657,7 +673,7 @@ function OngletPersonnel({ partie }: { partie: EtatJeu }) {
   const r = TEXTES.recrutement;
   return (
     <>
-      <h3>{r.effectif(partie.personnel.length, PERSONNEL_MAX)}</h3>
+      <h3>{r.effectif(partie.personnel.length, personnelMax(partie))}</h3>
       {partie.personnel.map((e) => (
         <LigneEmploye key={e.id} partie={partie} employe={e} />
       ))}

@@ -8,6 +8,7 @@ import { trouverChambre } from '../content/maison';
 import type { EtatJeu, Nuit } from './etat';
 import type { Tirage } from './hasard';
 import { verifierPaliers, type EvenementPalier } from './paliers';
+import { fatigueGerante, nuitDeLaGerante, ouvertureGerante, salaireGerante, type EvenementAgrandir } from './agrandir';
 import {
   affluenceRelations,
   changerRelations,
@@ -96,6 +97,7 @@ import {
 } from './regles';
 
 export type EvenementSoiree =
+  | EvenementAgrandir
   | { type: 'arrivee'; client: string }
   | { type: 'clientParti'; client: string }
   | { type: 'filePleine' }
@@ -171,6 +173,8 @@ export function ouvrirNuit(etat: EtatJeu, evenements: Sortie): void {
     e.reposPrevu = false;
     if (e.repos) e.promesseRepos = null;
   }
+  // La gérante (palier 5) prend son poste et met au repos qui n'en peut plus.
+  ouvertureGerante(etat, evenements);
   etat.linge += etat.lingeCommande;
   etat.lingeCommande = 0;
   livrerCommandeBar(etat);
@@ -207,6 +211,7 @@ export function fermerNuit(etat: EtatJeu, tirage: Tirage, evenements: Sortie): v
   for (const e of etat.personnel) e.repos = false;
   etat.nuitsBouclees += 1;
   mettreEnReserve(etat, evenements);
+  nuitDeLaGerante(etat, evenements);
   if (etat.nuit) {
     // Les comptes de la journée deviennent ceux de la nuit ; ce qui suit (jusqu'à 5 h) reste à la semaine.
     etat.nuit.comptes = structuredClone(etat.journee.comptes);
@@ -240,7 +245,8 @@ function occupes(etat: EtatJeu) {
 
 export function employeDisponible(etat: EtatJeu, id: string): boolean {
   const e = etat.personnel.find((x) => x.id === id);
-  return !!e && !e.repos && !quotaAtteint(etat, e) && !occupes(etat).employes.has(id) && !enPause(etat, id);
+  // La gérante (palier 5) ne reçoit plus : elle tient la maison.
+  return !!e && id !== etat.gerante && !e.repos && !quotaAtteint(etat, e) && !occupes(etat).employes.has(id) && !enPause(etat, id);
 }
 
 export function chambreDisponible(etat: EtatJeu, id: string): boolean {
@@ -433,7 +439,7 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
 
   const fatigue = tirage.entre(B.FATIGUE_PAR_RDV_MIN, B.FATIGUE_PAR_RDV_MAX);
   employe.fatigue = borner(
-    employe.fatigue + fatigue * formule.fatigue * fatigueTheme(etat) * (aTrait(employe, 'Fêtarde') ? B.TRAITS_EFFETS.fetardeFatigue : 1),
+    employe.fatigue + fatigue * formule.fatigue * fatigueTheme(etat) * fatigueGerante(etat) * (aTrait(employe, 'Fêtarde') ? B.TRAITS_EFFETS.fetardeFatigue : 1),
   );
   employe.rdvCeSoir += 1;
   employe.chargeCeSoir += chargeFormule(rdv.formule);
@@ -521,7 +527,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
     ) {
       // La sécurité étouffe parfois la dispute dans l'œuf : pas de bulle.
       // (Sans équipe, on ne tire rien : le hasard de la partie ne bifurque pas.)
-      if (etat.equipes.securite > 0 && tirage.chance(partReglee(etat, 'securite'))) evenements.push({ type: 'disputeEvitee' });
+      if (partReglee(etat, 'securite') > 0 && tirage.chance(partReglee(etat, 'securite'))) evenements.push({ type: 'disputeEvitee' });
       else {
         etat.dispute = { expire: maintenant + B.DISPUTE_DELAI };
         etat.semaine.stats.disputes += 1;
@@ -569,7 +575,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
 
   // Salaires à midi, charges fixes le lundi matin
   if (etat.minuteDuJour === B.HEURE_SALAIRES) {
-    const montant = etat.equipes.menage * B.SALAIRE_MENAGE + etat.equipes.bar * B.SALAIRE_BAR + salairesEquipesQuartier(etat);
+    const montant = etat.equipes.menage * B.SALAIRE_MENAGE + etat.equipes.bar * B.SALAIRE_BAR + salairesEquipesQuartier(etat) + salaireGerante(etat);
     if (montant > 0) {
       const avant = etat.semaine.comptes.depenses.salaires;
       payerSalaires(etat, montant, evenements);

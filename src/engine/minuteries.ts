@@ -64,7 +64,7 @@ function ajouter(etat: EtatJeu, id: IdAlerte, cible: string | null, delai: numbe
   const a: AlerteMinutee = { id, cle: cible === null ? id : `${id}-${cible}`, cible, debut: maintenant, expire: maintenant + delai };
   // L'équipe du domaine (Accueil, Sécurité) règle parfois l'affaire avant qu'une bulle n'apparaisse.
   const equipe = equipeDe(id);
-  if (equipe && etat.equipes[equipe] > 0 && tirage.chance(partReglee(etat, equipe))) {
+  if (equipe && partReglee(etat, equipe) > 0 && tirage.chance(partReglee(etat, equipe))) {
     reglerSeule(etat, a);
     evenements.push({ type: 'alerteReglee', id, equipe });
     return;

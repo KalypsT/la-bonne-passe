@@ -14,14 +14,17 @@ export const SYSTEMES_PAR_PALIER: Record<number, (keyof Systemes)[]> = {
   2: ['affaires', 'groupes', 'clientele', 'tarifs', 'porte', 'bar', 'buanderie'],
   3: ['relations', 'rivale', 'accueil', 'securite', 'loges'],
   4: ['vip', 'couples', 'confort', 'renommer'],
+  5: ['agrandissement'],
 };
 
-/** Condition pour atteindre chaque palier, vérifiée à chaque fermeture (et le jour de la mensualité). Le palier 5 viendra avec la partie 7 de la v0.6. */
+/** Condition pour atteindre chaque palier, vérifiée à chaque fermeture (et le jour de la mensualité, et le lundi pour le permis du palier 5). */
 const DECLENCHEURS: Record<number, (etat: EtatJeu) => boolean> = {
   1: (etat) => etat.nuitsBouclees >= 1,
   2: (etat) => etat.reputation >= REPUTATION_PALIER_2,
   3: (etat) => etat.mensualitesPayees >= 1,
   4: (etat) => etat.reputation >= PALIER_4.reputation && etat.personnel.length >= PALIER_4.personnel,
+  // La réputation se vérifie au dépôt du dossier et à la réponse de la mairie (agrandir.ts).
+  5: (etat) => etat.permis.statut === 'accorde',
 };
 
 /** Monte d'un palier : ouvre ses systèmes et prépare sa carte d'annonce. */

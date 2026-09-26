@@ -5,6 +5,7 @@ import * as B from '../content/balance';
 import type { IdAlerte } from '../content/alertes';
 import type { Segment } from '../content/clientele';
 import { encaisser } from './comptes';
+import { partGerante } from './agrandir';
 import type { EtatJeu } from './etat';
 
 export type EquipeQuartier = 'accueil' | 'securite';
@@ -40,9 +41,10 @@ export function equipeDe(id: IdAlerte): EquipeQuartier | undefined {
 
 /** Part des alertes de son domaine qu'une équipe règle seule, selon son effectif. */
 export function partReglee(etat: EtatJeu, equipe: EquipeQuartier): number {
-  // Une équipe formée (palier 4) règle davantage seule.
-  if (etat.equipes[equipe] === 0) return 0;
-  return Math.min(1, etat.equipes[equipe] * B.EQUIPES[equipe].regle + (etat.niveauxEquipes[equipe] - 1) * B.FORMATIONS.regle);
+  // Une équipe formée (palier 4) règle davantage seule ; la gérante (palier 5) s'en mêle aussi.
+  const gerance = partGerante(etat);
+  if (etat.equipes[equipe] === 0) return gerance;
+  return Math.min(1, etat.equipes[equipe] * B.EQUIPES[equipe].regle + (etat.niveauxEquipes[equipe] - 1) * B.FORMATIONS.regle + gerance);
 }
 
 /** L'équipe change d'effectif (palier 3) ; l'interface le propose de 0 au maximum. */

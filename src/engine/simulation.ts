@@ -25,6 +25,7 @@ import { actionPossible } from './relations';
 import { reponsePossible } from './rivale';
 import { gagneNuit } from './comptes';
 import { valeurNette } from './banque';
+import { accepteGerance, optionsAgrandissement, peutDemanderPermis, peutPromouvoir } from './agrandir';
 
 const moyenne = (l: number[]) => (l.length ? l.reduce((a, b) => a + b, 0) / l.length : 0);
 
@@ -144,6 +145,15 @@ export interface OptionsSimulation {
   assurance?: number;
   /** Visibilité choisie dès qu'elle s'ouvre (v0.5). */
   visibilite?: B.IdVisibilite;
+  /** Palier 5 (v0.6) : déposer le permis dès que possible, racheter chez le voisin, promouvoir une gérante, acheter la deuxième maison. */
+  permis?: boolean;
+  agrandir?: 'etages' | 'batiment';
+  gerante?: boolean;
+  etablissement?: boolean;
+  /** Pour racheter chez le voisin, signer ce nouvel emprunt si la caisse ne suffit pas (v0.6). */
+  empruntAgrandir?: { montant: number; duree: number };
+  /** Embaucher aussi les candidats du marché tant que l'équipe compte moins de personnes (v0.6). */
+  recruterJusqua?: number;
 }
 
 const ORDRE_RENOVATION = ['orientale', 'velours', 'miroirs'];
@@ -317,7 +327,7 @@ export function simuler(options: OptionsSimulation): {
     for (const id of [...etat.essaisATrancher]) jouer([{ type: 'trancherEssai', employeId: id, garder: true }]);
     if (recruter) {
       for (const c of [...etat.candidats]) {
-        if (c.source !== 'visite') continue;
+        if (c.source !== 'visite' && !(options.recruterJusqua && etat.personnel.length < options.recruterJusqua)) continue;
         jouer([{ type: 'questionCandidat', candidatId: c.id, question: 0 }]);
         jouer([{ type: 'proposer', candidatId: c.id, part: 0.5 }]);
         const encore = etat.candidats.find((x) => x.id === c.id);
@@ -354,6 +364,34 @@ export function simuler(options: OptionsSimulation): {
             jouer([{ type: 'rafraichir', chambreId: c.id }]);
           }
         }
+      }
+      if (options.permis && peutDemanderPermis(etat)) jouer([{ type: 'demanderPermis' }]);
+      // Pour un gros achat, le joueur puise dans la réserve (Josée le lui fait remarquer).
+      const payer = (prix: number) => {
+        if (etat.tresorerie > prix + 3000) return true;
+        if (etat.tresorerie + etat.reserve <= prix + 3000) return false;
+        jouer([{ type: 'retirerReserve' }]);
+        return etat.tresorerie > prix;
+      };
+      if (options.agrandir && options.empruntAgrandir && optionsAgrandissement(etat).includes(options.agrandir) && etat.systemes.emprunt && !empruntSigne) {
+        if (etat.tresorerie + etat.reserve < B.AGRANDISSEMENT[options.agrandir].prix + 3000) {
+          empruntSigne = true;
+          jouer([{ type: 'emprunter', montant: options.empruntAgrandir.montant, duree: options.empruntAgrandir.duree }]);
+        }
+      }
+      if (options.agrandir && optionsAgrandissement(etat).includes(options.agrandir) && payer(B.AGRANDISSEMENT[options.agrandir].prix)) {
+        jouer([{ type: 'agrandir', option: options.agrandir }]);
+      }
+      // La gérante, une fois l'équipe assez nombreuse pour se passer d'une personne au salon.
+      if (options.gerante && etat.systemes.gerante && !etat.gerante && etat.personnel.length >= 6) {
+        const choix = [...etat.personnel].filter((e) => peutPromouvoir(etat, e.id) && accepteGerance(e)).sort((a, b) => b.loyaute - a.loyaute)[0];
+        if (choix) jouer([{ type: 'promouvoir', employeId: choix.id }]);
+      }
+      if (options.etablissement && etat.systemes.etablissement) {
+        const m = etat.etablissement;
+        const moinsCher = [...m.offres].sort((a, b) => a.achat + a.travaux - (b.achat + b.travaux))[0];
+        if (m.statut === 'offres' && moinsCher && payer(moinsCher.achat + moinsCher.travaux)) jouer([{ type: 'signerLieu', lieu: moinsCher.id }]);
+        if (m.statut === 'signe' && payer(m.offres.find((o) => o.id === m.lieu)?.travaux ?? 0)) jouer([{ type: 'lancerTravauxEtablissement' }]);
       }
       if (options.gestionJosee && etat.systemes.reserve && !etat.gestionJosee) jouer([{ type: 'gestionJosee', active: true }]);
       if (etat.systemes.reserve && etat.tauxReserve === 0) jouer([{ type: 'tauxReserve', taux: 0.1 }]);

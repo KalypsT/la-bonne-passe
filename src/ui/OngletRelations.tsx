@@ -22,6 +22,7 @@ import { acteursOuverts, actionPossible, prochaineAction, termes } from '../engi
 import { chanceTreve, enTreve, prochaineReponse, reponsePossible } from '../engine/rivale';
 import { remplir } from './modeles';
 import { JoseeLigne } from './Josee';
+import { PermisMairie } from './Agrandir';
 import { useInterface } from './store';
 
 /** Jauge de −100 à +100, remplie depuis le centre, avec les seuils des bons et des mauvais termes. */
@@ -199,6 +200,7 @@ export function FicheActeur({ partie, id }: { partie: EtatJeu; id: IdActeur }) {
         </span>
         <JaugeRelation valeur={valeur} />
       </div>
+      {id === 'mairie' && <PermisMairie partie={partie} />}
       <h3>
         {t.bons}
         {etat === 'bons' && <small className="positif"> · {t.actif}</small>}

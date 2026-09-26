@@ -35,6 +35,13 @@ export const CHAMBRES: DefinitionChambre[] = [
   { id: 'miroirs', nom: 'Chambre miroirs', theme: 'Miroirs biseautés, satin rose', premium: true, decor: 'miroirs', ouverteAuDepart: false, dans: 'dans la chambre miroirs', de: 'de la chambre miroirs' },
 ];
 
+/** Les chambres du bâtiment voisin, racheté au palier 5 (v0.6) : elles arrivent meublées, décor refait. */
+export const CHAMBRES_AGRANDISSEMENT: DefinitionChambre[] = [
+  { id: 'atelier', nom: 'L’Atelier', theme: 'Verrière, chevalet et draps de soie', premium: true, decor: 'miroirs', ouverteAuDepart: false, dans: 'dans l’atelier', de: 'de l’atelier' },
+  { id: 'canal', nom: 'Chambre du canal', theme: 'Vue sur l’eau et lanternes', premium: false, decor: 'orientale', ouverteAuDepart: false, dans: 'dans la chambre du canal', de: 'de la chambre du canal' },
+  { id: 'jardin', nom: 'Chambre du jardin', theme: 'Papier peint fleuri et cour intérieure', premium: false, decor: 'rose', ouverteAuDepart: false, dans: 'dans la chambre du jardin', de: 'de la chambre du jardin' },
+];
+
 export interface DefinitionPiece {
   id: 'salon' | 'bar' | 'bureau';
   nom: string;
@@ -73,7 +80,7 @@ export const ANNEXES: Record<'loges' | 'buanderie', { nom: string; description: 
 };
 
 export function trouverChambre(id: string): DefinitionChambre | undefined {
-  return CHAMBRES.find((c) => c.id === id);
+  return CHAMBRES.find((c) => c.id === id) ?? CHAMBRES_AGRANDISSEMENT.find((c) => c.id === id);
 }
 
 export function trouverPiece(id: DefinitionPiece['id']): DefinitionPiece {

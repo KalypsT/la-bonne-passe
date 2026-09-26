@@ -29,6 +29,7 @@ function ficheDe(id: string): Fiche {
   const piece = PIECES_COMMUNES.find((p) => p === id);
   if (piece) return { type: 'piece', id: piece };
   if (id === 'loges' || id === 'buanderie') return { type: 'annexe', id };
+  if (id === 'voisin') return { type: 'voisin', id };
   return { type: 'chambre', id };
 }
 
