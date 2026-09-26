@@ -210,6 +210,8 @@ export const TRAITS_EFFETS = {
   teteBruleeDispute: 1.5, // chance de dispute sur le quai multipliée, par Tête brûlée en service
   fetardeFatigue: 1.25, // fatigue par rendez-vous multipliée
   fetardePatience: 15, // minutes de patience en plus pour les clients, si une Fêtarde est en service
+  teteDAfficheHabitues: 1.3, // poids des habitués dans les arrivées, si une Tête d'affiche est en service
+  juristeRemise: 0.5, // amendes et arrangements multipliés, si une personne Juriste est dans l'équipe
 };
 
 /** Entretien individuel : une fois par jour et par personne. */
@@ -536,3 +538,25 @@ export const VOISIN = {
 
 /** Suite de l'imprévu du client généreux : le pourboire, s'il revient et que tout se passe bien. */
 export const COSTUME_POURBOIRE = 120;
+
+/** Arc de Mila, « La tête d'affiche » : ce que coûtent les choix. */
+export const ARC_MILA = {
+  /** Au plus tôt, après tant de nuits travaillées (période d'essai finie). */
+  nuits: 5,
+  affiche: 120,
+  prime: 200,
+  /** Part qu'elle réclame. */
+  part: 0.55,
+};
+
+/** Arc de Jonas, « Les examens » : ce que coûtent les choix. */
+export const ARC_JONAS = {
+  nuits: 6,
+  inscription: 600,
+  champagne: 60,
+  reinscription: 300,
+  /** Moral qu'il lui faut, le jour des résultats, pour réussir. */
+  moralReussite: 45,
+  /** Points de préparation qu'il lui faut (réviser au calme : 2, au salon : 1 ; inscription payée : 2, à moitié : 1). */
+  preparation: 3,
+};

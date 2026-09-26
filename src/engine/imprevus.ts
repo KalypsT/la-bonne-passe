@@ -7,7 +7,7 @@ import type { Employe, EtatJeu, ImprevuEnCours } from './etat';
 import { appliquerEffet } from './effets';
 import type { Tirage } from './hasard';
 import { demarrerSuite } from './intrigues';
-import { affinite } from './personnel';
+import { affinite, type EvenementPersonnel } from './personnel';
 import { ecart, instant } from './temps';
 
 export type EvenementImprevu =
@@ -17,7 +17,7 @@ export type EvenementImprevu =
 export type OrdreImprevu = { type: 'choixImprevu'; choix: number };
 
 interface Sortie {
-  push(e: EvenementImprevu): unknown;
+  push(e: EvenementImprevu | EvenementPersonnel): unknown;
 }
 
 function disponible(etat: EtatJeu, e: Employe): boolean {
@@ -81,8 +81,13 @@ export function trancherImprevu(etat: EtatJeu, choix: number, tirage: Tirage, aj
   const option = def?.choix[choix];
   if (!imprevu || !option) return;
   const reussite = option.chance === undefined || tirage.chance(option.chance);
-  appliquerEffet(etat, reussite ? option.effet : (option.echec ?? {}), imprevu, ajouterClient, (id, delai, employeId) =>
-    demarrerSuite(etat, id, delai, employeId),
+  appliquerEffet(
+    etat,
+    reussite ? option.effet : (option.echec ?? {}),
+    imprevu,
+    ajouterClient,
+    (id, delai, employeId) => demarrerSuite(etat, id, delai, employeId),
+    evenements,
   );
   etat.imprevu = null;
   const prenom = etat.personnel.find((x) => x.id === imprevu.employeId)?.prenom;

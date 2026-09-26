@@ -21,7 +21,8 @@ import { cleAffinite } from '../engine/personnel';
 import { clienteleDeDepart, type ParSegment } from '../engine/clientele';
 import { numeroSemaine, semaineDeDepart } from '../engine/semaine';
 import { SYSTEMES_PAR_PALIER } from '../engine/paliers';
-import { planifierVisitesScenarisees } from '../engine/recrutement';
+import { ambitionDuMarche, planifierVisitesScenarisees } from '../engine/recrutement';
+import { INES, JONAS, MILA } from '../content/candidats';
 import { PARTIE_PAR_DEFAUT } from '../content/partie';
 import { barDeDepart, reglesDeDepart, VERSION_ETAT, type EtatJeu } from '../engine/etat';
 import { intriguesDeDepart } from '../engine/intrigues';
@@ -205,7 +206,33 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
   },
   // v15 → v16 : les intrigues et le tapage du quartier. Le quartier part calme.
   15: (d) => ({ ...d, version: 16, intrigues: intriguesDeDepart(), quartier: quartierDeDepart() }),
+  // v16 → v17 : une ambition pour chaque personne (celle du contenu pour les personnages scénarisés).
+  // Josée présente les ambitions et l'humeur du voisinage aux parties qui ont déjà passé les paliers.
+  16: (d) => {
+    const avecAmbition = (x: unknown) => (estObjet(x) ? { ...x, ambition: ambitionConnue(String(x.id)) } : x);
+    const palier = typeof d.palier === 'number' ? d.palier : 0;
+    const nouveautes = [
+      ...(Array.isArray(d.nouveautes) ? d.nouveautes : []),
+      ...(palier >= 1 ? ['ambitions'] : []),
+      ...(palier >= 2 ? ['voisinage'] : []),
+    ];
+    return {
+      ...d,
+      version: 17,
+      personnel: Array.isArray(d.personnel) ? d.personnel.map(avecAmbition) : d.personnel,
+      candidats: Array.isArray(d.candidats) ? d.candidats.map(avecAmbition) : d.candidats,
+      visites: Array.isArray(d.visites)
+        ? d.visites.map((v) => (estObjet(v) ? { ...v, candidat: avecAmbition(v.candidat) } : v))
+        : d.visites,
+      nouveautes,
+    };
+  },
 };
+
+/** Ambition d'une personne d'une ancienne sauvegarde : celle du contenu si elle est scénarisée. */
+function ambitionConnue(id: string): string {
+  return [SANNE, MILA, JONAS, INES].find((def) => def.id === id)?.ambition ?? ambitionDuMarche(id);
+}
 
 function estObjet(v: unknown): v is Donnees {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -234,6 +261,7 @@ function estEtatValide(d: Donnees): boolean {
     typeof d.briefingJour === 'number' &&
     Array.isArray(d.chambres) &&
     Array.isArray(d.personnel) &&
+    d.personnel.every((e) => estObjet(e) && typeof e.ambition === 'string') &&
     Array.isArray(d.file) &&
     Array.isArray(d.rendezVous) &&
     typeof d.linge === 'number' &&

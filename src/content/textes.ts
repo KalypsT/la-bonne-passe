@@ -250,6 +250,7 @@ export const TEXTES = {
     rivalite: (a: string, b: string) => `Entre ${a} et ${b}, le courant ne passe plus.`,
     imprevu: (titre: string) => `Imprévu : ${titre.charAt(0).toLowerCase()}${titre.slice(1)}.`,
     intrigue: (titre: string) => `${titre}.`,
+    remboursement: (prenom: string, montant: string) => `${prenom} te rend les ${montant} que tu lui avais avancés.`,
   },
   recrutement: {
     candidats: 'Candidats',
@@ -488,6 +489,8 @@ export const TEXTES = {
     part: (pourcent: number) => `Garde ${pourcent} % de chaque rendez-vous`,
     talents: 'Talents',
     traits: 'Traits',
+    ambition: 'Ambition',
+    reve: (ambition: string) => `Son rêve : ${ambition.charAt(0).toLowerCase()}${ambition.slice(1)}.`,
     fatigue: 'Fatigue',
     moral: 'Moral',
     loyaute: 'Loyauté',

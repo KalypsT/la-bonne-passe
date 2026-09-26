@@ -23,7 +23,8 @@ function jouer(
   parties.set(
     nom,
     GRAINES.map((graine) => {
-      const r = simuler({ graine, offre, rdvMax: 3, nuits, regles, tendances, theme });
+      // Sans intrigue : leurs choix et leurs coûts brouilleraient la comparaison des offres (gardées à part).
+      const r = simuler({ graine, offre, rdvMax: 3, nuits, regles, tendances, theme, intrigues: false });
       return { nuits: r.nuits, avoir: r.etat.tresorerie + r.etat.reserve };
     }),
   );

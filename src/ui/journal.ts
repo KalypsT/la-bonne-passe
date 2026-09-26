@@ -217,6 +217,8 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       const p = evenement.prenom ? { prenom: evenement.prenom, genre: genreDe(partie, evenement.prenom) } : undefined;
       return texte ? remplir(texte, partie, p) : null;
     }
+    case 'remboursement':
+      return t.remboursement(evenement.prenom, formaterEuros(evenement.montant));
     case 'bilan':
       return null;
     default:

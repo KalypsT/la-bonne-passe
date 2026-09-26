@@ -20,7 +20,12 @@ beforeAll(() => {
   jouer('laxiste', { regles: { selection: 'laxiste' } });
   jouer('stricte', { regles: { selection: 'stricte' } });
   jouer('laxiste-hasard', { regles: { selection: 'laxiste' }, politique: 'hasard' });
+  jouer('classique-hasard', { politique: 'hasard' });
+  jouer('sans-intrigue', { intrigues: false });
 }, 30_000);
+
+/** Nuit où un arc a sorti sa première carte, ou null. */
+const debutArc = (p: Partie, id: string) => p.nuits.find((n) => n.intrigues.some((x) => x.startsWith(`${id}:`)))?.numero ?? null;
 
 describe('le voisin du dessus', () => {
   it('une porte laxiste le fait descendre vite ; un portier le laisse dormir', () => {
@@ -36,6 +41,29 @@ describe('le voisin du dessus', () => {
   it('les choix mènent à des dénouements différents', () => {
     const fins = new Set(parties.get('laxiste-hasard')!.flatMap((p) => p.intrigues.filter((f) => f.id === 'voisin').map((f) => f.fin)));
     expect(fins.size).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('les arcs de Mila et de Jonas', () => {
+  it('le joueur qui les embauche vit leurs histoires dans le mois', () => {
+    for (const id of ['mila', 'jonas']) {
+      const debuts = parties.get('classique')!.map((p) => debutArc(p, id));
+      expect(debuts.filter((n) => n !== null && n <= 20).length, id).toBeGreaterThanOrEqual(8);
+    }
+  });
+
+  it('les choix mènent à des dénouements différents', () => {
+    for (const id of ['mila', 'jonas']) {
+      const fins = new Set(parties.get('classique-hasard')!.flatMap((p) => p.intrigues.filter((f) => f.id === id).map((f) => f.fin)));
+      expect(fins.size, id).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('les histoires ne ruinent pas un joueur raisonnable, ni ne le font perdre en réputation', () => {
+    const avoir = (nom: string) => parties.get(nom)!.reduce((s, p) => s + p.etat.tresorerie + p.etat.reserve, 0) / GRAINES.length;
+    const reputation = (nom: string) => parties.get(nom)!.reduce((s, p) => s + p.nuits[27]!.reputation, 0) / GRAINES.length;
+    expect(avoir('classique')).toBeGreaterThan(avoir('sans-intrigue') * 0.8);
+    expect(reputation('classique')).toBeGreaterThan(reputation('sans-intrigue') - 3);
   });
 });
 

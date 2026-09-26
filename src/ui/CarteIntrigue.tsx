@@ -5,6 +5,7 @@ import type { EtatJeu } from '../engine/etat';
 import { choixPossibles } from '../engine/intrigues';
 import { texteEvenement } from './journal';
 import { remplir } from './modeles';
+import { Portrait } from './Panneau';
 import { useInterface } from './store';
 
 /** Ce que la carte montre une fois le choix fait : son issue, et le dénouement si l'histoire s'achève. */
@@ -82,7 +83,14 @@ export function CarteIntrigue({ partie }: { partie: EtatJeu }) {
         <h2 id="titre-intrigue" className="titre-neon">
           {texte(etape.titre)}
         </h2>
-        <p>{texte(etape.texte)}</p>
+        {e ? (
+          <div className="intrigue-personne">
+            <Portrait personne={e} petit />
+            <p>{texte(etape.texte)}</p>
+          </div>
+        ) : (
+          <p>{texte(etape.texte)}</p>
+        )}
         {etape.choix.map((c, i) => (
           <button key={c.texte} className="choix" disabled={possibles[i] === false} onClick={() => choisir(i)}>
             {texte(c.texte)}

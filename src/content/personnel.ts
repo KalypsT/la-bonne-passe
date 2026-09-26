@@ -22,6 +22,8 @@ export interface DefinitionEmploye {
   genre: 'f' | 'm';
   talents: Record<Talent, number>;
   traits: string[];
+  /** Son rêve (identifiant de src/content/ambitions.ts). */
+  ambition: string;
   /** Part gardée sur chaque rendez-vous (0,4 à 0,65). */
   part: number;
   moral: number;
@@ -45,10 +47,15 @@ export const TRAITS: Record<string, string> = {
   Solitaire: 'Récupère mieux les soirs de repos.',
   'Tête brûlée': 'Ose tout, mais déclenche parfois des disputes.',
   Fêtarde: 'Met l’ambiance, mais se fatigue plus vite.',
+  'Tête d’affiche': 'Les habitués demandent son prénom : ils viennent plus nombreux les soirs où cette personne travaille.',
+  Juriste: 'Relit les courriers d’avocats : amendes et arrangements coûtent moitié moins.',
 };
 
+/** Traits gagnés au bout d'un arc personnel : jamais tirés pour un candidat. */
+export const TRAITS_D_ARC = ['Tête d’affiche', 'Juriste'];
+
 /** Traits possibles pour les candidats du marché. */
-export const TRAITS_DU_MARCHE = Object.keys(TRAITS);
+export const TRAITS_DU_MARCHE = Object.keys(TRAITS).filter((t) => !TRAITS_D_ARC.includes(t));
 
 export const SANNE: DefinitionEmploye = {
   id: 'sanne',
@@ -58,6 +65,7 @@ export const SANNE: DefinitionEmploye = {
   genre: 'f',
   talents: { charme: 3, conversation: 5, audace: 2, discretion: 3 },
   traits: ['Mère poule', 'Fidèle'],
+  ambition: 'gerante',
   part: 0.5,
   moral: 72,
   loyaute: 80,

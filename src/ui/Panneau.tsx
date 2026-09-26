@@ -16,6 +16,7 @@ import {
   TAPAGE,
 } from '../content/balance';
 import { trouverIntrigue } from '../content/intrigues';
+import { trouverAmbition } from '../content/ambitions';
 import { PIECES_COMMUNES, trouverChambre, trouverPiece } from '../content/maison';
 import { JOSEE_RESERVE } from '../content/josee';
 import { PALIERS } from '../content/paliers';
@@ -450,9 +451,27 @@ function FicheEmploye({ partie, id }: { partie: EtatJeu; id: string }) {
           <b>{p.traitCache}</b> {p.traitCacheDetail}
         </p>
       ))}
+      <h3>{p.ambition}</h3>
+      <Ambition personne={employe} />
       <p className="sous">{p.part(Math.round(employe.part * 100))}</p>
       <Affinites partie={partie} employe={employe} />
     </div>
+  );
+}
+
+/** Le nom d'une ambition, accordé au genre de la personne. */
+export function nomAmbition(personne: { ambition: string; genre: 'f' | 'm' }): string {
+  return (trouverAmbition(personne.ambition)?.nom ?? '').replaceAll('{e}', personne.genre === 'f' ? 'e' : '');
+}
+
+/** L'ambition d'une personne, et ce qu'elle en dit. */
+function Ambition({ personne }: { personne: { ambition: string; genre: 'f' | 'm' } }) {
+  const ambition = trouverAmbition(personne.ambition);
+  if (!ambition) return null;
+  return (
+    <p className="trait">
+      <b>{nomAmbition(personne)}</b> {ambition.texte}
+    </p>
   );
 }
 
