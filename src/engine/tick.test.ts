@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ALERTES,
+  DISPUTE_DELAI,
   HEURE_BRIEFING,
   HEURE_FERMETURE,
   HEURE_OUVERTURE,
@@ -139,9 +141,31 @@ describe('rythme en temps réel', () => {
     return secondes;
   }
 
-  it('la soirée dure environ 6 minutes à ×1', () => {
+  it('la soirée dure environ 3 minutes à ×1 (1 min 30 à ×2, 45 s à ×4)', () => {
     expect(dureeReelle(partieA(h(20)), h(4))).toBeCloseTo(SECONDES_REELLES_SOIREE);
-    expect(SECONDES_REELLES_SOIREE).toBe(360);
+    expect(SECONDES_REELLES_SOIREE).toBe(180);
+    expect(SECONDES_REELLES_SOIREE / 2).toBe(90);
+    expect(SECONDES_REELLES_SOIREE / 4).toBe(45);
+  });
+
+  it('les alertes de la soirée gardent le temps de réaction réel de la v0.4 à ×1', () => {
+    // Secondes réelles pour une minute de jeu, maison ouverte.
+    const parMinute = secondesParTick(partieA(h(22))) / MINUTES_PAR_TICK;
+    const delais = {
+      bruit: ALERTES.bruit.delai,
+      ivre: ALERTES.ivre.delai,
+      bouteille: ALERTES.bouteille.delai,
+      photographe: ALERTES.photographe.delai,
+      pause: ALERTES.pause.delai,
+      presse: ALERTES.presse.seuilPatience,
+    };
+    // Secondes réelles de chaque alerte en v0.4 (délais en minutes de jeu, soirée de 6 minutes).
+    const v04 = { bruit: 22.5, ivre: 18.75, bouteille: 15, photographe: 18.75, pause: 22.5, presse: 11.25 };
+    for (const [id, minutes] of Object.entries(delais)) {
+      expect(minutes * parMinute, id).toBeCloseTo(v04[id as keyof typeof v04]);
+    }
+    // La dispute dégénère en 30 secondes, comme avant.
+    expect(DISPUTE_DELAI * parMinute).toBeCloseTo(30);
   });
 
   it('la journée, de 5 h à 19 h, dure environ 45 secondes', () => {

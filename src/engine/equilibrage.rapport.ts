@@ -46,13 +46,18 @@ const STRATEGIES: Strategie[] = [
 const arrondi = (n: number) => Math.round(n).toLocaleString('fr-FR');
 
 /** Les soirées se renouvellent-elles ? Une ligne par stratégie, cartes tranchées au hasard pour voir toutes les issues. */
-function renouvellement(): string[] {
+function renouvellement(): { lignes: string[]; types: string[] } {
   const lignes = [
     '| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) | Défis réussis | Objectif du mois 1 |',
     '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
   ];
   const noms = ['Classique, 3', 'Feutrée, 4', 'Adaptatif (suit les tendances), 3', 'Classique 3, sélection laxiste', 'Classique 3, sélection stricte'];
   const virgule = (x: number, d = 1) => x.toFixed(d).replace('.', ',');
+  const TYPES = ['presse', 'bruit', 'ivre', 'bouteille', 'photographe', 'pause', 'dispute', 'chambreSale', 'linge', 'barVide', 'epuisement'];
+  const types = [
+    `| Stratégie | ${TYPES.join(' | ')} |`,
+    `| --- | ${TYPES.map(() => '---').join(' | ')} |`,
+  ];
   const reussis = (liste: boolean[]) => (liste.length ? `${liste.filter(Boolean).length} sur ${liste.length}` : '—');
   for (const s of STRATEGIES.filter((x) => noms.includes(x.nom))) {
     const parties = GRAINES.map((graine) => simuler({ graine, nuits: NUITS, ...s, offre: s.offreSelon ?? s.offre, politique: 'hasard' }));
@@ -67,8 +72,10 @@ function renouvellement(): string[] {
         `${reussis(parties.flatMap((p) => p.bilans.flatMap((b) => (b.defi ? [b.defi.reussi] : []))))} | ` +
         `${reussis(parties.flatMap((p) => p.bilansMois.filter((m) => m.numero === 1).map((m) => m.reussi)))} |`,
     );
+    const soirees = parties.flatMap((p) => p.nuits);
+    types.push(`| ${s.nom} | ${TYPES.map((t) => virgule(soirees.reduce((n, x) => n + (x.alertes[t] ?? 0), 0) / Math.max(1, soirees.length))).join(' | ')} |`);
   }
-  return lignes;
+  return { lignes, types };
 }
 
 it('rapport d’équilibrage', () => {
@@ -99,5 +106,7 @@ it('rapport d’équilibrage', () => {
     );
   }
   console.log(`\nRapport d'équilibrage : ${GRAINES.length} graines, ${NUITS} nuits\n\n${lignes.join('\n')}\n`);
-  console.log(`\nRenouvellement des soirées : ${GRAINES.length} graines, ${NUITS} nuits (cartes tranchées au hasard)\n\n${renouvellement().join('\n')}\n`);
+  const r = renouvellement();
+  console.log(`\nRenouvellement des soirées : ${GRAINES.length} graines, ${NUITS} nuits (cartes tranchées au hasard)\n\n${r.lignes.join('\n')}\n`);
+  console.log(`\nAlertes par soirée, selon leur type (mêmes parties)\n\n${r.types.join('\n')}\n`);
 }, 120_000);

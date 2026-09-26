@@ -5,7 +5,7 @@ import { totalDepenses, totalRecettes } from './comptes';
 import { creerEtatInitial, type EtatJeu } from './etat';
 import { creerTirage } from './hasard';
 import { accorderPalier } from './paliers';
-import { demandeTendance, projeter, tirerTendances } from './semaine';
+import { demandeTendance, projeter, tendanceCreuse, tirerTendances } from './semaine';
 import { simuler } from './simulation';
 import { arrivee, facteurDemande, facteurDispute, modeleClient } from './soiree';
 import { appliquerOrdres, tick } from './tick';
@@ -110,6 +110,21 @@ describe('tendances', () => {
       for (const id of tirerTendances(unSeul, tirage)) expect(B.TENDANCES_EFFETS[id]!.segments.every((s) => s === 'touriste' || s === 'habitue')).toBe(true);
     }
     for (const id of Object.keys(B.TENDANCES_EFFETS)) expect(TENDANCES.some((t) => t.id === id)).toBe(true);
+  });
+
+  it('jamais deux tendances creuses la même semaine (grève et contrôles)', () => {
+    expect(tendanceCreuse('greve')).toBe(true);
+    expect(tendanceCreuse('controles')).toBe(true);
+    expect(tendanceCreuse('pluie')).toBe(false);
+    const tirage = creerTirage(3);
+    const tous = partie(2);
+    let doubles = 0;
+    for (let i = 0; i < 400; i++) {
+      const t = tirerTendances(tous, tirage);
+      if (t.length === 2) doubles += 1;
+      expect(t.filter(tendanceCreuse).length).toBeLessThanOrEqual(1);
+    }
+    expect(doubles).toBeGreaterThan(0);
   });
 
   it('un congrès fait venir les clients d’affaires, et plus de monde en tout', () => {

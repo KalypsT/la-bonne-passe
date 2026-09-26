@@ -245,7 +245,9 @@ export function traiterAlerte(etat: EtatJeu, cle: string, action: number, tirage
         // Il revient parfois un peu plus loin : l'alerte reprend, avec moins de temps.
         reussite = tirage.chance(0.7);
         if (!reussite) {
-          a.expire = instant(etat) + Math.round(A.photographe.delai / 2);
+          // Une nouvelle bulle, avec son propre compte à rebours.
+          a.debut = instant(etat);
+          a.expire = a.debut + Math.round(A.photographe.delai / 2);
           evenements.push({ type: 'alerteTraitee', id: a.id, action, reussite, prenom: undefined });
           return;
         }

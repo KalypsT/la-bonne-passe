@@ -27,8 +27,13 @@ export const MINUTE_DE_DEPART_DIDACTICIEL = 18 * 60;
 
 /** Durée réelle de la journée, de 5 h à 19 h (accélérée). */
 export const SECONDES_REELLES_JOURNEE = 45;
-/** Durée réelle de la soirée, de l'ouverture à la fermeture. */
-export const SECONDES_REELLES_SOIREE = 360;
+/**
+ * Durée réelle de la soirée, de l'ouverture à la fermeture (6 minutes jusqu'en v0.4 : trop long au téléphone).
+ * Tout ce que le joueur doit faire à temps pendant la soirée (délais des alertes, dispute, client pressé) est compté
+ * en minutes de jeu : si cette durée change, ces délais changent en proportion inverse, pour garder le même temps
+ * de réaction réel (environ 15 à 22 secondes à ×1). Voir le test « rythme en temps réel » dans tick.test.ts.
+ */
+export const SECONDES_REELLES_SOIREE = 180;
 /** Vitesses proposées au joueur, en plus de la pause. */
 export const VITESSES = [1, 2, 4] as const;
 
@@ -152,7 +157,7 @@ export const HEURE_SALAIRES = 12 * 60;
 export const CHARGES_FIXES = 1150; // chaque lundi
 /** Dispute sur le quai : chance par heure et par client en file au-delà du premier. */
 export const DISPUTE_CHANCE_PAR_HEURE = 0.05;
-export const DISPUTE_DELAI = 40; // minutes avant que ça dégénère
+export const DISPUTE_DELAI = 80; // minutes de jeu avant que ça dégénère (30 s réelles à ×1)
 export const DISPUTE_CASSE = 120;
 export const DISPUTE_REPUTATION = 2;
 export const DISPUTE_VERRE_OFFERT = 40;
@@ -602,21 +607,23 @@ export const IMPREVU_ARGENT = {
 
 /**
  * Alertes minutées de la soirée (v0.4) : une bulle, un délai, une ou deux actions, une conséquence si on l'ignore.
- * `chance` : probabilité par heure d'ouverture quand la condition est remplie ; `delai` : minutes pour réagir.
+ * `chance` : probabilité par heure d'ouverture quand la condition est remplie ; `delai` : minutes de jeu pour réagir.
+ * Les délais ont doublé en v0.5 quand la soirée est passée de 6 à 3 minutes : 40 à 60 minutes de jeu font toujours
+ * 15 à 22 secondes réelles à ×1. Les durées de simulation (pause, patience gagnée) ne changent pas.
  */
 export const ALERTES = {
   /** Client d'affaires sur le quai, à bout de patience : la bulle apparaît sous ce seuil (minutes). */
-  presse: { seuilPatience: 15, patienceAutres: 5, verre: 10, patienceVerre: 20, satisfactionManquee: 3 },
+  presse: { seuilPatience: 30, patienceAutres: 5, verre: 10, patienceVerre: 20, satisfactionManquee: 3 },
   /** Groupe bruyant sur le quai, quand le quartier commence à s'agacer. */
-  bruit: { seuilTapage: 25, chance: 0.8, delai: 30, rentrer: 1.5, groupe: 0.3, verre: 10, tapageVerre: 1, tapageManque: 8 },
+  bruit: { seuilTapage: 25, chance: 0.8, delai: 60, rentrer: 1.5, groupe: 0.3, verre: 10, tapageVerre: 1, tapageManque: 8 },
   /** Client éméché au bar (bar qui sert) : ignoré, il déclenche une dispute. */
-  ivre: { chance: 0.7, delai: 25, cafeReussite: 0.7, taxi: 20, tapageManque: 5 },
+  ivre: { chance: 0.7, delai: 50, cafeReussite: 0.7, taxi: 20, tapageManque: 5 },
   /** Un client veut offrir une bouteille (bar qui sert) : une recette, si quelqu'un la sert à temps. */
-  bouteille: { chance: 0.3, delai: 20, prix: 40 },
-  /** Une personne fatiguée demande une pause. */
+  bouteille: { chance: 0.3, delai: 40, prix: 40 },
   /** Un photographe rôde sur le quai (palier 2, réputation assez haute, un client d'affaires présent). */
-  photographe: { reputationMin: 30, chance: 0.5, delai: 25, billet: 20, satisfactionManquee: 3 },
-  pause: { fatigueMin: 50, chance: 0.9, delai: 30, minutes: 20, fatigue: 10, moral: 3, refus: 3, moralManque: 6, loyauteManque: 2 },
+  photographe: { reputationMin: 30, chance: 0.5, delai: 50, billet: 20, satisfactionManquee: 3 },
+  /** Une personne fatiguée demande une pause (`minutes` : durée de la pause, en temps de simulation). */
+  pause: { fatigueMin: 50, chance: 0.9, delai: 60, minutes: 20, fatigue: 10, moral: 3, refus: 3, moralManque: 6, loyauteManque: 2 },
 };
 
 /** Défis de la semaine (v0.4) : les cibles. Elles visent environ une semaine sur deux réussie pour un joueur attentif. */
