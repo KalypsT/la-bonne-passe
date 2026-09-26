@@ -1465,3 +1465,37 @@ Lecture :
 - **Rafraîchir** achète de la réputation (+3 à +4) au prix fort : l'usure (1 à 2,2 points par rendez-vous, `USURE_MIN`, `USURE_MAX`) vide une chambre en deux semaines, et le joueur simulé repeint chaque chambre tous les 12 à 15 jours. Il y perd 8 000 à 10 000 € en trois mois, en partie parce qu'il rénove les chambres fermées plus tard, faute de caisse. Sans rafraîchir, toutes les chambres finissent à 0 % d'état au deuxième mois : la qualité perd jusqu'à 0,135. **À trancher en partie 8** : ralentir l'usure (une chambre tiendrait un mois) ou baisser le prix du rafraîchissement, et remesurer toutes les gardes.
 - Le joueur de référence des gardes ne touche à rien de tout ça : leurs mesures restent valables. Nouvelle option de simulation : `lingeAuto`, `buanderie`, `loges`, `rafraichirSous`.
 - **Le joueur de référence manque de linge** : il achète un pack de 5 parures quand il lui en reste moins de 4, soit environ 4,5 parures par nuit pour 12 rendez-vous. Beaucoup de rendez-vous se font sans linge (qualité −0,12). C'est hérité des premières versions (50 draps sous 40) ; à revoir avec le rééquilibrage de la partie 8.
+
+### Le palier 4, « Monter en gamme » (partie 6)
+
+Réputation 50 et 4 personnes (`PALIER_4`). Le joueur de référence des gardes y arrive désormais, ce qui a déplacé plusieurs mesures.
+
+Quand le palier arrive (10 graines, 112 nuits) : entre les jours 28 et 73, en moyenne vers le jour 32 à 41. Le joueur classique l'atteint 10 fois sur 10 ; les joueurs « happy hour » et « soirée feutrée », 6 à 8 fois sur 10.
+
+**VIP et couples** : une première version (poids 0,35 et 0,7) donnait +13 800 € de valeur nette en trois mois, un palier trop généreux. Poids baissés à 0,2 et 0,45 (`POIDS_SEGMENTS`) : ils font 8 à 13 % des clients.
+
+Joueur classique à 3 rendez-vous, avec ou sans le palier 4 :
+
+| | Net par nuit (mois 3) | Valeur nette jour 112 | Impôt du 1er trimestre |
+| --- | --- | --- | --- |
+| Sans palier 4 | 553 € | 1 347 € | — |
+| Avec palier 4 | 748 € (+35 %) | 11 630 € | environ 3 000 € |
+
+Lecture :
+
+- Le palier 4 fait vraiment monter le niveau : un tiers de plus par nuit, surtout grâce aux VIP (380 à 450 €) et au confort (+10 % par niveau). Les formations (800 puis 1 600 €) et le jacuzzi (3 500 €) sont des dépenses que le joueur simulé ne fait pas. Elles sont là pour le joueur qui veut aller plus loin.
+- **Le placement** (+2 % sûr, −5 à +8 % risqué, 28 jours) reste modeste : 200 € sûrs sur 10 000 € placés prudemment, de −500 à +800 € en risqué (tendances en plus). C'est voulu : il fait un usage de l'excédent sans devenir une rente.
+
+Gardes déplacées (le palier 4 est maintenant atteint dans les simulations) :
+
+- `equilibrage-banque.test.ts` : impôt du premier trimestre entre 1 000 et 4 000 € (3 000 € avant), car les bénéfices montent avec le palier.
+- `equilibrage-quartier.test.ts` :
+  - la porte laxiste mène au moins 4 parties sur 10 en mauvais termes ;
+  - la garde sur les alertes des équipes devient un ratio : au moins 20 % des alertes du domaine réglées seules (mesuré : 31 %). Nouveau champ de simulation : `alertesReglees` ;
+  - le coût d'une équipe est d'au moins 800 € : la Sécurité protège aussi les VIP (chaque incident leur coûte 3 points de satisfaction), elle se rembourse mieux. Cela répond en partie à la question des équipes posée en v0.5.
+
+À surveiller :
+
+- **Les tendances propres aux VIP et aux couples** (scandale politique, Saint-Valentin…) ne sont pas encore écrites. Sans elles, ces deux segments sont stables d'une semaine à l'autre.
+- **L'usure** : les chambres premium à 0 % d'état perdent une bonne part de ce que le confort leur donne. C'est la même question qu'en partie 5, à trancher en partie 8.
+- **Le changement de nom** coûte 500 € et n'a aucun effet de jeu (une seule fois).

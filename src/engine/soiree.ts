@@ -34,6 +34,7 @@ import { revelerTraits, type EvenementRecrutement } from './recrutement';
 import { ecart, instant } from './temps';
 import { comptesVides, depenser, encaisser, journeeVide, recetteMaison } from './comptes';
 import { lundiFiscal, type EvenementFisc } from './fisc';
+import { echeancePlacement, facteurMenage, incidentVip, prixConfort, qualiteGamme, type EvenementGamme } from './gamme';
 import {
   chambreEnService,
   facteurRecuperation,
@@ -123,7 +124,8 @@ export type EvenementSoiree =
   | EvenementEquipe
   | EvenementBanque
   | EvenementFisc
-  | EvenementAmenagement;
+  | EvenementAmenagement
+  | EvenementGamme;
 
 /** Là où les fonctions de la soirée déposent leurs événements. */
 export interface Sortie {
@@ -145,6 +147,7 @@ function nouvelleNuit(etat: EtatJeu): Nuit {
     tresorerieApres: etat.tresorerie,
     retraitReserve: 0,
     empruntRecu: 0,
+    placement: 0,
     servis: 0,
     perdus: 0,
     reputationDebut: etat.reputation,
@@ -211,6 +214,7 @@ export function fermerNuit(etat: EtatJeu, tirage: Tirage, evenements: Sortie): v
     etat.nuit.tresorerieApres = etat.tresorerie;
     etat.nuit.retraitReserve = etat.journee.retraitReserve;
     etat.nuit.empruntRecu = etat.journee.empruntRecu;
+    etat.nuit.placement = etat.journee.placement;
   }
   if (etat.nuit) evenements.push({ type: 'bilan', nuit: structuredClone(etat.nuit) });
   verifierPaliers(etat, evenements);
@@ -400,7 +404,8 @@ export function qualiteRdv(
     qualiteBar(etat, modele.segment) +
     qualiteTheme(etat, modele.segment) +
     qualiteEquipes(etat, modele.segment) +
-    qualiteDecor(etat, chambreId, modele.segment);
+    qualiteDecor(etat, chambreId, modele.segment) +
+    qualiteGamme(chambre, modele.segment);
   return borner(valeur, 0, 1);
 }
 
@@ -415,7 +420,7 @@ function terminerRdv(etat: EtatJeu, chambreId: string, tirage: Tirage, evenement
   const qualite = qualiteRdv(etat, chambreId, employe.id, rdv.modele, rdv.formule);
   // Le client paie selon la qualité ; il juge aussi le prix, surtout s'il y est sensible.
   const ressentie = borner(qualite + prixRessenti(etat, modele.segment), 0, 1);
-  const tarif = trouverOffre(etat.offre).prix * (1 + ecartTarif(etat)) * formule.prix * prixTheme(etat);
+  const tarif = trouverOffre(etat.offre).prix * (1 + ecartTarif(etat)) * formule.prix * prixTheme(etat) * prixConfort(chambre);
   const prix = Math.round((modele.budget * B.BUDGET_CLIENTS * tarif * (B.PRIX_MIN + B.PRIX_ECART * qualite)) / 5) * 5;
   const maison = Math.round(prix * (1 - employe.part));
   // Le client paie la maison, qui reverse aussitôt sa part à la personne qui l'a reçu.
@@ -508,6 +513,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
       if (relationsOuvertes(etat)) changerRelations(etat, B.RELATIONS.dispute, evenements);
       changerTapage(etat, B.TAPAGE.dispute * (etat.quartier.insonorise ? B.TAPAGE.insonorise : 1));
       evenements.push({ type: 'disputeDegeneree', montant: B.DISPUTE_CASSE });
+      incidentVip(etat);
     } else if (
       !etat.dispute &&
       etat.file.length >= 2 &&
@@ -532,7 +538,7 @@ export function vivre(etat: EtatJeu, ouvert: boolean, tirage: Tirage, evenements
   }
 
   // Ménage : les chambres libres les plus sales d'abord
-  let capacite = etat.equipes.menage * (ouvert ? B.MENAGE_MAISON_OUVERTE : B.MENAGE_MAISON_FERMEE) * heures;
+  let capacite = etat.equipes.menage * (ouvert ? B.MENAGE_MAISON_OUVERTE : B.MENAGE_MAISON_FERMEE) * heures * facteurMenage(etat);
   const occupees = occupes(etat).chambres;
   const aNettoyer = etat.chambres
     .filter((c) => c.ouverte && !occupees.has(c.id) && c.proprete < 100)
@@ -607,6 +613,7 @@ export function prelevementsDuMatin(etat: EtatJeu, evenements: Sortie): void {
     lundiFiscal(etat, evenements);
   }
   rembourserAvance(etat, evenements);
+  echeancePlacement(etat, evenements);
   // Une mensualité en retard se régularise dès que possible ; la première payée ouvre le palier 3.
   if (regulariser(etat, evenements)) verifierPaliers(etat, evenements);
   const rachat = etat.jour === jourProchaineMensualite(etat);

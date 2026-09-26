@@ -137,7 +137,12 @@ export function FicheRegles({ partie }: { partie: EtatJeu }) {
     { cle: 'tarif', titre: t.tarif, options: TEXTES_TARIFS.map((texte, valeur) => ({ valeur, texte })), actuelle: r.tarif },
     { cle: 'formule', titre: t.formule, options: entrees(TEXTES_FORMULES), actuelle: r.formule },
     { cle: 'selection', titre: t.selection, options: entrees(TEXTES_SELECTIONS), actuelle: r.selection },
-    { cle: 'priorite', titre: t.priorite, options: entrees(TEXTES_PRIORITES), actuelle: r.priorite },
+    {
+      cle: 'priorite',
+      titre: t.priorite,
+      options: entrees(TEXTES_PRIORITES).filter((o) => o.valeur !== 'vip' || partie.systemes.vip),
+      actuelle: r.priorite,
+    },
     ...(partie.systemes.visibilite
       ? [{ cle: 'visibilite' as const, titre: t.visibilite, options: entrees(TEXTES_VISIBILITES), actuelle: r.visibilite }]
       : []),

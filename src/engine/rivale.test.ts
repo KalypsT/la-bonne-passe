@@ -73,9 +73,9 @@ describe('elle réagit à ce que la maison lui prend', () => {
     const haute = maison({ reputation: 60 });
     expect(cibleAgressivite(haute)).toBeGreaterThan(cibleAgressivite(basse));
     const habitues = maison();
-    habitues.clientele.historique = [{ servis: { touriste: 0, habitue: 8, affaires: 4, groupe: 0 }, perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0 } }];
+    habitues.clientele.historique = [{ servis: { touriste: 0, habitue: 8, affaires: 4, groupe: 0, vip: 0, couple: 0 }, perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0, vip: 0, couple: 0 } }];
     const touristes = maison();
-    touristes.clientele.historique = [{ servis: { touriste: 8, habitue: 0, affaires: 0, groupe: 4 }, perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0 } }];
+    touristes.clientele.historique = [{ servis: { touriste: 8, habitue: 0, affaires: 0, groupe: 4, vip: 0, couple: 0 }, perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0, vip: 0, couple: 0 } }];
     expect(cibleAgressivite(habitues)).toBeCloseTo(cibleAgressivite(touristes) + B.RIVALE.parClientele);
   });
 

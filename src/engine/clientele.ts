@@ -27,17 +27,19 @@ export interface Clientele {
 const borner = (v: number, min = 0, max = 100) => Math.min(max, Math.max(min, v));
 
 export function parSegment(valeur: number): ParSegment {
-  return { touriste: valeur, habitue: valeur, affaires: valeur, groupe: valeur };
+  return { touriste: valeur, habitue: valeur, affaires: valeur, groupe: valeur, vip: valeur, couple: valeur };
 }
 
 export function clienteleDeDepart(reputation: number = B.REPUTATION_INITIALE): Clientele {
   return { satisfaction: parSegment(reputation), satisfactionOuverture: parSegment(reputation), historique: [] };
 }
 
-/** Segments de clientèle ouverts : Touristes et Habitués d'emblée, Affaires et Groupes au palier 2. */
+/** Segments de clientèle ouverts : Touristes et Habitués d'emblée, Affaires et Groupes au palier 2, VIP et Couples au palier 4. */
 export function segmentOuvert(etat: EtatJeu, segment: Segment): boolean {
   if (segment === 'affaires') return etat.systemes.affaires;
   if (segment === 'groupe') return etat.systemes.groupes;
+  if (segment === 'vip') return etat.systemes.vip;
+  if (segment === 'couple') return etat.systemes.couples;
   return true;
 }
 

@@ -138,7 +138,7 @@ describe('l’objectif du mois et le bilan de fin de mois', () => {
 
   it('les mois suivants tournent : fidéliser la clientèle principale, garder une réserve, la réputation, l’équipe', () => {
     const etat = maison();
-    etat.clientele.historique = [{ servis: { touriste: 1, habitue: 6, affaires: 2, groupe: 1 }, perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0 } }];
+    etat.clientele.historique = [{ servis: { touriste: 1, habitue: 6, affaires: 2, groupe: 1, vip: 0, couple: 0 }, perdus: { touriste: 0, habitue: 0, affaires: 0, groupe: 0, vip: 0, couple: 0 } }];
     const m2 = prochainObjectif(etat, 2);
     expect(m2).toMatchObject({ objectif: 'satisfaction', segment: 'habitue' });
     expect(m2.cible).toBe(Math.floor(etat.clientele.satisfaction.habitue) + B.OBJECTIFS.satisfactionEnPlus);

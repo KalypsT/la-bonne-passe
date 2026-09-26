@@ -260,7 +260,7 @@ describe('migrations', () => {
     const { clientele: _c, nouveautes: _n, ...etat } = creerEtatInitial();
     const migre = migrer({ ...etat, version: 10, palier: 1, reputation: 21.5 });
     expect(migre?.version).toBe(VERSION_ETAT);
-    expect(migre?.clientele.satisfaction).toEqual({ touriste: 21.5, habitue: 21.5, affaires: 21.5, groupe: 21.5 });
+    expect(migre?.clientele.satisfaction).toMatchObject({ touriste: 21.5, habitue: 21.5, affaires: 21.5, groupe: 21.5 });
     expect(migre?.clientele.historique).toEqual([]);
     expect(migre?.systemes.clientele).toBe(false);
     // Les nouveautés des versions suivantes s'ajoutent ; celles de la clientèle, non.
@@ -645,6 +645,25 @@ describe('migrations', () => {
     const debut = migrer({ ...v30, palier: 1 });
     expect(debut?.systemes).toMatchObject({ buanderie: false, loges: false });
     expect(debut?.nouveautes).toEqual(['amenagement']);
+  });
+
+  it('migre une sauvegarde v31 : VIP et couples partis de la réputation, confort 1, équipes au niveau 1', () => {
+    const base = creerEtatInitial();
+    const { niveauxEquipes: _n, placement: _p, hasardPlacement: _h, ...reste } = base;
+    const { vip: _v, couples: _c, confort: _co, renommer: _r, formations: _f, placement: _pl, ...systemes } = base.systemes;
+    const chambres = base.chambres.map(({ confort: _x, confortAVenir: _y, ...c }) => c);
+    const { vip: _sv, couple: _sc, ...satisfaction } = base.clientele.satisfaction;
+    const v31 = { ...reste, version: 31, reputation: 42, systemes, chambres, clientele: { ...base.clientele, satisfaction }, nouveautes: [] };
+    const migre = migrer(v31);
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.clientele.satisfaction).toMatchObject({ vip: 42, couple: 42 });
+    expect(migre?.chambres.every((c) => c.confort === 1 && c.confortAVenir === null)).toBe(true);
+    expect(migre?.niveauxEquipes).toEqual({ menage: 1, bar: 1, accueil: 1, securite: 1 });
+    expect(migre?.placement).toBeNull();
+    expect(typeof migre?.hasardPlacement).toBe('number');
+    expect(migre?.systemes).toMatchObject({ vip: false, couples: false, confort: false, formations: false, placement: false });
+    expect(migre?.journee.comptes.recettes.placement).toBe(0);
+    expect(migre?.semaine.comptes.depenses.formations).toBe(0);
   });
 
   it('refuse une version future ou des données sans version', () => {

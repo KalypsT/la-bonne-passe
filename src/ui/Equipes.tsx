@@ -5,6 +5,7 @@ import { partReglee, type EquipeQuartier } from '../engine/equipes';
 import { Cadenas } from './Icones';
 import { JoseeLigne } from './Josee';
 import { useInterface } from './store';
+import { Formation } from './Gamme';
 
 /** Équipes Accueil et Sécurité (palier 3), dans l'onglet Personnel : effectif de 0 au maximum, salaire, effet. */
 export function EquipesQuartier({ partie }: { partie: EtatJeu }) {
@@ -38,6 +39,7 @@ function Equipe({ partie, equipe }: { partie: EtatJeu; equipe: EquipeQuartier })
       <p className="sous">{textes.effectif(n)}</p>
       <p className="sous">{textes.role}</p>
       {n > 0 && <p className="sous positif">{t.regle(partReglee(partie, equipe))}</p>}
+      <Formation partie={partie} equipe={equipe} />
       <div className="boutons-ligne">
         <button className="bouton discret" disabled={n <= 0} onClick={() => ordonner({ type: 'equipeQuartier', equipe, effectif: n - 1 })}>
           {t.retirer}

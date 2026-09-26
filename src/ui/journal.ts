@@ -12,6 +12,7 @@ import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS, TE
 import { JOSEE_RESERVE } from '../content/josee';
 import { ANNEXES, DECORS, trouverChambre } from '../content/maison';
 import { TEXTES_AMENAGEMENT } from '../content/amenagement';
+import { TEXTES_GAMME } from '../content/gamme';
 import { PALIERS } from '../content/paliers';
 import { TEXTES_ACTIONS_RELATIONS, TEXTES_SEUILS_RELATIONS } from '../content/relations';
 import { TEXTES_JOURNAL_RIVALE, TEXTES_REPONSES_RIVALE } from '../content/rivale';
@@ -202,6 +203,26 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return TEXTES_AMENAGEMENT.journal.finTravauxAnnexe(ANNEXES[evenement.annexe].nom);
     case 'parureUsee':
       return TEXTES_AMENAGEMENT.journal.parureUsee;
+    case 'travauxConfort':
+      return TEXTES_GAMME.journal.travauxConfort(
+        trouverChambre(evenement.chambreId)?.dans ?? '',
+        TEXTES_GAMME.confort.niveaux[evenement.niveau - 1] ?? '',
+        formaterEuros(evenement.montant),
+      );
+    case 'formation':
+      return TEXTES_GAMME.journal.formation(evenement.equipe, evenement.niveau, formaterEuros(evenement.montant));
+    case 'placement':
+      return TEXTES_GAMME.journal.placement(
+        formaterEuros(evenement.montant),
+        evenement.profil === 'prudent' ? TEXTES_GAMME.placement.prudent : TEXTES_GAMME.placement.risque,
+        evenement.echeance,
+      );
+    case 'finPlacement':
+      return evenement.gain >= 0
+        ? TEXTES_GAMME.journal.finPlacementGain(formaterEuros(evenement.montant), formaterEuros(evenement.gain))
+        : TEXTES_GAMME.journal.finPlacementPerte(formaterEuros(evenement.montant), formaterEuros(-evenement.gain));
+    case 'renommerMaison':
+      return TEXTES_GAMME.journal.renommer(evenement.ancien, evenement.nom, formaterEuros(evenement.montant));
     case 'empruntRembourse':
       return TEXTES_BANQUE.journalEmprunt.rembourse(formaterEuros(evenement.montant));
     case 'equipeMenage':

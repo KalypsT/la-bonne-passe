@@ -45,7 +45,8 @@ describe('le quartier réagit au style de la maison', () => {
     console.log('voisins nuit 56', ['classique', 'laxiste', 'stricte', 'soigneur'].map((n) => `${n} ${moyenne(n, (p) => fin(p).relations.voisins).toFixed(0)}`).join(', '));
     // Le joueur simulé fait rentrer les groupes bruyants dès l'alerte : un joueur distrait finit bien plus bas (−88 en moyenne).
     console.log('laxiste en mauvais termes', laxiste.filter((p) => fin(p).relations.voisins <= B.RELATIONS.mauvais).length, 'pétitions', laxiste.filter((p) => evenements(p, EVENEMENTS_MAUVAIS).includes('petition')).length);
-    expect(laxiste.filter((p) => fin(p).relations.voisins <= B.RELATIONS.mauvais).length).toBeGreaterThanOrEqual(5);
+    // v0.6 : au palier 4 (deuxième mois), VIP et couples prennent des places aux groupes bruyants : 4 sur 10 au lieu de 5.
+    expect(laxiste.filter((p) => fin(p).relations.voisins <= B.RELATIONS.mauvais).length).toBeGreaterThanOrEqual(4);
     expect(laxiste.filter((p) => evenements(p, EVENEMENTS_MAUVAIS).includes('petition')).length).toBeGreaterThanOrEqual(4);
   });
 
@@ -110,20 +111,35 @@ describe('le Chat Noir', () => {
 describe('les équipes Accueil et Sécurité, et l’assurance', () => {
   /** Alertes par soirée, des nuits 36 à 56 (les équipes sont engagées dès le jour 28). */
   const alertes = (nom: string) => moyenne(nom, (p) => mesurerRenouvellement(p.nuits.slice(35)).alertes);
+  // v0.6 : les alertes du domaine des équipes (le quai, la presse, l'ivresse, les photographes…), sur tout le deuxième mois.
+  // Le total, lui, bouge avec le linge et les chambres sales, que les équipes ne touchent pas : au palier 4, le bruit de
+  // ces alertes-là couvrait l'effet des équipes.
+  const DOMAINE = ['presse', 'bruit', 'ivre', 'photographe', 'sabotage', 'journaliste', 'fenetre'];
+  const alertesDuDomaine = (nom: string) =>
+    moyenne(nom, (p) => {
+      const nuits = p.nuits.slice(28);
+      return nuits.reduce((t, n) => t + DOMAINE.reduce((s, k) => s + (n.alertes[k] ?? 0), 0), 0) / nuits.length;
+    });
   // v0.6 : net de la mensualité en retard et des salaires dus, que la banque et les équipes attendent.
   const avoir = (nom: string) => moyenne(nom, (p) => avoirNet(p.etat));
 
   it('règlent une partie des alertes, sans vider la soirée', () => {
     console.log('alertes par soirée', ['classique', 'accueil', 'equipes'].map((n) => `${n} ${alertes(n).toFixed(1)}`).join(', '));
-    expect(alertes('equipes')).toBeLessThan(alertes('classique') - 0.5);
+    console.log('alertes du domaine des équipes', ['classique', 'accueil', 'equipes'].map((n) => `${n} ${alertesDuDomaine(n).toFixed(2)}`).join(', '));
+    // Ce qu'elles règlent seules, sur ce qui est apparu ou a été réglé : un quart environ par personne et par équipe.
+    const reglees = moyenne('equipes', (p) => p.nuits.slice(28).reduce((t, n) => t + n.alertesReglees, 0) / 28);
+    console.log('alertes réglées seules par soirée', reglees.toFixed(2));
+    expect(reglees / (reglees + alertesDuDomaine('equipes'))).toBeGreaterThan(0.2);
     expect(alertes('equipes')).toBeGreaterThan(alertes('classique') * 0.6);
   });
 
-  it('se paient : une équipe coûte 1 500 à 4 000 € sur le deuxième mois, deux davantage', () => {
+  // v0.6 : au palier 4, une équipe se rembourse en partie (la sécurité évite aux VIP les incidents qui les font fuir) ;
+  // une équipe coûtait 1 500 à 4 000 € sur le deuxième mois, elle en coûte désormais 800 à 4 000.
+  it('se paient : une équipe coûte 800 à 4 000 € sur le deuxième mois, deux davantage', () => {
     const une = avoir('classique') - avoir('accueil');
     const deux = avoir('classique') - avoir('equipes');
     console.log('coût sur le mois 2', `une équipe ${une.toFixed(0)} €`, `deux ${deux.toFixed(0)} €`, `avoir classique ${avoir('classique').toFixed(0)} €`);
-    expect(une).toBeGreaterThan(1500);
+    expect(une).toBeGreaterThan(800);
     expect(une).toBeLessThan(4000);
     expect(deux).toBeGreaterThan(une);
   });

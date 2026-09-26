@@ -40,7 +40,9 @@ export function equipeDe(id: IdAlerte): EquipeQuartier | undefined {
 
 /** Part des alertes de son domaine qu'une équipe règle seule, selon son effectif. */
 export function partReglee(etat: EtatJeu, equipe: EquipeQuartier): number {
-  return Math.min(1, etat.equipes[equipe] * B.EQUIPES[equipe].regle);
+  // Une équipe formée (palier 4) règle davantage seule.
+  if (etat.equipes[equipe] === 0) return 0;
+  return Math.min(1, etat.equipes[equipe] * B.EQUIPES[equipe].regle + (etat.niveauxEquipes[equipe] - 1) * B.FORMATIONS.regle);
 }
 
 /** L'équipe change d'effectif (palier 3) ; l'interface le propose de 0 au maximum. */
@@ -58,7 +60,7 @@ export function salairesEquipesQuartier(etat: EtatJeu): number {
 
 /** Minutes de patience en plus sur le quai. */
 export function patienceAccueil(etat: EtatJeu): number {
-  return etat.equipes.accueil * B.EQUIPES.accueil.patience;
+  return etat.equipes.accueil * B.EQUIPES.accueil.patience * (1 + (etat.niveauxEquipes.accueil - 1) * B.FORMATIONS.patience);
 }
 
 /** Qualité ressentie : la sécurité, discrète, rassure les clients d'affaires. */

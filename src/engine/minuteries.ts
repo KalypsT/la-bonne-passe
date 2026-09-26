@@ -10,6 +10,7 @@ import { creerTirage, type Tirage } from './hasard';
 import { barSert } from './bar';
 import { changerReputationGlobale, changerSatisfaction } from './clientele';
 import { depenser, encaisser } from './comptes';
+import { incidentVip } from './gamme';
 import { changerLoyaute, changerMoral } from './personnel';
 import { changerTapage } from './quartier';
 import { visibiliteActive } from './regles';
@@ -129,6 +130,7 @@ function manquer(etat: EtatJeu, a: AlerteMinutee, evenements: Sortie): void {
     case 'photographe':
       changerSatisfaction(etat, 'affaires', -A.photographe.satisfactionManquee);
       if (relationsOuvertes(etat)) changerRelations(etat, B.RELATIONS.photographeManque, evenements);
+      incidentVip(etat);
       break;
     case 'journaliste':
       if (relationsOuvertes(etat)) changerRelations(etat, { presse: B.ALERTES_QUARTIER.journaliste.presseManque }, evenements);

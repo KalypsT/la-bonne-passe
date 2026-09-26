@@ -2,13 +2,15 @@
 
 import type { Silhouette, Talent } from './personnel';
 
-export type Segment = 'touriste' | 'habitue' | 'affaires' | 'groupe';
+export type Segment = 'touriste' | 'habitue' | 'affaires' | 'groupe' | 'vip' | 'couple';
 
 export const SEGMENTS: Record<Segment, string> = {
   touriste: 'Touristes',
   habitue: 'Habitués',
   affaires: 'Affaires',
   groupe: 'Groupes',
+  vip: 'VIP',
+  couple: 'Couples curieux',
 };
 
 export interface ModeleClient {
@@ -153,6 +155,70 @@ export const CLIENTS: ModeleClient[] = [
     attend: 'conversation',
     silhouette: { teint: '#F4CFB0', cheveux: '#D8B25A', coiffure: 'longue', haut: '#5B2A6E', bas: '#2E3F55' },
   },
+  // ——— VIP (palier 4) : gros budgets, peu nombreux, allergiques aux indiscrétions ———
+  {
+    id: 'armateur',
+    nom: 'L’armateur discret',
+    segment: 'vip',
+    replique: 'Mon chauffeur attend au coin. Il n’a rien vu, et vous non plus.',
+    budget: 420,
+    attend: 'discretion',
+    patience: 30,
+    silhouette: { teint: '#E8B894', cheveux: '#CFCFCF', coiffure: 'degarnie', haut: '#14141A', bas: '#14141A', accent: '#D4A64A' },
+  },
+  {
+    id: 'diplomate',
+    nom: 'La diplomate en mission',
+    genre: 'f',
+    segment: 'vip',
+    replique: 'Officiellement, je suis au concert. Officieusement, surprenez-moi.',
+    budget: 450,
+    attend: 'conversation',
+    patience: 30,
+    silhouette: { teint: '#C68A62', cheveux: '#111111', coiffure: 'chignon', haut: '#5C1530', bas: '#2A1020', accent: '#D4A64A' },
+  },
+  {
+    id: 'footballeur',
+    nom: 'Le footballeur incognito',
+    segment: 'vip',
+    replique: 'La casquette, c’est pour la discrétion. Les lunettes aussi. Le chauffeur aussi.',
+    budget: 380,
+    attend: 'audace',
+    patience: 35,
+    silhouette: { teint: '#8D5A3B', cheveux: '#111111', coiffure: 'casquette', haut: '#1C2A44', bas: '#222222', accent: '#EDEDED', lunettes: true },
+  },
+  // ——— Couples curieux (palier 4) : ils viennent à deux, et regardent tout ———
+  {
+    id: 'couple-rotterdam',
+    nom: 'Le couple de Rotterdam',
+    segment: 'couple',
+    replique: 'On s’est dit : pourquoi pas ? Et puis on s’est dit : pourquoi pas ici ?',
+    budget: 220,
+    attend: 'conversation',
+    patience: 50,
+    silhouette: { teint: '#F4CFB0', cheveux: '#D8B25A', coiffure: 'courte', haut: '#5FA3A8', bas: '#2E3F55', accent: '#FF9BBE' },
+  },
+  {
+    id: 'couple-anniversaire',
+    nom: 'La femme qui fête ses dix ans de mariage',
+    genre: 'f',
+    segment: 'couple',
+    replique: 'Mon mari attend au bar. C’est son cadeau, ou le mien, on n’a pas tranché.',
+    budget: 240,
+    attend: 'charme',
+    patience: 50,
+    silhouette: { teint: '#F1C7A5', cheveux: '#5A3A22', coiffure: 'longue', haut: '#B01E3A', bas: '#2A2030' },
+  },
+  {
+    id: 'couple-artistes',
+    nom: 'Les amants du dimanche',
+    segment: 'couple',
+    replique: 'Une chambre avec une histoire, s’il vous plaît. La nôtre est un peu usée.',
+    budget: 200,
+    attend: 'conversation',
+    patience: 55,
+    silhouette: { teint: '#C68A62', cheveux: '#2A1712', coiffure: 'longue', haut: '#7A5A3A', bas: '#3A2A3F', lunettes: true },
+  },
 ];
 
 /** Ce que la fiche d'un segment raconte, dans l'onglet Clientèle. */
@@ -166,6 +232,25 @@ export interface InfoSegment {
 }
 
 export const INFOS_SEGMENTS: Record<Segment, InfoSegment> = {
+  vip: {
+    attend: 'De la discrétion avant tout, du prestige : une chambre premium, du confort, un décor refait à neuf.',
+    sensible: 'Aux incidents et aux indiscrétions : une dispute sur le quai ou un photographe laissé filer, et ils ne reviennent plus. Ils n’attendent pas.',
+    attire: 'La priorité d’accueil « VIP d’abord » leur plaît, et une équipe Sécurité les rassure.',
+    humeurs: [
+      'Dans les salons privés, ton nom se murmure avec un sourire en coin. Pas celui qu’on veut.',
+      'Une voiture aux vitres teintées ralentit parfois devant la porte.',
+      'Les chauffeurs des grands hôtels connaissent le quai par cœur.',
+    ],
+  },
+  couple: {
+    attend: 'De la conversation, et une chambre qui raconte une histoire : un décor refait, un jacuzzi.',
+    sensible: 'À l’accueil et à la propreté : ils regardent tout, à deux, et en parlent sur le chemin du retour.',
+    humeurs: [
+      'Sur les forums de couples, on parle de toi comme d’une « expérience ratée ».',
+      'Quelques couples osent passer la porte, en se tenant la main.',
+      'On vient fêter des anniversaires de mariage chez toi. Des vrais.',
+    ],
+  },
   touriste: {
     attend: 'De la conversation, de l’ambiance, un souvenir à raconter sans se ruiner.',
     sensible: 'Au prix et aux avis en ligne. Sur le quai, ils patientent en photographiant le canal.',
@@ -205,11 +290,8 @@ export const INFOS_SEGMENTS: Record<Segment, InfoSegment> = {
   },
 };
 
-/** Segments qui viendront plus tard, affichés verrouillés dans l'onglet Clientèle. */
-export const SEGMENTS_A_VENIR = [
-  { nom: 'VIP', palier: 4 },
-  { nom: 'Couples curieux', palier: 4 },
-];
+/** Segments qui viendront plus tard, affichés verrouillés dans l'onglet Clientèle (v0.6 : tous ouverts au palier 4). */
+export const SEGMENTS_A_VENIR: { nom: string; palier: number }[] = [];
 
 /** Segments ouverts dès le départ ; les autres s'ouvrent par palier. */
 export const SEGMENTS_DE_DEPART: Segment[] = ['touriste', 'habitue'];

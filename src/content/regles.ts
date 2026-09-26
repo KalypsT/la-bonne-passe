@@ -103,6 +103,12 @@ export const TEXTES_PRIORITES: Record<IdPriorite, TexteOption> = {
     effet: 'Le client le moins patient passe en premier. Les affaires apprécient ; les autres patientent.',
     josee: 'Les pressés d’abord : ils partent vite, et le racontent encore plus vite.',
   },
+  vip: {
+    nom: 'VIP d’abord',
+    court: 'VIP',
+    effet: 'Un VIP ne fait jamais la queue, et il le remarque. Les autres patientent un peu plus.',
+    josee: 'Les VIP paient pour ne pas attendre. Fais-leur ce plaisir, et fais-le discrètement.',
+  },
 };
 
 /** Visibilité (v0.5) : comment la maison se fait connaître. Plus de monde, mais pas toujours le bon. */
