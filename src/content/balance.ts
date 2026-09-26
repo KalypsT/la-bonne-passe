@@ -79,7 +79,7 @@ export const REPUTATION_PAR_RDV = 2.0;
  * Les gains ralentissent quand la réputation monte : × (1 − réputation / 100) ^ FREIN.
  * Les pertes, elles, tombent en entier. Cible : avec Sanne seule, réputation 25 au mieux vers la nuit 4 ou 5 (voir paliers.test.ts).
  */
-export const REPUTATION_FREIN = 2;
+export const REPUTATION_FREIN = 3.5;
 export const REPUTATION_CLIENT_PERDU = 0.1;
 export const REPUTATION_FILE_PLEINE = 0;
 
@@ -149,7 +149,7 @@ export const LIVRAISON_EXPRESS_LINGE = { draps: 50, prix: 90 };
 
 export const SALAIRE_MENAGE = 110; // par jour et par personne, à midi
 export const HEURE_SALAIRES = 12 * 60;
-export const CHARGES_FIXES = 1000; // chaque lundi
+export const CHARGES_FIXES = 1150; // chaque lundi
 /** Dispute sur le quai : chance par heure et par client en file au-delà du premier. */
 export const DISPUTE_CHANCE_PAR_HEURE = 0.05;
 export const DISPUTE_DELAI = 40; // minutes avant que ça dégénère
@@ -476,7 +476,7 @@ export const THEMES: Record<string, ReglageTheme> = {
     dispute: 1,
     bar: 1.3,
     patience: 20,
-    bouche: 1.8,
+    bouche: 3,
   },
   jazz: {
     cout: 60,
@@ -606,13 +606,13 @@ export const IMPREVU_ARGENT = {
  */
 export const ALERTES = {
   /** Client d'affaires sur le quai, à bout de patience : la bulle apparaît sous ce seuil (minutes). */
-  presse: { seuilPatience: 20, patienceAutres: 5, verre: 10, patienceVerre: 20, satisfactionManquee: 3 },
+  presse: { seuilPatience: 15, patienceAutres: 5, verre: 10, patienceVerre: 20, satisfactionManquee: 3 },
   /** Groupe bruyant sur le quai, quand le quartier commence à s'agacer. */
   bruit: { seuilTapage: 25, chance: 0.8, delai: 30, rentrer: 1.5, groupe: 0.3, verre: 10, tapageVerre: 1, tapageManque: 8 },
   /** Client éméché au bar (bar qui sert) : ignoré, il déclenche une dispute. */
   ivre: { chance: 0.7, delai: 25, cafeReussite: 0.7, taxi: 20, tapageManque: 5 },
   /** Un client veut offrir une bouteille (bar qui sert) : une recette, si quelqu'un la sert à temps. */
-  bouteille: { chance: 0.35, delai: 20, prix: 40 },
+  bouteille: { chance: 0.3, delai: 20, prix: 40 },
   /** Une personne fatiguée demande une pause. */
   /** Un photographe rôde sur le quai (palier 2, réputation assez haute, un client d'affaires présent). */
   photographe: { reputationMin: 30, chance: 0.5, delai: 25, billet: 20, satisfactionManquee: 3 },
@@ -630,7 +630,7 @@ export const DEFIS = {
   habitues: 5, // points de satisfaction gagnés chez les habitués
   attentive: 3, // alertes laissées filer, au plus
   bar: 1800, // recette du bar, en euros
-  fidelite: 15, // part de clients perdus, au plus (%)
+  fidelite: 20, // part de clients perdus, au plus (%)
   affluence: 80, // clients reçus
   /** Un défi lié à une tendance de la semaine pèse tant de fois plus qu'un défi ordinaire au tirage. */
   poidsLie: 3,
@@ -639,7 +639,7 @@ export const DEFIS = {
 /** Objectifs du mois (v0.4), évalués le jour de la mensualité. */
 export const OBJECTIFS = {
   /** Premier mois : la réputation à atteindre. */
-  reputationMois1: 52,
+  reputationMois1: 42,
   /** Mois suivants : réputation actuelle + tant (plafonnée à 90). */
   reputationEnPlus: 8,
   /** Fidéliser la clientèle principale (le segment le plus reçu ces dernières nuits) : sa satisfaction + tant (plafonnée à 90). */

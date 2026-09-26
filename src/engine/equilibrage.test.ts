@@ -2,10 +2,11 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { Offre } from '../content/clientele';
 import { partsDeClientele, simuler, type ResumeNuit } from './simulation';
 
-// Parties simulées d'un joueur actif (voir simulation.ts) : 14 nuits, 10 graines.
+// Parties simulées d'un joueur actif (voir simulation.ts) : 14 nuits, 20 graines (10 ne suffisaient plus à départager
+// des offres proches, v0.4).
 // Les cibles viennent des spécifications (« Économie et finances ») et de docs/EQUILIBRAGE.md.
 
-const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const GRAINES = Array.from({ length: 20 }, (_, i) => i + 1);
 const OFFRES: Offre[] = ['classique', 'happy', 'feutree'];
 type Cle = `${Offre}-${number}`;
 const parties = new Map<Cle, { nuits: ResumeNuit[]; moral: number; departs: number }[]>();
