@@ -264,7 +264,7 @@ describe('réputation', () => {
       const r = tick(etat, sale ? [{ type: 'nettoyageExpress', chambreId: 'boudoir' }] : []);
       etat = r.etat;
       if (r.evenements.some((e) => e.type === 'briefing')) {
-        etat = appliquerOrdres(etat, [{ type: 'validerBriefing', offre, commanderLinge: true }]).etat;
+        etat = appliquerOrdres(etat, [{ type: 'validerBriefing', offre, packLinge: 5 }]).etat;
       }
       if (r.evenements.some((e) => e.type === 'bilan')) reputations.push(etat.reputation);
     }

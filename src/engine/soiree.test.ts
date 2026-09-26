@@ -33,19 +33,19 @@ function ordre(etat: EtatJeu, o: Ordre) {
 
 describe('ouverture de la nuit', () => {
   it('prépare la nuit : comptes à zéro et linge commandé livré', () => {
-    const avant = partieA(h(19, 55), { lingeCommande: 50 });
+    const avant = partieA(h(19, 55), { lingeCommande: 5 });
     const { etat } = tick(avant);
     expect(etat.nuit).toMatchObject({ numero: 1, servis: 0, perdus: 0 });
     expect(etat.nuit?.comptes).toEqual(comptesVides());
-    expect(etat.linge).toBe(B.LINGE_INITIAL + 50);
+    expect(etat.linge).toBe(B.LINGE_INITIAL + 5);
     expect(etat.lingeCommande).toBe(0);
   });
 
   it('le briefing fixe l’offre du soir et commande le linge', () => {
-    const { etat } = ordre(creerEtatInitial(), { type: 'validerBriefing', offre: 'happy', commanderLinge: true });
+    const { etat } = ordre(creerEtatInitial(), { type: 'validerBriefing', offre: 'happy', packLinge: 5 });
     expect(etat.offre).toBe('happy');
-    expect(etat.lingeCommande).toBe(B.COMMANDE_LINGE.draps);
-    expect(etat.tresorerie).toBe(B.TRESORERIE_INITIALE - B.COMMANDE_LINGE.prix);
+    expect(etat.lingeCommande).toBe(B.PACKS_LINGE[0].parures);
+    expect(etat.tresorerie).toBe(B.TRESORERIE_INITIALE - B.PACKS_LINGE[0].prix);
   });
 });
 
@@ -176,9 +176,9 @@ describe('actions du joueur', () => {
     expect(ordre(partieA(h(22)), { type: 'nettoyageExpress', chambreId: 'velours' }).etat.tresorerie).toBe(B.TRESORERIE_INITIALE);
   });
 
-  it('la livraison express apporte 50 draps pour 90 €', () => {
+  it('la livraison express apporte 5 parures pour 90 €', () => {
     const { etat } = ordre(partieA(h(22), { linge: 0 }), { type: 'livraisonLinge' });
-    expect(etat.linge).toBe(B.LIVRAISON_EXPRESS_LINGE.draps);
+    expect(etat.linge).toBe(B.LIVRAISON_EXPRESS_LINGE.parures);
     expect(etat.tresorerie).toBe(B.TRESORERIE_INITIALE - B.LIVRAISON_EXPRESS_LINGE.prix);
   });
 

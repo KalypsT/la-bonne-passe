@@ -392,6 +392,19 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     }
     return { ...d, version: 25, semaine, bilanSemaine, journee, nuit };
   },
+  // v25 → v26 : le linge se compte en parures (10 draps font une parure, arrondi à l'avantage du joueur),
+  // avec une commande automatique, présentée par Josée.
+  25: (d) => {
+    const parures = (draps: unknown) => (typeof draps === 'number' ? Math.ceil(Math.max(0, draps) / 10) : 0);
+    return {
+      ...d,
+      version: 26,
+      linge: parures(d.linge),
+      lingeCommande: parures(d.lingeCommande),
+      lingeAuto: 0,
+      nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), 'parures'],
+    };
+  },
 };
 
 
@@ -431,6 +444,7 @@ function estEtatValide(d: Donnees): boolean {
     Array.isArray(d.file) &&
     Array.isArray(d.rendezVous) &&
     typeof d.linge === 'number' &&
+    typeof d.lingeAuto === 'number' &&
     typeof d.reserve === 'number' &&
     typeof d.tauxReserve === 'number' &&
     typeof d.mensualitesPayees === 'number' &&

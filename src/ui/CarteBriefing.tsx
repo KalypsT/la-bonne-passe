@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { COMMANDE_BAR, COMMANDE_LINGE, FORMULES, SEUIL_BAR, THEMES, HEURE_FERMETURE, HEURE_OUVERTURE, RDV_MAX_CRANS } from '../content/balance';
+import { CIBLES_LINGE_AUTO, COMMANDE_BAR, FORMULES, PACKS_LINGE, SEUIL_BAR, THEMES, HEURE_FERMETURE, HEURE_OUVERTURE, RDV_MAX_CRANS } from '../content/balance';
 import { OFFRES, type Offre } from '../content/clientele';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
+import { manqueAuto, prixLinge } from '../engine/linge';
 import { jourDeLaSemaine } from '../engine/temps';
 import { Avatar } from '../scene/Avatar';
 import { formaterEuros, formaterHeure } from './format';
@@ -20,7 +21,8 @@ import { useInterface } from './store';
 export function CarteBriefing({ partie }: { partie: EtatJeu }) {
   const validerBriefing = useInterface((s) => s.validerBriefing);
   const [offre, setOffre] = useState<Offre>(partie.offre);
-  const [commanderLinge, setCommanderLinge] = useState(false);
+  const [packLinge, setPackLinge] = useState(0);
+  const [lingeAuto, setLingeAuto] = useState(partie.lingeAuto);
   const [commanderBar, setCommanderBar] = useState(false);
   const [theme, setTheme] = useState<string | null>(null);
   // Planning : une personne promise au repos est proposée au repos d'office.
@@ -39,6 +41,9 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
   const p = TEXTES.personnel;
   const jourSemaine = TEXTES.jours[jourDeLaSemaine(partie.jour)] ?? '';
   const premierSoir = partie.nuitsBouclees === 0;
+  // Ce que la commande automatique ajoutera après le pack choisi, et le linge disponible ce soir.
+  const auto = manqueAuto({ ...partie, lingeAuto }, packLinge);
+  const lingeCeSoir = partie.linge + partie.lingeCommande + packLinge + auto;
 
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-briefing">
@@ -51,7 +56,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
               {TEXTES.date(jourSemaine, partie.jour)} · {t.horaires(formaterHeure(HEURE_OUVERTURE), formaterHeure(HEURE_FERMETURE))}
             </p>
           </div>
-          <button className="bouton principal" onClick={() => validerBriefing({ offre, commanderLinge, commanderBar, repos: planning ? repos : [], rdvMax, theme })}>
+          <button className="bouton principal" onClick={() => validerBriefing({ offre, packLinge, lingeAuto, commanderBar, repos: planning ? repos : [], rdvMax, theme })}>
             {t.lancer}
           </button>
         </header>
@@ -104,14 +109,30 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
             )}
             {!partie.systemes.planning && partie.didacticiel === null && <p className="sous">{t.planningVerrouille(partie.personnel[0]?.prenom ?? '')}</p>}
             <h3>{t.linge}</h3>
-            <p className="sous">{t.stockLinge(partie.linge)}</p>
-            <button
-              className={commanderLinge ? 'choix choisi' : 'choix'}
-              aria-pressed={commanderLinge}
-              onClick={() => setCommanderLinge(!commanderLinge)}
-            >
-              {t.commanderLinge(COMMANDE_LINGE.draps, formaterEuros(COMMANDE_LINGE.prix))}
-            </button>
+            <p className="sous">{t.stockLingeCommande(partie.linge, partie.lingeCommande)}</p>
+            <p className="sous">{t.packLinge}</p>
+            <div className="boutons-ligne quatre" role="group" aria-label={t.packLinge}>
+              {[0, ...PACKS_LINGE.map((p) => p.parures)].map((n) => (
+                <button
+                  key={n}
+                  className={packLinge === n ? 'choix-court choisi' : 'choix-court'}
+                  aria-pressed={packLinge === n}
+                  aria-label={n === 0 ? t.aucunPack : t.pack(n, formaterEuros(prixLinge(n)), formaterEuros(prixLinge(n) / n))}
+                  onClick={() => setPackLinge(n)}
+                >
+                  {n === 0 ? t.aucunPack : `${n} · ${formaterEuros(prixLinge(n))}`}
+                </button>
+              ))}
+            </div>
+            <p className="sous">{t.lingeAuto}</p>
+            <div className="boutons-ligne quatre" role="group" aria-label={t.lingeAuto}>
+              {CIBLES_LINGE_AUTO.map((n) => (
+                <button key={n} className={lingeAuto === n ? 'choix-court choisi' : 'choix-court'} aria-pressed={lingeAuto === n} onClick={() => setLingeAuto(n)}>
+                  {t.cibleAuto(n)}
+                </button>
+              ))}
+            </div>
+            <p className="sous">{lingeAuto > 0 ? t.lingeAutoAide : ''} {t.apresCommande(lingeCeSoir, auto, formaterEuros(prixLinge(auto)))}</p>
             {partie.bar.ouvert && (
               <>
                 <h3>{t.bar}</h3>

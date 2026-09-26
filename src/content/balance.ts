@@ -144,11 +144,21 @@ export const RENOVATION = { prix: 900, heures: 8 };
 export const PROPRETE_APRES_TRAVAUX = 100;
 export const ETAT_APRES_TRAVAUX = 90;
 
-export const LINGE_INITIAL = 40;
-export const LINGE_PAR_RDV = 10;
-export const SEUIL_LINGE = 10;
-export const COMMANDE_LINGE = { draps: 50, prix: 60 };
-export const LIVRAISON_EXPRESS_LINGE = { draps: 50, prix: 90 };
+// Le linge se compte en parures (draps, housse, serviettes) : une par rendez-vous.
+export const LINGE_INITIAL = 4;
+export const LINGE_PAR_RDV = 1;
+/** Sous ce stock, l'alerte « plus de linge propre ». */
+export const SEUIL_LINGE = 1;
+/** Packs commandés au briefing, livrés à l'ouverture : plus le pack est gros, moins la parure coûte. */
+export const PACKS_LINGE = [
+  { parures: 5, prix: 60 },
+  { parures: 10, prix: 110 },
+  { parures: 20, prix: 200 },
+] as const;
+/** Commande automatique : le stock est complété chaque soir jusqu'à cette cible (0 : pas de commande). */
+export const CIBLES_LINGE_AUTO = [0, 5, 10, 20] as const;
+/** Livraison express en soirée, plus chère. */
+export const LIVRAISON_EXPRESS_LINGE = { parures: 5, prix: 90 };
 
 // ——— Dépenses ———
 

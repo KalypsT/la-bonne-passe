@@ -38,11 +38,11 @@ function matinDuJour2(): EtatJeu {
 describe('comptes de la nuit', () => {
   it('tient chaque poste de sa journée : salaires de midi, commandes du briefing, rendez-vous pleins et part du personnel', () => {
     const matin = matinDuJour2();
-    const { etat, evenements } = jusqua(matin, h(5), { type: 'validerBriefing', commanderLinge: true });
+    const { etat, evenements } = jusqua(matin, h(5), { type: 'validerBriefing', packLinge: 5 });
     const nuit = bilanDe(evenements);
     const c = nuit.comptes;
     expect(c.depenses.salaires).toBe(matin.equipes.menage * B.SALAIRE_MENAGE);
-    expect(c.depenses.linge).toBe(B.COMMANDE_LINGE.prix);
+    expect(c.depenses.linge).toBe(B.PACKS_LINGE[0].prix);
     expect(nuit.servis).toBeGreaterThan(0);
     expect(c.recettes.rendezVous).toBeGreaterThan(0);
     // Sanne garde la moitié de chaque rendez-vous.

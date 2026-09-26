@@ -1328,3 +1328,21 @@ Une partie du jour 20 au jour 46, à ×4 : cartes tranchées au hasard, une bull
 - 70 cartes différentes en 26 soirées : rumeur et prix cassés du Chat Noir, compteur de clients, colis noir, ronde de l'agent Visser, voisine en peignoir, échevin en goguette, chroniqueur au bar, fleuriste, panne de courant, pianiste, voisin à sa fenêtre…
 - Au jour 46, sans rien soigner : voisins −14 (en froid), mairie +33, presse −18.
 - Aucune erreur dans la console.
+
+## Finances et aménagement (v0.6)
+
+### Le linge en parures (partie 1b)
+
+Le linge se compte en parures, une par rendez-vous, au lieu de 10 draps par rendez-vous. Les montants ne changent pas : l'ancien stock de 40 draps vaut 4 parures, l'ancienne commande (50 draps, 60 €) devient le pack de 5 parures, soit 12 € la parure.
+
+| Achat | Parures | Prix | Par parure |
+| --- | --- | --- | --- |
+| Pack au briefing | 5 | 60 € | 12 € |
+| Pack au briefing | 10 | 110 € | 11 € |
+| Pack au briefing | 20 | 200 € | 10 € |
+| Commande automatique | ce qui manque | au tarif du plus gros pack atteint | 10 à 12 € |
+| Livraison express en soirée | 5 | 90 € | 18 € |
+
+- Une parure coûte 4 à 5 % de la recette d'un rendez-vous (environ 240 € en moyenne au premier mois) : le linge reste un poste mineur, que le gros pack allège d'environ 2 € par rendez-vous.
+- Une maison à 4 personnes et 4 rendez-vous chacune use 16 parures par nuit : la commande automatique à 20 revient à environ 160 à 180 € par soir, contre environ 190 € au tarif du pack de 5 et près de 290 € en express.
+- Le joueur simulé commande toujours un pack de 5 quand il lui reste moins de 4 parures, comme avant : toutes les mesures des versions précédentes restent valables.

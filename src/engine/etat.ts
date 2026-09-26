@@ -296,10 +296,12 @@ export interface EtatJeu {
   equipes: { menage: number; bar: number; accueil: number; securite: number };
   bar: EtatBar;
   avance: Avance;
-  /** Draps propres en stock. */
+  /** Parures de linge propres en stock (une par rendez-vous). */
   linge: number;
-  /** Draps commandés au briefing, livrés à l'ouverture. */
+  /** Parures commandées au briefing, livrées à l’ouverture. */
   lingeCommande: number;
+  /** Commande automatique : le stock est complété chaque soir jusqu'à cette cible (0 : aucune). */
+  lingeAuto: number;
   offre: Offre;
   file: ClientEnFile[];
   rendezVous: RendezVous[];
@@ -385,7 +387,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 25;
+export const VERSION_ETAT = 26;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -469,6 +471,7 @@ export function soireeDeDepart() {
     equipes: { menage: 1, bar: 0, accueil: 0, securite: 0 },
     linge: LINGE_INITIAL,
     lingeCommande: 0,
+    lingeAuto: 0,
     offre: 'classique' as Offre,
     file: [],
     rendezVous: [],

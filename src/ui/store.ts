@@ -97,7 +97,8 @@ interface EtatInterface {
   avancer: (secondes: number) => void;
   validerBriefing: (choix: {
     offre: Offre;
-    commanderLinge: boolean;
+    packLinge: number;
+    lingeAuto: number;
     commanderBar: boolean;
     repos: string[];
     rdvMax: number;
@@ -300,11 +301,11 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     if (bilan) get().sauvegarderPartie();
   },
 
-  validerBriefing: ({ offre, commanderLinge, commanderBar, repos, rdvMax, theme }) => {
+  validerBriefing: ({ offre, packLinge, lingeAuto, commanderBar, repos, rdvMax, theme }) => {
     const { partie, vitesse } = get();
     if (!partie) return;
     reserveDeTemps = 0;
-    const resultat = appliquerOrdres(partie, [{ type: 'validerBriefing', offre, commanderLinge, commanderBar, repos, rdvMax, theme }]);
+    const resultat = appliquerOrdres(partie, [{ type: 'validerBriefing', offre, packLinge, lingeAuto, commanderBar, repos, rdvMax, theme }]);
     set({ partie: resultat.etat, carte: null, vitesse: vitesse === 0 ? 1 : vitesse });
     get().signalerDidacticiel('briefing');
     get().sauvegarderPartie();
