@@ -187,8 +187,8 @@ Chaque personnage porte un arc de 3 à 5 événements, déclenchés par son mora
 | --- | --- | --- | --- |
 | Ménage | Propreté des chambres et du linge | 110 € par jour et par personne | Départ (1 personne) |
 | Bar | Recettes annexes, ambiance du salon, patience sur le quai (le bar se rouvre d'abord : 1 200 €, 8 h de travaux) | 130 € | 2 |
-| Accueil | Patience des clients, tri à l'entrée | 100 € | 3 |
-| Sécurité | Prévention et règlement des incidents, discrétion | 130 € | 3 |
+| Accueil | Patience des clients, tri à l'entrée | 70 € (100 € avant le rééquilibrage de la v0.5) | 3 |
+| Sécurité | Prévention et règlement des incidents, discrétion | 90 € (130 € avant le rééquilibrage de la v0.5) | 3 |
 
 Chaque équipe a un effectif et un niveau (1 à 3), qui augmente par la formation. L'effectif fixe la capacité, le niveau la qualité. Le ménage nettoie environ trois fois plus vite quand la maison est fermée.
 
@@ -233,7 +233,7 @@ Chaque semaine, un ou deux contextes modifient la demande : un congrès médical
 4. **Soirées à thème** (palier 2, au premier lundi), programmées au briefing pour le soir même : masquée (affaires), burlesque (bouche-à-oreille, groupes et touristes), jazz (habitués, calme), années folles (bar). Chacune coûte, se paie par un supplément sur chaque rendez-vous, attire un segment et fatigue plus ou moins. Un même thème répété dans la semaine lasse : ses effets diminuent de moitié à chaque reprise.
 5. **Sélection à l'entrée** (palier 2) : laxiste, normale, stricte (un portier payé à la soirée, qui refuse une partie des groupes et des touristes). Les règles ciblées (« pas de groupes après minuit ») viendront avec l'équipe Accueil.
 6. **Priorité d'accueil** (palier 2) : ordre d'arrivée, habitués d'abord, pressés d'abord ; VIP au palier 4.
-7. **Visibilité** (v0.5, avec les relations et la presse) : bouche-à-oreille, site discret, concierges d'hôtel, influenceurs. Plus de monde, mais en pays non légal, plus de chaleur. Elle s'ouvre au deuxième lundi après le palier 3, dans les règles de la maison, et se paie à chaque soirée ouverte (0, 35, 70 ou 55 €). Le site discret attire clients d'affaires et habitués ; les concierges, clients d'affaires et touristes aisés (et la mairie apprécie) ; les influenceurs, beaucoup de touristes et de groupes : la presse adore, les voisins et les clients discrets beaucoup moins, et les photographes rôdent.
+7. **Visibilité** (v0.5, avec les relations et la presse) : bouche-à-oreille, site discret, concierges d'hôtel, influenceurs. Plus de monde, mais en pays non légal, plus de chaleur. Elle s'ouvre au deuxième lundi après le palier 3, dans les règles de la maison, et se paie à chaque soirée ouverte (0, 30, 50 ou 40 €). Elle ne rapporte que si la maison a de la place : une soirée feutrée y gagne, une maison déjà pleine y perd. Le site discret attire clients d'affaires et habitués ; les concierges, clients d'affaires et touristes aisés (et la mairie apprécie) ; les influenceurs, beaucoup de touristes et de groupes : la presse adore, les voisins et les clients discrets beaucoup moins, et les photographes rôdent.
 
 ### Déroulé d'une visite, automatique
 
@@ -505,3 +505,7 @@ Après la v1.0 : chapitres 2 à 4, chaleur, gérantes multi-maisons, Grand Gala 
 - [ ] Seuils des paliers (réputation 25, 50, 70) : à équilibrer en jeu.
 - [ ] Durées visées des chapitres (6 à 8 h pour le premier) : réalistes pour des sessions de 15 à 20 minutes ?
 - [ ] Pays des chapitres 2 à 4 : la liste proposée convient-elle ?
+- [x] Le quartier vit-il ? (v0.5) Oui : au deuxième mois, 11 à 16 événements venus de dehors par semaine selon la maison, aucune semaine sans, des relations qui divergent selon le style (voisins de −33 à +36), une rivale qui frappe deux à trois fois par mois et d'autant plus fort qu'on lui prend sa clientèle. Détail dans docs/EQUILIBRAGE.md.
+- [ ] Le deuxième mois est-il trop dense à ×1 ? 6 à 10 alertes et 8 à 12 décisions par soirée de 3 minutes, contre 4 à 5 alertes au premier mois.
+- [ ] Les équipes Accueil et Sécurité valent-elles leur salaire ? Elles achètent du calme, pas de l'argent : une équipe coûte environ 1 800 à 2 600 € par mois.
+- [ ] Le découvert : plusieurs stratégies passent sous −2 000 € le jour de la première mensualité ; les conséquences (salaires impayés, taux) arrivent avec les finances complètes de la v0.6.

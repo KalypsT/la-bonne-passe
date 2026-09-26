@@ -366,7 +366,7 @@ export interface ReglageSelection {
 export const SELECTIONS: Record<IdSelection, ReglageSelection> = {
   laxiste: { affluence: 1, dispute: 1.6, attire: { groupe: 1.4, touriste: 1.1 }, refus: {}, qualite: { groupe: 0.05, touriste: 0.03, habitue: -0.03, affaires: -0.04 }, cout: 0 },
   normale: { affluence: 1, dispute: 1, attire: {}, refus: {}, qualite: {}, cout: 0 },
-  stricte: { affluence: 1, dispute: 0.4, attire: {}, refus: { groupe: 0.5, touriste: 0.2 }, qualite: { habitue: 0.03, affaires: 0.04 }, cout: 80 },
+  stricte: { affluence: 1, dispute: 0.4, attire: {}, refus: { groupe: 0.5, touriste: 0.2 }, qualite: { habitue: 0.03, affaires: 0.04 }, cout: 50 },
 };
 /** Un client refusé à la porte : son segment le prend un peu mal (avant SATISFACTION_PAR_CLIENT). */
 export const REFUS_SATISFACTION = 0.15;
@@ -617,11 +617,11 @@ export const ALERTES = {
   /** Groupe bruyant sur le quai, quand le quartier commence à s'agacer. */
   bruit: { seuilTapage: 25, chance: 0.8, delai: 60, rentrer: 1.5, groupe: 0.3, verre: 10, tapageVerre: 1, tapageManque: 8 },
   /** Client éméché au bar (bar qui sert) : ignoré, il déclenche une dispute. */
-  ivre: { chance: 0.7, delai: 50, cafeReussite: 0.7, taxi: 20, tapageManque: 5 },
+  ivre: { chance: 0.55, delai: 50, cafeReussite: 0.7, taxi: 20, tapageManque: 5 },
   /** Un client veut offrir une bouteille (bar qui sert) : une recette, si quelqu'un la sert à temps. */
-  bouteille: { chance: 0.3, delai: 40, prix: 40 },
+  bouteille: { chance: 0.22, delai: 40, prix: 40 },
   /** Un photographe rôde sur le quai (palier 2, réputation assez haute, un client d'affaires présent). */
-  photographe: { reputationMin: 30, chance: 0.5, delai: 50, billet: 20, satisfactionManquee: 3 },
+  photographe: { reputationMin: 30, chance: 0.4, delai: 50, billet: 20, satisfactionManquee: 3 },
   /** Un faux client envoyé par le Chat Noir fait un scandale sur le quai (v0.5, décidé le lundi par la rivale). */
   sabotage: { delai: 50, remboursement: 60, reussite: 0.6, reputation: 2, presse: -4, police: -3 },
   /** Une personne fatiguée demande une pause (`minutes` : durée de la pause, en temps de simulation). */
@@ -800,7 +800,7 @@ export const RIVALE_ARGENT = {
  */
 export const EQUIPES = {
   accueil: {
-    salaire: 100,
+    salaire: 70,
     max: 2,
     /** Minutes de patience en plus sur le quai, par personne à l'accueil. */
     patience: 12,
@@ -808,7 +808,7 @@ export const EQUIPES = {
     regle: 0.3,
   },
   securite: {
-    salaire: 130,
+    salaire: 90,
     max: 2,
     /** Chance de dispute multipliée par (1 − ce facteur × effectif). */
     dispute: 0.2,
@@ -847,10 +847,10 @@ export interface ReglageVisibilite {
 }
 export const VISIBILITES: Record<IdVisibilite, ReglageVisibilite> = {
   bouche: { cout: 0, affluence: 1, attire: {}, qualite: {}, relations: {}, photographe: 1 },
-  site: { cout: 35, affluence: 1.08, attire: { affaires: 1.3, habitue: 1.1 }, qualite: {}, relations: {}, photographe: 1 },
-  concierges: { cout: 70, affluence: 1.15, attire: { affaires: 1.5, touriste: 1.3 }, qualite: { affaires: 0.02 }, relations: { mairie: 0.3 }, photographe: 1 },
+  site: { cout: 30, affluence: 1.08, attire: { affaires: 1.3, habitue: 1.1 }, qualite: {}, relations: {}, photographe: 1 },
+  concierges: { cout: 50, affluence: 1.15, attire: { affaires: 1.5, touriste: 1.3 }, qualite: { affaires: 0.02 }, relations: { mairie: 0.3 }, photographe: 1 },
   influenceurs: {
-    cout: 55,
+    cout: 40,
     affluence: 1.3,
     attire: { touriste: 1.8, groupe: 1.4 },
     qualite: { affaires: -0.04, habitue: -0.02 },

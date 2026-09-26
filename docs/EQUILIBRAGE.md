@@ -1188,3 +1188,143 @@ Une partie du jour 35 au palier 3 : le bilan du lundi 36 annonce la visibilité 
 - **Le deuxième mois est chargé** : 7 à 10 alertes par soirée selon la maison (5 au premier mois). Intense à ×1 en 3 minutes : c'est la question du rééquilibrage final.
 - **La porte stricte s'appauvrit toujours** (−550 € à la nuit 56).
 - **Le site discret** est presque toujours rentable : à surveiller s'il devient le choix évident.
+
+
+## Rééquilibrage final (v0.5, partie 6)
+
+### Ce qui a été réglé
+
+| Valeur | Avant | Après | Pourquoi |
+| --- | --- | --- | --- |
+| `ALERTES.ivre.chance` | 0,7 | 0,55 | Le deuxième mois montait à 7,4 alertes par soirée en classique (joueur au hasard), 8,4 porte laxiste. Cible : 5 à 6. |
+| `ALERTES.bouteille.chance` | 0,3 | 0,22 | Idem : 1,2 bouteille à servir par soirée au deuxième mois. |
+| `ALERTES.photographe.chance` | 0,5 | 0,4 | Idem. |
+| Portier de la porte stricte (`SELECTIONS.stricte.cout`) | 80 € | 50 € | La porte stricte finissait le deuxième mois dans le rouge (−790 € à la nuit 56). |
+| Salaire de l'Accueil | 100 € | 70 € | Une équipe coûtait tout le résultat du deuxième mois (2 700 à 3 600 €) pour un peu de calme. |
+| Salaire de la Sécurité | 130 € | 90 € | Idem ; avec la porte stricte, elle se paie désormais (le portier est inclus). |
+| Visibilité : site / concierges / influenceurs | 35 / 70 / 55 € | 30 / 50 / 40 € | Aucune ne rapportait ; elles rapportent maintenant quand la maison a de la place (soirée feutrée : +400 € avec le site discret), et coûtent quand elle est déjà pleine. |
+
+### Mesures finales (10 graines, joueur au hasard sauf le premier tableau)
+
+Premier mois (joueur prudent) :
+
+| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 4 à 4 | 32 / 41 / 52 | 94 € | 763 € | 2 510 € | 17 % | 95 | 0,0 | 26 / 30 / 14 / 30 | 69 / 54 / 32 / 48 |
+| Classique, 4 | 3 à 4 | 32 / 42 / 54 | 379 € | 1 040 € | 4 859 € | 8 % | 89 | 0,0 | 29 / 27 / 15 / 29 | 71 / 57 / 33 / 51 |
+| Happy hour, 4 | 3 à 3 | 36 / 45 / 55 | 136 € | 767 € | 2 063 € | 22 % | 89 | 0,4 | 38 / 25 / 13 / 24 | 76 / 57 / 35 / 49 |
+| Feutrée, 4 | 3 à 4 | 34 / 45 / 57 | 113 € | 745 € | 2 261 € | 1 % | 92 | 0,0 | 19 / 42 / 12 / 27 | 69 / 64 / 36 / 56 |
+| Adaptatif (suit les tendances), 3 | 4 à 4 | 32 / 43 / 53 | 94 € | 758 € | 4 180 € | 10 % | 95 | 0,0 | 23 / 37 / 15 / 25 | 61 / 58 / 40 / 48 |
+| Classique 3, sans bar | 4 à 4 | 32 / 41 / 51 | 201 € | 664 € | 2 707 € | 19 % | 94 | 0,0 | 26 / 31 / 14 / 29 | 67 / 54 / 30 / 47 |
+| Classique 3, bar à 2, sans avance | 4 à 4 | 32 / 42 / 52 | 13 € | 766 € | 914 € | 17 % | 95 | 0,0 | 26 / 30 / 14 / 30 | 68 / 54 / 33 / 48 |
+| Classique 3, champagne | 4 à 4 | 32 / 40 / 46 | 174 € | 841 € | 3 933 € | 17 % | 96 | 0,0 | 24 / 30 / 16 / 30 | 55 / 49 / 32 / 45 |
+| Classique 3, tarif −20 % | 4 à 4 | 33 / 42 / 53 | 0 € | 499 € | 113 € | 30 % | 92 | 0,0 | 30 / 28 / 12 / 30 | 73 / 57 / 30 / 49 |
+| Classique 3, tarif +20 % | 4 à 4 | 30 / 37 / 44 | 294 € | 948 € | 4 416 € | 13 % | 94 | 0,0 | 22 / 29 / 14 / 34 | 50 / 50 / 34 / 40 |
+| Classique 3, formule courte | 4 à 4 | 32 / 42 / 53 | 94 € | 600 € | 1 073 € | 14 % | 92 | 0,0 | 27 / 24 / 19 / 29 | 68 / 51 / 39 / 51 |
+| Classique 3, soirée complète | 4 à 4 | 31 / 39 / 47 | 356 € | 981 € | 5 267 € | 22 % | 92 | 0,0 | 26 / 34 / 7 / 33 | 64 / 52 / 23 / 43 |
+| Classique 3, sélection laxiste | 4 à 4 | 31 / 41 / 51 | 164 € | 802 € | 2 660 € | 13 % | 91 | 0,0 | 27 / 26 / 15 / 32 | 71 / 51 / 32 / 49 |
+| Classique 3, sélection stricte | 4 à 4 | 31 / 41 / 51 | 31 € | 591 € | 1 780 € | 8 % | 94 | 0,0 | 27 / 38 / 19 / 16 | 63 / 60 / 37 / 38 |
+| Classique 3, habitués d’abord | 4 à 4 | 32 / 42 / 53 | 119 € | 768 € | 3 517 € | 21 % | 92 | 0,0 | 27 / 31 / 14 / 28 | 70 / 56 / 32 / 48 |
+| Classique 3, pressés d’abord | 4 à 4 | 32 / 42 / 51 | 99 € | 748 € | 2 210 € | 17 % | 94 | 0,0 | 25 / 31 / 15 / 29 | 67 / 53 / 33 / 48 |
+| Passif (classique, sans recruter ni rénover) | 11 à 27 | 23 / 24 / 26 | -132 € | 190 € | -1 405 € | 62 % | 51 | 0,0 | 44 / 49 / 4 / 3 | 29 / 29 / 19 / 24 |
+
+Renouvellement du premier mois :
+
+| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) | Défis réussis | Objectif du mois 1 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 6,3 | 21 % | 4,5 | 1,6 | 20,0 | 3,9 | 0 % | 13,3 | 5 sur 10, nuit 18 | 9 sur 20 | 7 sur 10 |
+| Feutrée, 4 | 4,8 | 39 % | 3,1 | 1,6 | 19,7 | 3,9 | 0 % | 14,2 | 0 sur 10 | 16 sur 20 | 10 sur 10 |
+| Adaptatif (suit les tendances), 3 | 5,3 | 29 % | 3,5 | 1,7 | 22,5 | 3,9 | 0 % | 12,9 | 0 sur 10 | 13 sur 20 | 10 sur 10 |
+| Classique 3, sélection laxiste | 7,1 | 20 % | 5,2 | 1,7 | 21,5 | 3,8 | 0 % | 15,7 | 10 sur 10, nuit 10 | 11 sur 20 | 5 sur 10 |
+| Classique 3, sélection stricte | 5,8 | 26 % | 3,8 | 1,8 | 21,8 | 4,0 | 0 % | 12,8 | 0 sur 10 | 14 sur 20 | 4 sur 10 |
+
+Le deuxième mois, soirée par soirée :
+
+| Stratégie (nuits 36 à 56) | Imprévus par soirée | Alertes par soirée | Décisions par soirée | Soirées sous 4 décisions | Imprévus différents (mois 2) | Presse / voisins, nuit 56 | Avoir, nuit 56 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 2,14 | 6,5 | 8,8 | 10 % | 22,0 | 27 / 17 | 4 416 € |
+| Feutrée, 4 | 2,04 | 5,8 | 7,9 | 9 % | 22,2 | 41 / 22 | 4 976 € |
+| Classique 3, sélection stricte | 2,07 | 5,4 | 7,5 | 9 % | 23,5 | 28 / 36 | 1 076 € |
+| Classique 3, sélection laxiste | 2,04 | 7,6 | 9,7 | 12 % | 22,6 | 16 / -33 | 4 321 € |
+| Classique 3, site discret | 2,13 | 7,7 | 9,9 | 7 % | 22,1 | 21 / 4 | 3 830 € |
+| Classique 3, concierges d’hôtel | 2,08 | 7,6 | 9,7 | 9 % | 23,0 | 22 / 10 | 3 564 € |
+| Classique 3, influenceurs | 2,09 | 9,7 | 11,9 | 8 % | 22,7 | 27 / -24 | 3 327 € |
+
+Équipes et assurance :
+
+| Stratégie (56 nuits) | Alertes par soirée, nuits 36 à 56 | Décisions par soirée | Clients perdus, semaine 6 | Réputation, nuit 56 | Primes / remboursements d’assurance | Avoir, nuit 56 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 6,5 | 8,8 | 15,8 | 53 | — | 4 416 € |
+| Classique 3, accueil 1 | 6,7 | 8,9 | 22,1 | 52 | — | 2 597 € |
+| Classique 3, sécurité 1 | 5,7 | 7,9 | 17,7 | 54 | — | 1 801 € |
+| Classique 3, accueil 1 et sécurité 1 | 5,1 | 7,2 | 12,2 | 56 | — | -119 € |
+| Classique 3, accueil 2 et sécurité 2 | 5,1 | 7,3 | 11,3 | 56 | — | -3 465 € |
+| Classique 3, sélection stricte | 5,4 | 7,5 | 8,4 | 51 | — | 1 076 € |
+| Classique 3, sélection stricte, sécurité 1 | 5,6 | 7,8 | 12,9 | 50 | — | 1 785 € |
+| Classique 3, assurance casse | 6,5 | 8,8 | 15,8 | 53 | 160 € / 67 € | 4 273 € |
+| Classique 3, assurance casse et amendes | 6,5 | 8,8 | 15,8 | 53 | 400 € / 171 € | 4 059 € |
+
+La rivale :
+
+| Stratégie (56 nuits) | Agressivité, nuit 56 | Rapports | Coups par partie, mois 2 (total sur les parties) | Faux clients par partie | Débauchages (dénouements) | Avoir, nuit 56 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 73 | -1 | 2,4 (rumeur 15, debauchage 2, sabotage 6, prix 1) | 0,6 | 2 (reste 1, riposte 1) | 4 416 € |
+| Classique 3, sélection laxiste | 61 | -2 | 2,1 (rumeur 10, debauchage 2, sabotage 7, prix 2) | 0,7 | 2 (riposte 1, reste 1) | 4 321 € |
+| Classique 3, sélection stricte | 70 | 9 | 2,1 (rumeur 10, debauchage 3, sabotage 6, prix 2) | 0,6 | 3 (reste 2, fidele 1) | 1 076 € |
+| Feutrée, 4 | 93 | -2 | 2,9 (rumeur 13, debauchage 4, sabotage 7, prix 5) | 0,7 | 4 (reste 4) | 4 976 € |
+| Classique 3, trêve dès que possible | 51 | 16 | 1,5 (debauchage 1, rumeur 7, sabotage 4, prix 3) | 0,4 | 1 (reste 1) | 3 867 € |
+| Classique 3, riposte par rumeur | 84 | -26 | 2,6 (rumeur 10, prix 5, debauchage 4, sabotage 7) | 0,7 | 4 (reste 2, fidele 1, partie 1) | 4 250 € |
+
+Les relations :
+
+| Stratégie (56 nuits) | Voisins | Mairie | Presse | Police | Événements du quartier par partie, mois 2 (total sur les parties) | Actions de relations par partie, mois 2 | Avoir, nuit 56 | Décisions par soirée, mois 2 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 17 | 28 | 27 | 20 | 0,5 (feteVoisins 1, portrait 4) | 0,0 | 4 416 € | 8,5 |
+| Classique 3, sélection laxiste | -33 | 19 | 16 | 1 | 0,9 (petition 7, feteVoisins 2) | 0,0 | 4 321 € | 9,1 |
+| Classique 3, sélection stricte | 36 | 26 | 28 | 14 | 0,5 (portrait 3, feteVoisins 2) | 0,0 | 1 076 € | 7,3 |
+| Feutrée, 4 | 22 | 26 | 41 | 14 | 1,1 (portrait 10, feteVoisins 1) | 0,0 | 4 976 € | 7,7 |
+| Classique 3, relations entretenues (cible 10) | 20 | 28 | 23 | 22 | 0,6 (portrait 2, conseilEchevin 1, feteVoisins 3) | 1,9 | 4 188 € | 9,1 |
+| Laxiste, relations entretenues (cible 10) | -2 | 28 | 25 | 18 | 0,6 (petition 3, portrait 3) | 4,4 | 3 400 € | 8,1 |
+| Classique 3, relations soignées (cible 45) | 29 | 45 | 37 | 31 | 3,4 (conseilEchevin 17, agentQuartier 3, feteVoisins 8, portrait 6) | 12,0 | 2 491 € | 9,3 |
+
+### La question de la v0.5 : le quartier vit-il ?
+
+Oui. Mesures au deuxième mois (nuits 29 à 56), 10 parties par stratégie, cartes tranchées au hasard :
+
+| Stratégie (nuits 29 à 56) | Événements venus de dehors par semaine | Semaines sans | Voisins / mairie / presse / police, nuit 56 | Rivale : agressivité, coups au mois 2 | Décisions par soirée |
+| --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 10,8 | 0 % | 17 / 28 / 27 / 20 | 73, 2,4 | 8,5 |
+| Feutrée, 4 | 16,2 | 0 % | 22 / 26 / 41 / 14 | 93, 2,9 | 7,7 |
+| Classique 3, sélection stricte | 14,9 | 0 % | 36 / 26 / 28 / 14 | 70, 2,1 | 7,3 |
+| Classique 3, sélection laxiste | 12,5 | 0 % | -33 / 19 / 16 / 1 | 61, 2,1 | 9,1 |
+| Classique 3, influenceurs | 11,5 | 0 % | -24 / 27 / 27 / 13 | 60, 2,1 | 10,8 |
+| Classique 3, relations soignées et trêve | 10,8 | 0 % | 31 / 50 / 33 / 39 | 47, 1,3 | 9,5 |
+
+- **Il se passe quelque chose chaque semaine** : 11 à 16 événements venus de dehors par semaine (cartes du quartier, cartes et coups du Chat Noir, imprévus du quartier, journaliste, voisin à sa fenêtre, faux client), et aucune semaine sans, pour toutes les stratégies.
+- **Le quartier répond au style de la maison** : les voisins vont de −33 (porte laxiste, une pétition dans 7 parties sur 10) à +36 (porte stricte) ; la presse monte à +41 avec la soirée feutrée ; la police tombe à +1 avec la porte laxiste. Le joueur qui soigne ses relations met la mairie en bons termes (+50) et reçoit trois fois plus d'opportunités (conseil de l'échevin, fête des voisins, portrait).
+- **La rivale frappe là où on la gêne** : en guerre contre la soirée feutrée (93), sur ses gardes face à la porte laxiste (61) ; deux à trois coups par mois ; une trêve la calme (47) et divise ses coups par deux ; la riposte l'enrage (84).
+- **Les soirées calmes ne le sont plus** : au deuxième mois, la soirée feutrée passe de 4,6 décisions (v0.4) à 7,9, avec 9 % de soirées sous 4 décisions (42 % en v0.4) ; la porte stricte de 4,6 à 7,5 (9 %). Deux imprévus par soirée (1,3 à 1,5 en v0.4).
+- **Le premier mois est préservé** : 4,5 alertes et 6,3 décisions par soirée en classique, palier 2 à la nuit 4, 2 500 € après la première mensualité (cible 0 à 4 000 €).
+
+### Gardes à la fin de la v0.5
+
+- `equilibrage-quartier.test.ts` (joueur au hasard, 56 nuits) : pétition et mauvais termes avec la porte laxiste ; voisins contents avec la porte stricte ; la rivale frappe 1,5 à 4 fois au deuxième mois, plus fort contre la soirée feutrée, moins en trêve ; les équipes règlent des alertes sans vider la soirée et coûtent 1 500 à 4 000 € par mois ; l'assurance rembourse moins qu'elle ne coûte ; au moins 1,8 imprévu et 5,5 décisions par soirée au deuxième mois ; au moins 5 événements venus de dehors par semaine, et aucune semaine sans.
+- Les gardes du premier mois (renouvellement, mois, règles, semaine) tiennent toujours.
+
+### Ce qui reste à surveiller (v0.6)
+
+- **La densité du deuxième mois** : 6 à 10 alertes et 8 à 12 décisions par soirée de 3 minutes. À juger en main.
+- **Le découvert** : le jour de la première mensualité, plusieurs stratégies passent sous −2 000 € (−900 € en moyenne au plus bas pour le joueur classique, −2 200 € avec la porte stricte). Les conséquences arrivent avec les finances complètes.
+- **La réputation** dépasse 50 au deuxième mois (53 à la nuit 56 en classique, 64 en soirée feutrée) : le palier 4 (réputation 50 et 4 personnes) arrivera au deuxième mois.
+- **Le débauchage** aboutit rarement à un départ (3 sur 18 tentatives en 70 nuits, 30 parties au hasard) : l'histoire existe, mais un joueur attentif la verra peu.
+- **La journaliste** est fréquente en soirée feutrée (environ une par soirée) : si elle lasse, baisser `ALERTES_QUARTIER.journaliste.chic`.
+
+### Partie jouée dans le navigateur (vite preview, 844 × 390)
+
+Une partie du jour 20 au jour 46, à ×4 : cartes tranchées au hasard, une bulle touchée de temps en temps, ni équipe ni visibilité ni action de relation. Construite juste avant la baisse des salaires des équipes et du prix de la visibilité, que ce joueur n'utilise pas.
+
+- Argent aux jours 20, 28, 36, 46 : 636 €, 2 011 €, 982 €, 1 941 € ; réputation 35, 37, 40, 39.
+- Enchaînement attendu : fin du mois 1, palier 3, carte de visite du Chat Noir au lundi 29, bilans du lundi.
+- 70 cartes différentes en 26 soirées : rumeur et prix cassés du Chat Noir, compteur de clients, colis noir, ronde de l'agent Visser, voisine en peignoir, échevin en goguette, chroniqueur au bar, fleuriste, panne de courant, pianiste, voisin à sa fenêtre…
+- Au jour 46, sans rien soigner : voisins −14 (en froid), mairie +33, presse −18.
+- Aucune erreur dans la console.

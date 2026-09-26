@@ -1,7 +1,7 @@
 // Règles de la maison (palier 2) : noms, effets affichés avant de choisir, avis de Josée.
 // Les valeurs sont dans balance.ts (TARIFS, FORMULES, SELECTIONS, PRIORITE_QUALITE).
 
-import { VISIBILITES, type IdVisibilite } from './balance';
+import { SELECTIONS, VISIBILITES, type IdVisibilite } from './balance';
 import type { IdFormule, IdPriorite, IdSelection } from './balance';
 
 export interface TexteOption {
@@ -79,7 +79,7 @@ export const TEXTES_SELECTIONS: Record<IdSelection, TexteOption> = {
   stricte: {
     nom: 'Stricte',
     court: 'Stricte',
-    effet: 'Un portier loué 80 € par soir refuse une partie des groupes et des touristes. Maison calme, trois fois moins de disputes ; les refusés le prennent mal.',
+    effet: `Un portier loué ${SELECTIONS.stricte.cout} € par soir refuse une partie des groupes et des touristes. Maison calme, moins de disputes ; les refusés le prennent mal.`,
     josee: 'Un portier en costume, ça calme les esprits. Et ça fait monter le standing, disent les habitués.',
   },
 };
