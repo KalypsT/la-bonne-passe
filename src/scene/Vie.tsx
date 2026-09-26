@@ -214,6 +214,10 @@ function positionMinuterie(a: Extract<Alerte, { type: 'minuterie' }>, partie: Et
       return POSITIONS.bulleQuai;
     case 'sabotage':
       return POSITIONS.bulleSabotage;
+    case 'journaliste':
+      return POSITIONS.bulleJournaliste;
+    case 'fenetre':
+      return POSITIONS.bulleFenetre;
     case 'photographe':
       return POSITIONS.bullePhotographe;
     case 'bouteille':
@@ -340,6 +344,23 @@ function PictoMinuterie({ id }: { id: IdAlerte }) {
           <path d="M-5 5V-3L-3.5 -6.5L-1.5 -3.5H1.5L3.5 -6.5L5 -3V5Z" fill="#1C1C22" />
           <circle cx="-2" cy="0" r="1" fill="#D4A64A" />
           <circle cx="2" cy="0" r="1" fill="#D4A64A" />
+        </g>
+      );
+    case 'journaliste':
+      // Carnet et crayon
+      return (
+        <g>
+          <rect x="-4.5" y="-5" width="8" height="10" rx="1" fill="#F4DCC8" stroke="#1C2A44" strokeWidth=".8" />
+          <path d="M-2.5 -2H2M-2.5 0H2M-2.5 2H1" stroke="#1C2A44" strokeWidth=".7" />
+          <path d="M3 5L6 -3" stroke="#D4A64A" strokeWidth="1.4" strokeLinecap="round" />
+        </g>
+      );
+    case 'fenetre':
+      // Fenêtre allumée
+      return (
+        <g>
+          <rect x="-5" y="-5" width="10" height="10" fill="#E8B45A" stroke="#5C1530" strokeWidth="1" />
+          <path d="M0 -5V5M-5 0H5" stroke="#5C1530" strokeWidth=".9" />
         </g>
       );
     case 'pause':

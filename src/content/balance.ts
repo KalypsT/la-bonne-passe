@@ -827,3 +827,58 @@ export const ASSURANCES = [
   { prime: 80, casse: 0.7, amendes: 0 },
   { prime: 200, casse: 1, amendes: 1 },
 ] as const;
+
+// ——— v0.5 : visibilité (point 7 des leviers d'offre), au deuxième lundi après le palier 3 ———
+
+export type IdVisibilite = 'bouche' | 'site' | 'concierges' | 'influenceurs';
+export interface ReglageVisibilite {
+  /** Coût par soirée d'ouverture (site, commissions, cadeaux aux influenceurs). */
+  cout: number;
+  /** Arrivées multipliées. */
+  affluence: number;
+  /** Poids de certains segments dans les arrivées. */
+  attire: Partial<Record<Segment, number>>;
+  /** Qualité ressentie selon le segment (les clients discrets n'aiment pas être vus). */
+  qualite: Partial<Record<Segment, number>>;
+  /** Relations, chaque matin après une soirée ouverte avec cette visibilité (en pays non légal, ce serait de la chaleur). */
+  relations: Record<string, number>;
+  /** Chance d'un photographe sur le quai multipliée. */
+  photographe: number;
+}
+export const VISIBILITES: Record<IdVisibilite, ReglageVisibilite> = {
+  bouche: { cout: 0, affluence: 1, attire: {}, qualite: {}, relations: {}, photographe: 1 },
+  site: { cout: 35, affluence: 1.08, attire: { affaires: 1.3, habitue: 1.1 }, qualite: {}, relations: {}, photographe: 1 },
+  concierges: { cout: 70, affluence: 1.15, attire: { affaires: 1.5, touriste: 1.3 }, qualite: { affaires: 0.02 }, relations: { mairie: 0.3 }, photographe: 1 },
+  influenceurs: {
+    cout: 55,
+    affluence: 1.3,
+    attire: { touriste: 1.8, groupe: 1.4 },
+    qualite: { affaires: -0.04, habitue: -0.02 },
+    relations: { presse: 0.8, voisins: -0.5 },
+    photographe: 1.8,
+  },
+};
+
+/** Alertes du quartier (v0.5, palier 3). `chance` par heure d'ouverture ; `delai` en minutes de jeu (15 à 22 s à ×1). */
+export const ALERTES_QUARTIER = {
+  /** Un journaliste pose des questions sur le quai ; les maisons chic l'attirent (soirée feutrée, porte stricte). */
+  journaliste: { chance: 0.06, chic: 3, delai: 50, verre: 15, presse: 1, presseVerre: 2, affairesCharme: 1, presseManque: -3 },
+  /** Un voisin à sa fenêtre menace d'appeler la police (tapage au-dessus du seuil, voisins froids). */
+  fenetre: { seuilTapage: 35, voisinsMax: -10, chance: 0.2, delai: 50, baisser: 5, groupe: 0.3, excuses: 2, voisinsManque: -4, policeManque: -3 },
+};
+
+/** Imprévus du quartier (v0.5) : les sommes en jeu. */
+export const IMPREVU_QUARTIER_ARGENT = {
+  cafeAgent: 10,
+  tisane: 15,
+  journaliste: 60,
+  espion: 25,
+  transfuge: 30,
+  electricien: 90,
+  bougies: 20,
+  pianiste: 40,
+  retraite: 45,
+  celebrite: 0,
+  fleuriste: 50,
+  echevin: 60,
+};

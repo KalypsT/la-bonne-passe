@@ -1,6 +1,7 @@
 // Règles de la maison (palier 2) : noms, effets affichés avant de choisir, avis de Josée.
 // Les valeurs sont dans balance.ts (TARIFS, FORMULES, SELECTIONS, PRIORITE_QUALITE).
 
+import { VISIBILITES, type IdVisibilite } from './balance';
 import type { IdFormule, IdPriorite, IdSelection } from './balance';
 
 export interface TexteOption {
@@ -101,5 +102,33 @@ export const TEXTES_PRIORITES: Record<IdPriorite, TexteOption> = {
     court: 'Pressés',
     effet: 'Le client le moins patient passe en premier. Les affaires apprécient ; les autres patientent.',
     josee: 'Les pressés d’abord : ils partent vite, et le racontent encore plus vite.',
+  },
+};
+
+/** Visibilité (v0.5) : comment la maison se fait connaître. Plus de monde, mais pas toujours le bon. */
+export const TEXTES_VISIBILITES: Record<IdVisibilite, TexteOption> = {
+  bouche: {
+    nom: 'Bouche-à-oreille',
+    court: 'Bouche',
+    effet: 'Gratuit : les clients contents en parlent à leurs amis. Rien de plus.',
+    josee: 'Le meilleur des publicitaires, c’est un client qui repart en sifflotant.',
+  },
+  site: {
+    nom: 'Site discret',
+    court: 'Site',
+    effet: `${VISIBILITES.site.cout} € par soir : une page sobre, un numéro. Un peu plus de monde, surtout des clients d’affaires et des habitués.`,
+    josee: 'Pas de photos, pas de prix, un numéro de téléphone. Les gens bien élevés savent lire entre les lignes.',
+  },
+  concierges: {
+    nom: 'Concierges d’hôtel',
+    court: 'Concierges',
+    effet: `${VISIBILITES.concierges.cout} € par soir de commissions : les grands hôtels envoient clients d’affaires et touristes aisés. La mairie apprécie les maisons recommandées.`,
+    josee: 'Un concierge, ça se soigne comme un vieux client. Une enveloppe à Noël, un sourire le reste de l’année.',
+  },
+  influenceurs: {
+    nom: 'Influenceurs',
+    court: 'Influenceurs',
+    effet: `${VISIBILITES.influenceurs.cout} € par soir : beaucoup plus de monde, surtout des touristes et des groupes. La presse adore, les voisins moins, les clients discrets fuient les téléphones.`,
+    josee: 'Trois cent mille abonnés, et pas un qui sache se tenir. Mais ils remplissent le quai.',
   },
 };

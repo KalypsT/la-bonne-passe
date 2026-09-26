@@ -1127,3 +1127,64 @@ Une partie de la nuit 27 : au lundi 29, le bilan de la semaine annonce l'assuran
 - **Le prix des équipes** : 100 et 130 € par jour, c'est lourd face à une marge de 4 000 à 8 000 € au deuxième mois. À juger au téléphone : est-ce que le calme acheté vaut son prix ?
 - **La réputation** monte de 6 à 7 points avec une équipe : le palier 4 (réputation 50) pourrait arriver plus tôt en v0.6.
 - **L'assurance** : utile surtout avec une porte laxiste, la rivale en guerre ou une mairie fâchée ; les imprévus du quartier (partie 5) lui donneront plus d'occasions de servir.
+
+
+## Visibilité et cartes du quartier (v0.5, partie 5)
+
+Objectif : deux imprévus par soirée (1,3 à 1,5 en v0.4), et des soirées feutrées ou à porte stricte qui ne soient plus creuses (4,6 décisions et 40 % de soirées calmes en v0.4).
+
+### Ce qui a été ajouté
+
+- **Quinze imprévus** (`src/content/imprevusQuartier.ts`), dont quatre sans palier 3 (panne de courant, pianiste, départ à la retraite d'un habitué, célébrité refoulée par le portier) et onze liés au quartier, à la rivale ou à la visibilité. Dix préfèrent la soirée feutrée (nouveau bonus `offre`), deux la porte stricte. Neuf sur quinze sont des opportunités.
+- **Deux alertes** (`ALERTES_QUARTIER`) : une journaliste sur le quai (0,06 par heure, trois fois plus chez une maison chic) et un voisin à sa fenêtre (tapage d'au moins 35, voisins à −10 ou moins, 0,2 par heure). L'Accueil en règle une part.
+- **La visibilité** (`VISIBILITES`), au deuxième lundi après le palier 3.
+
+### Réglages en cours de route
+
+- **Le voisin à sa fenêtre** tombait 1,7 fois par soirée avec la porte laxiste (seuil de tapage 30, voisins sous 0, 0,5 par heure). Ramené à 0,5.
+- **La journaliste** ne venait pas assez chez les maisons chic (0,15 par soirée feutrée) : elle n'exige plus de clients sur le quai (1,3 par soirée feutrée, 0,5 en classique). Ses gains de presse sont réduits (+1 et +2 au lieu de +3 et +5) : le joueur qui répondait à chaque fois finissait adoré (+90).
+- **Les premières réponses étaient trop généreuses** : le joueur simulé prudent, qui prend toujours le premier choix, gagnait 7 points de réputation au premier mois (48 → 56 à la nuit 28) et la rivale saturait à 100 d'agressivité pour toutes les stratégies. Bougies, pianiste, retraite, fleuriste et chroniqueur rapportent moins et coûtent quelque chose ailleurs.
+- **Les gardes du quartier** (`equilibrage-quartier.test.ts`) jouent désormais au hasard, comme le rapport : un joueur qui dit toujours oui n'est pas le bon étalon d'un quartier qui réagit aux choix.
+
+### Mesures (10 graines, cartes tranchées au hasard)
+
+Premier mois (28 nuits) :
+
+| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) | Défis réussis | Objectif du mois 1 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 6,8 | 21 % | 5,1 | 1,6 | 19,8 | 3,8 | 0 % | 13,0 | 4 sur 10, nuit 21 | 11 sur 20 | 6 sur 10 |
+| Feutrée, 4 | 5,2 | 33 % | 3,4 | 1,6 | 20,0 | 4,0 | 0 % | 14,1 | 1 sur 10, nuit 26 | 16 sur 20 | 10 sur 10 |
+| Adaptatif (suit les tendances), 3 | 6,0 | 21 % | 4,2 | 1,7 | 24,0 | 3,7 | 0 % | 13,1 | 2 sur 10, nuit 16 | 11 sur 20 | 5 sur 10 |
+| Classique 3, sélection laxiste | 8,4 | 14 % | 6,5 | 1,7 | 21,3 | 3,8 | 0 % | 15,6 | 10 sur 10, nuit 11 | 10 sur 20 | 3 sur 10 |
+| Classique 3, sélection stricte | 5,3 | 31 % | 3,4 | 1,8 | 21,6 | 3,9 | 0 % | 13,1 | 0 sur 10 | 11 sur 20 | 5 sur 10 |
+
+Deuxième mois :
+
+| Stratégie (nuits 36 à 56) | Imprévus par soirée | Alertes par soirée | Décisions par soirée | Soirées sous 4 décisions | Imprévus différents (mois 2) | Presse / voisins, nuit 56 | Avoir, nuit 56 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 2,13 | 7,4 | 9,6 | 8 % | 22,1 | 25 / 1 | 4 704 € |
+| Feutrée, 4 | 2,04 | 6,5 | 8,6 | 8 % | 21,9 | 40 / 21 | 5 043 € |
+| Classique 3, sélection stricte | 2,03 | 5,6 | 7,7 | 11 % | 23,6 | 30 / 38 | -548 € |
+| Classique 3, sélection laxiste | 1,97 | 7,6 | 9,7 | 8 % | 22,3 | 21 / -61 | 5 536 € |
+| Classique 3, site discret | 2,12 | 8,8 | 11,0 | 4 % | 22,1 | 17 / -6 | 5 260 € |
+| Classique 3, concierges d’hôtel | 2,10 | 9,1 | 11,3 | 4 % | 23,4 | 18 / 7 | 3 994 € |
+| Classique 3, influenceurs | 2,09 | 10,1 | 12,3 | 1 % | 22,8 | 28 / -37 | 3 808 € |
+
+- **Deux imprévus par soirée au deuxième mois** (2,0 à 2,1 selon les stratégies), 1,6 à 1,8 au premier mois ; 22 imprévus différents au deuxième mois.
+- **La soirée feutrée passe de 6,0 à 8,6 décisions** au deuxième mois (8 % de soirées calmes), la porte stricte de 6,0 à 7,7 (11 %). Au premier mois, elles restent les plus calmes (5,2 et 5,3 décisions, un tiers de soirées calmes) : c'est leur caractère tant que le quartier ne s'est pas ouvert.
+- **La visibilité** : le site discret rapporte (+550 € sur le mois, un peu plus d'alertes), les concierges et les influenceurs coûtent (−700 et −900 €) et remplissent le quai (9 et 10 alertes par soirée) ; les influenceurs fâchent les voisins (−37).
+
+### Gardes
+
+- `equilibrage-quartier.test.ts` : au moins 1,8 imprévu par soirée aux nuits 36 à 56 (classique, feutrée, stricte) ; au moins 5,5 décisions et au plus 30 % de soirées calmes pour la soirée feutrée et la porte stricte ; au plus 10 alertes par soirée avec la porte laxiste.
+- `equilibrage-renouvellement.test.ts` (joueur prudent, premier mois) tient toujours : moins de 8 alertes par soirée en classique, au moins 5 décisions.
+
+### Dans le navigateur (vite preview, 844 × 390 et 667 × 375)
+
+Une partie du jour 35 au palier 3 : le bilan du lundi 36 annonce la visibilité avec l'avis de Josée ; les règles de la maison proposent les quatre crans (boutons de 40 px) ; les soirs suivants, « Un déçu du Chat Noir », « Panne de courant », « Un pianiste de passage », « Un compteur de clients », et la bulle de la journaliste devant la vitrine. Aucune erreur dans la console.
+
+### À surveiller
+
+- **Le deuxième mois est chargé** : 7 à 10 alertes par soirée selon la maison (5 au premier mois). Intense à ×1 en 3 minutes : c'est la question du rééquilibrage final.
+- **La porte stricte s'appauvrit toujours** (−550 € à la nuit 56).
+- **Le site discret** est presque toujours rentable : à surveiller s'il devient le choix évident.

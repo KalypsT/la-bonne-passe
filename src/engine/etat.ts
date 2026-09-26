@@ -12,6 +12,7 @@ import {
   type IdFormule,
   type IdPriorite,
   type IdSelection,
+  type IdVisibilite,
 } from '../content/balance';
 import type { Offre } from '../content/clientele';
 import { CHAMBRES } from '../content/maison';
@@ -61,6 +62,8 @@ export interface Systemes {
   securite: boolean;
   /** Assurance (au premier lundi après le palier 3, v0.5). */
   assurance: boolean;
+  /** Visibilité : site, concierges, influenceurs (au deuxième lundi après le palier 3, v0.5). */
+  visibilite: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -70,10 +73,12 @@ export interface Regles {
   formule: IdFormule;
   selection: IdSelection;
   priorite: IdPriorite;
+  /** Visibilité (v0.5, au deuxième lundi après le palier 3). */
+  visibilite: IdVisibilite;
 }
 
 export function reglesDeDepart(): Regles {
-  return { tarif: 1, formule: 'standard', selection: 'normale', priorite: 'arrivee' };
+  return { tarif: 1, formule: 'standard', selection: 'normale', priorite: 'arrivee', visibilite: 'bouche' };
 }
 
 export interface Joueur {
@@ -372,7 +377,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 23;
+export const VERSION_ETAT = 24;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -397,6 +402,7 @@ export function systemesDeDepart(): Systemes {
     accueil: false,
     securite: false,
     assurance: false,
+    visibilite: false,
   };
 }
 

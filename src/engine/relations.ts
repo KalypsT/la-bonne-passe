@@ -10,6 +10,7 @@ import { creerTirage } from './hasard';
 import { changerReputationGlobale } from './clientele';
 import { depenser } from './comptes';
 import { demarrerSuite } from './intrigues';
+import { visibiliteActive } from './regles';
 
 export interface Relations {
   /** Jauge de chaque acteur, de −100 à +100. */
@@ -105,6 +106,8 @@ export function matinDesRelations(etat: EtatJeu, evenements: Sortie): void {
   // Une nuit très bruyante : les voisins appellent la police. Fâchés, ils écrivent à la mairie.
   if (tapage >= R.police.tapageAppel) changerRelation(etat, 'police', -R.police.perte, evenements);
   if (termes(r.jauges.voisins) === 'mauvais') changerRelation(etat, 'mairie', -R.mairie.plaintesVoisins, evenements);
+  // La visibilité de la nuit passée : la presse aime les influenceurs, les voisins beaucoup moins.
+  if (etat.nuit && etat.nuit.numero === etat.nuitsBouclees) changerRelations(etat, visibiliteActive(etat).relations, evenements);
   // Les autres reviennent peu à peu vers leur point d'équilibre, en bien comme en mal.
   for (const a of ACTEURS_ORDRE) {
     if (a === 'voisins') continue;

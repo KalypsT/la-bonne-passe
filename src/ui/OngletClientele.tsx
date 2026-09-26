@@ -3,7 +3,7 @@ import { BUDGET_CLIENTS, PATIENCE_CLIENT, PRIX_ECART, PRIX_MIN, SEUILS_HUMEUR } 
 import { CLIENTS, INFOS_SEGMENTS, OFFRES, SEGMENTS, SEGMENTS_A_VENIR, type Segment } from '../content/clientele';
 import { TALENTS } from '../content/personnel';
 import { trouverTendance } from '../content/tendances';
-import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS, type TexteOption } from '../content/regles';
+import { TEXTES_FORMULES, TEXTES_PRIORITES, TEXTES_SELECTIONS, TEXTES_TARIFS, TEXTES_VISIBILITES, type TexteOption } from '../content/regles';
 import { TEXTES } from '../content/textes';
 import { frequentation, segmentsOuverts } from '../engine/clientele';
 import type { EtatJeu } from '../engine/etat';
@@ -125,7 +125,7 @@ export function FicheSegment({ partie, id }: { partie: EtatJeu; id: Segment }) {
   );
 }
 
-type CleRegle = 'tarif' | 'formule' | 'selection' | 'priorite';
+type CleRegle = 'tarif' | 'formule' | 'selection' | 'priorite' | 'visibilite';
 
 /** Fiche des règles de la maison : 4 réglages en 3 crans, effet affiché, avis de Josée. */
 export function FicheRegles({ partie }: { partie: EtatJeu }) {
@@ -138,6 +138,9 @@ export function FicheRegles({ partie }: { partie: EtatJeu }) {
     { cle: 'formule', titre: t.formule, options: entrees(TEXTES_FORMULES), actuelle: r.formule },
     { cle: 'selection', titre: t.selection, options: entrees(TEXTES_SELECTIONS), actuelle: r.selection },
     { cle: 'priorite', titre: t.priorite, options: entrees(TEXTES_PRIORITES), actuelle: r.priorite },
+    ...(partie.systemes.visibilite
+      ? [{ cle: 'visibilite' as const, titre: t.visibilite, options: entrees(TEXTES_VISIBILITES), actuelle: r.visibilite }]
+      : []),
   ];
   const choisir = (cle: CleRegle, valeur: number | string) => {
     setDerniere(cle);

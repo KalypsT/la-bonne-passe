@@ -175,7 +175,7 @@ describe('le contenu des imprévus', () => {
     return !!c && (c.rivalite !== undefined || c.fatigueMin !== undefined || c.trait !== undefined || c.partMax !== undefined || !!c.disponible);
   };
 
-  it('24 cartes, dont la moitié des nouvelles sont des opportunités', () => {
+  it('au moins 24 cartes (39 avec le quartier), dont la moitié des nouvelles sont des opportunités', () => {
     expect(IMPREVUS.length).toBeGreaterThanOrEqual(24);
     const nouvelles = IMPREVUS.slice(6);
     expect(nouvelles.filter((d) => d.opportunite).length).toBeGreaterThanOrEqual(nouvelles.length / 2);

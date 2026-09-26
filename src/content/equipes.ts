@@ -54,3 +54,12 @@ export const TEXTES_EQUIPES = {
       `L’assurance rembourse ${montant} ${sinistre === 'casse' ? 'de casse' : 'd’amende'}.`,
   },
 };
+
+/** Ce qui s'ouvre un lundi après le palier 3, présenté par Josée au bilan de la semaine. */
+export const OUVERTURES_LUNDI: Record<string, { titre: string; josee: string }> = {
+  assurance: { titre: TEXTES_EQUIPES.assurance.ouverture, josee: TEXTES_EQUIPES.assurance.ouvertureJosee },
+  visibilite: {
+    titre: 'Nouveau ce lundi : la visibilité, dans les règles de la maison (onglet Clientèle).',
+    josee: 'Tu peux maintenant faire parler de la maison : un site discret, les concierges des grands hôtels, ou ces jeunes gens qui filment tout. Plus de monde, mais pas toujours celui qu’on voudrait.',
+  },
+};

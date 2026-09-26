@@ -6,13 +6,16 @@ import { mesurerRenouvellement, simuler, type OptionsSimulation } from './simula
 // Le quartier vit-il ? (v0.5) Les relations réagissent au style de la maison, et les soigner coûte, mais rapporte.
 // La rivale frappe plus fort la maison qui lui prend sa clientèle, et une trêve la calme.
 // Joueur actif, classique à 3 rendez-vous, 56 nuits (le palier 3 tombe le jour 28), 10 graines.
+// v0.5, partie 5 : le joueur tranche les cartes au hasard et laisse filer une alerte sur quatre. Le joueur prudent, qui
+// prend toujours le premier choix, disait oui à toutes les bonnes causes du quartier : avec deux imprévus par soirée,
+// sa réputation, sa presse et l'agressivité de la rivale saturaient toutes (voir docs/EQUILIBRAGE.md).
 
 const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 type Partie = ReturnType<typeof simuler>;
 const parties = new Map<string, Partie[]>();
 
 function jouer(nom: string, options: Partial<OptionsSimulation>) {
-  parties.set(nom, GRAINES.map((graine) => simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 56, ...options })));
+  parties.set(nom, GRAINES.map((graine) => simuler({ graine, offre: 'classique', rdvMax: 3, nuits: 56, politique: 'hasard', ...options })));
 }
 
 const EVENEMENTS_BONS = new Set(ACTEURS_ORDRE.map((a) => ACTEURS[a].evenementBons));
@@ -130,5 +133,26 @@ describe('les équipes Accueil et Sécurité, et l’assurance', () => {
     console.log('assurance casse et amendes, 10 parties', `primes ${primes} €`, `remboursés ${rembourse} €`);
     expect(rembourse).toBeGreaterThan(0);
     expect(rembourse).toBeLessThan(primes);
+  });
+});
+
+describe('les soirées du deuxième mois (v0.5, partie 5)', () => {
+  /** Nuits 36 à 56 : le quartier, la rivale et la visibilité sont tous en place. */
+  const mois2 = (nom: string) => parties.get(nom)!.map((p) => mesurerRenouvellement(p.nuits.slice(35)));
+  const moy = (nom: string, f: (m: ReturnType<typeof mesurerRenouvellement>) => number) => mois2(nom).reduce((t, m) => t + f(m), 0) / GRAINES.length;
+
+  it('environ deux imprévus par soirée', () => {
+    console.log('imprévus', ['classique', 'feutree', 'stricte', 'laxiste'].map((n) => `${n} ${moy(n, (m) => m.imprevus).toFixed(2)}`).join(', '));
+    for (const nom of ['classique', 'feutree', 'stricte']) expect(moy(nom, (m) => m.imprevus), nom).toBeGreaterThanOrEqual(1.8);
+  });
+
+  it('la soirée feutrée et la porte stricte ne sont plus des soirées creuses', () => {
+    console.log('décisions', ['classique', 'feutree', 'stricte', 'laxiste'].map((n) => `${n} ${moy(n, (m) => m.decisions).toFixed(1)} (calmes ${(moy(n, (m) => m.soireesCalmes) * 100).toFixed(0)} %)`).join(', '));
+    for (const nom of ['feutree', 'stricte']) {
+      expect(moy(nom, (m) => m.decisions), nom).toBeGreaterThanOrEqual(5.5);
+      expect(moy(nom, (m) => m.soireesCalmes), nom).toBeLessThanOrEqual(0.3);
+    }
+    // Et la maison la plus animée ne déborde pas.
+    expect(moy('laxiste', (m) => m.alertes)).toBeLessThanOrEqual(10);
   });
 });

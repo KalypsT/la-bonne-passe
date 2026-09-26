@@ -2,11 +2,11 @@
 // Ignorée, une alerte a une conséquence. Les valeurs sont dans balance.ts (ALERTES).
 // Les textes acceptent {prenom} et l'accord {e} pour la personne concernée.
 
-import { ALERTES } from './balance';
+import { ALERTES, ALERTES_QUARTIER } from './balance';
 
 const euros = (n: number) => `${n.toLocaleString('fr-FR')} €`;
 
-export type IdAlerte = 'presse' | 'bruit' | 'ivre' | 'bouteille' | 'photographe' | 'pause' | 'sabotage';
+export type IdAlerte = 'presse' | 'bruit' | 'ivre' | 'bouteille' | 'photographe' | 'pause' | 'sabotage' | 'journaliste' | 'fenetre';
 
 export interface TexteAlerte {
   /** Libellé de la bulle (lu par les lecteurs d'écran) et titre de la carte. */
@@ -94,6 +94,30 @@ export const TEXTES_ALERTES: Record<IdAlerte, TexteAlerte> = {
     manquee: 'Le scandale a duré une heure : police, badauds, et un journaliste. Le Chat Noir a gagné sa soirée.',
     reglee: 'La sécurité reconnaît le faux client dès le quai et le raccompagne poliment vers le Chat Noir.',
     rate: 'L’homme se débat et renverse une table. La dispute gagne le quai.',
+  },
+  journaliste: {
+    titre: 'Un journaliste sur le quai',
+    texte: 'Une journaliste du Nachtblad interroge les clients qui attendent : « Qu’est-ce qui vous amène ici ? » Certains répondent. Trop.',
+    actions: [
+      { texte: 'Répondre toi-même, avec charme', detail: 'Elle aura sa citation ; les clients discrets sont soulagés' },
+      { texte: 'L’inviter au bar', detail: `${euros(ALERTES_QUARTIER.journaliste.verre)} ; un meilleur article, peut-être` },
+    ],
+    journal: 'Une journaliste pose des questions sur le quai.',
+    traitee: ['« Une maison de caractère, comme sa direction. » La journaliste repart avec sa citation.', 'La journaliste finit sa coupe au bar, conquise. Son article sera tendre.'],
+    manquee: 'La journaliste a fait parler trois clients sur le quai. Son article cite des prénoms, et même une plaque d’immatriculation.',
+    reglee: 'L’accueil offre un café à la journaliste et répond à sa place, avec le sourire. Rien de compromettant.',
+  },
+  fenetre: {
+    titre: 'Un voisin à sa fenêtre',
+    texte: 'Au deuxième, une fenêtre s’ouvre avec fracas : « Si ça continue, j’appelle la police ! » Le quai éclate de rire, ce qui n’arrange rien.',
+    actions: [
+      { texte: 'Faire baisser le ton sur le quai', detail: 'Le calme revient ; les groupes râlent un peu' },
+      { texte: 'Monter t’excuser', detail: 'Les voisins apprécient le geste' },
+    ],
+    journal: 'Un voisin menace d’appeler la police.',
+    traitee: ['Le quai se calme. La fenêtre se referme, lentement.', 'Tu montes t’excuser, une boîte de chocolats à la main. Le voisin grommelle, mais il accepte.'],
+    manquee: 'Le voisin a appelé la police. Une patrouille est passée sur le quai, gyrophare allumé.',
+    reglee: 'L’accueil fait rentrer tout le monde et adresse un signe d’excuse vers la fenêtre. Elle se referme.',
   },
   pause: {
     titre: '{prenom} demande une pause',

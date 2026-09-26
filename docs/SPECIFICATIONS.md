@@ -233,7 +233,7 @@ Chaque semaine, un ou deux contextes modifient la demande : un congrès médical
 4. **Soirées à thème** (palier 2, au premier lundi), programmées au briefing pour le soir même : masquée (affaires), burlesque (bouche-à-oreille, groupes et touristes), jazz (habitués, calme), années folles (bar). Chacune coûte, se paie par un supplément sur chaque rendez-vous, attire un segment et fatigue plus ou moins. Un même thème répété dans la semaine lasse : ses effets diminuent de moitié à chaque reprise.
 5. **Sélection à l'entrée** (palier 2) : laxiste, normale, stricte (un portier payé à la soirée, qui refuse une partie des groupes et des touristes). Les règles ciblées (« pas de groupes après minuit ») viendront avec l'équipe Accueil.
 6. **Priorité d'accueil** (palier 2) : ordre d'arrivée, habitués d'abord, pressés d'abord ; VIP au palier 4.
-7. **Visibilité** (v0.5, avec les relations et la presse) : bouche-à-oreille, site discret, concierges d'hôtel, influenceurs. Plus de monde, mais en pays non légal, plus de chaleur.
+7. **Visibilité** (v0.5, avec les relations et la presse) : bouche-à-oreille, site discret, concierges d'hôtel, influenceurs. Plus de monde, mais en pays non légal, plus de chaleur. Elle s'ouvre au deuxième lundi après le palier 3, dans les règles de la maison, et se paie à chaque soirée ouverte (0, 35, 70 ou 55 €). Le site discret attire clients d'affaires et habitués ; les concierges, clients d'affaires et touristes aisés (et la mairie apprécie) ; les influenceurs, beaucoup de touristes et de groupes : la presse adore, les voisins et les clients discrets beaucoup moins, et les photographes rôdent.
 
 ### Déroulé d'une visite, automatique
 
@@ -355,6 +355,8 @@ Les événements sont le principal moteur de décision en soirée. Ils existent 
 | Intrigue | 1 ou 2 actives à la fois | Chaîne de 3 à 6 cartes sur plusieurs jours | Arc d'un personnage, rivale qui débauche, VIP qui propose un « arrangement » |
 
 Les événements suivent la montée en puissance : au départ, ils concernent Sanne, la maison vide et les premiers candidats ; les rivales et les VIP n'entrent en scène qu'aux paliers correspondants. Le premier imprévu de la partie est toujours simple (le touriste perdu).
+
+En v0.5, une quinzaine d'imprévus viennent du quartier (l'agent de quartier, une voisine insomniaque, un chroniqueur incognito, un espion du Chat Noir, un habitué déçu de la rivale, une panne de courant, un pianiste, un concert du voisin, un direct d'influenceuse…), et deux alertes : une journaliste sur le quai (plus souvent chez les maisons chic, soirée feutrée ou porte stricte) et un voisin à sa fenêtre les soirs de bruit. Plusieurs cartes préfèrent les soirées feutrées : elles ont désormais leurs histoires.
 
 ### Règles d'écriture
 
