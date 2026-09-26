@@ -36,6 +36,7 @@ import { changerGestionJosee, emprunter, surveillerDecouvert } from './banque';
 import { appliquerGamme, type OrdreGamme } from './gamme';
 import { appliquerAgrandir, avancerAgrandissement, reponseDuPermis, tirerOffres, type EvenementAgrandir, type OrdreAgrandir } from './agrandir';
 import { accorderPalier } from './paliers';
+import { noterChronique, noterSemaineChronique, verifierFinChapitre, type EvenementChronique } from './chronique';
 import { appliquerMaison2, matinMaison2, semaineMaison2, type EvenementMaison2, type OrdreMaison2 } from './maison2';
 import { appliquerAmenagement, avancerTravauxAnnexes, type OrdreAmenagement } from './amenagement';
 import { appliquerPlafond, type AccordPlafond, type EvenementPlafond } from './plafond';
@@ -79,6 +80,10 @@ export type Ordre =
   | { type: 'bilanSemaineVu' }
   /** Le bilan de fin de mois a été lu. */
   | { type: 'bilanMoisVu' }
+  /** L'écran de fin du chapitre a été lu (v1.0). */
+  | { type: 'finChapitreVue' }
+  /** Temps réel passé dans la partie, compté par l'interface (v1.0). */
+  | { type: 'tempsJoue'; secondes: number }
   /** Le didacticiel avance (l'interface décide des étapes, le moteur les garde). */
   | { type: 'didacticiel'; etape: number | null }
   | OrdreRecrutement
@@ -121,13 +126,16 @@ export type EvenementMoteur =
   | EvenementRivale
   | EvenementEquipe
   | EvenementAgrandir
-  | EvenementMaison2;
+  | EvenementMaison2
+  | EvenementChronique;
 
 /** Taille du journal gardé dans la sauvegarde. */
 export const TAILLE_JOURNAL = 50;
 
 /** Range les événements dans le journal de la partie, du plus récent au plus ancien. */
 function journaliser(etat: EtatJeu, evenements: readonly EvenementMoteur[]): void {
+  // Josée retient ce qui compte pour la fin du chapitre (v1.0).
+  noterChronique(etat, evenements);
   const entrees = evenements
     .filter((e) => e.type !== 'bilan')
     .map((evenement) => ({ jour: etat.jour, minuteDuJour: etat.minuteDuJour, evenement }));
@@ -351,6 +359,12 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
     case 'annonceMaisonVue':
       appliquerMaison2(etat, ordre, evenements);
       return;
+    case 'finChapitreVue':
+      etat.finChapitreAVoir = false;
+      return;
+    case 'tempsJoue':
+      etat.chronique.tempsJoue += Math.max(0, ordre.secondes);
+      return;
     case 'reponseRivale':
       repondreRivale(etat, ordre.reponse, evenements);
       return;
@@ -416,6 +430,7 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
       const bilanMaison = semaineMaison2(etat, evenements);
       cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
       if (bilanMaison && etat.bilanSemaine) etat.bilanSemaine.maison2 = bilanMaison;
+      noterSemaineChronique(etat);
       // Palier 5 (v0.6) : la mairie répond au dossier ; au deuxième lundi, la deuxième maison ; au premier, la gérance.
       reponseDuPermis(etat, evenements);
       if (etat.palier === 4 && etat.permis.statut === 'accorde') {
@@ -493,6 +508,8 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
   if (etaitOuvert && !ouvert) {
     evenements.push({ type: 'fermeture', jour: etat.jour });
     fermerNuit(etat, tirage, evenements);
+    // Le soir où la deuxième maison est ouverte avec une maison d'origine assez réputée, le chapitre 1 se boucle.
+    verifierFinChapitre(etat, evenements);
   }
   if (attendBriefing(etat)) evenements.push({ type: 'briefing', jour: etat.jour });
 

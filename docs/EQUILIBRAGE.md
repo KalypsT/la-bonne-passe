@@ -1624,3 +1624,24 @@ Gardes : `equilibrage-maison2.test.ts` (chaque lieu se rembourse en 26 à 39 sem
 
 - **La consigne ambitieuse** reste la plus payante tant qu'on remplace la gérante qui part. Ce qu'elle coûte (une personne de l'équipe qui quitte le salon) ne se voit qu'en jouant.
 - **Le bilan du lundi s'allonge** d'un bloc de plus, dans la colonne de droite.
+
+### La fin du chapitre 1 (partie 2)
+
+La condition : la deuxième maison ouverte, et la maison d'origine à 70 de réputation au moins à la fermeture (`FIN_CHAPITRE`). Dans toutes les parties simulées, la fin tombe le soir même de l'inauguration : un joueur qui a pu payer la maison a déjà passé 80 pour le permis, et s'y tient.
+
+**Les titres** : une première version testait la réputation d'abord (Baronne du velours à 90). Les 38 fins de chapitre simulées donnaient toutes « velours » : une maison bien tenue finit vers 94. Le velours passe donc après les styles de jeu. Mesures (10 graines, 336 nuits) :
+
+| Stratégie | Fin du chapitre (jour) | Titres |
+| --- | --- | --- |
+| Classique 3 | 326, 1 partie sur 10 | famille 1 |
+| Classique 4 | 195 (159 à 245) | velours 9, famille 1 |
+| Feutrée 4 | 249 (214 à 321), 7 sur 10 | discrétion 7 |
+| Complet (bâtiment à crédit, 8 personnes) | 175 (156 à 197) | bâtisseuse 10 |
+| Complet, cartes au hasard | jamais | — |
+
+Le joueur simulé ne programme jamais de thème ni de happy hour : « nuits blanches » et « funambule » ne sortent pas dans ces parties, mais les gardes (`chronique.test.ts`) vérifient chaque titre.
+
+À surveiller :
+
+- **Le temps réel** est compté par l'interface, pauses et cartes comprises, au plus un quart d'heure d'un coup (un téléphone oublié sur une carte ne compte pas des heures). Il servira à mesurer la durée réelle du chapitre sur téléphone.
+- **La durée du chapitre** reste le problème de la partie 1 (jour 175 à 250) : à régler en partie 6.

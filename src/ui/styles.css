@@ -1932,3 +1932,35 @@ body {
   border-radius: 50%;
   background: #ff4f8b;
 }
+
+/* v1.0 : la fin du chapitre 1. */
+.carte-fin .liste-moments {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+.carte-fin .liste-moments li {
+  margin-bottom: 3px;
+}
+.carte-modale .titre-final {
+  margin: 2px 0 6px;
+  text-align: center;
+  font-family: 'Yellowtail', 'Brush Script MT', cursive;
+  font-size: 30px;
+  line-height: 1.1;
+  color: var(--laiton);
+  text-shadow: 0 0 10px rgba(212, 166, 74, 0.45);
+}
+.carte-modale .avertissement {
+  margin: 8px 0 0;
+  font-size: 11px;
+  font-style: italic;
+  opacity: 0.75;
+}
+.avertissement-titre {
+  margin: 4px 0 0;
+  font-size: 10.5px;
+  text-align: center;
+  opacity: 0.6;
+}

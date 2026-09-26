@@ -1,5 +1,6 @@
 import { TEXTES_BANQUE } from '../content/banque';
 import { TEXTES } from '../content/textes';
+import { AVERTISSEMENT_TITRE, TEXTES_FIN } from '../content/fin';
 import type { Emplacement } from '../save/emplacements';
 import { Avatar } from '../scene/Avatar';
 import { EnseigneNeon } from '../scene/EnseigneNeon';
@@ -23,6 +24,7 @@ export function EcranTitre() {
           </li>
         ))}
       </ol>
+      <p className="avertissement-titre">{AVERTISSEMENT_TITRE}</p>
       {suppressionDemandee !== null && (
         <ConfirmationSuppression emplacement={emplacements[suppressionDemandee] ?? { statut: 'vide' }} />
       )}
@@ -77,7 +79,7 @@ function CarteEmplacement({ numero, emplacement, maintenant }: PropsCarte) {
         </div>
       </div>
       <p className="carte-ligne">
-        {t.chapitre(r.chapitre)} · {t.jour(r.jour)} · {formaterHeure(r.minuteDuJour)}
+        {r.chapitreFini ? TEXTES_FIN.emplacement : t.chapitre(r.chapitre)} · {t.jour(r.jour)} · {formaterHeure(r.minuteDuJour)}
       </p>
       <p className="carte-ligne attenue">
         {t.dernierePartie} : {formaterDernierePartie(r.dernierePartie, maintenant)}

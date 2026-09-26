@@ -9,7 +9,7 @@ import { ambitionDuMarche } from '../engine/recrutement';
 import { creerStockageMemoire, type Stockage } from './stockage';
 
 /** Les nouveautés apportées par la migration testée, sans celles des mises à jour suivantes (v0.6 : parures, crans, banque, emprunt, impôt, gestion, fournisseurs). */
-const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => !['parures', 'crans', 'banque', 'emprunt', 'impot', 'gestionJosee', 'fournisseurs', 'amenagement', 'buanderie', 'loges', 'entretien'].includes(n));
+const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => !['parures', 'crans', 'banque', 'emprunt', 'impot', 'gestionJosee', 'fournisseurs', 'amenagement', 'buanderie', 'loges', 'entretien', 'chronique'].includes(n));
 
 const MAINTENANT = Date.UTC(2026, 8, 25, 20, 0);
 
@@ -623,10 +623,10 @@ describe('migrations', () => {
     expect(migre?.relations.jauges.fournisseurs).toBe(0);
     expect(migre?.semaine.comptes.depenses.impots).toBe(0);
     expect(migre?.banque).toMatchObject({ sursis: false, supplement: 0 });
-    expect(migre?.nouveautes).toEqual(['impot', 'gestionJosee', 'fournisseurs', 'entretien']);
+    expect(migre?.nouveautes).toEqual(['impot', 'gestionJosee', 'fournisseurs', 'entretien', 'chronique']);
     const tot = migrer({ ...v29, systemes: { ...systemes, reserve: false, emprunt: false } });
     expect(tot?.systemes.fournisseurs).toBe(false);
-    expect(tot?.nouveautes).toEqual(['impot', 'entretien']);
+    expect(tot?.nouveautes).toEqual(['impot', 'entretien', 'chronique']);
   });
 
   it('migre une sauvegarde v30 : décors d’origine, loges et buanderie à aménager, présentés par Josée', () => {
@@ -641,10 +641,10 @@ describe('migrations', () => {
     expect(migre?.chambres.every((c) => !c.fermee && !c.decorRefait && c.decorAVenir === null)).toBe(true);
     expect(migre?.annexes.buanderie).toMatchObject({ ouverte: false, sale: 0 });
     expect(migre?.systemes).toMatchObject({ buanderie: true, loges: true });
-    expect(migre?.nouveautes).toEqual(['amenagement', 'buanderie', 'loges', 'entretien']);
+    expect(migre?.nouveautes).toEqual(['amenagement', 'buanderie', 'loges', 'entretien', 'chronique']);
     const debut = migrer({ ...v30, palier: 1 });
     expect(debut?.systemes).toMatchObject({ buanderie: false, loges: false });
-    expect(debut?.nouveautes).toEqual(['amenagement', 'entretien']);
+    expect(debut?.nouveautes).toEqual(['amenagement', 'entretien', 'chronique']);
   });
 
   it('migre une sauvegarde v31 : VIP et couples partis de la réputation, confort 1, équipes au niveau 1', () => {
@@ -681,7 +681,7 @@ describe('migrations', () => {
     expect(migre?.systemes).toMatchObject({ agrandissement: false, gerante: false, etablissement: false });
     expect(migre?.semaine.comptes.depenses).toMatchObject({ etablissement: 0, caisse: 0 });
     // Seule la présentation de l'entretien (v34) suit.
-    expect(migre?.nouveautes).toEqual(['entretien']);
+    expect(migre?.nouveautes).toEqual(['entretien', 'chronique']);
   });
 
   it('migre une sauvegarde v33 : aucun départ récent connu', () => {
@@ -689,7 +689,7 @@ describe('migrations', () => {
     const migre = migrer({ ...reste, version: 33 });
     expect(migre?.version).toBe(VERSION_ETAT);
     expect(migre?.departsRecents).toEqual([]);
-    expect(migre?.nouveautes).toEqual(['entretien']);
+    expect(migre?.nouveautes).toEqual(['entretien', 'chronique']);
   });
 
   it('migre une sauvegarde v34 : deuxième maison à ouvrir, deux postes de comptes de plus', () => {
@@ -711,6 +711,30 @@ describe('migrations', () => {
     const prete = migrer({ ...v34, etablissement: { offres: [], lieu: 'pension', statut: 'pret', fin: 60 } });
     expect(prete?.systemes.maison2).toBe(true);
     expect(prete?.maison2.annonces).toEqual([{ id: 'prete' }]);
+  });
+
+  it('migre une sauvegarde v35 : la chronique commence aujourd’hui, avec les histoires déjà terminées', () => {
+    const base = creerEtatInitial();
+    const { chronique: _c, finChapitre: _f, finChapitreAVoir: _v, ...reste } = base;
+    const v35 = {
+      ...reste,
+      version: 35,
+      jour: 90,
+      intrigues: { ...base.intrigues, finies: [{ id: 'mila', fin: 'tete', jour: 20 }, { id: 'voisin', fin: 'ecartee', jour: 0 }] },
+      permis: { statut: 'accorde', jour: 85 },
+    };
+    const migre = migrer(v35);
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.chronique.depuis).toBe(90);
+    expect(migre?.chronique.recettes).toBe(0);
+    expect(migre?.chronique.moments).toEqual([
+      { jour: 20, type: 'intrigue', id: 'mila', fin: 'tete' },
+      { jour: 85, type: 'palier', numero: 5 },
+    ]);
+    expect(migre?.finChapitre).toBeNull();
+    expect(migre?.finChapitreAVoir).toBe(false);
+    // Josée présente la chronique et l'objectif du chapitre.
+    expect(migre?.nouveautes).toContain('chronique');
   });
 
   it('refuse une version future ou des données sans version', () => {

@@ -327,8 +327,8 @@ function deuxiemeMaison(): string[] {
     ['Complet, cartes au hasard', { ...complet, politique: 'hasard' }],
   ];
   const lignes = [
-    `| Stratégie (${NUITS_CHAPITRE} nuits) | Palier 5 | Inauguration (jour) | Résultat par semaine pleine | Coût du lieu | Remboursé en (semaines) | Rapporté à la fin | Faillites |`,
-    '| --- | --- | --- | --- | --- | --- | --- | --- |',
+    `| Stratégie (${NUITS_CHAPITRE} nuits) | Palier 5 | Inauguration (jour) | Fin du chapitre (jour) | Titres | Résultat par semaine pleine | Coût du lieu | Remboursé en (semaines) | Rapporté à la fin | Faillites |`,
+    '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
   ];
   for (const [nom, o] of strategies) {
     const p = mesurerProgression(GRAINES, o);
@@ -338,11 +338,13 @@ function deuxiemeMaison(): string[] {
       const m = Math.round(j.reduce((a, b) => a + b, 0) / j.length);
       return `${m} (${Math.min(...j)} à ${Math.max(...j)})${j.length < GRAINES.length ? `, ${j.length} sur ${GRAINES.length}` : ''}`;
     };
+    const titres = (liste: string[]) =>
+      liste.length ? [...new Set(liste)].map((t) => `${t} ${liste.filter((x) => x === t).length}`).join(', ') : '—';
     const m2 = p.maison2;
     const moy = (f: (x: (typeof m2)[number]) => number) => (m2.length ? m2.reduce((t, x) => t + f(x), 0) / m2.length : 0);
     const semaine = moy((x) => x.resultatSemaine);
     lignes.push(
-      `| ${nom} | ${jours(p.paliers.map((x) => x[4]!))} | ${jours(p.inaugurations)} | ${m2.length ? `${arrondi(semaine)} €` : '—'} | ${m2.length ? `${arrondi(moy((x) => x.cout))} €` : '—'} | ${
+      `| ${nom} | ${jours(p.paliers.map((x) => x[4]!))} | ${jours(p.inaugurations)} | ${jours(p.finsChapitre)} | ${titres(p.titres)} | ${m2.length ? `${arrondi(semaine)} €` : '—'} | ${m2.length ? `${arrondi(moy((x) => x.cout))} €` : '—'} | ${
         semaine > 0 ? Math.round(moy((x) => x.cout) / semaine) : '—'
       } | ${m2.length ? `${arrondi(moy((x) => x.total))} €` : '—'} | ${p.faillites} |`,
     );

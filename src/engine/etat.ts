@@ -41,6 +41,7 @@ import {
   type Etablissement,
   type Permis,
 } from './agrandir';
+import { chroniqueDeDepart, type Chronique, type FinChapitre } from './chronique';
 import { hasardMaison2DeDepart, maison2DeDepart, type Maison2 } from './maison2';
 import { hasardPlacementDeDepart, niveauxDeDepart, type NiveauxEquipes, type Placement } from './gamme';
 import type { IdDecor } from '../content/maison';
@@ -456,6 +457,11 @@ export interface EtatJeu {
   maison2: Maison2;
   /** Hasard de la deuxième maison, à part (v1.0). */
   hasardMaison2: number;
+  /** Ce que Josée retient de la partie, pour la fin du chapitre (v1.0). */
+  chronique: Chronique;
+  /** La fin du chapitre 1, figée le soir où il se boucle, et si elle attend d'être lue (v1.0). */
+  finChapitre: FinChapitre | null;
+  finChapitreAVoir: boolean;
   /** Gestion confiée à Josée (v0.6, partie 4). */
   gestionJosee: boolean;
   /** Impôt trimestriel : bénéfice du trimestre en cours (v0.6, partie 4). */
@@ -471,7 +477,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 35;
+export const VERSION_ETAT = 36;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -684,6 +690,9 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     hasardEtablissement: hasardEtablissementDeDepart(options.graine ?? GRAINE_PAR_DEFAUT),
     maison2: maison2DeDepart(),
     hasardMaison2: hasardMaison2DeDepart(options.graine ?? GRAINE_PAR_DEFAUT),
+    chronique: chroniqueDeDepart(),
+    finChapitre: null,
+    finChapitreAVoir: false,
     finDePartie: null,
     assurance: 0,
     didacticiel: options.didacticiel ? 0 : null,

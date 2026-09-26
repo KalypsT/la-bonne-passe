@@ -391,6 +391,22 @@ export const MAISON2 = {
 };
 export type IdConsigne = keyof typeof MAISON2.consignes;
 
+/**
+ * La fin du chapitre 1 (v1.0, partie 2) : la deuxième maison ouverte, et la maison d'origine à `reputation` au moins
+ * le soir où l'on vérifie (à chaque fermeture). Le palier 5 demande 80 : ce plancher pardonne une baisse pendant les
+ * mois chers de l'agrandissement, sans être acquis d'avance (le joueur au hasard descend souvent sous 70).
+ * Titres selon le style : réputation pour le velours ; parts des soirées (feutrées ; happy hours et thèmes) ;
+ * personnes pour la bâtisseuse (avec le bâtiment voisin) ; embauches sans aucun départ pour la famille.
+ */
+export const FIN_CHAPITRE = {
+  reputation: 70,
+  /** Nuits dans la maison pour compter parmi les fidèles. */
+  nuitsFidele: 28,
+  /** Moments marquants racontés à l'écran de fin. */
+  moments: 7,
+  titres: { velours: 90, discretion: 0.5, fete: 0.4, batisseuse: 6, famille: 3 },
+};
+
 // Le linge se compte en parures (draps, housse, serviettes) : une par rendez-vous.
 export const LINGE_INITIAL = 4;
 export const LINGE_PAR_RDV = 1;
