@@ -762,3 +762,105 @@ Les gardes de mécanique (`cartes: false`) ignorent aussi défis et objectifs : 
 Parties jouées dans le navigateur (version compilée, 844 × 390 et 667 × 375) : une ancienne sauvegarde reçoit les objectifs et les défis, présentés par Josée ; l'onglet Maison affiche le défi en cours (7 sur 12 clients d'affaires) et l'objectif du mois ; la veille de la mensualité, le temps avance et la carte « Fin du mois 1 » s'ouvre (objectif raté, 590 € pris dans la réserve, objectif suivant) ; la veille d'un lundi, le bilan de la semaine juge le défi du bar et annonce le suivant. Aucune erreur.
 
 `npm test` : 365 tests en 14 secondes environ.
+
+## Rééquilibrage final (v0.4, partie 6)
+
+### La réputation montait trop haut
+
+Au fil des parties 3 à 5, la réputation du joueur actif s'était envolée : 55 à la nuit 28 en classique (35 en v0.3), 62 en soirée feutrée et en happy hour. Trois causes cumulées :
+
+- le client généreux ne vidait plus l'équipe un soir sur deux (partie 3) ;
+- les disputes réglées ne coûtaient plus leurs 2 points (partie 4) ;
+- les alertes récompensent un joueur attentif (partie 4).
+
+Le palier 4 (réputation 50 et 4 personnes) serait tombé vers la nuit 20. Le joueur passif atteignait parfois le palier 2.
+
+Le levier retenu est **`REPUTATION_FREIN` : 2 → 3,5**. Les gains de satisfaction sont multipliés par (1 − satisfaction / 100)^3,5 : le début de partie ne change presque pas (le palier 2 tombe toujours entre les nuits 3 et 5), mais la réputation plafonne plus tôt.
+
+| Frein (toutes cartes actives, 12 graines) | Classique, nuits 7 / 14 / 28 | Meilleure stratégie, nuit 28 | Passif, nuit 28 | Palier 2 |
+| --- | --- | --- | --- | --- |
+| 2 (partie 5) | 35 / 45 / 55 | 63 (happy hour) | 27, palier 2 parfois | nuits 2 à 4 |
+| 3 | 31 / 41 / 47 | 54 (feutrée) | 24 | nuits 3 à 4 |
+| **3,5** | **30 / 37 / 42** | **49 (feutrée)** | **23** | **nuits 3 à 5** |
+| 4 | 29 / 35 / 40 | 47 | 21 | nuits 3 à 5 |
+
+4 atteignait aussi les cibles, mais écrasait les écarts entre stratégies : la soirée feutrée ne construisait plus la meilleure réputation.
+
+Ce que le frein a demandé en plus, pour que chaque choix garde son sens :
+
+| Valeur | Avant | Après | Pourquoi |
+| --- | --- | --- | --- |
+| Soirée feutrée, réputation | × 1 | × 1,25 | Le happy hour (× 1,5) construisait une meilleure réputation qu'elle à la nuit 14 : 36,2 contre 35,4 (20 graines) |
+| Burlesque, bouche-à-oreille | × 1,8 | × 3 | Le frein réduit les gains, pas les pertes : le monde en plus un soir de match devenait des clients perdus (−0,9 de réputation sur 30 graines ; +2,2 après) |
+| `CHARGES_FIXES` | 1 000 € | 1 150 € | Moins de clients perdus, un peu plus d'argent : l'avoir du joueur classique dépassait 4 000 € |
+| Client pressé, seuil | 20 min | 15 min | Le joueur classique dépassait 8 alertes par soirée |
+| Bouteille à servir, chance | 0,35 | 0,3 | Idem |
+| Objectif du mois 1 | réputation 52 | réputation 42 | Recalé sur la nouvelle échelle |
+| Défi « Personne ne repart » | 15 % perdus | 20 % | 2 réussites sur 19 en classique |
+
+### Gardes revues
+
+- `equilibrage.test.ts` passe de 10 à 20 graines : sur 10, deux offres proches (classique et happy hour à 4 rendez-vous) s'inversaient par hasard.
+- L'avance du joueur adaptatif en réputation est exigée à +1,5 au lieu de +2 : +1,9 mesuré sur 30 graines, contre +7 en v0.3, avant que le frein ne comprime les écarts.
+- Les dénouements des arcs se comptent sur 20 parties jouées au hasard (10 ne montraient parfois que deux fins de Mila, contre 5 sur 20).
+- Au plus un tiers de soirées calmes (30 % avant) : une porte stricte fait une maison plus calme, par nature.
+
+### Mesures finales
+
+| Stratégie | Palier 2 (nuit) | Réputation 7 / 14 / 28 | Résultat réel par jour, semaine 2 | Net par nuit, semaine 2 | Avoir après la nuit 28, mensualité payée | Clients perdus, semaine 2 | Moral | Départs | Clientèle semaine 2 (T / H / A / G, %) | Satisfaction nuit 28 (T / H / A / G) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 4 à 5 | 30 / 37 / 43 | 208 € | 881 € | 3 920 € | 23 % | 87 | 0,0 | 30 / 29 / 15 / 26 | 64 / 43 / 17 / 43 |
+| Classique, 4 | 3 à 4 | 31 / 40 / 48 | 300 € | 940 € | 5 693 € | 8 % | 85 | 0,1 | 27 / 26 / 12 / 35 | 70 / 48 / 21 / 50 |
+| Happy hour, 4 | 3 à 3 | 34 / 40 / 46 | 303 € | 939 € | 3 281 € | 26 % | 81 | 0,3 | 37 / 26 / 14 / 23 | 70 / 49 / 16 / 48 |
+| Feutrée, 4 | 3 à 4 | 33 / 43 / 53 | 134 € | 767 € | 3 279 € | 1 % | 87 | 0,0 | 26 / 35 / 10 / 28 | 71 / 56 / 27 / 56 |
+| Adaptatif (suit les tendances), 3 | 4 à 5 | 30 / 39 / 49 | 268 € | 918 € | 3 552 € | 15 % | 92 | 0,0 | 23 / 33 / 19 / 26 | 64 / 52 / 28 / 49 |
+| Classique 3, sans bar | 4 à 5 | 30 / 37 / 46 | 267 € | 729 € | 3 691 € | 24 % | 88 | 0,0 | 29 / 29 / 15 / 27 | 67 / 47 / 21 / 47 |
+| Classique 3, bar à 2, sans avance | 4 à 5 | 30 / 37 / 44 | 97 € | 886 € | 2 563 € | 23 % | 87 | 0,0 | 30 / 29 / 15 / 26 | 64 / 45 / 18 / 45 |
+| Classique 3, champagne | 4 à 5 | 30 / 36 / 38 | 335 € | 1 009 € | 4 791 € | 18 % | 90 | 0,0 | 25 / 29 / 18 / 28 | 51 / 38 / 19 / 43 |
+| Classique 3, tarif −20 % | 4 à 5 | 32 / 39 / 45 | -25 € | 492 € | -6 € | 28 % | 88 | 0,0 | 32 / 27 / 10 / 31 | 69 / 47 / 14 / 49 |
+| Classique 3, tarif +20 % | 4 à 5 | 29 / 34 / 37 | 452 € | 1 079 € | 5 881 € | 14 % | 92 | 0,0 | 20 / 27 / 20 / 32 | 47 / 39 / 22 / 39 |
+| Classique 3, formule courte | 4 à 5 | 31 / 40 / 49 | 16 € | 578 € | 937 € | 10 % | 90 | 0,0 | 27 / 25 / 17 / 31 | 69 / 44 / 31 / 51 |
+| Classique 3, soirée complète | 4 à 5 | 29 / 37 / 43 | 324 € | 950 € | 4 679 € | 24 % | 89 | 0,0 | 26 / 39 / 4 / 31 | 61 / 47 / 15 / 44 |
+| Classique 3, sélection laxiste | 4 à 5 | 31 / 36 / 44 | 214 € | 846 € | 2 679 € | 24 % | 91 | 0,0 | 26 / 20 / 12 / 43 | 64 / 41 / 20 / 49 |
+| Classique 3, sélection stricte | 4 à 5 | 31 / 38 / 46 | 8 € | 579 € | 879 € | 7 % | 90 | 0,0 | 24 / 37 / 22 / 17 | 61 / 52 / 26 / 39 |
+| Classique 3, habitués d’abord | 4 à 5 | 30 / 38 / 48 | 214 € | 888 € | 3 550 € | 22 % | 86 | 0,0 | 29 / 29 / 15 / 27 | 68 / 49 / 23 / 48 |
+| Classique 3, pressés d’abord | 4 à 5 | 30 / 37 / 45 | 215 € | 888 € | 3 134 € | 24 % | 88 | 0,0 | 28 / 29 / 15 / 27 | 65 / 45 / 21 / 46 |
+| Passif (classique, sans recruter ni rénover) | 16 à 99 | 21 / 22 / 23 | -126 € | 198 € | -1 383 € | 60 % | 48 | 0,0 | 49 / 51 / 0 / 0 | 26 / 23 / 16 / 18 |
+
+| Stratégie | Décisions par soirée | Soirées sous 4 décisions | Alertes par soirée | Imprévus par soirée | Imprévus différents | Répétitions du plus fréquent | Déjà vus dans les 7 nuits | Cartes d’intrigue | Voisin (parties, nuit moyenne) | Défis réussis | Objectif du mois 1 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Classique, 3 | 7,0 | 17 % | 5,5 | 1,4 | 15,1 | 4,0 | 0 % | 15,0 | 9 sur 10, nuit 18 | 10 sur 20 | 5 sur 10 |
+| Feutrée, 4 | 4,6 | 42 % | 3,1 | 1,3 | 14,9 | 3,9 | 0 % | 13,9 | 0 sur 10 | 7 sur 20 | 10 sur 10 |
+| Adaptatif (suit les tendances), 3 | 5,6 | 28 % | 4,0 | 1,5 | 18,0 | 3,9 | 0 % | 13,9 | 1 sur 10, nuit 27 | 13 sur 20 | 6 sur 10 |
+| Classique 3, sélection laxiste | 5,9 | 33 % | 4,4 | 1,4 | 15,5 | 4,0 | 0 % | 14,8 | 9 sur 10, nuit 13 | 11 sur 20 | 6 sur 10 |
+| Classique 3, sélection stricte | 4,6 | 39 % | 3,0 | 1,4 | 15,7 | 4,0 | 0 % | 14,5 | 0 sur 10 | 11 sur 20 | 5 sur 10 |
+
+## La question de la v0.4 : les soirées se renouvellent-elles ?
+
+Oui, et les gardes le vérifient (`equilibrage-renouvellement.test.ts`, joueur classique, 28 nuits) :
+
+| Mesure | v0.3 | v0.4 | Garde |
+| --- | --- | --- | --- |
+| Décisions par soirée | 3,9 | 7,0 | au moins 5 |
+| Soirées sous 4 décisions | 49 % | 17 % | au plus un tiers |
+| Alertes par soirée | 2,1 | 5,5 | entre 3,5 et 8 |
+| Imprévus différents dans le mois | 5 à 6 | 15 à 18 | au moins 12 |
+| Répétitions de l'imprévu le plus fréquent | environ 15 | 4 | au plus 5 |
+| Imprévus déjà vus dans les 7 nuits | 87 % | 0 % | au plus 10 % |
+| Cartes d'intrigue dans le mois | 0 | 14 à 16 | |
+
+- **Les soirées dépendent de l'état de la maison.** La porte stricte fait sortir « Refoulé à la porte » et jamais « Une enceinte sur le quai », la laxiste l'inverse. Un soir de match, de congrès ou de soirée masquée apporte ses propres cartes.
+- **Chaque semaine a son défi** (une semaine sur deux réussie en jouant classique, davantage en suivant les tendances) et chaque mois son objectif, jugés à des moments différents.
+- **Trois intrigues** donnent un fil sur plusieurs jours : le voisin (9 parties sur 10 avec une porte laxiste), Mila (vers la nuit 10), Jonas (vers la nuit 16). Leurs dénouements dépendent de l'ensemble des choix.
+- **Ce qui reste creux** :
+  - la soirée feutrée et la porte stricte donnent des soirées plus calmes (4,6 décisions, 40 % sous 4) ;
+  - les imprévus plafonnent à 1,3 à 1,5 par soirée, faute de cartes sans condition (la cible est de 2).
+
+  À enrichir en v0.5 avec les relations et la rivale.
+
+### À surveiller en jouant
+
+- **Le rythme des alertes à ×1** : 5 à 7 décisions en 6 minutes, est-ce agréable ou harcelant au téléphone ?
+- **L'argent du premier mois** est confortable pour un joueur actif (3 900 € en classique après la mensualité, dans la cible de 0 à 4 000 €). Le bar ne se rembourse qu'à partir de la cinquième semaine.
+- **Le défi du match** est presque impossible sans portier ; « Rien ne nous échappe » dépend de l'attention du joueur, que la simulation ne mesure pas.
+- **Les gardes de mécanique** jouent sans les cartes de la v0.4 (`cartes: false`) ; les gardes du jeu complet (mois, renouvellement) les gardent toutes. Un changement de contenu (une carte, une alerte) ne doit donc pas faire basculer les premières.

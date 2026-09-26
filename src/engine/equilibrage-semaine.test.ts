@@ -73,7 +73,8 @@ describe('l’offre change la partie', () => {
   });
 
   it('le joueur qui suit les tendances fait mieux en réputation que celui qui ne touche à rien, sans y perdre d’argent', () => {
-    expect(reputation('adaptatif')).toBeGreaterThan(reputation('fixe') + 2);
+    // v0.4, partie 6 : le frein de la réputation (3,5) comprime les écarts ; sur 30 graines, +1,9 (+7 en v0.3).
+    expect(reputation('adaptatif')).toBeGreaterThan(reputation('fixe') + 1.5);
     // v0.4 : sans le client généreux à répétition, l'argent est à égalité (40 graines : −300 € ± 450, écart-type 2 000 €).
     // À reprendre au rééquilibrage de la partie 6 ; en attendant, on vérifie qu'il ne s'appauvrit pas.
     expect(moyenne('adaptatif', (p) => p.avoir)).toBeGreaterThan(moyenne('fixe', (p) => p.avoir) - 800);

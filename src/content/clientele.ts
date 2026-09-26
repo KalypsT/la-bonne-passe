@@ -248,7 +248,9 @@ export const OFFRES: DefinitionOffre[] = [
     affluence: 0.7,
     prix: 1,
     qualite: 0.04,
-    reputation: 1,
+    // Le bouche-à-oreille des connaisseurs (v0.4) : sans lui, avec le frein de réputation à 3,5, le happy hour
+    // construisait une meilleure réputation qu'elle.
+    reputation: 1.25,
     attire: { habitue: 1.5 },
   },
 ];
