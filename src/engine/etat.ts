@@ -105,6 +105,8 @@ export interface Systemes {
   maison2: boolean;
   /** v1.0 : le mode libre, après la fin du chapitre (un objectif par semaine à la place du défi). */
   modeLibre: boolean;
+  /** v1.0, partie 4 : le dossier du permis d'agrandir, au lundi où la maison du palier 4 atteint 70 de réputation. */
+  permis: boolean;
 }
 
 /** Règles de la maison, réglables à tout moment dans l'onglet Clientèle (palier 2). */
@@ -484,7 +486,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 37;
+export const VERSION_ETAT = 38;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -525,6 +527,7 @@ export function systemesDeDepart(): Systemes {
     etablissement: false,
     maison2: false,
     modeLibre: false,
+    permis: false,
   };
 }
 

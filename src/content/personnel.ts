@@ -49,10 +49,12 @@ export const TRAITS: Record<string, string> = {
   Fêtarde: 'Met l’ambiance, mais se fatigue plus vite.',
   'Tête d’affiche': 'Les habitués demandent son prénom : ils viennent plus nombreux les soirs où cette personne travaille.',
   Juriste: 'Relit les courriers d’avocats : amendes et arrangements coûtent moitié moins.',
+  Pilier: 'Gérante née : à la gérance, ses rotations fatiguent l’équipe 30 % de moins (20 % d’ordinaire), elle règle 10 % d’alertes en plus et ne pioche jamais dans la caisse ; à la tête de la deuxième maison, elle rapporte 5 % de plus.',
+  'Oiseau de nuit': 'Attire les groupes comme une Fêtarde, sans se fatiguer plus vite : la nuit lui appartient.',
 };
 
 /** Traits gagnés au bout d'un arc personnel : jamais tirés pour un candidat. */
-export const TRAITS_D_ARC = ['Tête d’affiche', 'Juriste'];
+export const TRAITS_D_ARC = ['Tête d’affiche', 'Juriste', 'Pilier', 'Oiseau de nuit'];
 
 /** Traits possibles pour les candidats du marché. */
 export const TRAITS_DU_MARCHE = Object.keys(TRAITS).filter((t) => !TRAITS_D_ARC.includes(t));

@@ -256,7 +256,8 @@ export function chambreDisponible(etat: EtatJeu, id: string): boolean {
 }
 
 function fetardeEnService(etat: EtatJeu): boolean {
-  return etat.personnel.some((e) => e.enServiceCeSoir && !e.repos && aTrait(e, 'Fêtarde'));
+  // v1.0 : l'Oiseau de nuit (arc d'Inès) attire les groupes comme une Fêtarde.
+  return etat.personnel.some((e) => e.enServiceCeSoir && !e.repos && (aTrait(e, 'Fêtarde') || aTrait(e, 'Oiseau de nuit')));
 }
 
 /** Patience d'un client : la sienne, et une Fêtarde en service met l'ambiance. */

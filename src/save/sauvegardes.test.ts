@@ -751,6 +751,21 @@ describe('migrations', () => {
     expect(fini?.systemes.modeLibre).toBe(true);
   });
 
+  it('migre une sauvegarde v37 : le dossier du permis ouvert au palier 4 dès 70, et Josée présente les étapes', () => {
+    const base = creerEtatInitial();
+    const { permis: _p, ...systemes } = base.systemes;
+    const v37 = { ...base, version: 37, systemes };
+    const debut = migrer(v37);
+    expect(debut?.version).toBe(VERSION_ETAT);
+    expect(debut?.systemes.permis).toBe(false);
+    expect(debut?.nouveautes).not.toContain('permisEtapes');
+    const quatre = migrer({ ...v37, palier: 4, reputation: 72 });
+    expect(quatre?.systemes.permis).toBe(true);
+    expect(quatre?.nouveautes).toContain('permisEtapes');
+    expect(migrer({ ...v37, palier: 4, reputation: 60 })?.systemes.permis).toBe(false);
+    expect(migrer({ ...v37, palier: 5, reputation: 85 })?.systemes.permis).toBe(true);
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

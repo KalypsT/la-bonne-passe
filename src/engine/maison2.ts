@@ -110,8 +110,8 @@ export function moyenneTalents(e: Pick<Employe, 'talents'>): number {
 }
 
 /** 0,8 + 0,05 × la moyenne des talents : de 0,85 à 1,05. */
-export function facteurGerante(e: Pick<Employe, 'talents'>): number {
-  return 0.8 + 0.05 * moyenneTalents(e);
+export function facteurGerante(e: Pick<Employe, 'talents'> & { traits?: string[] }): number {
+  return 0.8 + 0.05 * moyenneTalents(e) + (e.traits?.includes('Pilier') ? B.GERANTE.pilierMaison2 : 0);
 }
 
 export function lieuMaison2(etat: EtatJeu) {
@@ -279,7 +279,7 @@ export function semaineMaison2(etat: EtatJeu, evenements: Sortie): BilanMaison |
 
   const incident = tirage.chance(consigne.incident) ? tirage.choisir(INCIDENTS_MAISON2).id : null;
   const coutIncident = incident ? Math.round(P.incidentCout[0] + tirage.suivant() * (P.incidentCout[1] - P.incidentCout[0])) : 0;
-  const caisse = personne && personne.loyaute < B.GERANTE.loyauteHonnete ? Math.round(recette * P.caisse) : 0;
+  const caisse = personne && personne.loyaute < B.GERANTE.loyauteHonnete && !personne.traits.includes('Pilier') ? Math.round(recette * P.caisse) : 0;
   const salaire = (g?.salaire ?? 0) * nuits;
   const frais = Math.round((P.charges * nuits) / 7) + salaire + coutIncident + caisse;
 

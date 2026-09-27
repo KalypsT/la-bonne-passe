@@ -12,6 +12,8 @@ const h = (heures: number, minutes = 0) => heures * 60 + minutes;
 function partie(palier: number, champs: Partial<EtatJeu> = {}): EtatJeu {
   const etat: EtatJeu = { ...creerEtatInitial({ graine: 51 }), jour: 30, minuteDuJour: h(10), briefingJour: 30, nuitsBouclees: 29, mensualitesPayees: 1 };
   for (let p = 1; p <= palier; p++) accorderPalier(etat, p);
+  // v1.0 : la buanderie s'ouvre au deuxième lundi après le palier 2 ; la partie de ces tests y est déjà.
+  if (palier >= 2) etat.systemes.buanderie = true;
   return { ...etat, annonces: [], visites: [], candidats: [], tresorerie: 5000, ...champs };
 }
 
@@ -101,6 +103,17 @@ describe('la buanderie', () => {
     e.annexes.buanderie.ouverte = true;
     return e;
   }
+
+  it('s’ouvre au deuxième lundi après le palier 2, un lundi après les thèmes, présentée au bilan', () => {
+    const e = partie(2, { jour: 7, minuteDuJour: h(4, 55), briefingJour: 7 });
+    e.systemes.buanderie = false;
+    const lundi1 = tick(e).etat;
+    expect(lundi1.systemes.themes).toBe(true);
+    expect(lundi1.systemes.buanderie).toBe(false);
+    const lundi2 = tick({ ...lundi1, jour: 14, minuteDuJour: h(4, 55), briefingJour: 14, bilanAVoir: false }).etat;
+    expect(lundi2.systemes.buanderie).toBe(true);
+    expect(lundi2.bilanSemaine?.ouvertures).toContain('buanderie');
+  });
 
   it('s’aménage au palier 2', () => {
     expect(ordre(partie(1), { type: 'renoverAnnexe', annexe: 'buanderie' }).evenements).toEqual([]);

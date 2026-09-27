@@ -503,6 +503,255 @@ export const INTRIGUES_PRINCIPALES: DefinitionIntrigue[] = [
       abandon: { texte: 'Jonas a rangé ses manuels. Il sourit toujours aux clients, un peu moins aux autres.' },
     },
   },
+  {
+    // Arc personnel d'Inès (v1.0) : son ambition, une saison à Ibiza. Il habite la troisième semaine.
+    id: 'ines',
+    titre: 'Inès et la saison à Ibiza',
+    genre: 'intrigue',
+    declencheur: { employe: 'ines', palierMin: 1, confirme: true, nuitsMin: B.ARC_INES.nuits },
+    premiere: 'flyer',
+    etapes: {
+      flyer: {
+        heure: H(16),
+        titre: 'Un flyer sur le bar',
+        texte:
+          'Inès pose un flyer sur le comptoir, soleil couchant et piscine turquoise : un club d’Ibiza cherche des hôtesses pour la saison. « Ils paient le vol, {joueur}. Tu en penses quoi ? »',
+        enCours: 'Inès regarde souvent le flyer d’Ibiza, punaisé dans la loge.',
+        choix: [
+          {
+            texte: '« Pars un été, on te gardera ta place »',
+            detail: 'Elle se sent libre, et c’est ce qui la retient',
+            effet: { points: 2, moral: 8, loyaute: 8 },
+            journal: 'Inès punaise le flyer dans la loge, à côté du planning. « Un été. Peut-être. »',
+            suite: { etape: 'soiree', delai: 4 },
+          },
+          {
+            texte: '« Monte ta soirée ibizienne ici »',
+            detail: `−${euros(B.ARC_INES.soiree)} de guirlandes et de sable ; elle fera ses preuves`,
+            effet: { points: 1, argent: -B.ARC_INES.soiree, moral: 10 },
+            journal: 'Inès commande des guirlandes, trois palmiers gonflables et un sac de sable. Personne n’ose demander pour le sable.',
+            suite: { etape: 'soiree', delai: 4 },
+          },
+          {
+            texte: '« Ibiza, c’est pour les touristes »',
+            detail: 'Moral en baisse ; elle n’en parlera plus',
+            effet: { moral: -10, loyaute: -4 },
+            journal: 'Inès range le flyer dans sa poche. Elle ne le jette pas.',
+            suite: { etape: 'soiree', delai: 4 },
+          },
+        ],
+      },
+      soiree: {
+        heure: H(22),
+        titre: 'Ibiza sur le quai',
+        texte:
+          'Inès a branché une enceinte sur le quai. Trois clients dansent pieds nus, un groupe de passage s’arrête, et à l’étage d’en face une fenêtre s’allume. « Juste une chanson, {joueur}. Promis. »',
+        enCours: 'Inès prépare quelque chose pour ce soir.',
+        choix: [
+          {
+            texte: 'Laisser la fête monter',
+            detail: 'Des groupes au quai et une équipe ravie ; les voisins, moins',
+            effet: { points: 1, moral: 8, moralEquipe: 3, clients: 3, clientsSegment: 'groupe', relations: { voisins: -2 }, tapage: 8 },
+            journal: 'La chanson dure une heure. Le quai sent la crème solaire en plein mois de pluie.',
+            suite: { etape: 'decision', delai: 6 },
+          },
+          {
+            texte: 'Une chanson, et on rentre',
+            detail: 'Un compromis : un peu de bruit, un peu de moral',
+            effet: { moral: 3, clients: 1, clientsSegment: 'groupe', tapage: 5 },
+            journal: 'Une chanson, une seule. Inès la choisit longue.',
+            suite: { etape: 'decision', delai: 6 },
+          },
+          {
+            texte: 'Couper l’enceinte',
+            detail: 'Le quartier dort ; Inès, pas du tout',
+            effet: { moral: -8, loyaute: -5, relations: { voisins: 2 } },
+            journal: 'Inès débranche l’enceinte sans un mot. Le silence est assourdissant.',
+            suite: { etape: 'decision', delai: 6 },
+          },
+        ],
+      },
+      decision: {
+        heure: H(12),
+        titre: 'Inès a choisi',
+        texte:
+          'Inès te rejoint au bureau, casque de scooter sous le bras. « Le club d’Ibiza m’a rappelée. J’ai dit non. Ici, j’ai trouvé ma piste de danse. Mais il faut que ça bouge, {joueur}. »',
+        enCours: 'Inès doit donner sa réponse au club d’Ibiza. Son moral et ce que tu lui as laissé faire pèseront.',
+        condition: { moralMin: B.ARC_INES.moralReste, pointsMin: B.ARC_INES.pointsReste },
+        sinon: { etape: 'depart', delai: 1 },
+        choix: [
+          {
+            texte: 'La nuit lui appartient',
+            detail: 'Elle devient Oiseau de nuit : elle attire les groupes sans s’épuiser (elle n’est plus Fêtarde)',
+            effet: { ajouterTrait: 'Oiseau de nuit', retirerTrait: 'Fêtarde', loyaute: 10, moral: 6 },
+            journal: 'Inès range le flyer d’Ibiza dans un cadre, au-dessus du bar. « Pour me souvenir que j’ai choisi. »',
+            suite: { fin: 'oiseau' },
+          },
+          {
+            texte: 'Lui confier les soirées à thème',
+            detail: 'Charme +1, elle se calme (elle n’est plus Tête brûlée)',
+            effet: { talent: { charme: 1 }, retirerTrait: 'Tête brûlée', loyaute: 8 },
+            journal: 'Inès prend le carnet des soirées à thème et le couvre d’autocollants. Elle ne cherche plus la dispute : elle a mieux à faire.',
+            suite: { fin: 'assagie' },
+          },
+        ],
+      },
+      depart: {
+        heure: H(12),
+        titre: 'Le billet pour Ibiza',
+        texte:
+          'Inès pose un billet d’avion sur ton bureau. « Ils m’attendent lundi. Je voulais te le dire en face. » Elle a l’air triste, et décidée.',
+        enCours: 'Inès doit donner sa réponse au club d’Ibiza.',
+        choix: [
+          {
+            texte: '« Bon vent, Inès »',
+            detail: 'Elle part, libre ; l’équipe la regrette',
+            effet: { depart: true, moralEquipe: -3 },
+            journal: 'Inès embrasse tout le monde, même le portier. Le scooter démarre au troisième essai.',
+            suite: { fin: 'partie' },
+          },
+          {
+            texte: `Lui proposer ${Math.round(B.ARC_INES.part * 100)} % de part`,
+            detail: 'Elle reste peut-être, pour l’argent et pour toi',
+            effet: { moral: 10, loyaute: 6, partMin: B.ARC_INES.part },
+            chance: 0.6,
+            echec: { depart: true },
+            journal: 'Inès déchire le billet en deux, puis en quatre. « Pour le principe. »',
+            journalEchec: 'Inès sourit, touchée. « Ce n’est pas une question d’argent. » Elle part lundi.',
+            suite: { fin: 'retenue' },
+            suiteEchec: { fin: 'partie' },
+          },
+        ],
+      },
+    },
+    fins: {
+      oiseau: { texte: 'Inès a laissé Ibiza au mur, dans un cadre. Les groupes la réclament ; elle, elle ne s’épuise plus.' },
+      assagie: { texte: 'Inès tient les soirées à thème d’une main ferme. Le quartier dit qu’elle s’est calmée ; elle dit qu’elle s’est trouvée.' },
+      retenue: { texte: 'Inès est restée, pour un meilleur pourcentage et une meilleure raison. Elle ne dit pas laquelle.' },
+      partie: { texte: 'Inès est partie à Ibiza. Une carte postale est arrivée : du sable, du soleil, et « la maison me manque ».' },
+    },
+  },
+  {
+    // Arc personnel de Sanne (v1.0) : son ambition, devenir gérante. Il habite les semaines 9 à 12.
+    id: 'sanne',
+    titre: 'Sanne et la relève',
+    genre: 'intrigue',
+    declencheur: { employe: 'sanne', palierMin: 4, jourMin: B.ARC_SANNE.jour, nuitsMin: B.ARC_SANNE.nuits },
+    premiere: 'carnet',
+    etapes: {
+      carnet: {
+        heure: H(11),
+        titre: 'Le carnet de Josée',
+        texte:
+          'Sanne a retrouvé un vieux carnet dans le bureau : les comptes de Madame Josée, à l’encre violette, année après année. « Tu me montres comment tu fais, toi, {joueur} ? J’aimerais comprendre. »',
+        enCours: 'Sanne relit le carnet de Josée entre deux clients.',
+        choix: [
+          {
+            texte: '« Assieds-toi, on fait les comptes »',
+            detail: 'Une heure ensemble au bureau ; elle apprend vite',
+            effet: { points: 2, moral: 6, loyaute: 6 },
+            journal: 'Sanne prend des notes dans la marge du carnet. Elle trouve une erreur de Josée datant de 2004.',
+            suite: { etape: 'soir', delai: 5 },
+          },
+          {
+            texte: '« Prépare le prochain briefing »',
+            detail: 'Elle apprend sur le tas, avec fierté',
+            effet: { points: 1, moral: 10 },
+            journal: 'Sanne affiche un planning sur la porte de la loge. Il est en couleurs.',
+            suite: { etape: 'soir', delai: 5 },
+          },
+          {
+            texte: '« Chacun son métier »',
+            detail: 'Moral en baisse ; elle referme le carnet',
+            effet: { moral: -8, loyaute: -4 },
+            journal: 'Sanne remet le carnet sur l’étagère, bien droit.',
+            suite: { etape: 'soir', delai: 5 },
+          },
+        ],
+      },
+      soir: {
+        heure: H(22),
+        titre: 'Une soirée sans toi',
+        texte:
+          'Un rendez-vous à la banque s’éternise, puis un dîner avec l’échevin. Il est 22 h et tu n’es pas là. Au téléphone, Sanne est calme : « Deux habitués se disputent la même chambre. Je m’en occupe ? »',
+        enCours: 'Sanne va peut-être devoir tenir la maison seule un soir.',
+        choix: [
+          {
+            texte: '« La maison est à toi ce soir »',
+            detail: `Elle réussit plus souvent qu’elle n’échoue (${Math.round(B.ARC_SANNE.chance * 100)} %)`,
+            effet: { points: 2, moral: 8, reputation: 1 },
+            chance: B.ARC_SANNE.chance,
+            echec: { points: 1, moral: -4, reputation: -1 },
+            journal: 'Sanne sépare les deux habitués avec une coupe de champagne et une clé de chambre chacun. Personne ne sait comment.',
+            journalEchec: 'Les deux habitués repartent fâchés. Sanne note dans le carnet : « Ne jamais promettre la même chambre. »',
+            suite: { etape: 'josee', delai: 6 },
+            suiteEchec: { etape: 'josee', delai: 6 },
+          },
+          {
+            texte: '« J’arrive, ne fais rien »',
+            detail: 'Tu reprends la main ; elle attendra',
+            effet: { moral: -5 },
+            journal: 'Tu arrives en taxi. Sanne t’attendait sur le quai, les bras croisés.',
+            suite: { etape: 'josee', delai: 6 },
+          },
+        ],
+      },
+      josee: {
+        heure: H(16),
+        titre: 'Madame Josée passe',
+        texte:
+          'Madame Josée passe « par hasard », un bouquet sous le bras. Elle s’enferme une heure au bureau avec Sanne. En ressortant, elle te glisse : « Cette petite a du métier. Tu le savais ? »',
+        enCours: 'Madame Josée a promis de passer voir Sanne.',
+        condition: { moralMin: B.ARC_SANNE.moralReussite, pointsMin: B.ARC_SANNE.preparation },
+        sinon: { etape: 'doute', delai: 1 },
+        choix: [
+          {
+            texte: '« Un jour, elle tiendra une maison »',
+            detail: 'Elle devient Pilier : une gérante née (plus d’alertes réglées, jamais de caisse qui manque)',
+            effet: { ajouterTrait: 'Pilier', loyaute: 15, moral: 6 },
+            journal: 'Josée offre son carnet à Sanne. « L’encre violette, c’est obligatoire. »',
+            suite: { fin: 'releve' },
+          },
+          {
+            texte: 'Une prime pour fêter ça',
+            detail: `−${euros(B.ARC_SANNE.prime)} ; elle devient Pilier`,
+            effet: { argent: -B.ARC_SANNE.prime, ajouterTrait: 'Pilier', moral: 12, loyaute: 8 },
+            journal: 'Sanne invite Josée à dîner avec sa prime. Elles reviennent à minuit, bras dessus bras dessous.',
+            suite: { fin: 'carnet' },
+          },
+        ],
+      },
+      doute: {
+        heure: H(16),
+        titre: 'Sanne doute',
+        texte:
+          'Madame Josée est passée, a bu un thé, et n’a rien dit. Sanne range le carnet : « Je ne suis peut-être pas faite pour ça. Le salon, je sais faire. »',
+        enCours: 'Madame Josée a promis de passer voir Sanne.',
+        choix: [
+          {
+            texte: '« Tu l’es. Ça viendra »',
+            detail: 'Moral en hausse ; l’histoire en reste là, pour l’instant',
+            effet: { moral: 10, loyaute: 4 },
+            journal: 'Sanne remet le carnet sur l’étagère, mais pas tout au fond.',
+            suite: { fin: 'plusTard' },
+          },
+          {
+            texte: 'Ne rien dire',
+            detail: 'Elle retourne au salon, un peu éteinte',
+            effet: { moral: -6 },
+            journal: 'Sanne retourne au salon. Elle sourit aux clients comme avant, presque.',
+            suite: { fin: 'salon' },
+          },
+        ],
+      },
+    },
+    fins: {
+      releve: { texte: 'Sanne a hérité du carnet de Josée, et de son encre violette. Un jour, elle tiendra une maison ; elle le sait, maintenant.' },
+      carnet: { texte: 'Sanne et Josée dînent ensemble chaque premier lundi du mois. On ne sait pas qui apprend à qui.' },
+      plusTard: { texte: 'Sanne a gardé le carnet à portée de main. La relève attendra un peu.' },
+      salon: { texte: 'Sanne est retournée au salon. Le carnet de Josée prend la poussière sur l’étagère.' },
+    },
+  },
 ];
 
 /** Toutes les intrigues, et les suites différées des imprévus. */

@@ -282,6 +282,15 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
       return TEXTES_MODE_LIBRE.journal.nouveau(OBJECTIFS_LIBRES[evenement.objectif].titre);
     case 'objectifLibreConclu':
       return (evenement.reussi ? TEXTES_MODE_LIBRE.journal.reussi : TEXTES_MODE_LIBRE.journal.rate)(OBJECTIFS_LIBRES[evenement.objectif].titre);
+    case 'permisEtape': {
+      const j = TEXTES_AGRANDIR.journal;
+      if (evenement.etape === 'enquete') return j.permisEnquete;
+      if (evenement.etape === 'commission') return j.permisCommission;
+      if (evenement.etape === 'ajourne') return j.permisAjourne;
+      return j.permisRefuseVoisins;
+    }
+    case 'reunionQuartier':
+      return TEXTES_AGRANDIR.journal.reunionQuartier(formaterEuros(evenement.montant));
     case 'demissionMaison':
       return TEXTES_MAISON2.journal.demission(evenement.prenom);
     case 'renommerMaison':

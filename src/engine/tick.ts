@@ -347,6 +347,7 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       appliquerGamme(etat, ordre, evenements);
       return;
     case 'demanderPermis':
+    case 'reunionQuartier':
     case 'agrandir':
     case 'promouvoir':
     case 'retrograder':
@@ -430,6 +431,8 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     if (jourDeLaSemaine(etat.jour) === 0) {
       // La deuxième maison fait ses comptes d'abord : ils entrent dans ceux de la semaine écoulée (v1.0).
       const bilanMaison = semaineMaison2(etat, evenements);
+      // Les thèmes ouvrent au premier lundi après le palier 2 ; la buanderie au suivant (v1.0, partie 4).
+      const themesDejaOuverts = etat.systemes.themes;
       cloreSemaine(etat, prochainesMensualites(etat, 2), tirage, evenements);
       if (bilanMaison && etat.bilanSemaine) etat.bilanSemaine.maison2 = bilanMaison;
       noterSemaineChronique(etat);
@@ -449,6 +452,16 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
       if (etat.palier >= 5 && etat.systemes.agrandissement && !etat.systemes.gerante && etat.permis.jour < etat.jour) {
         etat.systemes.gerante = true;
         if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'gerante'];
+      }
+      // v1.0, partie 4 : la buanderie au deuxième lundi après le palier 2 (la troisième semaine était vide) ;
+      // le dossier du permis, au lundi où la maison du palier 4 a 70 de réputation.
+      if (themesDejaOuverts && !etat.systemes.buanderie) {
+        etat.systemes.buanderie = true;
+        if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'buanderie'];
+      }
+      if (etat.palier === 4 && etat.reputation >= B.PALIER_5.depot && !etat.systemes.permis) {
+        etat.systemes.permis = true;
+        if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'permis'];
       }
       // Palier 4 (v0.6) : au deuxième lundi, le placement ; au premier, les formations.
       if (etat.systemes.formations && !etat.systemes.placement) {

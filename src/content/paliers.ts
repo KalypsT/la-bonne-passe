@@ -36,8 +36,8 @@ export const PALIERS: DefinitionPalier[] = [
       'Onglet Clientèle : la satisfaction de chaque segment, et ce qui les fait revenir.',
       'Règles de la maison : tarif, formule, sélection à l’entrée et priorité d’accueil.',
       'Le bar peut rouvrir (1 200 €, 8 h de travaux) : une équipe Bar, du stock, la formule champagne.',
-      'La buanderie peut ouvrir (1 200 €, 8 h de travaux) : le linge se relave au lieu de s’acheter.',
       'Dès lundi : les tendances de la semaine en ville, et les soirées à thème au briefing.',
+      'Le lundi d’après : la buanderie (1 200 €, 8 h de travaux), où le linge se relave au lieu de s’acheter.',
     ],
   },
   {

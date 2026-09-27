@@ -268,7 +268,10 @@ function progression(): string[] {
     '| Stratégie (168 nuits) | Palier 2 | Palier 3 | Palier 4 | Palier 5 | Faillites |',
     '| --- | --- | --- | --- | --- | --- |',
   ];
-  const semaines = ['| Stratégie | Systèmes ouverts en plus, semaines 1 à 16 | Semaines sans nouveauté (2 à 16) |', '| --- | --- | --- |'];
+  const semaines = [
+    '| Stratégie | Systèmes ouverts en plus, semaines 1 à 16 | Semaines sans nouveau système (2 à 16) | Nouveautés (systèmes, arcs, étapes du permis), semaines 1 à 16 | Semaines sans nouveauté (2 à 16) |',
+    '| --- | --- | --- | --- | --- |',
+  ];
   const argent = [
     '| Stratégie | Trésorerie fin des mois 1 à 6 | Dette fin des mois 1 à 6 | Valeur nette fin des mois 1 à 6 | Réputation mois 1 à 6 | Personnes / chambres au mois 6 | Décisions d’argent / d’investissement par semaine (dès la semaine 5) |',
     '| --- | --- | --- | --- | --- | --- | --- |',
@@ -283,7 +286,10 @@ function progression(): string[] {
     };
     paliers.push(`| ${nom} | ${jour(1)} | ${jour(2)} | ${jour(3)} | ${jour(4)} | ${p.faillites} |`);
     const plus = p.systemesParSemaine.slice(0, 16).map((x, i) => x - (i === 0 ? x : p.systemesParSemaine[i - 1]!));
-    semaines.push(`| ${nom} | ${plus.map((x, i) => (i === 0 ? '—' : virgule(x))).join(' · ')} | ${plus.slice(1).filter((x) => x < 0.5).length} sur 15 |`);
+    const nouv = p.nouveautesParSemaine.slice(0, 16).map((x, i) => x - (i === 0 ? x : p.nouveautesParSemaine[i - 1]!));
+    semaines.push(
+      `| ${nom} | ${plus.map((x, i) => (i === 0 ? '—' : virgule(x))).join(' · ')} | ${plus.slice(1).filter((x) => x < 0.5).length} sur 15 | ${nouv.map((x, i) => (i === 0 ? '—' : virgule(x))).join(' · ')} | ${nouv.slice(1).filter((x) => x < 0.5).length} sur 15 |`,
+    );
     const m = p.mois;
     const f = (g: (x: (typeof m)[number]) => number) => m.map((x) => arrondi(g(x))).join(' / ');
     const dernier = m[m.length - 1]!;

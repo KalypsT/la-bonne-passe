@@ -295,7 +295,21 @@ export const NOUVELLE_ENSEIGNE = 500;
  * de la mairie qu'il faut au lundi de la réponse (en bons termes).
  */
 // v0.6, partie 8 : réputation 80 (70 auparavant), voir PALIER_4.
-export const PALIER_5 = { reputation: 80, fraisDossier: 300, mairie: 40 };
+// v1.0, partie 4 : le permis en trois étapes, pour habiter les semaines 9 à 12 (aucune nouveauté entre les formations et
+// le palier 5, mesuré en v0.6). Le dossier se dépose dès 70 de réputation (`depot`) ; au lundi suivant s'ouvre l'enquête
+// de voisinage, que les voisins doivent passer (au moins `voisins`, une réunion de quartier y aide : `reunion`) ; au
+// lundi d'après, la commission accorde si la mairie est en bons termes et la réputation à 80, sinon elle ajourne d'une
+// semaine.
+export const PALIER_5 = {
+  reputation: 80,
+  depot: 70,
+  fraisDossier: 300,
+  mairie: 40,
+  // L'enquête échoue si les voisins sont en mauvais termes (sous −40). À 0, des voisins simplement grincheux faisaient
+  // refuser le dossier, qui repartait de zéro : le palier 5 arrivait vers le jour 102 au cran 3 (89 auparavant).
+  voisins: -40,
+  reunion: { cout: 250, voisins: 12 },
+};
 /**
  * Agrandissement par le bâtiment voisin : ses deux étages (2 chambres), ou tout le bâtiment (3 chambres) ;
  * après les étages, le rez-de-chaussée peut suivre. Travaux en heures de jeu. Les chambres arrivent meublées.
@@ -328,6 +342,12 @@ export const GERANTE = {
   moralRetour: -10,
   loyauteHonnete: 40,
   caisse: 0.03,
+  /** v1.0, partie 4 : une gérante « Pilier » (arc de Sanne) règle cette part d'alertes en plus, ne pioche jamais dans
+   * la caisse, et fait rapporter à la deuxième maison ce facteur en plus. */
+  pilierRegle: 0.1,
+  pilierMaison2: 0.05,
+  /** Ses rotations fatiguent l'équipe d'autant moins encore (30 % au lieu de 20 %). */
+  pilierFatigue: 0.1,
 };
 /**
  * Le deuxième établissement (deux lundis après le palier 5), jusqu'au projet : trois lieux proposés, l'achat
@@ -921,6 +941,37 @@ export const ARC_JONAS = {
   /** Moral qu'il lui faut, le jour des résultats, pour réussir. */
   moralReussite: 45,
   /** Points de préparation qu'il lui faut (réviser au calme : 2, au salon : 1 ; inscription payée : 2, à moitié : 1). */
+  preparation: 3,
+};
+
+/**
+ * Arc d'Inès, « Une saison à Ibiza » (v1.0, partie 4). Au plus tôt après tant de nuits. À 8 nuits (vers le jour 12),
+ * il prenait la place de l'arc de Jonas (deux intrigues à la fois au plus) : Jonas ne vivait plus son histoire dans le
+ * mois (0 partie sur 10). La troisième semaine a déjà Jonas et la buanderie ; Inès vient après, au deuxième mois. À 24
+ * nuits, elle tombait au lendemain de la première mensualité, caisse au plus bas : 0,3 mensualité impayée par partie en
+ * deux mois (cartes au hasard) au lieu de 0,2 au plus. 30 nuits : vers le jour 36 à 42.
+ */
+export const ARC_INES = {
+  nuits: 30,
+  soiree: 150,
+  /** Pour qu'elle reste, au dénouement. À 2 points, elle partait dans 4 à 5 parties sur 10 où l'on tranche au hasard ;
+   * à 1 point, dans 2 (6 sur 30 parties de deux mois). */
+  moralReste: 50,
+  pointsReste: 1,
+  part: 0.55,
+};
+
+/**
+ * Arc de Sanne, « La relève » (v1.0, partie 4) : il comble les semaines 9 à 12, au palier 4, pas avant le jour `jour`.
+ * Réussi, Sanne devient « Pilier » : une gérante née (voir GERANTE.pilierRegle).
+ */
+export const ARC_SANNE = {
+  jour: 55,
+  nuits: 40,
+  prime: 200,
+  /** La soirée qu'elle tient seule : chance de réussite. */
+  chance: 0.65,
+  moralReussite: 45,
   preparation: 3,
 };
 

@@ -1672,3 +1672,36 @@ Lecture :
 - **Reconquérir** sort rarement : dans une maison bien tenue, tous les segments dépassent 85. C'est voulu : on ne reconquiert que ce qu'on a perdu.
 
 Gardes : `modeLibre.test.ts` (règles), `equilibrage-modeLibre.test.ts` (4 graines, 266 nuits : au moins 12 objectifs, 3 types, 30 à 80 % de réussite, aucune semaine sans carte ni imprévu après la fin).
+
+### Les creux de progression (partie 4)
+
+Trois changements : la **buanderie** ouvre au deuxième lundi après le palier 2 (et non plus avec lui) ; deux **arcs** de plus, Inès (« Une saison à Ibiza ») et Sanne (« La relève ») ; le **permis en trois étapes** (dossier dès 70 de réputation, enquête de voisinage, commission à 80). La mesure « nouveau chaque semaine » compte désormais les systèmes, les arcs et intrigues principales commencés, et les étapes du permis (`nouveautes` dans la simulation).
+
+**Nouveautés par semaine** (`npm run rapport`, 10 graines, semaines 2 à 16) :
+
+| Stratégie | Systèmes seuls | Nouveautés (systèmes, arcs, permis) | Semaines sans nouveauté |
+| --- | --- | --- | --- |
+| Classique 3 | 3,0 · 1,0 · 5,4 · 2,7 · 2,7 · 2,5 · 1,6 · 0,8 · 0,2 · 0,1 · 0,2 · 0,5 · 0,6 · 0,6 · 0,4 | 4,2 · 2,1 · 5,7 · 3,8 · 3,2 · 2,6 · 2,8 · 1,8 · 1,1 · 1,0 · 0,6 · 0,8 · 1,0 · 0,8 · 0,4 | 1 sur 15 (v0.6 : 6 sur 15 en systèmes) |
+| Classique 4 | 3,0 · 1,0 · 5,8 · 3,6 · 2,6 · 1,9 · 1,6 · 0,3 · 0,3 · 0,4 · 0,4 · 0,7 · 0,6 · 0,6 · 0,2 | 4,5 · 2,1 · 5,9 · 4,8 · 2,7 · 2,1 · 3,2 · 1,4 · 1,4 · 1,3 · 0,6 · 1,2 · 0,8 · 0,6 · 0,2 | 1 sur 15 |
+| Feutrée 4 | 3,0 · 1,0 · 7,0 · 3,5 · 2,1 · 2,2 · 1,2 · 0,0 · 0,4 · 0,6 · 0,7 · 0,4 · 0,3 · 0,3 · 0,2 | 4,1 · 2,0 · 7,0 · 4,7 · 2,6 · 3,0 · 3,3 · 1,1 · 1,0 · 1,2 · 0,9 · 0,5 · 0,4 · 0,4 · 0,2 | 3 sur 15 |
+| Complet | 3,0 · 1,0 · 5,4 · 3,1 · 2,4 · 2,5 · 1,8 · 0,5 · 0,2 · 0,1 · 0,1 · 0,6 · 0,8 · 0,7 · 0,3 | 4,2 · 2,1 · 5,7 · 4,2 · 2,9 · 2,6 · 3,3 · 1,5 · 1,1 · 0,7 · 0,5 · 1,2 · 1,0 · 0,7 · 0,4 | 1 sur 15 |
+| Complet, cartes au hasard | | 4,1 · 2,0 · 5,4 · 2,3 · 2,0 · 1,3 · 2,0 · 0,3 · 0,2 · 1,3 · 0,2 · 1,1 · 0,4 · 0,8 · 0,1 | 5 sur 15 |
+
+- **La troisième semaine** (colonne 2) apporte la buanderie (1 système) et l'arc de Jonas : 2,1 nouveautés, contre 0 système en v0.6.
+- **Les semaines 9 à 12** (colonnes 8 à 11) : 0,6 à 1,8 nouveauté par semaine au cran 3 (0 à 0,2 système en v0.6), grâce aux étapes du permis et à l'arc de Sanne. Le joueur qui tranche au hasard, arrivé tard au palier 4, garde ses creux.
+
+**Palier 5** : au cran 3, jour 94 (71 à 127) ; cran 4, 80 (64 à 92) ; feutrée, 75 ; complet, 92 (85 en v0.6). Il arrive au même moment ou un peu plus tard qu'en v0.6 : c'est la réputation 80 qui décide, et le dossier déposé dès 70 attend devant la commission.
+
+**Réglages en cours de route** (chaque garde déplacée porte sa mesure en commentaire) :
+
+- **L'arc d'Inès** démarrait après 8 nuits (vers le jour 12) : il prenait la place de celui de Jonas (deux intrigues à la fois au plus), qui ne se jouait plus dans le mois (0 partie sur 10). Puis à 24 nuits, il tombait au lendemain de la première mensualité, caisse au plus bas (0,3 mensualité impayée par partie). Il démarre après 30 nuits, vers le jour 36 à 42.
+- **Inès partait trop souvent** : 4 à 5 parties sur 10 quand on tranche au hasard. Il lui faut un geste au lieu de deux pour rester : 2 départs sur 10.
+- **Sa fête sur le quai** faisait perdre la mairie (en bons termes dans 6 parties sur 20 au lieu de 11) : tapage 8 au lieu de 15, voisins −2 au lieu de −5. La mairie finit en moyenne à 38 à la nuit 56, comme sans l'arc.
+- **La commission** refusait d'abord quand la mairie était tiède, et tout le dossier repartait de zéro (palier 5 vers le jour 105) ; elle ajourne désormais. **L'enquête** échouait dès que les voisins passaient sous 0 (palier 5 au jour 102 au cran 3) ; elle échoue sous −40, en mauvais termes.
+- **La gérante** : après son arc, Sanne est la plus loyale, et le joueur simulé la promouvait toujours, retirant la meilleure hôtesse du salon (237 € par nuit de poste au lieu de 182 €). Le joueur simulé promeut désormais la moins douée qui accepte : 126 € par nuit de poste, environ son salaire.
+- **Gardes plus larges en graines** : les arcs consomment des tirages et rebattent les parties. Le cran 6 permanent (`plafond.test.ts`) passe à 20 graines (sur les graines 1 à 10, il finissait devant ; sur 20, 17 400 € contre 21 000 €), le palier 5 (`equilibrage-agrandir.test.ts`) à 12 graines. Trois seuils bougent : agios en deux mois sous 250 € (porte stricte : 131 € avant, 219 € après) ; 0,3 mensualité impayée au plus (porte stricte ; 0,2 sans l'arc d'Inès) ; mairie en bons termes dans 4 parties sur 10 au moins chez le joueur qui soigne le quartier.
+
+À surveiller :
+
+- **Le cran 6 permanent** reste derrière sur 20 graines, mais de peu sur certaines séries : les arcs remontent le moral et retardent les départs.
+- **La gérante** coûte son salaire si on choisit bien qui promouvoir ; promouvoir sa meilleure hôtesse coûte le double. Josée pourrait le dire (partie 5).
