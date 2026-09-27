@@ -11,7 +11,8 @@ export type EvenementPalier = { type: 'palier'; numero: number };
 /** Systèmes ouverts par chaque palier. */
 export const SYSTEMES_PAR_PALIER: Record<number, (keyof Systemes)[]> = {
   1: ['recrutement', 'renovation', 'planning', 'reserve'],
-  2: ['affaires', 'groupes', 'clientele', 'tarifs', 'porte', 'bar', 'buanderie'],
+  // La buanderie ouvre au deuxième lundi après le palier 2 (v1.0, partie 4 : voir tick.ts).
+  2: ['affaires', 'groupes', 'clientele', 'tarifs', 'porte', 'bar'],
   3: ['relations', 'rivale', 'accueil', 'securite', 'loges'],
   4: ['vip', 'couples', 'confort', 'renommer'],
   5: ['agrandissement'],

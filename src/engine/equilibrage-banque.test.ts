@@ -37,14 +37,19 @@ describe('équilibrage de la banque', () => {
   it('le joueur actif ne fait jamais faillite en deux mois, et paie presque toujours à l’heure', () => {
     for (const nom of DEUX_MOIS) {
       expect(parties.get(nom)!.filter((p) => p.etat.finDePartie).length).toBe(0);
-      expect(moyenne(nom, (p) => p.etat.banque.impayees)).toBeLessThanOrEqual(0.2);
+      // v1.0, partie 4 : 0,3 (0,2 auparavant). Porte stricte, cartes au hasard : 0,3 mensualité impayée par partie en deux
+      // mois (0,2 sans l'arc d'Inès, mesuré sur 20 graines) ; classique et cran 4 : 0.
+      expect(moyenne(nom, (p) => p.etat.banque.impayees)).toBeLessThanOrEqual(0.3);
     }
   });
 
-  it('les agios restent une piqûre de rappel : moins de 200 € en deux mois', () => {
+  // v1.0, partie 4 : 250 € (200 auparavant). L'arc d'Inès arrive au lendemain de la première mensualité, quand la
+  // caisse est au plus bas (sa soirée ibizienne coûte 150 €), et rebat le hasard des parties : porte stricte, 131 € d'agios
+  // en moyenne avant, 219 € après ; classique, 93 € puis 49 € ; cran 4, 2 € puis 4 €.
+  it('les agios restent une piqûre de rappel : moins de 250 € en deux mois', () => {
     for (const nom of DEUX_MOIS) {
       const agios = moyenne(nom, (p) => p.bilans.reduce((t, b) => t + b.comptes.depenses.agios, 0) + p.etat.semaine.comptes.depenses.agios);
-      expect(agios).toBeLessThan(200);
+      expect(agios).toBeLessThan(250);
     }
   });
 });

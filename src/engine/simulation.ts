@@ -10,7 +10,7 @@ import { appliquerOrdresSurPlace, tickSurPlace, type Ordre } from './tick';
 import { alertes } from './alertes';
 import { creerTirage } from './hasard';
 import { trouverImprevu } from '../content/imprevus';
-import { INTRIGUES } from '../content/intrigues';
+import { INTRIGUES, INTRIGUES_PRINCIPALES } from '../content/intrigues';
 import { choixPossibles, etapeCourante, type IntrigueFinie } from './intrigues';
 import { estOuvert } from './temps';
 
@@ -26,7 +26,7 @@ import { reponsePossible } from './rivale';
 import { gagneNuit } from './comptes';
 import { detteTotale, valeurNette } from './banque';
 import { prixFormation, prochainConfort } from './gamme';
-import { accepteGerance, optionsAgrandissement, peutDemanderPermis, peutPromouvoir } from './agrandir';
+import { accepteGerance, optionsAgrandissement, peutDemanderPermis, peutPromouvoir, peutReunirQuartier } from './agrandir';
 import { peutConfier, peutEngagerExterne } from './maison2';
 
 const moyenne = (l: number[]) => (l.length ? l.reduce((a, b) => a + b, 0) / l.length : 0);
@@ -63,6 +63,11 @@ export interface ResumeNuit {
   palier: number;
   /** Systèmes ouverts à la fermeture (v0.6, partie 8), toute la dette (rachat, emprunts, retard) et la valeur nette. */
   systemesOuverts: number;
+  /**
+   * v1.0, partie 4 : les nouveautés vécues jusque-là, au sens large : systèmes ouverts, arcs et intrigues principales
+   * commencés, et étapes du permis franchies (dépôt, enquête, commission, accord).
+   */
+  nouveautes: number;
   dette: number;
   valeurNette: number;
   /** Tapage du quartier à la fermeture. */
@@ -173,6 +178,14 @@ export interface OptionsSimulation {
 }
 
 const ORDRE_RENOVATION = ['orientale', 'velours', 'miroirs'];
+
+/** Les intrigues qui comptent comme une nouveauté : celles des personnages et du Chat Noir. */
+const HISTOIRES_PRINCIPALES = new Set([...INTRIGUES_PRINCIPALES, INTRIGUE_CHAT_NOIR].map((d) => d.id));
+/** Étapes du permis franchies : dépôt, enquête, commission, accord (un refus repart de zéro). */
+function etapesPermis(etat: EtatJeu): number {
+  const rang = { aucun: 0, refuse: 0, depose: 1, enquete: 2, commission: 3, accorde: 4 } as const;
+  return etat.palier >= 5 ? 4 : rang[etat.permis.statut];
+}
 
 /** Joue une partie avec des décisions simples et raisonnables, et résume chaque nuit. */
 export function simuler(options: OptionsSimulation): {
@@ -292,6 +305,10 @@ export function simuler(options: OptionsSimulation): {
           chambres: etat.chambres.filter((c) => c.ouverte).length,
           palier: etat.palier,
           systemesOuverts: Object.values(etat.systemes).filter(Boolean).length,
+          nouveautes:
+            Object.values(etat.systemes).filter(Boolean).length +
+            new Set([...etat.intrigues.actives, ...etat.intrigues.finies.filter((f) => f.fin !== 'ecartee')].map((i) => i.id).filter((id) => HISTOIRES_PRINCIPALES.has(id))).size +
+            etapesPermis(etat),
           dette: detteTotale(etat),
           valeurNette: valeurNette(etat),
           tapage: etat.quartier.tapage,
@@ -396,6 +413,8 @@ export function simuler(options: OptionsSimulation): {
         }
       }
       if (options.permis && peutDemanderPermis(etat)) jouer([{ type: 'demanderPermis' }]);
+      // Pendant l'enquête de voisinage (v1.0), une réunion de quartier si les voisins ne sont pas franchement acquis.
+      if (options.permis && peutReunirQuartier(etat) && etat.relations.jauges.voisins < B.PALIER_5.voisins + 15) jouer([{ type: 'reunionQuartier' }]);
       if (options.confort && etat.systemes.confort && !ouvertMaintenant(etat)) {
         for (const c of etat.chambres) {
           const suivant = prochainConfort(c);
@@ -427,7 +446,13 @@ export function simuler(options: OptionsSimulation): {
       }
       // La gérante, une fois l'équipe assez nombreuse pour se passer d'une personne au salon.
       if (options.gerante && etat.systemes.gerante && !etat.gerante && etat.personnel.length >= 6) {
-        const choix = [...etat.personnel].filter((e) => peutPromouvoir(etat, e.id) && accepteGerance(e)).sort((a, b) => b.loyaute - a.loyaute)[0];
+        // v1.0, partie 4 : parmi ceux qui acceptent, celle ou celui aux talents les plus modestes (la vedette reste au
+        // salon), puis le plus loyal. Choisir le plus loyal désignait toujours Sanne après son arc : la meilleure hôtesse
+        // quittait le salon, et la gérante coûtait 237 € par nuit de poste au lieu de 182 €.
+        const talents = (e: (typeof etat.personnel)[number]) => Object.values(e.talents).reduce((a, b) => a + b, 0);
+        const choix = [...etat.personnel]
+          .filter((e) => peutPromouvoir(etat, e.id) && accepteGerance(e))
+          .sort((a, b) => talents(a) - talents(b) || b.loyaute - a.loyaute)[0];
         if (choix) jouer([{ type: 'promouvoir', employeId: choix.id }]);
       }
       if (options.etablissement && etat.systemes.etablissement) {
@@ -639,6 +664,8 @@ export interface Progression {
   paliers: number[][];
   /** Systèmes ouverts à la fin de chaque semaine, en moyenne. */
   systemesParSemaine: number[];
+  /** v1.0, partie 4 : nouveautés au sens large (systèmes, arcs, étapes du permis) à la fin de chaque semaine, en moyenne. */
+  nouveautesParSemaine: number[];
   /** À la fin de chaque mois (28 nuits) : trésorerie, toute la dette, valeur nette (avoir moins les nouveaux emprunts), en moyenne. */
   mois: { tresorerie: number; dette: number; valeur: number; reputation: number; personnel: number; chambres: number }[];
   /** Décisions d'argent et d'investissement par semaine, en moyenne, à partir de la semaine donnée. */
@@ -667,6 +694,7 @@ export function mesurerProgression(graines: number[], options: Omit<OptionsSimul
   return {
     paliers: parties.map((p) => [1, 2, 3, 4, 5].map((k) => p.nuits.find((x) => x.palier >= k)?.numero ?? 0)),
     systemesParSemaine: Array.from({ length: semaines }, (_, s) => moyenne((p) => nuit(p, s * 7 + 6)?.systemesOuverts ?? 0)),
+    nouveautesParSemaine: Array.from({ length: semaines }, (_, s) => moyenne((p) => nuit(p, s * 7 + 6)?.nouveautes ?? 0)),
     mois: Array.from({ length: moisN }, (_, m) => ({
       tresorerie: moyenne((p) => nuit(p, m * 28 + 27)?.tresorerie ?? 0),
       dette: moyenne((p) => nuit(p, m * 28 + 27)?.dette ?? 0),

@@ -29,7 +29,7 @@ import { intriguesDeDepart } from '../engine/intrigues';
 import { quartierDeDepart } from '../engine/quartier';
 import { relationsDeDepart } from '../engine/relations';
 import { rivaleDeDepart } from '../engine/rivale';
-import { JOUR_PREMIERE_MENSUALITE, RELATIONS, TAPAGE } from '../content/balance';
+import { JOUR_PREMIERE_MENSUALITE, PALIER_5, RELATIONS, TAPAGE } from '../content/balance';
 import { moisDeDepart, prochainObjectif, statsDeDepart } from '../engine/bilans';
 import { comptesVides, journeeVide } from '../engine/comptes';
 import { banqueDeDepart } from '../engine/banque';
@@ -672,6 +672,18 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
       modeLibre: modeLibreDeDepart(),
       hasardModeLibre: hasardModeLibreDeDepart(typeof d.hasard === 'number' ? d.hasard : 0),
     };
+  },
+  // v37 → v38 : le permis en trois étapes (v1.0, partie 4). Le dossier s'ouvre au palier 4 dès 70 de réputation ; une
+  // partie qui y est déjà (ou qui a déjà déposé) le garde ouvert, et Josée présente les étapes au palier 4. Un dossier
+  // déjà déposé part à l'enquête de voisinage au prochain lundi.
+  37: (d) => {
+    const systemes = estObjet(d.systemes) ? d.systemes : {};
+    const palier = typeof d.palier === 'number' ? d.palier : 0;
+    const reputation = typeof d.reputation === 'number' ? d.reputation : 0;
+    const statut = estObjet(d.permis) ? d.permis.statut : 'aucun';
+    const ouvert = palier >= 5 || (palier === 4 && (reputation >= PALIER_5.depot || statut !== 'aucun'));
+    const nouveautes = [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(palier === 4 ? ['permisEtapes'] : [])];
+    return { ...d, version: 38, systemes: { ...systemes, permis: ouvert }, nouveautes };
   },
 };
 

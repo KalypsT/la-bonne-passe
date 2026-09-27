@@ -37,7 +37,8 @@ describe('la visibilité', () => {
     expect(lundi1.systemes.visibilite).toBe(false);
     const lundi2 = tick({ ...lundi1, jour: 35, minuteDuJour: h(4, 55), briefingJour: 35 }).etat;
     expect(lundi2.systemes.visibilite).toBe(true);
-    expect(lundi2.bilanSemaine?.ouvertures).toEqual(['visibilite']);
+    // La partie de ce test ouvre aussi la buanderie ce lundi-là (v1.0 : deuxième lundi après les thèmes).
+    expect(lundi2.bilanSemaine?.ouvertures).toContain('visibilite');
   });
 
   it('se règle dans les règles de la maison, une fois ouverte seulement', () => {

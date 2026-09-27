@@ -68,7 +68,10 @@ describe('soigner ses relations coûte, mais ouvre des portes', () => {
     const bons = soigneur.map((p) => evenements(p, EVENEMENTS_BONS).length);
     console.log('soigneur : mairie nuit 56', moyenne('soigneur', (p) => fin(p).relations.mairie).toFixed(0), 'opportunités', bons.join(','),
       'avoir', moyenne('soigneur', (p) => p.etat.tresorerie + p.etat.reserve).toFixed(0), 'contre', moyenne('classique', (p) => p.etat.tresorerie + p.etat.reserve).toFixed(0));
-    expect(soigneur.filter((p) => fin(p).relations.mairie >= B.RELATIONS.bons).length).toBeGreaterThanOrEqual(5);
+    // v1.0, partie 4 : 4 parties sur 10 (5 auparavant). Avec l'arc d'Inès, la mairie finit en moyenne à 38 à la nuit 56,
+    // comme sans lui, mais passe +40 dans 7 parties sur 20 (11 sans lui) : sa fête sur le quai a été adoucie (tapage 8
+    // au lieu de 15, voisins −2 au lieu de −5), le seuil reste sensible au hasard.
+    expect(soigneur.filter((p) => fin(p).relations.mairie >= B.RELATIONS.bons).length).toBeGreaterThanOrEqual(4);
     // v0.6, partie 8 : 0,8 service par partie en deux mois (4 parties sur 10), des événements rares et tirés au hasard.
     expect(bons.reduce((a, b) => a + b, 0) / GRAINES.length).toBeGreaterThanOrEqual(0.5);
     const cout = moyenne('classique', (p) => p.etat.tresorerie + p.etat.reserve) - moyenne('soigneur', (p) => p.etat.tresorerie + p.etat.reserve);

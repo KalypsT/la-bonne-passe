@@ -6,7 +6,10 @@ import { simuler, type OptionsSimulation } from './simulation';
 // Palier 5, « S'agrandir » (v0.6, partie 7) : quand il arrive, et ce que rapportent le bâtiment voisin et la gérante.
 // Joueur classique à 3 rendez-vous qui entretient ses relations et dépose le permis dès qu'il le peut, 168 nuits.
 
-const GRAINES = [1, 2, 3, 4, 5, 6];
+// v1.0, partie 4 : 12 graines (6 auparavant). Les arcs d'Inès et de Sanne rebattent le hasard des parties : sur les
+// graines 1 à 6, la réputation atteignait 80 vers le jour 97 (83 avant), sur les graines 7 à 18 vers le jour 89 (85 sans
+// l'arc d'Inès). Six parties ne suffisaient plus à séparer l'effet du hasard.
+const GRAINES = Array.from({ length: 12 }, (_, i) => i + 1);
 const NUITS = 168;
 type Mesure = { jourPalier5: number; valeur: number; netFin: number; personnel: number };
 const mesures = new Map<string, Mesure[]>();
@@ -56,6 +59,8 @@ describe('palier 5 : s’agrandir', () => {
 
   it('la gérante ne coûte guère plus que son salaire : ses rotations compensent la personne qui ne reçoit plus', () => {
     // Le joueur simulé répond à toutes les alertes : ce qu'elle épargne en attention ne se voit pas ici.
+    // v1.0, partie 4 : le joueur simulé ne promeut plus la personne la plus loyale (toujours Sanne après son arc, la
+    // meilleure hôtesse) mais la moins douée qui accepte.
     expect(moyenne('gerante', (m) => m.netFin)).toBeGreaterThan(moyenne('batiment', (m) => m.netFin) * 0.95);
     // Mesuré (6 graines) : 11 600 € sur 168 nuits, pour une gérante en poste environ 90 nuits (9 900 € de salaire).
     const cout = moyenne('batiment', (m) => m.valeur) - moyenne('gerante', (m) => m.valeur);

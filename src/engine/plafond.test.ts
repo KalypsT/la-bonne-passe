@@ -179,7 +179,11 @@ describe('garde d’équilibrage : le cran 6 en permanence', () => {
     // v0.6, partie 8 : le joueur actif remplace qui part (marché du lundi). Le 6 permanent devient un sprint : devant au
     // bout d'un mois, il use trois à six personnes, fait fuir les candidats (DEPARTS_RECENTS) et finit loin derrière.
     // Mesuré (10 graines) : trésorerie au jour 84, 15 300 € contre 19 400 € ; 1,2 personne encore là ; 5,6 départs contre 0,2.
-    const dix = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    // v1.0, partie 4 : 20 graines (10 auparavant). L'arc d'Inès consomme des tirages et rebat ces parties, très
+    // sensibles au hasard (qui part, quand) : sur les graines 1 à 10, le cran 6 finissait devant (22 400 € contre 20 500 €),
+    // sur les graines 11 à 20 loin derrière. Sur 20 graines : 17 400 € contre 21 000 €, moral de 39 en semaine 8,
+    // 5,5 départs contre 0,3, 1,8 personne restante.
+    const dix = Array.from({ length: 20 }, (_, i) => i + 1);
     const jouer = (rdvMax: number, reposFatigue?: number) => dix.map((graine) => simuler({ graine, offre: 'classique', rdvMax, nuits: 84, reposFatigue }));
     const six = jouer(6, 101);
     const quatre = jouer(4);
@@ -188,7 +192,8 @@ describe('garde d’équilibrage : le cran 6 en permanence', () => {
     expect(semaine8(six)).toBeLessThan(semaine8(quatre) - 30);
     expect(moyenne(six.map((p) => p.departs))).toBeGreaterThan(moyenne(quatre.map((p) => p.departs)) + 3);
     expect(moyenne(six.map((p) => p.etat.personnel.length))).toBeLessThan(3);
-    const tresorerie = (ps: typeof six, n: number) => moyenne(ps.map((p) => p.nuits[n - 1]!.tresorerie));
+    // Une partie en faillite avant la fin compte avec sa dernière nuit.
+    const tresorerie = (ps: typeof six, n: number) => moyenne(ps.map((p) => p.nuits[Math.min(n, p.nuits.length) - 1]!.tresorerie));
     expect(tresorerie(six, 84)).toBeLessThan(tresorerie(quatre, 84) * 0.9);
-  }, 180_000);
+  }, 360_000);
 });

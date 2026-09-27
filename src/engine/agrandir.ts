@@ -8,12 +8,18 @@ import { depenser, recetteMaison } from './comptes';
 import type { EtatChambre, EtatJeu } from './etat';
 import { creerTirage, tirer } from './hasard';
 import { instant } from './temps';
+import { changerRelation } from './relations';
 import { maisonPrete } from './maison2';
 
 export interface Permis {
-  statut: 'aucun' | 'depose' | 'refuse' | 'accorde';
-  /** Jour du dépôt ou de la réponse. */
+  /** v1.0 : déposé, puis l'enquête de voisinage, puis la commission, qui accorde, ajourne ou refuse. */
+  statut: 'aucun' | 'depose' | 'enquete' | 'commission' | 'refuse' | 'accorde';
+  /** Jour du dépôt ou de la dernière étape. */
   jour: number;
+  /** Pourquoi le dernier refus ou ajournement (v1.0). */
+  motif?: 'voisins' | 'mairie' | 'reputation';
+  /** Une réunion de quartier a eu lieu pendant l'enquête (v1.0). */
+  reunion?: boolean;
 }
 
 export interface Agrandissement {
@@ -42,6 +48,8 @@ export interface Etablissement {
 export type EvenementAgrandir =
   | { type: 'permisDepose'; montant: number }
   | { type: 'permis'; accorde: boolean }
+  | { type: 'permisEtape'; etape: 'enquete' | 'commission' | 'ajourne' | 'refuse'; motif?: 'voisins' | 'mairie' | 'reputation' }
+  | { type: 'reunionQuartier'; montant: number }
   | { type: 'agrandissement'; option: IdAgrandissement; montant: number; fin: number }
   | { type: 'agrandissementFini'; option: IdAgrandissement; chambres: string[] }
   | { type: 'gerance'; employeId: string; accepte: boolean; ambition: boolean }
@@ -54,6 +62,7 @@ export type EvenementAgrandir =
 
 export type OrdreAgrandir =
   | { type: 'demanderPermis' }
+  | { type: 'reunionQuartier' }
   | { type: 'agrandir'; option: IdAgrandissement }
   | { type: 'promouvoir'; employeId: string }
   | { type: 'retrograder' }
@@ -87,18 +96,54 @@ export function peutDemanderPermis(etat: EtatJeu): boolean {
   return (
     etat.palier === 4 &&
     etat.systemes.relations &&
-    etat.reputation >= B.PALIER_5.reputation &&
+    etat.systemes.permis &&
+    etat.reputation >= B.PALIER_5.depot &&
     (etat.permis.statut === 'aucun' || etat.permis.statut === 'refuse') &&
     etat.tresorerie >= B.PALIER_5.fraisDossier
   );
 }
 
-/** Le lundi, la mairie répond au dossier déposé : en bons termes et avec la réputation, le permis est accordé. */
+/**
+ * Le lundi, le dossier avance d'une étape (v1.0) : déposé, il part à l'enquête de voisinage ; l'enquête passe si les
+ * voisins ne sont pas fâchés ; la commission accorde si la mairie est en bons termes et la réputation à 80, et ajourne
+ * sinon à la semaine suivante.
+ */
 export function reponseDuPermis(etat: EtatJeu, evenements: Sortie): void {
-  if (etat.permis.statut !== 'depose') return;
-  const accorde = etat.relations.jauges.mairie >= B.PALIER_5.mairie && etat.reputation >= B.PALIER_5.reputation;
-  etat.permis = { statut: accorde ? 'accorde' : 'refuse', jour: etat.jour };
-  evenements.push({ type: 'permis', accorde });
+  const p = etat.permis;
+  const P = B.PALIER_5;
+  switch (p.statut) {
+    case 'depose':
+      etat.permis = { statut: 'enquete', jour: etat.jour, reunion: false };
+      evenements.push({ type: 'permisEtape', etape: 'enquete' });
+      return;
+    case 'enquete':
+      if (etat.relations.jauges.voisins >= P.voisins) {
+        etat.permis = { statut: 'commission', jour: etat.jour };
+        evenements.push({ type: 'permisEtape', etape: 'commission' });
+      } else {
+        etat.permis = { statut: 'refuse', jour: etat.jour, motif: 'voisins' };
+        evenements.push({ type: 'permisEtape', etape: 'refuse', motif: 'voisins' });
+      }
+      return;
+    case 'commission': {
+      // Mairie tiède ou réputation courte : la commission ajourne d'une semaine, le dossier reste devant elle.
+      // (Un refus renvoyait tout le dossier au départ : le palier 5 arrivait trois semaines plus tard, jour 105 en moyenne.)
+      const motif = etat.relations.jauges.mairie < P.mairie ? 'mairie' : etat.reputation < P.reputation ? 'reputation' : null;
+      if (motif) {
+        etat.permis = { statut: 'commission', jour: etat.jour, motif };
+        evenements.push({ type: 'permisEtape', etape: 'ajourne', motif });
+        return;
+      }
+      etat.permis = { statut: 'accorde', jour: etat.jour };
+      evenements.push({ type: 'permis', accorde: true });
+      return;
+    }
+  }
+}
+
+/** Pendant l'enquête, une fois : une réunion de quartier pour rassurer les voisins. */
+export function peutReunirQuartier(etat: EtatJeu): boolean {
+  return etat.permis.statut === 'enquete' && !etat.permis.reunion && etat.tresorerie >= B.PALIER_5.reunion.cout;
 }
 
 // ——— Le bâtiment voisin ———
@@ -196,7 +241,7 @@ export function nuitDeLaGerante(etat: EtatJeu, evenements: Sortie): void {
   for (const e of etat.personnel) {
     if (e !== g && e.enServiceCeSoir && e.moral < B.GERANTE.moralMax) e.moral = Math.min(B.GERANTE.moralMax, e.moral + B.GERANTE.moral);
   }
-  if (g.loyaute < B.GERANTE.loyauteHonnete) {
+  if (g.loyaute < B.GERANTE.loyauteHonnete && !g.traits.includes('Pilier')) {
     const montant = Math.round(Math.max(0, recetteMaison(etat.journee.comptes)) * B.GERANTE.caisse);
     if (montant > 0) {
       depenser(etat, montant, 'caisse');
@@ -212,12 +257,16 @@ export function salaireGerante(etat: EtatJeu): number {
 
 /** Elle organise les rotations : chaque rendez-vous fatigue moins l'équipe. */
 export function fatigueGerante(etat: EtatJeu): number {
-  return gerante(etat) ? 1 - B.GERANTE.fatigue : 1;
+  const g = gerante(etat);
+  if (!g) return 1;
+  return 1 - B.GERANTE.fatigue - (g.traits.includes('Pilier') ? B.GERANTE.pilierFatigue : 0);
 }
 
 /** Part des alertes du quartier que la gérante règle seule, en plus des équipes. */
 export function partGerante(etat: EtatJeu): number {
-  return gerante(etat) ? B.GERANTE.regle : 0;
+  const g = gerante(etat);
+  if (!g) return 0;
+  return B.GERANTE.regle + (g.traits.includes('Pilier') ? B.GERANTE.pilierRegle : 0);
 }
 
 // ——— La deuxième maison ———
@@ -248,6 +297,14 @@ export function appliquerAgrandir(etat: EtatJeu, ordre: OrdreAgrandir, evenement
       depenser(etat, B.PALIER_5.fraisDossier, 'relations');
       etat.permis = { statut: 'depose', jour: etat.jour };
       evenements.push({ type: 'permisDepose', montant: B.PALIER_5.fraisDossier });
+      return;
+    }
+    case 'reunionQuartier': {
+      if (!peutReunirQuartier(etat)) return;
+      depenser(etat, B.PALIER_5.reunion.cout, 'relations');
+      etat.permis.reunion = true;
+      changerRelation(etat, 'voisins', B.PALIER_5.reunion.voisins);
+      evenements.push({ type: 'reunionQuartier', montant: B.PALIER_5.reunion.cout });
       return;
     }
     case 'agrandir': {

@@ -68,6 +68,11 @@ export const OUVERTURES_LUNDI: Record<string, { titre: string; josee: string }> 
   gerante: TEXTES_AGRANDIR.ouvertures.gerante,
   etablissement: TEXTES_AGRANDIR.ouvertures.etablissement,
   modeLibre: TEXTES_MODE_LIBRE.ouverture,
+  permis: TEXTES_AGRANDIR.permis.ouverture,
+  buanderie: {
+    titre: 'Nouveau ce lundi : la buanderie, derrière la fenêtre de droite du rez-de-chaussée (onglet Maison).',
+    josee: 'Mille deux cents euros de travaux, et le linge se relave au lieu de s’acheter. Au bout d’un mois, elle est payée.',
+  },
   assurance: { titre: TEXTES_EQUIPES.assurance.ouverture, josee: TEXTES_EQUIPES.assurance.ouvertureJosee },
   visibilite: {
     titre: 'Nouveau ce lundi : la visibilité, dans les règles de la maison (onglet Clientèle).',

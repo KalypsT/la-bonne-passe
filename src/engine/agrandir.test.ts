@@ -29,6 +29,8 @@ const embauche = (def: typeof MILA, champs: Partial<ReturnType<typeof creerEmplo
 function auPalier(palier: number, champs: Partial<EtatJeu> = {}): EtatJeu {
   const etat: EtatJeu = { ...creerEtatInitial({ graine: 71 }), jour: 44, minuteDuJour: h(10), briefingJour: 44, nuitsBouclees: 43, mensualitesPayees: 1 };
   for (let p = 1; p <= palier; p++) accorderPalier(etat, p);
+  // v1.0 : le dossier du permis est ouvert (il s'ouvre au lundi où la maison du palier 4 a 70 de réputation).
+  if (palier >= 4) etat.systemes.permis = true;
   etat.personnel = [{ ...etat.personnel[0]!, nuitsTravaillees: 40 }, embauche(MILA), embauche(JONAS), embauche(INES)];
   return { ...etat, annonces: [], visites: [], candidats: [], tresorerie: 30000, reputation: 82, ...champs };
 }
@@ -43,9 +45,23 @@ function attendre(e: EtatJeu, heures: number): EtatJeu {
   return x;
 }
 
-describe('palier 5 : le permis de la mairie', () => {
-  it('se demande au palier 4, avec 80 de réputation, contre 300 € de dossier', () => {
-    expect(peutDemanderPermis(auPalier(4, { reputation: B.PALIER_5.reputation - 1 }))).toBe(false);
+describe('palier 5 : le permis de la mairie, en trois étapes (v1.0)', () => {
+  /** Le dossier arrivé devant la commission, qui répond au prochain lundi. */
+  const enCommission = (champs: Partial<EtatJeu> = {}) => auPalier(4, { permis: { statut: 'commission', jour: 40 }, ...champs });
+
+  it('le dossier s’ouvre au lundi où la maison du palier 4 a 70 de réputation, et Josée le présente', () => {
+    const avant = auPalier(4, { reputation: B.PALIER_5.depot - 1 });
+    avant.systemes.permis = false;
+    expect(peutDemanderPermis(avant)).toBe(false);
+    expect(lundi(avant).systemes.permis).toBe(false);
+    const l = lundi({ ...avant, reputation: B.PALIER_5.depot + 1 });
+    expect(l.systemes.permis).toBe(true);
+    expect(l.bilanSemaine?.ouvertures).toContain('permis');
+  });
+
+  it('se dépose au palier 4 dès 70 de réputation, contre 300 € de dossier', () => {
+    expect(peutDemanderPermis(auPalier(4, { reputation: B.PALIER_5.depot - 1 }))).toBe(false);
+    expect(peutDemanderPermis(auPalier(4, { reputation: B.PALIER_5.depot }))).toBe(true);
     expect(peutDemanderPermis(auPalier(3))).toBe(false);
     const { etat, evenements } = ordre(auPalier(4), { type: 'demanderPermis' });
     expect(etat.permis.statut).toBe('depose');
@@ -54,8 +70,32 @@ describe('palier 5 : le permis de la mairie', () => {
     expect(ordre(etat, { type: 'demanderPermis' }).etat.tresorerie).toBe(etat.tresorerie);
   });
 
-  it('le lundi, une mairie en bons termes l’accorde : palier 5 et bâtiment voisin', () => {
+  it('déposé, le dossier part à l’enquête ; les voisins la font passer ou échouer', () => {
     const e = ordre(auPalier(4), { type: 'demanderPermis' }).etat;
+    const enquete = lundi(e);
+    expect(enquete.permis.statut).toBe('enquete');
+    enquete.relations.jauges.voisins = B.PALIER_5.voisins;
+    expect(lundi(enquete, 56).permis.statut).toBe('commission');
+    const fache = structuredClone(enquete);
+    fache.relations.jauges.voisins = B.PALIER_5.voisins - 20;
+    const refuse = lundi(fache, 56);
+    expect(refuse.permis).toMatchObject({ statut: 'refuse', motif: 'voisins' });
+    expect(peutDemanderPermis(refuse)).toBe(true);
+  });
+
+  it('pendant l’enquête, une réunion de quartier, une fois, rassure les voisins', () => {
+    const enquete = lundi(ordre(auPalier(4), { type: 'demanderPermis' }).etat);
+    const voisins = enquete.relations.jauges.voisins;
+    const { etat, evenements } = ordre(enquete, { type: 'reunionQuartier' });
+    expect(etat.relations.jauges.voisins).toBeCloseTo(voisins + B.PALIER_5.reunion.voisins);
+    expect(etat.tresorerie).toBe(enquete.tresorerie - B.PALIER_5.reunion.cout);
+    expect(evenements).toContainEqual({ type: 'reunionQuartier', montant: B.PALIER_5.reunion.cout });
+    expect(ordre(etat, { type: 'reunionQuartier' }).etat.tresorerie).toBe(etat.tresorerie);
+    expect(ordre(auPalier(4), { type: 'reunionQuartier' }).evenements).toEqual([]);
+  });
+
+  it('la commission accorde avec la mairie en bons termes et 80 de réputation : palier 5 et bâtiment voisin', () => {
+    const e = enCommission();
     e.relations.jauges.mairie = 50;
     const l = lundi(e);
     expect(l.permis.statut).toBe('accorde');
@@ -64,17 +104,25 @@ describe('palier 5 : le permis de la mairie', () => {
     expect(l.systemes.gerante).toBe(false);
   });
 
-  it('une mairie tiède refuse ; on peut redéposer', () => {
-    const e = ordre(auPalier(4), { type: 'demanderPermis' }).etat;
-    e.relations.jauges.mairie = 20;
-    const l = lundi(e);
-    expect(l.permis.statut).toBe('refuse');
+  it('sous 80 de réputation, ou la mairie tiède, la commission ajourne d’une semaine', () => {
+    const e = enCommission({ reputation: B.PALIER_5.reputation - 2 });
+    e.relations.jauges.mairie = 50;
+    const { etat: l, evenements } = tick({ ...e, jour: 49, minuteDuJour: h(4, 55), briefingJour: 49, bilanAVoir: false, bilanMoisAVoir: false });
+    expect(l.permis.statut).toBe('commission');
     expect(l.palier).toBe(4);
-    expect(peutDemanderPermis(l)).toBe(true);
+    expect(evenements).toContainEqual({ type: 'permisEtape', etape: 'ajourne', motif: 'reputation' });
+    const tiede = enCommission();
+    tiede.relations.jauges.mairie = 20;
+    const r = lundi(tiede);
+    expect(r.permis).toMatchObject({ statut: 'commission', motif: 'mairie' });
+    expect(r.palier).toBe(4);
+    // La mairie revenue en bons termes, la commission accorde au lundi suivant.
+    r.relations.jauges.mairie = 50;
+    expect(lundi(r, 56).permis.statut).toBe('accorde');
   });
 
   it('la gérance ouvre au lundi suivant, la deuxième maison au lundi d’après, avec trois lieux', () => {
-    const e = ordre(auPalier(4), { type: 'demanderPermis' }).etat;
+    const e = enCommission();
     e.relations.jauges.mairie = 50;
     const l1 = lundi(e);
     const l2 = lundi(l1, 56);

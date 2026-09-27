@@ -33,6 +33,12 @@ export const NOUVEAUTES: Nouveaute[] = [
     palier: 2,
     texte: 'La buanderie, derrière la fenêtre de droite du rez-de-chaussée : 1 200 € de travaux, et le linge se relave au lieu de s’acheter.',
   },
+  {
+    id: 'permisEtapes',
+    palier: 4,
+    texte:
+      'Le permis d’agrandir se mérite désormais en trois étapes, un lundi chacune : le dossier (dès 70 de réputation), l’enquête de voisinage (une réunion de quartier peut aider), puis la commission (la mairie en bons termes et 80 de réputation). Tout est dans la fiche de la mairie.',
+  },
   { id: 'loges', palier: 3, texte: 'Les loges du personnel, sous les combles : 1 500 € de travaux, et l’équipe se repose deux fois mieux entre deux clients.' },
   { id: 'gestionJosee', palier: 1, texte: TEXTES_BANQUE.nouveautes.gestionJosee },
   { id: 'fournisseurs', palier: 3, texte: TEXTES_BANQUE.nouveautes.fournisseurs },

@@ -1,7 +1,7 @@
 import { AGRANDISSEMENT, GERANTE, PALIER_5, PERSONNEL_MAX_AGRANDI } from '../content/balance';
 import { LIEUX, TEXTES_AGRANDIR, type IdAgrandissement } from '../content/agrandir';
 import type { Employe, EtatJeu } from '../engine/etat';
-import { accepteGerance, gerante, optionsAgrandissement, peutDemanderPermis, peutPromouvoir } from '../engine/agrandir';
+import { accepteGerance, gerante, optionsAgrandissement, peutDemanderPermis, peutPromouvoir, peutReunirQuartier } from '../engine/agrandir';
 import { formaterEuros } from './format';
 import { JoseeLigne } from './Josee';
 import { useInterface } from './store';
@@ -10,22 +10,43 @@ import { MaisonOuverte } from './Maison2';
 const t = TEXTES_AGRANDIR;
 const accord = (e: { genre: 'f' | 'm' }) => (e.genre === 'm' ? '' : 'e');
 
-/** Dans la fiche de la mairie (onglet Relations) : le dossier du permis d'agrandir (palier 4 → 5). */
+/** Dans la fiche de la mairie (onglet Relations) : le dossier du permis d'agrandir, en trois étapes (palier 4 → 5). */
 export function PermisMairie({ partie }: { partie: EtatJeu }) {
   const ordonner = useInterface((s) => s.ordonner);
-  if (partie.palier !== 4) return null;
+  if (partie.palier !== 4 || !partie.systemes.permis) return null;
   const p = t.permis;
-  const statut = partie.permis.statut;
+  const { statut, motif } = partie.permis;
   return (
     <>
       <h3>{p.titre}</h3>
       <p className="sous">{p.detail(formaterEuros(PALIER_5.fraisDossier))}</p>
-      {statut === 'depose' ? (
-        <p className="statut">{p.depose}</p>
-      ) : (
+      <ul className="liste-effets">
+        {p.etapes(PALIER_5.depot, PALIER_5.reputation, PALIER_5.mairie).map((x) => (
+          <li key={x}>{x}</li>
+        ))}
+      </ul>
+      {statut === 'depose' && <p className="statut">{p.depose}</p>}
+      {statut === 'enquete' && (
         <>
-          {statut === 'refuse' && <p className="sous negatif">{p.refuse(PALIER_5.mairie)}</p>}
-          {partie.reputation < PALIER_5.reputation && <p className="sous">{p.reputation(PALIER_5.reputation)}</p>}
+          <p className="statut">{p.enquete(Math.round(partie.relations.jauges.voisins))}</p>
+          {partie.permis.reunion ? (
+            <p className="sous">{p.reunionFaite}</p>
+          ) : (
+            <button className="bouton discret pleine-largeur" disabled={!peutReunirQuartier(partie)} onClick={() => ordonner({ type: 'reunionQuartier' })}>
+              {p.reunion(formaterEuros(PALIER_5.reunion.cout))}
+            </button>
+          )}
+        </>
+      )}
+      {statut === 'commission' && (
+        <p className="statut">
+          {motif === 'mairie' ? p.ajourne.mairie(PALIER_5.mairie) : motif === 'reputation' ? p.ajourne.reputation(PALIER_5.reputation) : p.commission}
+        </p>
+      )}
+      {(statut === 'aucun' || statut === 'refuse') && (
+        <>
+          {statut === 'refuse' && <p className="sous negatif">{motif === 'voisins' ? p.refuse.voisins : p.refuse.mairie(PALIER_5.mairie)}</p>}
+          {partie.reputation < PALIER_5.depot && <p className="sous">{p.reputation(PALIER_5.depot)}</p>}
           <button className="bouton principal pleine-largeur" disabled={!peutDemanderPermis(partie)} onClick={() => ordonner({ type: 'demanderPermis' })}>
             {p.deposer(formaterEuros(PALIER_5.fraisDossier))}
           </button>
