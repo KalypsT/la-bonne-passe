@@ -40,6 +40,7 @@ import { hasardMaison2DeDepart, maison2DeDepart } from '../engine/maison2';
 import { chroniqueDeDepart, type Moment } from '../engine/chronique';
 import { hasardModeLibreDeDepart, modeLibreDeDepart } from '../engine/modeLibre';
 import { conseilsDeDepart } from '../engine/conseils';
+import { LIEUX } from '../content/agrandir';
 import { INTRIGUES_PRINCIPALES } from '../content/intrigues';
 import { INTRIGUE_CHAT_NOIR } from '../content/rivale';
 
@@ -694,6 +695,31 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     conseils: conseilsDeDepart(),
     nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), 'conseils'],
   }),
+  // v39 → v40 : la deuxième maison se reprend à bail (v1.0, partie 6), 2 à 2,5 fois moins cher. Les offres pas encore
+  // signées suivent les nouveaux prix, dans la même proportion ; Josée l'annonce aux parties concernées.
+  39: (d) => {
+    const m = d.etablissement;
+    if (!estObjet(m) || m.statut !== 'offres' || !Array.isArray(m.offres) || m.offres.length === 0) return { ...d, version: 40 };
+    const arrondi = (x: number) => Math.round(x / 500) * 500;
+    const offres = m.offres.map((o) => {
+      if (!estObjet(o) || typeof o.id !== 'string') return o;
+      const ancien = ANCIENS_LIEUX[o.id];
+      const nouveau = LIEUX.find((l) => l.id === o.id);
+      if (!ancien || !nouveau || typeof o.achat !== 'number' || typeof o.travaux !== 'number') return o;
+      return { ...o, achat: arrondi((o.achat * nouveau.achat) / ancien.achat), travaux: arrondi((o.travaux * nouveau.travaux) / ancien.travaux), jours: nouveau.jours };
+    });
+    const nouveautes = [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), 'baux'];
+    return { ...d, version: 40, etablissement: { ...m, offres }, nouveautes };
+  },
+};
+
+/** Les prix des lieux avant la v1.0, partie 6 (achat des murs), pour la migration v39 → v40. */
+const ANCIENS_LIEUX: Record<string, { achat: number; travaux: number }> = {
+  pension: { achat: 32000, travaux: 9000 },
+  entrepot: { achat: 45000, travaux: 14000 },
+  'salon-the': { achat: 36000, travaux: 8000 },
+  club: { achat: 40000, travaux: 12000 },
+  hotel: { achat: 48000, travaux: 13000 },
 };
 
 

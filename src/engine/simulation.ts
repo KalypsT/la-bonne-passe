@@ -24,7 +24,7 @@ import { IMPREVUS_QUARTIER } from '../content/imprevusQuartier';
 import { actionPossible } from './relations';
 import { reponsePossible } from './rivale';
 import { gagneNuit } from './comptes';
-import { detteTotale, valeurNette } from './banque';
+import { detteTotale, encours, valeurNette } from './banque';
 import { prixFormation, prochainConfort } from './gamme';
 import { accepteGerance, optionsAgrandissement, peutDemanderPermis, peutPromouvoir, peutReunirQuartier } from './agrandir';
 import { peutConfier, peutEngagerExterne } from './maison2';
@@ -90,6 +90,39 @@ export interface ResumeNuit {
   alertesReglees: number;
   /** La rivale à la fermeture (v0.5) : agressivité et vos rapports ; ses actions depuis la nuit précédente. */
   rivale: { agressivite: number; relation: number; actions: string[] };
+}
+
+/** Vitesse choisie le jour et le soir (v1.0, partie 6) : ×1 partout, ×2 le jour et ×1 le soir, ×2 partout. */
+export const PROFILS_VITESSE = {
+  lent: { jour: 1, soir: 1 },
+  courant: { jour: 2, soir: 1 },
+  rapide: { jour: 2, soir: 2 },
+} as const;
+export type ProfilVitesse = keyof typeof PROFILS_VITESSE;
+
+/**
+ * Le temps réel estimé d'une suite de nuits, en secondes (v1.0, partie 6) : la journée et la soirée à la vitesse du
+ * profil, et le temps passé sur les cartes en pause (TEMPS_REEL dans balance.ts).
+ */
+export function secondesReelles(nuits: readonly ResumeNuit[], profil: ProfilVitesse): number {
+  const v = PROFILS_VITESSE[profil];
+  const T = B.TEMPS_REEL;
+  return nuits.reduce((total, n) => {
+    const alertes = Object.values(n.alertes).reduce((a, b) => a + b, 0);
+    return (
+      total +
+      B.SECONDES_REELLES_JOURNEE / v.jour +
+      B.SECONDES_REELLES_SOIREE / v.soir +
+      T.briefing +
+      T.bilanNuit +
+      T.gestion +
+      n.imprevus.length * T.imprevu +
+      n.intrigues.length * T.intrigue +
+      alertes * T.alerte +
+      (n.numero % 7 === 0 ? T.semaine : 0) +
+      (n.numero % 28 === 0 ? T.mois : 0)
+    );
+  }, 0);
 }
 
 /** Comment le joueur simulé tranche les cartes : le premier choix possible, ou au hasard (graine à part). */
@@ -173,6 +206,10 @@ export interface OptionsSimulation {
   /** v1.0 : ouvrir la deuxième maison une fois prête, confiée à une personne de l'équipe (la plus loyale qui accepte) ou à la gérante venue d'ailleurs, avec cette consigne. */
   maison2?: 'equipe' | 'externe';
   consigneMaison?: B.IdConsigne;
+  /** v1.0, partie 6 : part des alertes minutées que le joueur laisse filer, les cartes tranchées avec prudence. */
+  distrait?: number;
+  /** v1.0, partie 6 : pour la deuxième maison, emprunter ce qui manque (sur 24 mois) si la caisse ne suffit pas. */
+  empruntMaison?: boolean;
   /** Pour racheter chez le voisin, signer ce nouvel emprunt si la caisse ne suffit pas (v0.6). */
   empruntAgrandir?: { montant: number; duree: number };
   /** Embaucher aussi les candidats du marché tant que l'équipe compte moins de personnes (v0.6 ; 4 par défaut, pour remplacer qui part). */
@@ -208,6 +245,8 @@ export function simuler(options: OptionsSimulation): {
   // v1.0, partie 5 : le joueur qui suit Josée se met à recruter quand elle le lui dit, et prend la commande automatique.
   let recruter = options.recruter ?? true;
   let lingeJosee: number | undefined;
+  let empruntMaison = options.empruntMaison ?? false;
+  let empruntMaisonSigne = false;
   // Le joueur actif (partie 8) : commande automatique du linge et chambres rafraîchies avant d'être défraîchies.
   // La cible de linge couvre la soirée prévue (5, 10 ou 20 parures), comme le ferait un joueur attentif.
   const cibleLinge = () =>
@@ -359,6 +398,7 @@ export function simuler(options: OptionsSimulation): {
       if (conseil.id === 'recruter' || conseil.id === 'recruterEncore') recruter = true;
       if (conseil.id === 'lingeAuto') lingeJosee = 10;
       if (conseil.id === 'permis' && peutDemanderPermis(etat)) jouer([{ type: 'demanderPermis' }]);
+      if (conseil.id === 'deuxiemeMaison') empruntMaison = true;
       jouer([{ type: 'conseilVu' }]);
     }
 
@@ -380,7 +420,11 @@ export function simuler(options: OptionsSimulation): {
       if (options.politique === 'hasard') {
         if (hasard.chance(0.25)) continue;
         jouer([{ type: 'traiterAlerte', cle: a.cle, action: hasard.choisir(Array.from({ length: n }, (_, i) => i)) }]);
-      } else jouer([{ type: 'traiterAlerte', cle: a.cle, action: 0 }]);
+      } else {
+        // v1.0, partie 6 : le joueur distrait tranche les cartes avec prudence, mais laisse filer une part des alertes.
+        if (options.distrait && hasard.chance(options.distrait)) continue;
+        jouer([{ type: 'traiterAlerte', cle: a.cle, action: 0 }]);
+      }
     }
     if (etat.avance.statut === 'proposee') jouer([{ type: 'avanceFournisseur', accepter: avance }]);
     while (etat.annonces.length) jouer([{ type: 'annonceVue' }]);
@@ -474,6 +518,15 @@ export function simuler(options: OptionsSimulation): {
       if (options.etablissement && etat.systemes.etablissement) {
         const m = etat.etablissement;
         const moinsCher = [...m.offres].sort((a, b) => a.achat + a.travaux - (b.achat + b.travaux))[0];
+        // v1.0, partie 6 : ce qui manque, emprunté sur 24 mois (par tranches de 5 000 €, dans la limite de l'encours).
+        if (empruntMaison && !empruntMaisonSigne && m.statut === 'offres' && moinsCher && etat.systemes.emprunt) {
+          const manque = moinsCher.achat + moinsCher.travaux + B.MAISON2.inauguration + 3000 - (etat.tresorerie + etat.reserve);
+          const montant = Math.ceil(Math.max(0, manque) / B.EMPRUNT.tranche) * B.EMPRUNT.tranche;
+          if (montant > 0 && encours(etat) + montant <= B.EMPRUNT.max) {
+            empruntMaisonSigne = true;
+            jouer([{ type: 'emprunter', montant, duree: 24 }]);
+          }
+        }
         if (m.statut === 'offres' && moinsCher && payer(moinsCher.achat + moinsCher.travaux)) jouer([{ type: 'signerLieu', lieu: moinsCher.id }]);
         if (m.statut === 'signe' && payer(m.offres.find((o) => o.id === m.lieu)?.travaux ?? 0)) jouer([{ type: 'lancerTravauxEtablissement' }]);
       }

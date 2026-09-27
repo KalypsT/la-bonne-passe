@@ -132,6 +132,6 @@ export const TEXTES_MAISON2 = {
   },
   statut: {
     travaux: (jour: number) => `travaux jusqu’au jour ${jour}`,
-    aVendre: (n: number) => `${n} lieux à vendre`,
+    aVendre: (n: number) => `${n} baux à reprendre`,
   },
 };

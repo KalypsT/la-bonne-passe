@@ -1727,3 +1727,53 @@ Garde : `equilibrage-didacticiel.test.ts` (6 graines, 112 nuits : le passif fait
 
 - **Le rythme des cartes** : au deuxième jour, le conseil de 5 h précède l'entretien de Mila (11 h) et celui de Jonas (15 h). Trois cartes le même jour, mais c'est le jour où l'on apprend à recruter.
 - **Les conseils coupés** avec le didacticiel : un joueur qui passe tout se retrouve seul, comme en v0.6.
+
+### L'équilibrage final (partie 6)
+
+**La durée réelle.** Nouvel estimateur (`secondesReelles` dans la simulation, `TEMPS_REEL` dans `balance.ts`) : la journée (45 s à ×1) et la soirée (3 min à ×1) selon la vitesse choisie, plus le temps passé sur les cartes en pause (briefing 30 s, bilan de nuit 12 s, imprévu 15 s, carte d'intrigue 20 s, alerte 6 s, bilan du lundi 40 s, du mois 30 s) et 25 s de gestion par jour. Ce sont des hypothèses : le temps réel compté en jeu (`chronique.tempsJoue`, affiché à la fin du chapitre) permettra de les vérifier sur téléphone. À la vitesse courante (×2 le jour, ×1 le soir), une journée coûte environ 6 minutes.
+
+**Premier constat** : la deuxième maison coûtait 36 000 à 68 000 €, et le chapitre se bouclait vers le jour 199 au cran 4 (21 h), jamais au cran 3 en un an. Trois mois d'épargne suivaient le palier 5, sans rien de neuf.
+
+**Ce qui a été réglé** :
+
+| Constat | Correction |
+| --- | --- |
+| Trois mois d'épargne entre le palier 5 et la deuxième maison. | On **reprend un bail** au lieu de racheter les murs : 14 000 à 22 000 € (32 000 à 48 000), travaux 4 000 à 6 000 € (8 000 à 14 000), 4 à 7 jours. Le projet s'ouvre au même lundi que la gérance (un lundi plus tard auparavant). Les offres pas encore signées des parties en cours suivent (migration v40). |
+| La maison, moins chère, se remboursait en 14 à 16 semaines. | Prix moyen d'un rendez-vous de la deuxième maison : 150 € (175) : 19 à 23 semaines, 4 à 5 mois. |
+| Le cran 3 n'avait jamais la somme. | Le **nouvel emprunt** finance la reprise : Josée le conseille (« Une adresse à ta portée ») dès que le projet s'ouvre, si la banque prête. Le joueur simulé peut emprunter ce qui manque (`empruntMaison`). |
+| La gérante coûtait son salaire pour une décision de moins par soirée. | Elle règle **35 %** des alertes du quartier (20 %) : au cinquième mois, avec 8 personnes et 7 chambres, 7,8 décisions par soirée au lieu de 9,4 (8,4 à 20 %), pour le même net par nuit. |
+| Le joueur qui tranche au hasard plafonne sous 80 de réputation. | Un conseil de Josée au palier 4, à partir du jour 70, sous 75 : le segment le moins content. |
+
+**La durée du chapitre** (`npm run rapport`, 10 graines, 336 nuits) :
+
+| Stratégie | Fin du chapitre (jour) | Heures à ×1 | Heures, vitesse courante | Heures à ×2 | Sessions de 15 à 20 min |
+| --- | --- | --- | --- | --- | --- |
+| Classique 3, sans emprunt | 231 (166 à 298), 9 sur 10 | 24,9 | 23,4 | 17,6 | 70 à 94 |
+| Classique 3, à crédit | 106 (82 à 139) | 11,1 | 10,5 | 7,8 | 31 à 42 |
+| Classique 4 | 107 (93 à 137) | 11,5 | 10,8 | 8,2 | 33 à 43 |
+| Feutrée 4, à crédit | 87 (76 à 110) | 8,9 | 8,4 | 6,2 | 25 à 34 |
+| Complet (bâtiment voisin à crédit) | 145 (127 à 184) | 15,2 | 14,3 | 10,7 | 43 à 57 |
+| Passif qui suit Josée | 106 (90 à 161) | 11,3 | 10,7 | 8,0 | 32 à 43 |
+| Distrait (une alerte sur trois manquée), à crédit | 167 (103 à 271), 9 sur 10 | 18,0 | 17,0 | 12,8 | 51 à 68 |
+| Cartes au hasard | 237 (222 à 251), 2 sur 10 | 24,9 | 23,5 | 17,6 | 70 à 94 |
+
+Lecture : les 6 à 8 h visées ne tiennent qu'à ×2. À la vitesse courante, un chapitre bien mené dure 8 à 11 h, soit 25 à 43 sessions de 15 à 20 minutes : un à deux mois de jeu à raison d'une session par jour. Le palier 5 seul, au jour 75 à 94, en demande 8 à 9 : aller plus vite demanderait des paliers plus courts ou une soirée plus brève, deux choix de fond laissés en question. Le joueur complet, qui agrandit la maison avant d'en ouvrir une autre, finit plus tard (jour 145) : son encours est déjà pris par le bâtiment voisin.
+
+**Les autres points laissés ouverts en v0.6** :
+
+- **Le cran 4 au premier mois** : 4 264 € après la première mensualité, au-dessus de la cible de 0 à 4 000 €. Gardé : c'est la stratégie la plus rentable, et le cran 3 (2 382 €) sert de référence à la cible.
+- **Le deuxième mois à ×1** : 6,9 à 10,1 décisions par soirée (classique 8,1, feutrée 6,9, influenceurs 10,1), comme en v0.6 ; gardé. Le cinquième mois se charge davantage avec une grande maison, et la gérante le ramène sous 8.
+- **Le joueur distrait** finit le chapitre 9 fois sur 10 vers le jour 167. Celui qui tranche toutes les cartes au hasard n'atteint le palier 5 que 2 fois sur 10 : c'est le joueur qui ne lit pas, et le chapitre récompense le soin. Assumé.
+
+**Gardes** : `equilibrage-chapitre.test.ts` (cran 3 à crédit : fin entre les jours 75 et 150, en 6 à 14 h à la vitesse courante, 3 parties sur 4 au moins) ; `equilibrage-maison2.test.ts` passe à 17 à 26 semaines de remboursement (26 à 39 auparavant, quand on rachetait les murs) ; la gérance et la deuxième maison ouvrent au même lundi (`agrandir.test.ts`) ; `conseils.test.ts` vérifie le conseil sur la réputation.
+
+## Bilan de la v1.0 : une campagne d'Amsterdam aboutie ?
+
+**Oui, avec une réserve sur la durée.**
+
+- **Le chapitre a une vraie fin, atteinte par presque tous les joueurs attentifs.** La deuxième maison inaugurée avec 70 de réputation boucle le chapitre vers le jour 87 à 107 : cran 4, jour 107 ; cran 3 à crédit, jour 106 ; soirées feutrées à crédit, jour 87. Josée raconte : durée, recettes, fidèles, sept moments, et un titre qui suit le style (famille, velours ou quartier au cran 4 ; discrétion en soirées feutrées ; bâtisseuse chez qui agrandit).
+- **La durée réelle** : 8 à 11 h à la vitesse courante, 6 à 8 h à ×2, soit 25 à 43 sessions de 15 à 20 minutes. Les 6 à 8 h visées ne sont tenues qu'en jouant vite ; elles supposeraient des paliers plus courts.
+- **Le joueur passif, grâce au didacticiel** : sans Josée, faillite au jour 84 dans 10 parties sur 10. En faisant ce qu'elle conseille, et seulement cela : aucune faillite, 4 personnes, 3 chambres, palier 5 vers le jour 93, chapitre bouclé vers le jour 106 (en empruntant sur son conseil).
+- **Le mode libre tient sur un mois et au-delà** : un objectif chaque semaine, les quatre types tirés, 49 à 52 % de réussite chez le joueur attentif, des séries jusqu'à 6 semaines ; 18 cartes et imprévus par semaine après la fin, comme avant ; la valeur nette continue de monter (+36 000 € en trois mois au cran 4).
+- **Les creux de progression sont comblés** : au cran 3, une seule semaine sur quinze sans nouveauté (systèmes, arcs, étapes du permis), la seizième, contre six en v0.6. La troisième semaine apporte la buanderie et l'arc de Jonas ; les semaines 9 à 12, les étapes du permis et l'arc de Sanne.
+- **Ce qui reste fragile** : le joueur qui tranche au hasard ne finit pas le chapitre (2 fois sur 10) ; les gardes à 10 graines bougent dès qu'une nouvelle intrigue rebat le hasard (plusieurs sont passées à 12 ou 20 graines) ; la durée réelle repose sur des hypothèses de temps par carte, à confronter au temps compté en jeu.

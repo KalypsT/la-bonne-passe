@@ -96,7 +96,7 @@ export const TEXTES_FIN = {
     sursis: 'La banque accorde un sursis, grâce à Josée.',
     agrandissement: 'Le bâtiment voisin rejoint la maison.',
     gerance: (prenom: string) => `${prenom} prend la gérance.`,
-    achatLieu: (nom: string, quartier: string) => `${nom}, ${quartier} : l’acte est signé.`,
+    achatLieu: (nom: string, quartier: string) => `${nom}, ${quartier} : le bail est signé.`,
     inauguration: (prenom: string) => `Inauguration de la deuxième maison, confiée à ${prenom}.`,
     jour: (jour: number) => `Jour ${jour}`,
   },

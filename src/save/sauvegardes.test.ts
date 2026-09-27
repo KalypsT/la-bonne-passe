@@ -774,6 +774,19 @@ describe('migrations', () => {
     expect(migre?.nouveautes).toContain('conseils');
   });
 
+  it('migre une sauvegarde v39 : les offres de la deuxième maison pas encore signées suivent les prix des baux', () => {
+    const base = creerEtatInitial();
+    const offres = [{ id: 'pension', achat: 33000, travaux: 9500, jours: 6 }];
+    const migre = migrer({ ...base, version: 39, etablissement: { offres, lieu: null, statut: 'offres', fin: 0 } });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.etablissement.offres).toEqual([{ id: 'pension', achat: 14500, travaux: 4000, jours: 5 }]);
+    expect(migre?.nouveautes).toContain('baux');
+    // Déjà signé : rien ne change.
+    const signe = migrer({ ...base, version: 39, etablissement: { offres, lieu: 'pension', statut: 'signe', fin: 0 } });
+    expect(signe?.etablissement.offres).toEqual(offres);
+    expect(signe?.nouveautes).not.toContain('baux');
+  });
+
   it('refuse une version future ou des données sans version', () => {
     expect(migrer({ ...creerEtatInitial(), version: VERSION_ETAT + 1 })).toBeNull();
     expect(migrer({ jour: 1 })).toBeNull();

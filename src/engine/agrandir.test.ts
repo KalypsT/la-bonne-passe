@@ -121,18 +121,17 @@ describe('palier 5 : le permis de la mairie, en trois étapes (v1.0)', () => {
     expect(lundi(r, 56).permis.statut).toBe('accorde');
   });
 
-  it('la gérance ouvre au lundi suivant, la deuxième maison au lundi d’après, avec trois lieux', () => {
+  it('la gérance et la deuxième maison, avec trois lieux, ouvrent au lundi suivant (v1.0, partie 6)', () => {
     const e = enCommission();
     e.relations.jauges.mairie = 50;
     const l1 = lundi(e);
-    const l2 = lundi(l1, 56);
-    expect(l2.systemes).toMatchObject({ gerante: true, etablissement: false });
-    const l3 = lundi(l2, 63);
-    expect(l3.systemes.etablissement).toBe(true);
+    expect(l1.systemes).toMatchObject({ gerante: false, etablissement: false });
+    const l3 = lundi(l1, 56);
+    expect(l3.systemes).toMatchObject({ gerante: true, etablissement: true });
     expect(l3.etablissement.offres).toHaveLength(B.ETABLISSEMENT.offres);
     expect(new Set(l3.etablissement.offres.map((o) => o.id)).size).toBe(B.ETABLISSEMENT.offres);
     // Même graine, mêmes lieux.
-    expect(lundi(lundi(lundi(e), 56), 63).etablissement.offres).toEqual(l3.etablissement.offres);
+    expect(lundi(lundi(e), 56).etablissement.offres).toEqual(l3.etablissement.offres);
   });
 });
 

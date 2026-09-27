@@ -9,7 +9,7 @@ export interface TexteConseil {
   /** Le bouton qui mène au bon endroit. */
   montrer: string;
   /** Où il mène : un onglet, ou une fiche (la chambre désignée, le bureau, la mairie). */
-  cible: { onglet: 'maison' | 'personnel' | 'finances' | 'relations' } | { fiche: 'chambre' | 'bureau' | 'mairie' } | null;
+  cible: { onglet: 'maison' | 'personnel' | 'clientele' | 'finances' | 'relations' } | { fiche: 'chambre' | 'bureau' | 'mairie' } | null;
 }
 
 export const CONSEILS: Record<IdConseil, TexteConseil> = {
@@ -69,6 +69,13 @@ export const CONSEILS: Record<IdConseil, TexteConseil> = {
     montrer: 'Voir la mairie',
     cible: { fiche: 'mairie' },
   },
+  reputation: {
+    titre: 'Ta réputation plafonne',
+    texte:
+      'Pour la commission, il te faut 80 de réputation, et tu stagnes. Ce sont surtout les {segment} qui boudent : regarde ce qu’ils attendent dans l’onglet Clientèle. Et chaque alerte laissée filer, chaque client qui attend trop, se paie en réputation.',
+    montrer: 'Onglet Clientèle',
+    cible: { onglet: 'clientele' },
+  },
   gerance: {
     titre: 'Choisir sa gérante',
     texte:
@@ -79,7 +86,7 @@ export const CONSEILS: Record<IdConseil, TexteConseil> = {
   deuxiemeMaison: {
     titre: 'Une adresse à ta portée',
     texte:
-      'Tu as de quoi acheter une des adresses en vente. Une deuxième maison, ouverte avec au moins 70 de réputation ici, et ton premier chapitre est bouclé. Garde tout de même de quoi payer les travaux et la banque.',
+      'Trois baux sont à reprendre en ville. Une deuxième maison, ouverte avec au moins 70 de réputation ici, et ton premier chapitre est bouclé. Si la caisse ne suffit pas, la banque prête (onglet Finances) : avec ta réputation, à bon taux. Garde de quoi payer les travaux.',
     montrer: 'Voir le bureau',
     cible: { fiche: 'bureau' },
   },

@@ -459,14 +459,16 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
         accorderPalier(etat, 5);
         evenements.push({ type: 'palier', numero: 5 });
       }
+      if (etat.palier >= 5 && etat.systemes.agrandissement && !etat.systemes.gerante && etat.permis.jour < etat.jour) {
+        etat.systemes.gerante = true;
+        if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'gerante'];
+      }
+      // v1.0, partie 6 : la deuxième maison le même lundi que la gérance (un lundi plus tard auparavant) : le chapitre
+      // ne doit pas attendre une semaine de plus.
       if (etat.systemes.gerante && !etat.systemes.etablissement) {
         etat.systemes.etablissement = true;
         tirerOffres(etat);
         if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'etablissement'];
-      }
-      if (etat.palier >= 5 && etat.systemes.agrandissement && !etat.systemes.gerante && etat.permis.jour < etat.jour) {
-        etat.systemes.gerante = true;
-        if (etat.bilanSemaine) etat.bilanSemaine.ouvertures = [...(etat.bilanSemaine.ouvertures ?? []), 'gerante'];
       }
       // v1.0, partie 4 : la buanderie au deuxième lundi après le palier 2 (la troisième semaine était vide) ;
       // le dossier du permis, au lundi où la maison du palier 4 a 70 de réputation.

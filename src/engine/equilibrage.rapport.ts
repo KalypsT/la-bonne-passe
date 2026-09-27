@@ -5,6 +5,7 @@ import { it } from 'vitest';
 import type { Offre, Segment } from '../content/clientele';
 import type { EtatJeu, Regles } from './etat';
 import { EVENEMENTS_QUARTIER } from '../content/quartier';
+import { secondesReelles, type ProfilVitesse } from './simulation';
 import { choixAdaptatif, evenementsExterieurs, mesurerProgression, mesurerRenouvellement, partsDeClientele, simuler, type OptionsSimulation, type Renouvellement, type ResumeNuit } from './simulation';
 
 const GRAINES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -370,6 +371,8 @@ function modeLibre(): string[] {
     ['Classique 4', { ...base, offre: 'classique', rdvMax: 4 }],
     ['Feutrée 4', { ...base, offre: 'feutree', rdvMax: 4 }],
     ['Classique 4, cartes au hasard', { ...base, offre: 'classique', rdvMax: 4, politique: 'hasard' }],
+    ['Classique 4, cartes au hasard, à crédit', { ...base, offre: 'classique', rdvMax: 4, politique: 'hasard', empruntMaison: true }],
+    ['Classique 4, distrait (une alerte sur trois manquée), à crédit', { ...base, offre: 'classique', rdvMax: 4, distrait: 0.33, empruntMaison: true }],
   ];
   const TYPES = ['recette', 'calme', 'segment', 'record'] as const;
   const lignes = [
@@ -405,6 +408,60 @@ function modeLibre(): string[] {
     });
     lignes.push(
       `| ${nom} | ${libres.length} sur ${GRAINES.length} | ${semaines} | ${parType.join(' | ')} | ${reussite} | ${serie} | ${virgule(avant)} / ${virgule(apres)} | ${mois.join(' / ')} |`,
+    );
+  }
+  return lignes;
+}
+
+/**
+ * La durée du chapitre 1 (v1.0, partie 6) : le jour de la fin, et le temps réel estimé selon la vitesse choisie
+ * (×1 partout, ×2 le jour et ×1 le soir, ×2 partout), en heures, et en sessions de 15 à 20 minutes.
+ */
+function dureeChapitre(): string[] {
+  const NUITS_CHAPITRE = 336;
+  const base = { nuits: NUITS_CHAPITRE, permis: true, etablissement: true, maison2: 'externe' as const };
+  const complet: Omit<OptionsSimulation, 'graine'> = {
+    ...base,
+    offre: 'classique',
+    rdvMax: 3,
+    relations: 'entretien',
+    buanderie: true,
+    loges: true,
+    confort: true,
+    former: true,
+    placer: true,
+    agrandir: 'batiment',
+    empruntAgrandir: { montant: 20000, duree: 24 },
+    recruterJusqua: 8,
+    gerante: true,
+  };
+  const strategies: [string, Omit<OptionsSimulation, 'graine'>][] = [
+    ['Classique 3', { ...base, offre: 'classique', rdvMax: 3 }],
+    ['Classique 3, deuxième maison à crédit', { ...base, offre: 'classique', rdvMax: 3, empruntMaison: true }],
+    ['Classique 4', { ...base, offre: 'classique', rdvMax: 4 }],
+    ['Feutrée 4', { ...base, offre: 'feutree', rdvMax: 4 }],
+    ['Feutrée 4, à crédit', { ...base, offre: 'feutree', rdvMax: 4, empruntMaison: true }],
+    ['Complet', complet],
+    ['Classique 4, cartes au hasard', { ...base, offre: 'classique', rdvMax: 4, politique: 'hasard' }],
+    ['Passif qui suit Josée', { ...base, offre: 'classique', rdvMax: 4, recruter: false, renover: false, suitJosee: true }],
+  ];
+  const virgule = (x: number, d = 1) => x.toFixed(d).replace('.', ',');
+  const lignes = [
+    '| Stratégie | Fin du chapitre (jour) | Heures à ×1 | Heures ×2 le jour, ×1 le soir | Heures à ×2 | Sessions de 15 à 20 min (vitesse courante) |',
+    '| --- | --- | --- | --- | --- | --- |',
+  ];
+  for (const [nom, o] of strategies) {
+    const parties = GRAINES.map((graine) => simuler({ ...o, graine }));
+    const finies = parties.filter((p) => p.etat.finChapitre);
+    const jours = finies.map((p) => p.etat.finChapitre!.jour);
+    const heures = (profil: ProfilVitesse) =>
+      finies.length ? finies.reduce((t, p) => t + secondesReelles(p.nuits.slice(0, p.etat.finChapitre!.jour), profil), 0) / finies.length / 3600 : 0;
+    const jour = jours.length
+      ? `${Math.round(jours.reduce((a, b) => a + b, 0) / jours.length)} (${Math.min(...jours)} à ${Math.max(...jours)})${jours.length < GRAINES.length ? `, ${jours.length} sur ${GRAINES.length}` : ''}`
+      : 'jamais';
+    const courant = heures('courant');
+    lignes.push(
+      `| ${nom} | ${jour} | ${finies.length ? virgule(heures('lent')) : '—'} | ${finies.length ? virgule(courant) : '—'} | ${finies.length ? virgule(heures('rapide')) : '—'} | ${finies.length ? `${Math.round((courant * 60) / 20)} à ${Math.round((courant * 60) / 15)}` : '—'} |`,
     );
   }
   return lignes;
@@ -447,6 +504,7 @@ it('rapport d’équilibrage', () => {
   console.log(`\nÉquipes et assurance : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard)\n\n${equipes().join('\n')}\n`);
   console.log(`\nLa progression sur six mois : ${GRAINES.length} graines, 168 nuits (jours d'atteinte des paliers : moyenne, puis extrêmes)\n\n${progression().join('\n')}\n`);
   console.log(`\nLa deuxième maison et la fin du chapitre 1 : ${GRAINES.length} graines, 336 nuits\n\n${deuxiemeMaison().join('\n')}\n`);
+  console.log(`\nLa durée du chapitre 1 : ${GRAINES.length} graines, 336 nuits (temps réel estimé)\n\n${dureeChapitre().join('\n')}\n`);
   console.log(`\nLe mode libre : ${GRAINES.length} graines, 336 nuits\n\n${modeLibre().join('\n')}\n`);
   console.log(`\nLe quartier : ${GRAINES.length} graines, 56 nuits (cartes tranchées au hasard ; événements sur 10 parties)\n\n${quartier().join('\n')}\n`);
 }, 1_800_000);

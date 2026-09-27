@@ -330,7 +330,7 @@ export const PERSONNEL_MAX_AGRANDI = 8;
  */
 export const GERANTE = {
   salaire: 110,
-  regle: 0.2,
+  regle: 0.35,
   fatigue: 0.2,
   moral: 2,
   moralMax: 80,
@@ -366,6 +366,9 @@ export const ETABLISSEMENT = { offres: 3, variation: 0.1 };
  * Frais = `charges` (pour 7 nuits) + salaire de la gérante par nuit + incident éventuel + caisse si elle est peu loyale.
  * Cible : l'achat, les travaux et l'inauguration remboursés en 6 à 9 mois. Mesuré (equilibrage-maison2.test.ts) : 29 à 33 semaines
  * selon le lieu, la réputation partant de 30 (prix moyen 160 € : 34 à 44 semaines, trop lent).
+ * v1.0, partie 6 : on reprend un bail au lieu de racheter les murs, 2,3 fois moins cher (voir LIEUX) : le chapitre se
+ * bouclait vers le jour 200, trois mois après le palier 5, à épargner. Prix moyen 150 € (175 auparavant) : chaque lieu
+ * se rembourse en 19 à 23 semaines (à 175 €, 14 à 16 : trop vite ; à 130 €, 25 à 35 ; les frais fixes pèsent).
  */
 export const MAISON2 = {
   /** Soirée d'inauguration : champagne, presse et voisins invités. Une seule fois. */
@@ -376,7 +379,7 @@ export const MAISON2 = {
   rdvParChambre: 2,
   occupationBase: 0.35,
   occupationReputation: 0.55,
-  prixMoyen: 175,
+  prixMoyen: 150,
   partPersonnel: 0.5,
   /** Charges d'une semaine pleine : énergie, licence, ménage. */
   charges: 600,
@@ -419,6 +422,23 @@ export type IdConsigne = keyof typeof MAISON2.consignes;
  * personnes pour la bâtisseuse (avec le bâtiment voisin) ; embauches sans aucun départ pour la famille.
  */
 /**
+ * Estimation du temps réel d'une partie (v1.0, partie 6), pour la durée du chapitre : les secondes passées sur chaque
+ * carte en pause (briefing, bilans, imprévus, cartes d'intrigue, alertes minutées), et `gestion` par jour pour les
+ * fiches, les entretiens et les travaux. S'y ajoutent la journée et la soirée, selon la vitesse choisie.
+ * Des hypothèses, à confronter au temps réel compté en jeu (chronique.tempsJoue).
+ */
+export const TEMPS_REEL = {
+  briefing: 30,
+  bilanNuit: 12,
+  imprevu: 15,
+  intrigue: 20,
+  alerte: 6,
+  semaine: 40,
+  mois: 30,
+  gestion: 25,
+};
+
+/**
  * Les conseils de Josée (v1.0, partie 5) : la suite du didacticiel, au bon moment, une fois chacun, un par matin au plus.
  * Réglages des déclencheurs : la caisse à garder après une rénovation ou un rafraîchissement (`marge`), le jour où Josée
  * s'inquiète d'une équipe trop petite, l'état sous lequel elle propose de rafraîchir (un peu avant la chambre défraîchie).
@@ -434,6 +454,8 @@ export const CONSEILS = {
   jourLinge: 3,
   etatRafraichir: 40,
   jourReserve: 12,
+  /** La réputation qui plafonne sous 75 au palier 4, à partir de ce jour (v1.0, partie 6). */
+  jourReputation: 70,
 };
 
 /**
