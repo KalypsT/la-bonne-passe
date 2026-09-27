@@ -453,6 +453,28 @@ Le didacticiel tient en une première soirée guidée, juste après la création
 
 Ensuite, Josée revient à chaque palier pour présenter le système qui s'ouvre, et quand une jauge devient critique. Chaque écran garde un bouton d'aide court.
 
+### Le didacticiel final (v1.0)
+
+- **La suite guidée** : une fois la soirée guidée finie, Josée passe **le matin**, au plus un conseil par jour et une fois pour chaque chose, avec une carte en pause et un bouton qui mène au bon endroit (la fiche d'une chambre, un onglet, la mairie, le bureau) :
+
+| Conseil | Quand |
+| --- | --- |
+| Rouvrir une chambre | Dès le lendemain de la première nuit, si seul le Boudoir est ouvert et que la caisse couvre 900 € avec une marge |
+| Recruter | Au troisième jour, Sanne seule et des candidats au salon |
+| Rouvrir encore une chambre | Dès le huitième jour, si une chambre dort encore et que la caisse le permet largement |
+| Recruter encore | Au dixième jour, moins de trois personnes et des candidats au salon |
+| La commande automatique du linge | Au troisième jour, sans commande automatique et le stock bas |
+| Rafraîchir une chambre | Une chambre sous 40 % d'état, un peu avant qu'elle soit défraîchie |
+| La réserve | Au douzième jour, rien de côté (sauf gestion confiée à Josée) |
+| Déposer le permis | Dès que le dossier peut être déposé |
+| Choisir sa gérante | À l'ouverture de la gérance : quelqu'un de loyal, pas sa meilleure hôtesse |
+| La deuxième maison | Quand une adresse en vente est à la portée de la caisse |
+
+- **Au premier entretien d'embauche**, Josée explique la carte : une question pour un trait, puis une part (50 % convient à la plupart).
+- **Passer le didacticiel** coupe aussi les conseils. Ils se rallument (ou se coupent) dans l'aide, le bouton « ? » de la barre du haut. Une partie d'avant la v1.0 les reçoit allumés, présentés par Josée.
+- **L'aide courte sur chaque écran** : l'aide de l'onglet ouvert (bouton « ? » de la barre du haut), et un « ? » en haut à droite des cartes (briefing, bilan de la nuit, bilan du lundi, bilan du mois, entretiens, imprévus, intrigues, dispute, alertes), qui déplie une explication de Josée.
+- **Mesure** : le joueur passif (Sanne seule, rien rénové) fait faillite au jour 84 dans 10 parties sur 10 ; le même joueur, s'il fait ce que Josée conseille et seulement cela, ne fait jamais faillite en six mois : 4 personnes, 3 chambres, palier 4 vers le jour 39, palier 5 vers le jour 93.
+
 ## Interface et direction artistique
 
 Le jeu se joue en paysage. L'écran principal montre la maison en coupe à gauche et un panneau de gestion permanent à droite : on voit la maison vivre pendant qu'on la gère. En portrait, un écran invite à tourner le téléphone.

@@ -39,6 +39,7 @@ import { hasardPlacementDeDepart, niveauxDeDepart } from '../engine/gamme';
 import { hasardMaison2DeDepart, maison2DeDepart } from '../engine/maison2';
 import { chroniqueDeDepart, type Moment } from '../engine/chronique';
 import { hasardModeLibreDeDepart, modeLibreDeDepart } from '../engine/modeLibre';
+import { conseilsDeDepart } from '../engine/conseils';
 import { INTRIGUES_PRINCIPALES } from '../content/intrigues';
 import { INTRIGUE_CHAT_NOIR } from '../content/rivale';
 
@@ -685,6 +686,14 @@ const MIGRATIONS: Record<number, (d: Donnees) => Donnees> = {
     const nouveautes = [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), ...(palier === 4 ? ['permisEtapes'] : [])];
     return { ...d, version: 38, systemes: { ...systemes, permis: ouvert }, nouveautes };
   },
+  // v38 → v39 : les conseils de Josée, la suite du didacticiel (v1.0, partie 5). Allumés, et présentés par Josée : ils
+  // ne parlent que de ce qui manque encore à la partie, et se coupent dans l'aide.
+  38: (d) => ({
+    ...d,
+    version: 39,
+    conseils: conseilsDeDepart(),
+    nouveautes: [...(Array.isArray(d.nouveautes) ? d.nouveautes : []), 'conseils'],
+  }),
 };
 
 
@@ -797,6 +806,8 @@ function estEtatValide(d: Donnees): boolean {
     estObjet(d.modeLibre) &&
     Array.isArray(d.modeLibre.historique) &&
     typeof d.hasardModeLibre === 'number' &&
+    estObjet(d.conseils) &&
+    Array.isArray(d.conseils.vus) &&
     typeof d.gestionJosee === 'boolean' &&
     estObjet(d.systemes)
   );

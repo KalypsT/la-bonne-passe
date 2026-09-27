@@ -419,6 +419,24 @@ export type IdConsigne = keyof typeof MAISON2.consignes;
  * personnes pour la bâtisseuse (avec le bâtiment voisin) ; embauches sans aucun départ pour la famille.
  */
 /**
+ * Les conseils de Josée (v1.0, partie 5) : la suite du didacticiel, au bon moment, une fois chacun, un par matin au plus.
+ * Réglages des déclencheurs : la caisse à garder après une rénovation ou un rafraîchissement (`marge`), le jour où Josée
+ * s'inquiète d'une équipe trop petite, l'état sous lequel elle propose de rafraîchir (un peu avant la chambre défraîchie).
+ */
+export const CONSEILS = {
+  marge: 400,
+  /** Une deuxième chambre à rouvrir, dès la deuxième semaine, si la caisse le permet largement. */
+  jourRenoverEncore: 8,
+  margeRenoverEncore: 1500,
+  jourRecruter: 3,
+  jourRecruterEncore: 10,
+  equipeMin: 3,
+  jourLinge: 3,
+  etatRafraichir: 40,
+  jourReserve: 12,
+};
+
+/**
  * Le mode libre (v1.0, partie 3) : après la fin du chapitre, un objectif par semaine, tiré au sort, à la place du défi.
  * Recette : la recette d'activité (rendez-vous, bar, divers) des 4 dernières semaines en moyenne, plus `recetteHausse`.
  * Calme : aucun incident (dispute qui dégénère, alerte manquée). Segment : le segment ouvert le moins content (sous

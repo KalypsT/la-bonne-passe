@@ -8,6 +8,7 @@ import { formaterEuros } from './format';
 import { TEXTES_BANQUE } from '../content/banque';
 import { Jauge } from './Jauge';
 import { useInterface } from './store';
+import { AideCarte } from './AideCarte';
 
 /** Bilan de fermeture : le compte de la nuit poste par poste d'abord, puis la salle et le personnel. En pause. */
 export function CarteBilan({ partie }: { partie: EtatJeu }) {
@@ -27,6 +28,7 @@ export function CarteBilan({ partie }: { partie: EtatJeu }) {
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-bilan">
       <div className="carte-modale carte-large">
+        <AideCarte id="bilan" />
         <h2 id="titre-bilan" className="titre-neon">
           {t.titre(bilan.numero)}
         </h2>

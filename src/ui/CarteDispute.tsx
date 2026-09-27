@@ -2,6 +2,7 @@ import { DISPUTE_VERRE_OFFERT } from '../content/balance';
 import { TEXTES } from '../content/textes';
 import { formaterEuros } from './format';
 import { useInterface } from './store';
+import { AideCarte } from './AideCarte';
 
 /** Dispute sur le quai : deux façons de la régler, ou la laisser courir. */
 export function CarteDispute() {
@@ -16,6 +17,7 @@ export function CarteDispute() {
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-dispute">
       <div className="carte-modale">
+        <AideCarte id="dispute" />
         <h2 id="titre-dispute">{t.titre}</h2>
         <p>{t.texte}</p>
         <button className="choix" onClick={() => choisir('verre')}>

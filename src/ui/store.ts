@@ -44,7 +44,8 @@ export type Carte =
   | 'adieu'
   | 'aide'
   | 'maison'
-  | 'finChapitre';
+  | 'finChapitre'
+  | 'conseil';
 
 export interface ChoixCreation {
   prenom: string;
@@ -157,6 +158,7 @@ function carteEnAttente(partie: EtatJeu | null): Carte | null {
   if (partie.annonces.length > 0) return 'palier';
   if (partie.nouveautes.length > 0) return 'nouveautes';
   if (partie.maison2.annonces.length > 0) return 'maison';
+  if (partie.conseils.enCours) return 'conseil';
   if (partie.adieux.length > 0) return 'adieu';
   if (partie.essaisATrancher.length > 0) return 'essai';
   return null;
@@ -168,7 +170,7 @@ function etapeDidacticiel(partie: EtatJeu | null) {
 }
 
 /** Événements qui mettent le jeu en pause et ouvrent une carte. */
-const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai', 'imprevu', 'intrigue', 'depart', 'grossiste', 'bilanSemaine', 'bilanMois', 'faillite', 'etablissementPret']);
+const EVENEMENTS_EN_PAUSE = new Set<EvenementMoteur['type']>(['briefing', 'bilan', 'visite', 'finEssai', 'imprevu', 'intrigue', 'depart', 'grossiste', 'bilanSemaine', 'bilanMois', 'faillite', 'etablissementPret', 'conseil']);
 
 /** Traduit les événements en montants flottants et en cartes à ouvrir. Le journal, lui, vit dans la partie. */
 function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
@@ -191,6 +193,7 @@ function recevoirEvenements(evenements: EvenementMoteur[], modifier: Modifier) {
     if (e.type === 'depart' && !carte) carte = 'adieu';
     if (e.type === 'finEssai' && !carte) carte = 'essai';
     if ((e.type === 'etablissementPret' || e.type === 'demissionMaison' || e.type === 'inauguration') && !carte) carte = 'maison';
+    if (e.type === 'conseil' && !carte) carte = 'conseil';
     if (e.type === 'faillite') carte = 'faillite';
     if (e.type === 'bilan') {
       carte = 'bilan';
@@ -362,11 +365,11 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     const { partie, carte: actuelle } = get();
     let suite = carte ?? carteEnAttente(partie);
     // Fermer une annonce, des nouveautés ou un adieu : le moteur les marque comme vus, puis on passe à la suite.
-    const vus = { palier: 'annonceVue', nouveautes: 'nouveautesVues', adieu: 'adieuVu', semaine: 'bilanSemaineVu', mois: 'bilanMoisVu', maison: 'annonceMaisonVue', finChapitre: 'finChapitreVue' } as const;
+    const vus = { palier: 'annonceVue', nouveautes: 'nouveautesVues', adieu: 'adieuVu', semaine: 'bilanSemaineVu', mois: 'bilanMoisVu', maison: 'annonceMaisonVue', finChapitre: 'finChapitreVue', conseil: 'conseilVu' } as const;
     if (
       !carte &&
       partie &&
-      (actuelle === 'palier' || actuelle === 'nouveautes' || actuelle === 'adieu' || actuelle === 'semaine' || actuelle === 'mois' || actuelle === 'maison' || actuelle === 'finChapitre')
+      (actuelle === 'palier' || actuelle === 'nouveautes' || actuelle === 'adieu' || actuelle === 'semaine' || actuelle === 'mois' || actuelle === 'maison' || actuelle === 'finChapitre' || actuelle === 'conseil')
     ) {
       const resultat = appliquerOrdres(partie, [{ type: vus[actuelle] }]);
       set({ partie: resultat.etat });
@@ -414,7 +417,7 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   passerDidacticiel: () => {
     const { partie, vitesse } = get();
     if (!partie) return;
-    set({ partie: appliquerOrdres(partie, [{ type: 'didacticiel', etape: null }]).etat, vitesse: vitesse === 0 ? 1 : vitesse });
+    set({ partie: appliquerOrdres(partie, [{ type: 'passerDidacticiel' }]).etat, vitesse: vitesse === 0 ? 1 : vitesse });
     get().sauvegarderPartie();
   },
 }));

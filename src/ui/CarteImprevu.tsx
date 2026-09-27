@@ -4,6 +4,7 @@ import type { EtatJeu } from '../engine/etat';
 import { JoseeLigne } from './Josee';
 import { remplir } from './modeles';
 import { useInterface } from './store';
+import { AideCarte } from './AideCarte';
 
 /** Imprévu de la soirée : 2 ou 3 choix, en pause. */
 export function CarteImprevu({ partie }: { partie: EtatJeu }) {
@@ -23,6 +24,7 @@ export function CarteImprevu({ partie }: { partie: EtatJeu }) {
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-imprevu">
       <div className="carte-modale">
+        <AideCarte id="imprevu" />
         <h2 id="titre-imprevu" className="titre-neon">
           {texte(def.titre)}
         </h2>

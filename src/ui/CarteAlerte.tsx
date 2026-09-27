@@ -4,6 +4,7 @@ import type { EtatJeu } from '../engine/etat';
 import { instant } from '../engine/temps';
 import { remplir } from './modeles';
 import { useInterface } from './store';
+import { AideCarte } from './AideCarte';
 
 /** Une alerte minutée : ce qui se passe, une ou deux façons d'y répondre, ou la laisser courir. */
 export function CarteAlerte({ partie }: { partie: EtatJeu }) {
@@ -25,6 +26,7 @@ export function CarteAlerte({ partie }: { partie: EtatJeu }) {
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-alerte">
       <div className="carte-modale">
+        <AideCarte id="alerte" />
         <h2 id="titre-alerte">{texte(t.titre)}</h2>
         <p>{texte(t.texte)}</p>
         <p className="sous">{TEXTES.alerteCarte.restant(restant)}</p>

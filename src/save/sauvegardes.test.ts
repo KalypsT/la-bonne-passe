@@ -9,7 +9,7 @@ import { ambitionDuMarche } from '../engine/recrutement';
 import { creerStockageMemoire, type Stockage } from './stockage';
 
 /** Les nouveautés apportées par la migration testée, sans celles des mises à jour suivantes (v0.6 : parures, crans, banque, emprunt, impôt, gestion, fournisseurs). */
-const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => !['parures', 'crans', 'banque', 'emprunt', 'impot', 'gestionJosee', 'fournisseurs', 'amenagement', 'buanderie', 'loges', 'entretien', 'chronique'].includes(n));
+const propres = (nouveautes?: string[]) => nouveautes?.filter((n) => !['parures', 'crans', 'banque', 'emprunt', 'impot', 'gestionJosee', 'fournisseurs', 'amenagement', 'buanderie', 'loges', 'entretien', 'chronique', 'conseils'].includes(n));
 
 const MAINTENANT = Date.UTC(2026, 8, 25, 20, 0);
 
@@ -623,10 +623,10 @@ describe('migrations', () => {
     expect(migre?.relations.jauges.fournisseurs).toBe(0);
     expect(migre?.semaine.comptes.depenses.impots).toBe(0);
     expect(migre?.banque).toMatchObject({ sursis: false, supplement: 0 });
-    expect(migre?.nouveautes).toEqual(['impot', 'gestionJosee', 'fournisseurs', 'entretien', 'chronique']);
+    expect(migre?.nouveautes).toEqual(['impot', 'gestionJosee', 'fournisseurs', 'entretien', 'chronique', 'conseils']);
     const tot = migrer({ ...v29, systemes: { ...systemes, reserve: false, emprunt: false } });
     expect(tot?.systemes.fournisseurs).toBe(false);
-    expect(tot?.nouveautes).toEqual(['impot', 'entretien', 'chronique']);
+    expect(tot?.nouveautes).toEqual(['impot', 'entretien', 'chronique', 'conseils']);
   });
 
   it('migre une sauvegarde v30 : décors d’origine, loges et buanderie à aménager, présentés par Josée', () => {
@@ -641,10 +641,10 @@ describe('migrations', () => {
     expect(migre?.chambres.every((c) => !c.fermee && !c.decorRefait && c.decorAVenir === null)).toBe(true);
     expect(migre?.annexes.buanderie).toMatchObject({ ouverte: false, sale: 0 });
     expect(migre?.systemes).toMatchObject({ buanderie: true, loges: true });
-    expect(migre?.nouveautes).toEqual(['amenagement', 'buanderie', 'loges', 'entretien', 'chronique']);
+    expect(migre?.nouveautes).toEqual(['amenagement', 'buanderie', 'loges', 'entretien', 'chronique', 'conseils']);
     const debut = migrer({ ...v30, palier: 1 });
     expect(debut?.systemes).toMatchObject({ buanderie: false, loges: false });
-    expect(debut?.nouveautes).toEqual(['amenagement', 'entretien', 'chronique']);
+    expect(debut?.nouveautes).toEqual(['amenagement', 'entretien', 'chronique', 'conseils']);
   });
 
   it('migre une sauvegarde v31 : VIP et couples partis de la réputation, confort 1, équipes au niveau 1', () => {
@@ -681,7 +681,7 @@ describe('migrations', () => {
     expect(migre?.systemes).toMatchObject({ agrandissement: false, gerante: false, etablissement: false });
     expect(migre?.semaine.comptes.depenses).toMatchObject({ etablissement: 0, caisse: 0 });
     // Seule la présentation de l'entretien (v34) suit.
-    expect(migre?.nouveautes).toEqual(['entretien', 'chronique']);
+    expect(migre?.nouveautes).toEqual(['entretien', 'chronique', 'conseils']);
   });
 
   it('migre une sauvegarde v33 : aucun départ récent connu', () => {
@@ -689,7 +689,7 @@ describe('migrations', () => {
     const migre = migrer({ ...reste, version: 33 });
     expect(migre?.version).toBe(VERSION_ETAT);
     expect(migre?.departsRecents).toEqual([]);
-    expect(migre?.nouveautes).toEqual(['entretien', 'chronique']);
+    expect(migre?.nouveautes).toEqual(['entretien', 'chronique', 'conseils']);
   });
 
   it('migre une sauvegarde v34 : deuxième maison à ouvrir, deux postes de comptes de plus', () => {
@@ -764,6 +764,14 @@ describe('migrations', () => {
     expect(quatre?.nouveautes).toContain('permisEtapes');
     expect(migrer({ ...v37, palier: 4, reputation: 60 })?.systemes.permis).toBe(false);
     expect(migrer({ ...v37, palier: 5, reputation: 85 })?.systemes.permis).toBe(true);
+  });
+
+  it('migre une sauvegarde v38 : les conseils de Josée, allumés et présentés', () => {
+    const { conseils: _c, ...reste } = creerEtatInitial();
+    const migre = migrer({ ...reste, version: 38 });
+    expect(migre?.version).toBe(VERSION_ETAT);
+    expect(migre?.conseils).toEqual({ actifs: true, vus: [], enCours: null });
+    expect(migre?.nouveautes).toContain('conseils');
   });
 
   it('refuse une version future ou des données sans version', () => {

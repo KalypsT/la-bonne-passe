@@ -6,6 +6,7 @@ import type { ReponseEntretien } from '../engine/personnel';
 import { remplir } from './modeles';
 import { Portrait } from './Panneau';
 import { useInterface } from './store';
+import { AideCarte } from './AideCarte';
 
 function humeur(moral: number): Humeur {
   return moral < SEUIL_MORAL_BAS + 10 ? 'basse' : moral < 70 ? 'moyenne' : 'haute';
@@ -30,6 +31,7 @@ export function CarteEntretienIndividuel({ partie }: { partie: EtatJeu }) {
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-entretien-individuel">
       <div className="carte-modale">
+        <AideCarte id="entretienIndividuel" />
         <div className="employe-entete">
           <Portrait personne={employe} />
           <div>

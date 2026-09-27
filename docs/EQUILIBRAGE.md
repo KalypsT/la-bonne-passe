@@ -1705,3 +1705,25 @@ Trois changements : la **buanderie** ouvre au deuxième lundi après le palier 2
 
 - **Le cran 6 permanent** reste derrière sur 20 graines, mais de peu sur certaines séries : les arcs remontent le moral et retardent les départs.
 - **La gérante** coûte son salaire si on choisit bien qui promouvoir ; promouvoir sa meilleure hôtesse coûte le double. Josée pourrait le dire (partie 5).
+
+### Le didacticiel final (partie 5)
+
+Josée conseille au bon moment, le matin, une fois pour chaque chose (`CONSEILS` dans `balance.ts`, `src/engine/conseils.ts`). Nouvelle option de simulation : `suitJosee`, le joueur qui fait ce que Josée conseille, et seulement cela (rouvrir la chambre désignée, se mettre à recruter, la commande automatique à 10, rafraîchir, déposer le permis).
+
+**Le joueur passif, avec et sans Josée** (`npm run rapport`, 10 graines, 168 nuits) :
+
+| Stratégie | Palier 2 | Palier 4 | Palier 5 | Faillites | Valeur nette, mois 1 / 3 / 6 | Personnes / chambres |
+| --- | --- | --- | --- | --- | --- | --- |
+| Passif (Sanne seule, rien rénové) | 10 | jamais | jamais | 10 (jour 84) | −1 300 / −13 600 € | 1 / 1 |
+| Passif qui suit Josée | 4 (4 à 5) | 39 (32 à 48) | 93 (78 à 148) | 0 | 3 800 / 4 000 / 5 300 € | 4 / 3 |
+
+Premier jet : sans le conseil « rouvrir encore une chambre », le joueur guidé s'arrêtait à deux chambres (0 faillite, palier 5 dans les 10 parties, mais 2 chambres). Avec lui, trois.
+
+Lecture : les conseils suffisent à sauver le joueur passif, et le mènent aux paliers aussi vite que le joueur classique au cran 3 (palier 5 au jour 93 contre 94). Il reste pauvre (5 300 € de valeur nette au sixième mois, contre 18 100 € au cran 3) : il n'investit que ce que Josée lui souffle. C'est voulu : les conseils apprennent, ils ne jouent pas à la place du joueur.
+
+Garde : `equilibrage-didacticiel.test.ts` (6 graines, 112 nuits : le passif fait faillite au moins 5 fois sur 6, le passif guidé jamais, et atteint le palier 4 avec 3 personnes et 2 chambres au moins). `conseils.test.ts` vérifie chaque déclencheur.
+
+À surveiller :
+
+- **Le rythme des cartes** : au deuxième jour, le conseil de 5 h précède l'entretien de Mila (11 h) et celui de Jonas (15 h). Trois cartes le même jour, mais c'est le jour où l'on apprend à recruter.
+- **Les conseils coupés** avec le didacticiel : un joueur qui passe tout se retrouve seul, comme en v0.6.
