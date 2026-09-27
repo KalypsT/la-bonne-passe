@@ -18,6 +18,12 @@ export const NOUVEAUTES: Nouveaute[] = [
       'L’entretien se voit dans la caisse : une chambre défraîchie (sous 30 % d’état) se paie 15 % de moins, et un client sans linge propre aussi, à tes frais. Les packs de linge baissent (50, 90 et 160 €), et les chambres s’usent deux fois moins vite. Autre chose : quand quelqu’un part, le quartier en parle pendant un mois. Moins de candidatures, et plus exigeantes.',
   },
   {
+    id: 'conseils',
+    palier: 0,
+    texte:
+      'Je passerai te donner un conseil de temps en temps, quand je vois quelque chose qui manque : une chambre à rouvrir, du monde à embaucher, le linge, la réserve, le permis. Une fois chaque chose, promis. Si je t’agace, coupe-moi dans l’aide (le bouton « ? »).',
+  },
+  {
     id: 'chronique',
     palier: 0,
     texte:

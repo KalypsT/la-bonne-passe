@@ -41,6 +41,7 @@ import {
   type Etablissement,
   type Permis,
 } from './agrandir';
+import { conseilsDeDepart, type Conseils } from './conseils';
 import { hasardModeLibreDeDepart, modeLibreDeDepart, type ModeLibre } from './modeLibre';
 import { chroniqueDeDepart, type Chronique, type FinChapitre } from './chronique';
 import { hasardMaison2DeDepart, maison2DeDepart, type Maison2 } from './maison2';
@@ -471,6 +472,8 @@ export interface EtatJeu {
   modeLibre: ModeLibre;
   /** Hasard du mode libre, à part (v1.0). */
   hasardModeLibre: number;
+  /** Les conseils de Josée, la suite du didacticiel (v1.0). */
+  conseils: Conseils;
   /** Gestion confiée à Josée (v0.6, partie 4). */
   gestionJosee: boolean;
   /** Impôt trimestriel : bénéfice du trimestre en cours (v0.6, partie 4). */
@@ -486,7 +489,7 @@ export interface EtatJeu {
 }
 
 /** À augmenter à chaque changement de structure, avec une migration dans src/save/migrations.ts. */
-export const VERSION_ETAT = 38;
+export const VERSION_ETAT = 39;
 
 /** Systèmes ouverts au départ : onglets Maison, Personnel, Finances et Journal. */
 export function systemesDeDepart(): Systemes {
@@ -706,6 +709,7 @@ export function creerEtatInitial(options: OptionsNouvellePartie = {}): EtatJeu {
     finChapitreAVoir: false,
     modeLibre: modeLibreDeDepart(),
     hasardModeLibre: hasardModeLibreDeDepart(options.graine ?? GRAINE_PAR_DEFAUT),
+    conseils: conseilsDeDepart(),
     finDePartie: null,
     assurance: 0,
     didacticiel: options.didacticiel ? 0 : null,

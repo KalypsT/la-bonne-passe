@@ -5,6 +5,9 @@ import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
 import { nomAmbition, Portrait, Talents } from './Panneau';
 import { useInterface } from './store';
+import { AideCarte } from './AideCarte';
+import { TEXTES_CONSEILS } from '../content/conseils';
+import { JoseeLigne } from './Josee';
 
 /** Entretien d'embauche : une question révèle un trait, puis une proposition de part. En pause. */
 export function CarteEntretien({ partie }: { partie: EtatJeu }) {
@@ -27,6 +30,7 @@ export function CarteEntretien({ partie }: { partie: EtatJeu }) {
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-entretien">
       <div className="carte-modale carte-large carte-entretien">
+        <AideCarte id="entretien" />
         <div className="carte-colonnes">
           <section>
             <p className="surtitre">{candidat.genre === 'f' ? r.titreCandidate : r.titreCandidat}</p>
@@ -41,6 +45,8 @@ export function CarteEntretien({ partie }: { partie: EtatJeu }) {
               </div>
             </div>
             <p className="intro">{candidat.intro}</p>
+            {/* v1.0 : au premier recrutement, Josée explique l'entretien (la suite du didacticiel). */}
+            {partie.conseils.actifs && partie.personnel.length === 1 && <JoseeLigne texte={TEXTES_CONSEILS.entretien} />}
             <Talents talents={candidat.talents} />
           </section>
           <section>

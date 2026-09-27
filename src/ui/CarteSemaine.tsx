@@ -15,6 +15,7 @@ import { BilanMaisonLundi } from './Maison2';
 import { ModeLibreDuLundi } from './ModeLibre';
 import { trouverDefi } from '../content/defis';
 import { formaterMesure, texteDefi, texteReussiteDefi } from './objectifs';
+import { AideCarte } from './AideCarte';
 
 /** Bilan du lundi : recettes et dépenses par poste, résultat, trésorerie projetée, tendances de la semaine. En pause. */
 export function CarteSemaine({ partie }: { partie: EtatJeu }) {
@@ -30,6 +31,7 @@ export function CarteSemaine({ partie }: { partie: EtatJeu }) {
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-semaine">
       <div className="carte-modale carte-large carte-semaine">
+        <AideCarte id="semaine" />
         <h2 id="titre-semaine" className="titre-neon">
           {t.titre(b.numero)}
         </h2>

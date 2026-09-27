@@ -8,6 +8,7 @@ import { texteEvenement } from './journal';
 import { remplir } from './modeles';
 import { Portrait } from './Panneau';
 import { useInterface } from './store';
+import { AideCarte } from './AideCarte';
 
 /** Ce que la carte montre une fois le choix fait : son issue, et le dénouement si l'histoire s'achève. */
 interface Resultat {
@@ -27,6 +28,7 @@ export function CarteIntrigue({ partie }: { partie: EtatJeu }) {
     return (
       <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-intrigue">
         <div className="carte-modale">
+          <AideCarte id="intrigue" />
           <h2 id="titre-intrigue" className="titre-neon">
             {resultat.titre}
           </h2>
@@ -80,6 +82,7 @@ export function CarteIntrigue({ partie }: { partie: EtatJeu }) {
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-intrigue">
       <div className="carte-modale">
+        <AideCarte id="intrigue" />
         {EVENEMENTS_QUARTIER.some((q) => q.id === def.id) ? (
           <p className="sous etiquette-intrigue">{t.quartier}</p>
         ) : (

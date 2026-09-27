@@ -16,6 +16,7 @@ import { TEXTES_GAMME } from '../content/gamme';
 import { LIEUX, TEXTES_AGRANDIR } from '../content/agrandir';
 import { CONSIGNES, TEXTES_MAISON2 } from '../content/maison2';
 import { TEXTES_FIN, TITRES } from '../content/fin';
+import { CONSEILS, TEXTES_CONSEILS } from '../content/conseils';
 import { OBJECTIFS_LIBRES, TEXTES_MODE_LIBRE } from '../content/modeLibre';
 import { PALIERS } from '../content/paliers';
 import { TEXTES_ACTIONS_RELATIONS, TEXTES_SEUILS_RELATIONS } from '../content/relations';
@@ -291,6 +292,8 @@ export function texteEvenement(evenement: EvenementMoteur, partie: EtatJeu): str
     }
     case 'reunionQuartier':
       return TEXTES_AGRANDIR.journal.reunionQuartier(formaterEuros(evenement.montant));
+    case 'conseil':
+      return TEXTES_CONSEILS.journal(remplir(CONSEILS[evenement.id].titre.replaceAll('{chambre}', ''), partie).trim());
     case 'demissionMaison':
       return TEXTES_MAISON2.journal.demission(evenement.prenom);
     case 'renommerMaison':

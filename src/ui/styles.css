@@ -1964,3 +1964,40 @@ body {
   text-align: center;
   opacity: 0.6;
 }
+
+/* v1.0 : l'aide courte de chaque carte, un « ? » en haut à droite qui déplie l'explication de Josée. */
+.carte-modale {
+  position: relative;
+}
+.aide-carte {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--laiton);
+  background: transparent;
+  color: var(--laiton);
+  font: inherit;
+  font-weight: 600;
+  z-index: 2;
+}
+.aide-carte.ouverte {
+  background: var(--laiton);
+  color: var(--nuit);
+}
+.aide-carte-bulle {
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  right: 10px;
+  z-index: 3;
+  border-radius: 12px;
+  border: 1px solid var(--laiton);
+  background: var(--prune);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+.carte-modale:has(> .aide-carte) h2 {
+  padding-right: 44px;
+}

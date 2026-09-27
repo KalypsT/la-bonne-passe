@@ -7,6 +7,7 @@ import { formaterEuros } from './format';
 import { JoseeLigne } from './Josee';
 import { formaterMesure, texteObjectif } from './objectifs';
 import { useInterface } from './store';
+import { AideCarte } from './AideCarte';
 
 /** Bilan de fin de mois, le jour de la mensualité : la mensualité, l'objectif jugé, le mois qui commence. En pause. */
 export function CarteMois({ partie }: { partie: EtatJeu }) {
@@ -28,6 +29,7 @@ export function CarteMois({ partie }: { partie: EtatJeu }) {
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-mois">
       <div className="carte-modale carte-large">
+        <AideCarte id="mois" />
         <h2 id="titre-mois" className="titre-neon">
           {t.titre(b.numero)}
         </h2>

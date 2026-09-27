@@ -101,6 +101,8 @@ export interface OptionsSimulation {
   nuits: number;
   /** Embaucher les candidats qui se présentent. */
   recruter?: boolean;
+  /** v1.0, partie 5 : fait ce que Josée conseille, et seulement cela (le joueur passif qui a suivi le didacticiel). */
+  suitJosee?: boolean;
   /** Rénover les chambres dès que la trésorerie le permet. */
   renover?: boolean;
   rdvMax?: number;
@@ -202,11 +204,14 @@ export function simuler(options: OptionsSimulation): {
   /** Ordres donnés par le joueur simulé, avec leur jour (v0.6, partie 8 : décisions par semaine). */
   ordres: { jour: number; type: string }[];
 } {
-  const { graine, nuits, recruter = true, renover = true, rdvMax = 3, equipeBar = 1, avance = true } = options;
+  const { graine, nuits, renover = true, rdvMax = 3, equipeBar = 1, avance = true } = options;
+  // v1.0, partie 5 : le joueur qui suit Josée se met à recruter quand elle le lui dit, et prend la commande automatique.
+  let recruter = options.recruter ?? true;
+  let lingeJosee: number | undefined;
   // Le joueur actif (partie 8) : commande automatique du linge et chambres rafraîchies avant d'être défraîchies.
   // La cible de linge couvre la soirée prévue (5, 10 ou 20 parures), comme le ferait un joueur attentif.
   const cibleLinge = () =>
-    options.lingeAuto ?? (renover ? (B.CIBLES_LINGE_AUTO.find((c) => c >= etat.personnel.length * rdvMax) ?? 20) : 0);
+    lingeJosee ?? options.lingeAuto ?? (renover ? (B.CIBLES_LINGE_AUTO.find((c) => c >= etat.personnel.length * rdvMax) ?? 20) : 0);
   const rafraichirSous = options.rafraichirSous ?? (renover ? B.CHAMBRE_DEFRAICHIE.seuil : 0);
   const etat = creerEtatInitial({ graine });
   const sansCartes = options.cartes === false;
@@ -344,6 +349,17 @@ export function simuler(options: OptionsSimulation): {
       if (r.selection && r.selection !== etat.regles.selection) ordresRegles.push({ type: 'regle', regle: 'selection', valeur: r.selection });
       if (r.priorite && r.priorite !== etat.regles.priorite) ordresRegles.push({ type: 'regle', regle: 'priorite', valeur: r.priorite });
       if (ordresRegles.length) jouer(ordresRegles);
+    }
+
+    // v1.0, partie 5 : le joueur qui suit Josée fait ce qu'elle conseille, puis referme la carte.
+    const conseil = etat.conseils.enCours;
+    if (options.suitJosee && conseil) {
+      if ((conseil.id === 'renover' || conseil.id === 'renoverEncore') && conseil.chambreId) jouer([{ type: 'renover', chambreId: conseil.chambreId }]);
+      if (conseil.id === 'rafraichir' && conseil.chambreId) jouer([{ type: 'rafraichir', chambreId: conseil.chambreId }]);
+      if (conseil.id === 'recruter' || conseil.id === 'recruterEncore') recruter = true;
+      if (conseil.id === 'lingeAuto') lingeJosee = 10;
+      if (conseil.id === 'permis' && peutDemanderPermis(etat)) jouer([{ type: 'demanderPermis' }]);
+      jouer([{ type: 'conseilVu' }]);
     }
 
     // Cartes en attente, tranchées comme le ferait un joueur prudent.

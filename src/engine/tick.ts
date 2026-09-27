@@ -36,6 +36,7 @@ import { changerGestionJosee, emprunter, surveillerDecouvert } from './banque';
 import { appliquerGamme, type OrdreGamme } from './gamme';
 import { appliquerAgrandir, avancerAgrandissement, reponseDuPermis, tirerOffres, type EvenementAgrandir, type OrdreAgrandir } from './agrandir';
 import { accorderPalier } from './paliers';
+import { appliquerConseil, matinDesConseils, type EvenementConseil, type OrdreConseil } from './conseils';
 import { lundiModeLibre, type EvenementModeLibre } from './modeLibre';
 import { noterChronique, noterSemaineChronique, verifierFinChapitre, type EvenementChronique } from './chronique';
 import { appliquerMaison2, matinMaison2, semaineMaison2, type EvenementMaison2, type OrdreMaison2 } from './maison2';
@@ -85,6 +86,8 @@ export type Ordre =
   | { type: 'finChapitreVue' }
   /** Temps réel passé dans la partie, compté par l'interface (v1.0). */
   | { type: 'tempsJoue'; secondes: number }
+  /** Passer le didacticiel (et les conseils de Josée qui le suivent, v1.0). */
+  | { type: 'passerDidacticiel' }
   /** Le didacticiel avance (l'interface décide des étapes, le moteur les garde). */
   | { type: 'didacticiel'; etape: number | null }
   | OrdreRecrutement
@@ -100,7 +103,8 @@ export type Ordre =
   | OrdreAmenagement
   | OrdreGamme
   | OrdreAgrandir
-  | OrdreMaison2;
+  | OrdreMaison2
+  | OrdreConseil;
 
 export type EvenementMoteur =
   | { type: 'nouveauJour'; jour: number }
@@ -129,7 +133,8 @@ export type EvenementMoteur =
   | EvenementAgrandir
   | EvenementMaison2
   | EvenementChronique
-  | EvenementModeLibre;
+  | EvenementModeLibre
+  | EvenementConseil;
 
 /** Taille du journal gardé dans la sauvegarde. */
 export const TAILLE_JOURNAL = 50;
@@ -307,6 +312,16 @@ function appliquer(etat: EtatJeu, ordre: Ordre, evenements: EvenementMoteur[]): 
       return;
     case 'didacticiel':
       etat.didacticiel = ordre.etape;
+      return;
+    case 'passerDidacticiel':
+      // Passer le didacticiel coupe aussi les conseils de Josée (ils se rallument dans l'aide).
+      etat.didacticiel = null;
+      etat.conseils.actifs = false;
+      etat.conseils.enCours = null;
+      return;
+    case 'conseilVu':
+    case 'conseilsActifs':
+      appliquerConseil(etat, ordre);
       return;
     case 'entretienIndividuel':
     case 'prime':
@@ -507,6 +522,8 @@ export function tickSurPlace(etat: EtatJeu, ordres: readonly Ordre[] = []): Even
     // Les voisins jugent aussi la nuit passée ; puis le quartier oublie un peu.
     matinDesRelations(etat, evenements);
     matinDuQuartier(etat);
+    // Josée passe donner un conseil, si elle a quelque chose d'utile à dire (v1.0).
+    matinDesConseils(etat, evenements);
   }
   avancerTravaux(etat, evenements);
   avancerTravauxBar(etat, evenements);

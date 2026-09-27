@@ -22,6 +22,7 @@ import { THEMES_SOIREE } from '../content/themes';
 import { forceSiProgramme } from '../engine/themes';
 import { formuleActive } from '../engine/regles';
 import { useInterface } from './store';
+import { AideCarte } from './AideCarte';
 
 /** Briefing de 19 h, en pause : qui travaille, l'offre du soir, le linge. */
 export function CarteBriefing({ partie }: { partie: EtatJeu }) {
@@ -57,6 +58,7 @@ export function CarteBriefing({ partie }: { partie: EtatJeu }) {
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-briefing">
       <div className="carte-modale carte-large">
+        <AideCarte id="briefing" />
         <header className="carte-entete">
           <Avatar avatar={partie.joueur.avatar} tenue={partie.joueur.tenue} taille={40} />
           <div className="carte-titre-bloc">

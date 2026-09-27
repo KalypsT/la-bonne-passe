@@ -104,13 +104,32 @@ export const TEXTES_DIDACTICIEL = {
 /** Aide courte de chaque onglet, que Josée donne à la demande. */
 export const AIDE_ONGLETS: Record<string, string> = {
   maison:
-    'Tes chambres, le linge et le ménage. Une chambre sale sous 40 % donne l’alerte, sous 15 % elle ne reçoit plus. Les chambres sous les draps se rénovent, et le bar aussi au palier 2.',
+    'Tes chambres, le linge et le ménage. Une chambre sale sous 40 % donne l’alerte, sous 15 % elle ne reçoit plus. Les chambres sous les draps se rénovent (900 €) ; une chambre usée se rafraîchit (400 €) avant d’être défraîchie. Tout en haut : ton prochain palier et tes objectifs.',
   personnel:
-    'Ton équipe et tes candidats. Surveille fatigue et moral : sous 20 de moral, on te menace de partir. Un entretien ou une prime, ça aide. Un soir de repos aussi.',
+    'Ton équipe et tes candidats. Surveille fatigue et moral : sous 20 de moral, on te menace de partir. Un entretien, une prime, un soir de repos, ça aide. Il faut trois ou quatre personnes pour faire tourner la maison.',
   clientele:
     'Tes clients, segment par segment. Chacun a sa satisfaction : contents, ils reviennent ; ta réputation est leur moyenne. Touche un segment pour voir ce qu’il attend. Les règles de la maison (tarif, formule, porte, accueil) se changent à tout moment.',
   finances:
-    'Ta trésorerie, l’emprunt et la réserve de sécurité. La mensualité tombe le 28 : la réserve paie en premier. Chaque lundi, le bilan de la semaine fait les comptes poste par poste.',
-  relations: 'Le quartier, la mairie, les voisins et les rivales. Pas encore ouvert.',
+    'Ta trésorerie, la banque et la réserve. La mensualité tombe tous les 28 jours : la réserve paie en premier. Chaque lundi, le bilan de la semaine fait les comptes et projette les quatre semaines à venir. Tu peux aussi me confier la gestion.',
+  relations:
+    'Le quartier : voisins, mairie, presse, police, puis les fournisseurs, chacun avec sa jauge. Au-dessus de +40, ils rendent service ; sous −40, les ennuis commencent. Une action par semaine et par acteur. Le Chat Noir, en face, a sa fiche : tu peux lui répondre.',
   journal: 'Tout ce qui s’est passé, du plus récent au plus ancien.',
 };
+
+/** Aide courte de chaque carte (le bouton « ? » en haut à droite), que Josée donne à la demande (v1.0). */
+export const AIDE_CARTES: Record<string, string> = {
+  briefing:
+    'À gauche, qui travaille ce soir et combien de rendez-vous chacun : au-delà de 4, ça use. À droite, l’offre du soir, le linge, le bar, le thème. Rien n’est définitif : tout se rejoue demain.',
+  bilan: 'Le compte de la nuit : ce qui est entré, ce qui est sorti, et ce qui reste. Les salaires de midi sont à part ; les charges du lundi et la mensualité vont au bilan de la semaine.',
+  semaine:
+    'Les comptes de la semaine poste par poste, et ta trésorerie projetée sur quatre semaines, mensualités comprises. Si la projection passe sous zéro, c’est maintenant qu’il faut réagir.',
+  mois: 'La mensualité du rachat, payée par la réserve d’abord, et l’objectif du mois. Deux mensualités impayées de suite, et la banque reprend la maison.',
+  entretien: 'Une question révèle un trait caché. Puis tu proposes une part : trop basse, on négocie ou on s’en va. Tu peux aussi réfléchir : le candidat attend quelques jours.',
+  entretienIndividuel: 'Écouter remonte le moral, promettre engage (une promesse rompue coûte cher), recadrer concentre mais pique. Une fois par semaine et par personne.',
+  imprevu: 'Il n’y a pas de bonne réponse, seulement des choix. Le jeu t’attend : lis le détail sous chaque choix, il dit ce que ça coûte.',
+  intrigue: 'Une histoire sur plusieurs jours : tes choix d’aujourd’hui décident de la suite. L’onglet Journal dit où elle en est.',
+  dispute: 'Un verre offert calme presque toujours, mais coûte ; parler peut suffire, ou pas. Une dispute ignorée dégénère.',
+  alerte: 'Une alerte a un délai : ignorée, elle a une conséquence. Les équipes Accueil et Sécurité en règlent une partie seules.',
+};
+
+export const TEXTES_AIDE_CARTE = { bouton: '?', titre: 'Aide' };

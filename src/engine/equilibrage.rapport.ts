@@ -262,6 +262,7 @@ function progression(): string[] {
     ['Complet (tout ce qui s’ouvre, bâtiment à crédit)', complet],
     ['Complet, cartes tranchées au hasard', { ...complet, politique: 'hasard' }],
     ['Passif (sans recruter ni rénover)', { offre: 'classique', rdvMax: 4, nuits: 168, recruter: false, renover: false }],
+    ['Passif qui suit les conseils de Josée (v1.0)', { offre: 'classique', rdvMax: 4, nuits: 168, recruter: false, renover: false, suitJosee: true }],
   ];
   const virgule = (x: number, d = 1) => x.toFixed(d).replace('.', ',');
   const paliers = [

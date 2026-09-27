@@ -21,6 +21,7 @@ import { CarteMois } from './CarteMois';
 import { Didacticiel } from './Didacticiel';
 import { CarteMaison } from './Maison2';
 import { CarteFinChapitre } from './CarteFinChapitre';
+import { CarteConseil } from './CarteConseil';
 import { Panneau } from './Panneau';
 import { useInterface, type Fiche } from './store';
 import { useBoucle } from './useBoucle';
@@ -108,6 +109,7 @@ export function EcranJeu() {
       {carte === 'aide' && <CarteAide />}
       {carte === 'maison' && <CarteMaison partie={partie} />}
       {carte === 'finChapitre' && <CarteFinChapitre partie={partie} />}
+      {carte === 'conseil' && <CarteConseil partie={partie} />}
       {carte === 'faillite' && <CarteFaillite partie={partie} />}
       <Didacticiel partie={partie} />
     </div>
