@@ -1,4 +1,5 @@
-// Garde d'équilibrage de la deuxième maison (v1.0, partie 1) : chaque lieu se rembourse en 6 à 9 mois (26 à 39 semaines),
+// Garde d'équilibrage de la deuxième maison (v1.0, parties 1 et 6) : chaque lieu se rembourse en 4 à 6 mois (17 à 26
+// semaines ; 6 à 9 mois avant la partie 6, quand on rachetait les murs au lieu de reprendre un bail),
 // tenu par Margot en consigne équilibrée, la maison d'origine à 70 de réputation. Voir docs/EQUILIBRAGE.md.
 
 import { describe, expect, it } from 'vitest';
@@ -31,12 +32,12 @@ function semainesPourRembourser(lieu: (typeof LIEUX)[number], graine: number): n
 }
 
 describe('équilibrage de la deuxième maison', () => {
-  it('chaque lieu se rembourse en 6 à 9 mois, montée de la réputation comprise (mesuré : 29 à 33 semaines)', () => {
+  it('chaque lieu se rembourse en 4 à 6 mois, montée de la réputation comprise (mesuré : 19 à 23 semaines)', () => {
     for (const lieu of LIEUX) {
       const semaines = [1, 2, 3, 4, 5].map((g) => semainesPourRembourser(lieu, g));
       const moyenne = semaines.reduce((a, b) => a + b, 0) / semaines.length;
-      expect(moyenne, lieu.id).toBeGreaterThanOrEqual(26);
-      expect(moyenne, lieu.id).toBeLessThanOrEqual(39);
+      expect(moyenne, lieu.id).toBeGreaterThanOrEqual(17);
+      expect(moyenne, lieu.id).toBeLessThanOrEqual(26);
     }
   });
 

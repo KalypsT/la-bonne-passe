@@ -1,5 +1,6 @@
 import { CONSEILS, TEXTES_CONSEILS } from '../content/conseils';
 import { trouverChambre } from '../content/maison';
+import { SEGMENTS_PHRASE } from '../content/modeLibre';
 import type { EtatJeu } from '../engine/etat';
 import { JoseeLigne } from './Josee';
 import { remplir } from './modeles';
@@ -14,7 +15,8 @@ export function CarteConseil({ partie }: { partie: EtatJeu }) {
   if (!conseil) return null;
   const def = CONSEILS[conseil.id];
   const chambre = conseil.chambreId ? (trouverChambre(conseil.chambreId)?.nom ?? '') : '';
-  const texte = (x: string) => remplir(x.replaceAll('{chambre}', chambre), partie);
+  const segment = conseil.segment ? SEGMENTS_PHRASE[conseil.segment] : '';
+  const texte = (x: string) => remplir(x.replaceAll('{chambre}', chambre).replaceAll('{segment}', segment), partie);
   const montrer = () => {
     const cible = def.cible;
     ouvrirCarte(null);

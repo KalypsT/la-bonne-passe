@@ -64,6 +64,15 @@ describe('les conseils de Josée', () => {
     expect(coupe.conseils.enCours).toBeNull();
   });
 
+  it('au palier 4, une réputation qui plafonne sous 75 : Josée désigne le segment le moins content', () => {
+    const e = matin(B.CONSEILS.jourReputation, { reputation: 70, palier: 4 });
+    e.conseils.vus = ['renover', 'renoverEncore', 'recruter', 'recruterEncore', 'lingeAuto', 'rafraichir', 'reserve'];
+    e.tauxReserve = 0.1;
+    e.clientele.satisfaction = { touriste: 70, habitue: 40, affaires: 70, groupe: 70, vip: 70, couple: 70 };
+    expect(conseilDuMatin(e)).toEqual({ id: 'reputation', segment: 'habitue' });
+    expect(conseilDuMatin({ ...e, reputation: 76 })).toBeNull();
+  });
+
   it('passer le didacticiel coupe aussi les conseils', () => {
     const e = appliquerOrdres(creerEtatInitial({ didacticiel: true }), [{ type: 'passerDidacticiel' }]).etat;
     expect(e.didacticiel).toBeNull();

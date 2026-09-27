@@ -5,6 +5,8 @@
 
 import * as B from '../content/balance';
 import { peutDemanderPermis } from './agrandir';
+import type { Segment } from '../content/clientele';
+import { segmentsOuverts } from './clientele';
 import type { EtatJeu } from './etat';
 
 export type IdConseil =
@@ -16,6 +18,7 @@ export type IdConseil =
   | 'rafraichir'
   | 'reserve'
   | 'permis'
+  | 'reputation'
   | 'gerance'
   | 'deuxiemeMaison';
 
@@ -25,7 +28,7 @@ export interface Conseils {
   /** Conseils déjà donnés. */
   vus: IdConseil[];
   /** Le conseil qui attend d'être lu (carte en pause), et la chambre qu'il désigne s'il y a lieu. */
-  enCours: { id: IdConseil; chambreId?: string } | null;
+  enCours: { id: IdConseil; chambreId?: string; segment?: Segment } | null;
 }
 
 export type EvenementConseil = { type: 'conseil'; id: IdConseil };
@@ -77,10 +80,16 @@ export function conseilDuMatin(etat: EtatJeu): Conseils['enCours'] {
     return { id: 'reserve' };
   }
   if (!vu('permis') && etat.systemes.permis && peutDemanderPermis(etat)) return { id: 'permis' };
+  // v1.0, partie 6 : la réputation plafonne sous 80 au palier 4 : Josée dit qui boude (le segment le moins content).
+  if (!vu('reputation') && etat.palier === 4 && etat.jour >= C.jourReputation && etat.reputation < B.PALIER_5.reputation - 5) {
+    const segment = [...segmentsOuverts(etat)].sort((a, b) => etat.clientele.satisfaction[a] - etat.clientele.satisfaction[b])[0];
+    if (segment) return { id: 'reputation', segment };
+  }
   if (!vu('gerance') && etat.systemes.gerante && !etat.gerante) return { id: 'gerance' };
+  // La deuxième maison : quand une adresse est à la portée de la caisse, ou de la banque (v1.0, partie 6).
   if (!vu('deuxiemeMaison') && etat.systemes.etablissement && etat.etablissement.statut === 'offres') {
     const moinsChere = Math.min(...etat.etablissement.offres.map((o) => o.achat));
-    if (etat.tresorerie >= moinsChere) return { id: 'deuxiemeMaison' };
+    if (etat.tresorerie >= moinsChere || etat.systemes.emprunt) return { id: 'deuxiemeMaison' };
   }
   return null;
 }

@@ -5,7 +5,12 @@ import type { Segment } from './clientele';
 
 export type IdAgrandissement = 'etages' | 'batiment' | 'rez';
 
-/** Les lieux possibles pour la deuxième maison ; trois sont proposés, prix tirés à ±10 %. */
+/**
+ * Les lieux possibles pour la deuxième maison ; trois sont proposés, prix tirés à ±10 %.
+ * v1.0, partie 6 : on reprend le bail (le fonds et la clientèle, les murs en location) au lieu de racheter les murs :
+ * 14 000 à 22 000 € (32 000 à 48 000 auparavant), travaux 4 000 à 6 000 € (8 000 à 14 000). Le chapitre se bouclait
+ * vers le jour 200 au cran 4, trois mois d'épargne après le palier 5 ; désormais vers le jour 107 (voir EQUILIBRAGE.md).
+ */
 export interface DefinitionLieu {
   id: string;
   nom: string;
@@ -25,9 +30,9 @@ export const LIEUX: DefinitionLieu[] = [
     nom: 'Une ancienne pension',
     quartier: 'De Pijp',
     description: 'Trois étages de papier peint jauni, un escalier qui craque juste ce qu’il faut, et le marché Albert Cuyp au pied de la porte.',
-    achat: 32000,
-    travaux: 9000,
-    jours: 6,
+    achat: 14000,
+    travaux: 4000,
+    jours: 5,
     chambres: 4,
     segment: 'touriste',
   },
@@ -36,9 +41,9 @@ export const LIEUX: DefinitionLieu[] = [
     nom: 'Un entrepôt de négociant',
     quartier: 'Prinsengracht',
     description: 'Poutres de chêne, poulie sous le pignon et vue sur le canal. Il y a de la place pour tout, et d’abord pour les idées.',
-    achat: 45000,
-    travaux: 14000,
-    jours: 10,
+    achat: 20000,
+    travaux: 6000,
+    jours: 7,
     chambres: 5,
     segment: 'affaires',
   },
@@ -47,9 +52,9 @@ export const LIEUX: DefinitionLieu[] = [
     nom: 'Un salon de thé fermé',
     quartier: 'Jordaan',
     description: 'Des vitrines en arc, un comptoir en marbre et des voisins qui connaissent tout le monde. Les habitués s’y sentiraient chez eux.',
-    achat: 36000,
-    travaux: 8000,
-    jours: 5,
+    achat: 16000,
+    travaux: 4000,
+    jours: 4,
     chambres: 3,
     segment: 'habitue',
   },
@@ -58,9 +63,9 @@ export const LIEUX: DefinitionLieu[] = [
     nom: 'Un club de jazz en faillite',
     quartier: 'Rembrandtplein',
     description: 'Une scène, des banquettes de cuir, et la place la plus bruyante de la ville. Les groupes n’attendent que ça.',
-    achat: 40000,
-    travaux: 12000,
-    jours: 8,
+    achat: 18000,
+    travaux: 5500,
+    jours: 6,
     chambres: 4,
     segment: 'groupe',
   },
@@ -69,9 +74,9 @@ export const LIEUX: DefinitionLieu[] = [
     nom: 'Un petit hôtel particulier',
     quartier: 'Museumplein',
     description: 'Moulures, lustres et un concierge qui a tout vu. Ici, on ne parle pas fort et on ne compte pas.',
-    achat: 48000,
-    travaux: 13000,
-    jours: 9,
+    achat: 22000,
+    travaux: 6000,
+    jours: 7,
     chambres: 3,
     segment: 'vip',
   },
@@ -147,12 +152,12 @@ export const TEXTES_AGRANDIR = {
   },
   etablissement: {
     titre: 'Une deuxième maison',
-    detail: 'Trois lieux sont à vendre en ville. On achète, on fait les travaux, et la maison attend son ouverture.',
+    detail: 'Trois baux sont à reprendre en ville : le fonds, la clientèle du quartier et les murs en location. On reprend, on fait les travaux, et la maison attend son ouverture.',
     lieu: (quartier: string, chambres: number) => `${quartier} · ${chambres} chambres`,
-    prix: (achat: string, travaux: string, jours: number) => `Achat ${achat}, puis travaux ${travaux} (${jours} jours).`,
-    signer: (achat: string) => `Signer l’achat (${achat})`,
+    prix: (achat: string, travaux: string, jours: number) => `Reprise du bail ${achat}, puis travaux ${travaux} (${jours} jours).`,
+    signer: (achat: string) => `Reprendre le bail (${achat})`,
     lancer: (travaux: string, jours: number) => `Lancer les travaux (${travaux}, ${jours} jours)`,
-    signe: (nom: string, quartier: string) => `${nom}, ${quartier} : l’acte est signé.`,
+    signe: (nom: string, quartier: string) => `${nom}, ${quartier} : le bail est signé.`,
     enTravaux: (jour: number) => `Travaux en cours jusqu’au jour ${jour}.`,
     tropCher: 'Pas assez en caisse.',
     clientele: {
@@ -182,7 +187,7 @@ export const TEXTES_AGRANDIR = {
     retour: (prenom: string) => `${prenom} reprend sa place au salon.`,
     geranteRepos: (gerante: string, prenom: string, e: string) => `${gerante} met ${prenom} au repos ce soir : trop fatigué${e} pour tenir.`,
     caisse: (montant: string) => `La caisse ne tombe pas juste : il manque ${montant}.`,
-    achat: (nom: string, quartier: string, montant: string) => `${nom}, ${quartier} : acte signé (${montant}).`,
+    achat: (nom: string, quartier: string, montant: string) => `${nom}, ${quartier} : bail repris (${montant}).`,
     travaux: (montant: string, jour: number) => `Travaux de la deuxième maison lancés (${montant}), jusqu’au jour ${jour}.`,
     pret: 'La deuxième maison est prête. Il lui manque quelqu’un pour la tenir.',
   },
