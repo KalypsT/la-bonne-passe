@@ -20,7 +20,31 @@ export const TEXTES = {
     chapitre: (n: number) => `Chapitre ${n}`,
     jour: (n: number) => `Jour ${n}`,
     dernierePartie: 'Dernière partie',
-    partieReprise: 'Cette partie a avancé dans un autre onglet. Continue-la d’ici pour reprendre au bon endroit.',
+    importer: 'Importer un fichier',
+    exporter: 'Exporter',
+    options: 'Options',
+  },
+  /** Avis affiché à la place du sous-titre de l'écran titre. */
+  avisTitre: {
+    reprise: 'Cette partie a avancé dans un autre onglet. Continue-la d’ici pour reprendre au bon endroit.',
+    exportee: 'Partie enregistrée dans tes téléchargements. Garde ce fichier : il survit même si le navigateur s’efface.',
+    exportImpossible: 'Le téléchargement a échoué. Réessaie, ou depuis un autre navigateur.',
+    importee: 'Partie importée. Elle t’attend dans son emplacement.',
+    importIllisible: 'Ce fichier n’est pas une partie de La bonne passe, ou il est abîmé.',
+    importOccupe: 'Cet emplacement est déjà pris : choisis un emplacement libre.',
+  },
+  optionsEmplacement: {
+    titre: 'Options de la partie',
+    exporter: 'Exporter',
+    exporterDetail: 'Exporter enregistre une copie de la partie en fichier, à garder sur ton téléphone. Pour la restaurer : « Importer un fichier » sur un emplacement libre.',
+    supprimer: 'Supprimer',
+    fermer: 'Fermer',
+  },
+  versionJeu: {
+    version: (v: string) => `v${v}`,
+    actualiser: 'Actualiser',
+    actualisation: 'Actualisation…',
+    actualiserLabel: 'Actualiser le jeu pour charger la dernière mise à jour',
   },
   confirmationSuppression: {
     titre: 'Supprimer cette partie ?',
@@ -64,6 +88,8 @@ export const TEXTES = {
   },
   jeu: {
     menu: 'Menu',
+    sauvegarder: 'Sauvegarder maintenant',
+    sauvegardee: 'Partie sauvegardée',
     bienvenue: (prenom: string, genre: Genre, maison: string) =>
       `Bienvenue, ${prenom}. Te voilà ${accord(genre, 'patronne', 'patron')} ${de(maison)}.`,
     regime: 'Amsterdam · légal',

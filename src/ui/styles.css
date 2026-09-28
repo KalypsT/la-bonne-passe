@@ -42,6 +42,7 @@ body {
 
 /* Écran titre */
 .ecran-titre {
+  position: relative;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -93,8 +94,8 @@ body {
   font-size: 13px;
 }
 
-/* La partie a avancé dans un autre onglet : une phrase lisible à la place du sous-titre. */
-.sous-titre.avis-reprise {
+/* Avis de l'écran titre (autre onglet, export, import) : une phrase lisible à la place du sous-titre. */
+.sous-titre.avis-titre {
   color: var(--neon-doux);
   letter-spacing: normal;
   text-transform: none;
@@ -145,6 +146,28 @@ body {
   background: var(--neon);
   color: var(--nuit);
   font-weight: 600;
+}
+
+/* Version du jeu et actualisation, en haut à droite de l'écran titre. */
+.version-jeu {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--attenue);
+  font-variant-numeric: tabular-nums;
+}
+
+.version-jeu .bouton {
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.carte-actions.colonne {
+  flex-direction: column;
 }
 
 /* Emplacements de sauvegarde */
@@ -1472,6 +1495,11 @@ body {
   width: 40px;
   padding: 0;
   font-weight: 600;
+}
+
+.bouton-aide.sauvegardee {
+  color: var(--laiton);
+  border-color: var(--laiton);
 }
 
 /* ——— Onglet Clientèle ——— */

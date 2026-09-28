@@ -1,9 +1,10 @@
+import { useEffect, useState } from 'react';
 import { VITESSES } from '../content/balance';
 import { TEXTES } from '../content/textes';
 import type { EtatJeu } from '../engine/etat';
 import { estOuvert, jourDeLaSemaine } from '../engine/temps';
 import { formaterEuros, formaterHeure } from './format';
-import { IconePause } from './Icones';
+import { IconeCoche, IconePause, IconeSauvegarde } from './Icones';
 import { useInterface, type Vitesse } from './store';
 
 export function BarreHaut({ partie }: { partie: EtatJeu }) {
@@ -43,6 +44,7 @@ export function BarreHaut({ partie }: { partie: EtatJeu }) {
           </button>
         ))}
       </div>
+      <BoutonSauvegarde />
       <button className="bouton discret bouton-aide" aria-label={TEXTES.aide.titre} onClick={() => ouvrirCarte('aide')}>
         {TEXTES.aide.bouton}
       </button>
@@ -50,5 +52,28 @@ export function BarreHaut({ partie }: { partie: EtatJeu }) {
         {t.menu}
       </button>
     </header>
+  );
+}
+
+/** Sauvegarde manuelle, en plus des sauvegardes automatiques : une coche confirme l'écriture. */
+function BoutonSauvegarde() {
+  const sauvegarderPartie = useInterface((s) => s.sauvegarderPartie);
+  const [faite, setFaite] = useState(false);
+  const t = TEXTES.jeu;
+
+  useEffect(() => {
+    if (!faite) return;
+    const minuterie = setTimeout(() => setFaite(false), 1500);
+    return () => clearTimeout(minuterie);
+  }, [faite]);
+
+  return (
+    <button
+      className={faite ? 'bouton discret bouton-aide sauvegardee' : 'bouton discret bouton-aide'}
+      aria-label={faite ? t.sauvegardee : t.sauvegarder}
+      onClick={() => setFaite(sauvegarderPartie())}
+    >
+      {faite ? <IconeCoche /> : <IconeSauvegarde />}
+    </button>
   );
 }

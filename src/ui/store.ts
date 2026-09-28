@@ -9,11 +9,23 @@ import { secondesParTick } from '../engine/temps';
 import type { IdActeur } from '../content/relations';
 import { appliquerOrdres, tick, type EvenementMoteur, type Ordre } from '../engine/tick';
 import type { AccordPlafond } from '../engine/plafond';
-import { charger, lireEcriture, lireEmplacements, sauvegarder, supprimer, type Emplacement } from '../save/emplacements';
+import {
+  charger,
+  exporterEmplacement,
+  importerPartie,
+  lireEcriture,
+  lireEmplacements,
+  sauvegarder,
+  supprimer,
+  type Emplacement,
+} from '../save/emplacements';
 import { demanderStockagePersistant } from '../save/stockage';
 import { formaterEuros } from './format';
+import { telecharger } from './fichiers';
 
 export type Ecran = 'titre' | 'creation' | 'jeu';
+/** Avis de l'écran titre (textes dans TEXTES.avisTitre). */
+export type AvisTitre = 'reprise' | 'exportee' | 'exportImpossible' | 'importee' | 'importIllisible' | 'importOccupe';
 export type Vitesse = 0 | 1 | 2 | 4;
 export type Onglet = 'maison' | 'personnel' | 'clientele' | 'finances' | 'relations' | 'journal';
 export type Fiche =
@@ -74,8 +86,10 @@ interface EtatInterface {
   partie: EtatJeu | null;
   /** Emplacement dont la suppression attend une confirmation. */
   suppressionDemandee: number | null;
-  /** La partie ouverte ici a été sauvegardée plus loin dans un autre onglet : on est revenu au titre. */
-  partieReprise: boolean;
+  /** Avis affiché sur l'écran titre (partie reprise dans un autre onglet, export, import). */
+  avisTitre: AvisTitre | null;
+  /** Emplacement dont la fenêtre d'options (export, suppression) est ouverte. */
+  optionsOuvertes: number | null;
 
   vitesse: Vitesse;
   /** Carte ouverte par-dessus le jeu ; le temps est en pause tant qu'elle est là. */
@@ -99,7 +113,13 @@ interface EtatInterface {
   continuer: (emplacement: number) => void;
   demanderSuppression: (emplacement: number | null) => void;
   confirmerSuppression: () => void;
-  sauvegarderPartie: () => void;
+  /** Sauvegarde la partie ouverte dans son emplacement. Vrai si l'écriture a bien eu lieu. */
+  sauvegarderPartie: () => boolean;
+  ouvrirOptions: (emplacement: number | null) => void;
+  /** Enregistre la partie d'un emplacement en fichier sur l'appareil. */
+  exporterPartie: (emplacement: number) => void;
+  /** Range dans un emplacement vide la partie lue dans un fichier. */
+  importerFichier: (emplacement: number, texte: string) => void;
   /** Revient au titre si un autre onglet a sauvegardé la partie ouverte ici. Vrai si c'est le cas. */
   verifierAutreOnglet: () => boolean;
   retourTitre: () => void;
@@ -243,7 +263,8 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   emplacementActif: null,
   partie: null,
   suppressionDemandee: null,
-  partieReprise: false,
+  avisTitre: null,
+  optionsOuvertes: null,
   ...etatDeJeuInitial,
 
   nouvellePartie: (emplacement) => set({ ecran: 'creation', emplacementActif: emplacement, partie: null }),
@@ -260,7 +281,7 @@ export const useInterface = create<EtatInterface>((set, get) => ({
     ecritureConnue = sauvegarder(emplacement, partie, Date.now());
     demanderStockagePersistant();
     reserveDeTemps = 0;
-    set({ ecran: 'jeu', partie, partieReprise: false, ...etatDeJeuInitial });
+    set({ ecran: 'jeu', partie, avisTitre: null, ...etatDeJeuInitial });
   },
 
   continuer: (emplacement) => {
@@ -278,13 +299,13 @@ export const useInterface = create<EtatInterface>((set, get) => ({
       ecran: 'jeu',
       emplacementActif: emplacement,
       partie,
-      partieReprise: false,
+      avisTitre: null,
       ...etatDeJeuInitial,
       carte: carteEnAttente(partie),
     });
   },
 
-  demanderSuppression: (emplacement) => set({ suppressionDemandee: emplacement }),
+  demanderSuppression: (emplacement) => set({ suppressionDemandee: emplacement, optionsOuvertes: null }),
 
   confirmerSuppression: () => {
     const emplacement = get().suppressionDemandee;
@@ -294,18 +315,38 @@ export const useInterface = create<EtatInterface>((set, get) => ({
 
   sauvegarderPartie: () => {
     const { emplacementActif, partie: avant } = get();
-    if (emplacementActif === null || !avant) return;
-    if (get().verifierAutreOnglet()) return;
+    if (emplacementActif === null || !avant) return false;
+    if (get().verifierAutreOnglet()) return false;
     const partie = compterTemps(avant);
     if (partie !== avant) set({ partie });
+    const precedente = ecritureConnue;
     ecritureConnue = sauvegarder(emplacementActif, partie, Date.now());
+    return ecritureConnue !== precedente;
+  },
+
+  ouvrirOptions: (emplacement) => set({ optionsOuvertes: emplacement }),
+
+  exporterPartie: (emplacement) => {
+    const fichier = exporterEmplacement(emplacement);
+    const reussi = fichier !== null && telecharger(fichier.nom, fichier.texte);
+    set({ optionsOuvertes: null, avisTitre: reussi ? 'exportee' : 'exportImpossible' });
+  },
+
+  importerFichier: (emplacement, texte) => {
+    const resultat = importerPartie(emplacement, texte, Date.now());
+    const avis: Record<typeof resultat, AvisTitre> = {
+      importee: 'importee',
+      illisible: 'importIllisible',
+      occupe: 'importOccupe',
+    };
+    set({ avisTitre: avis[resultat], emplacements: lireEmplacements() });
   },
 
   verifierAutreOnglet: () => {
     const { emplacementActif, partie } = get();
     if (emplacementActif === null || !partie || lireEcriture(emplacementActif) === ecritureConnue) return false;
     // Un autre onglet a joué cette partie plus loin : ne pas l'écraser, rendre la main à l'écran titre.
-    set({ ecran: 'titre', emplacementActif: null, partie: null, partieReprise: true, emplacements: lireEmplacements() });
+    set({ ecran: 'titre', emplacementActif: null, partie: null, avisTitre: 'reprise', emplacements: lireEmplacements() });
     return true;
   },
 
