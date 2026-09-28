@@ -6,6 +6,8 @@ export const NOMBRE_EMPLACEMENTS = 3;
 
 const PREFIXE = 'la-bonne-passe';
 const cleSauvegarde = (emplacement: number) => `${PREFIXE}:partie:${emplacement}`;
+/** Dernière sauvegarde relue et reconnue valide, reprise si la principale ne se charge plus. */
+const cleSecours = (emplacement: number) => `${PREFIXE}:partie:${emplacement}:secours`;
 const CLE_INDEX = `${PREFIXE}:index`;
 
 /** Résumé léger d'une partie, pour l'écran titre, sans charger la sauvegarde complète. */
@@ -69,27 +71,61 @@ function ecrireIndex(stockage: Stockage, index: Index): void {
   stockage.setItem(CLE_INDEX, JSON.stringify(index));
 }
 
-/** Charge et migre la partie d'un emplacement. Null si vide ou illisible. */
-export function charger(emplacement: number, stockage: Stockage = stockageNavigateur): EtatJeu | null {
-  const sauvegarde = lireJson(stockage, cleSauvegarde(emplacement));
-  if (typeof sauvegarde !== 'object' || sauvegarde === null) return null;
-  return migrer((sauvegarde as { etat?: unknown }).etat);
+/** Enveloppe écrite dans le stockage. `ecriture` compte les écritures, pour repérer celles d'un autre onglet. */
+interface Enveloppe {
+  version?: unknown;
+  etat?: unknown;
+  ecriture?: unknown;
 }
 
+function lireEnveloppe(stockage: Stockage, cle: string): Enveloppe | null {
+  const brut = lireJson(stockage, cle);
+  return typeof brut === 'object' && brut !== null ? (brut as Enveloppe) : null;
+}
+
+function chargerCle(stockage: Stockage, cle: string): EtatJeu | null {
+  const enveloppe = lireEnveloppe(stockage, cle);
+  return enveloppe ? migrer(enveloppe.etat) : null;
+}
+
+/** Charge et migre la partie d'un emplacement, ou sa copie de secours. Null si vide ou illisible. */
+export function charger(emplacement: number, stockage: Stockage = stockageNavigateur): EtatJeu | null {
+  return chargerCle(stockage, cleSauvegarde(emplacement)) ?? chargerCle(stockage, cleSecours(emplacement));
+}
+
+/**
+ * Numéro de la dernière écriture de cet emplacement (0 s'il est vide ou d'avant ce compteur).
+ * Si ce numéro change sans que cet onglet ait écrit, un autre onglet a sauvegardé entre-temps.
+ */
+export function lireEcriture(emplacement: number, stockage: Stockage = stockageNavigateur): number {
+  const ecriture = lireEnveloppe(stockage, cleSauvegarde(emplacement))?.ecriture;
+  return typeof ecriture === 'number' && Number.isFinite(ecriture) ? ecriture : 0;
+}
+
+/**
+ * Écrit la partie, puis la relit : si elle se recharge, elle devient aussi la copie de secours.
+ * Une partie abîmée par un bogue n'écrase donc jamais la dernière copie saine.
+ * Renvoie le numéro d'écriture désormais stocké (inchangé si l'écriture a échoué).
+ */
 export function sauvegarder(
   emplacement: number,
   etat: EtatJeu,
   maintenant: number,
   stockage: Stockage = stockageNavigateur,
-): void {
-  stockage.setItem(cleSauvegarde(emplacement), JSON.stringify({ version: etat.version, etat }));
+): number {
+  const cle = cleSauvegarde(emplacement);
+  const texte = JSON.stringify({ version: etat.version, etat, ecriture: lireEcriture(emplacement, stockage) + 1 });
+  stockage.setItem(cle, texte);
+  if (stockage.getItem(cle) === texte && chargerCle(stockage, cle)) stockage.setItem(cleSecours(emplacement), texte);
   const index = lireIndex(stockage);
   index[emplacement] = resumer(etat, maintenant);
   ecrireIndex(stockage, index);
+  return lireEcriture(emplacement, stockage);
 }
 
 export function supprimer(emplacement: number, stockage: Stockage = stockageNavigateur): void {
   stockage.removeItem(cleSauvegarde(emplacement));
+  stockage.removeItem(cleSecours(emplacement));
   const index = lireIndex(stockage);
   delete index[emplacement];
   ecrireIndex(stockage, index);
@@ -104,7 +140,8 @@ export function lireEmplacements(stockage: Stockage = stockageNavigateur): Empla
   let indexModifie = false;
 
   const emplacements = Array.from({ length: NOMBRE_EMPLACEMENTS }, (_, i): Emplacement => {
-    if (stockage.getItem(cleSauvegarde(i)) === null) {
+    const principale = stockage.getItem(cleSauvegarde(i));
+    if (principale === null && stockage.getItem(cleSecours(i)) === null) {
       if (index[i]) {
         delete index[i];
         indexModifie = true;
@@ -112,11 +149,11 @@ export function lireEmplacements(stockage: Stockage = stockageNavigateur): Empla
       return { statut: 'vide' };
     }
     const enCache = index[i];
-    if (enCache) return { statut: 'partie', resume: enCache };
+    if (enCache && principale !== null) return { statut: 'partie', resume: enCache };
 
     const etat = charger(i, stockage);
     if (!etat) return { statut: 'illisible' };
-    index[i] = resumer(etat, 0);
+    index[i] = resumer(etat, enCache?.dernierePartie ?? 0);
     indexModifie = true;
     return { statut: 'partie', resume: index[i] };
   });

@@ -41,6 +41,23 @@ export const stockageNavigateur: Stockage = {
   },
 };
 
+/**
+ * Demande au navigateur de ne pas effacer les données du jeu quand l'appareil manque de place.
+ * Sans cela, Firefox et les autres traitent le localStorage comme jetable (« best-effort »).
+ * Firefox peut afficher une question à la personne ; un refus ne change rien au jeu.
+ */
+export function demanderStockagePersistant(): void {
+  try {
+    if (typeof navigator === 'undefined' || !navigator.storage?.persist) return;
+    void navigator.storage
+      .persisted()
+      .then((deja) => (deja ? true : navigator.storage.persist()))
+      .catch(() => false);
+  } catch {
+    // Ignoré : la sauvegarde fonctionne sans cette garantie.
+  }
+}
+
 /** Stockage en mémoire, pour les tests. */
 export function creerStockageMemoire(): Stockage & { donnees: Map<string, string> } {
   const donnees = new Map<string, string>();

@@ -11,12 +11,17 @@ import { useInterface } from './store';
 export function EcranTitre() {
   const emplacements = useInterface((s) => s.emplacements);
   const suppressionDemandee = useInterface((s) => s.suppressionDemandee);
+  const partieReprise = useInterface((s) => s.partieReprise);
   const maintenant = Date.now();
 
   return (
     <main className="ecran-titre">
       <EnseigneNeon texte={TEXTES.titreJeu} />
-      <p className="sous-titre">{TEXTES.sousTitre}</p>
+      {partieReprise ? (
+        <p className="sous-titre avis-reprise">{TEXTES.emplacements.partieReprise}</p>
+      ) : (
+        <p className="sous-titre">{TEXTES.sousTitre}</p>
+      )}
       <ol className="emplacements">
         {emplacements.map((emplacement, i) => (
           <li key={i}>

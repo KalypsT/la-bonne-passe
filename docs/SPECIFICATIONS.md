@@ -551,6 +551,9 @@ flowchart LR
 - 3 emplacements dans le localStorage, plus un index léger (avatar, noms, chapitre, date, trésorerie) pour afficher l'écran titre sans tout charger.
 - Chaque sauvegarde porte un numéro de version, avec des fonctions de migration quand la structure évolue.
 - Sauvegarde automatique à chaque fermeture de nuit, à chaque bilan et au passage en arrière-plan. Pas de sauvegarde manuelle en v1.
+- Chaque écriture est relue ; si elle se recharge, elle devient aussi la **copie de secours** de l'emplacement. Une sauvegarde principale abîmée ou disparue est reprise depuis cette copie.
+- Chaque écriture porte un numéro. Un onglet dont la partie a été sauvegardée plus loin dans un autre onglet ne l'écrase pas : il revient à l'écran titre avec un avis.
+- Au lancement d'une partie, le jeu demande au navigateur un stockage persistant (`navigator.storage.persist()`), pour que Firefox et les autres n'effacent pas les données quand l'appareil manque de place.
 - Une exportation en fichier est envisagée plus tard.
 
 ### Langue
