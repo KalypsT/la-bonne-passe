@@ -20,6 +20,7 @@ export const TEXTES = {
     chapitre: (n: number) => `Chapitre ${n}`,
     jour: (n: number) => `Jour ${n}`,
     dernierePartie: 'Dernière partie',
+    partieReprise: 'Cette partie a avancé dans un autre onglet. Continue-la d’ici pour reprendre au bon endroit.',
   },
   confirmationSuppression: {
     titre: 'Supprimer cette partie ?',

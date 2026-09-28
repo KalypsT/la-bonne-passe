@@ -93,6 +93,14 @@ body {
   font-size: 13px;
 }
 
+/* La partie a avancé dans un autre onglet : une phrase lisible à la place du sous-titre. */
+.sous-titre.avis-reprise {
+  color: var(--neon-doux);
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: center;
+}
+
 .mention {
   margin: 0;
   color: var(--attenue);

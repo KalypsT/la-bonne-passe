@@ -9,7 +9,8 @@ import { secondesParTick } from '../engine/temps';
 import type { IdActeur } from '../content/relations';
 import { appliquerOrdres, tick, type EvenementMoteur, type Ordre } from '../engine/tick';
 import type { AccordPlafond } from '../engine/plafond';
-import { charger, lireEmplacements, sauvegarder, supprimer, type Emplacement } from '../save/emplacements';
+import { charger, lireEcriture, lireEmplacements, sauvegarder, supprimer, type Emplacement } from '../save/emplacements';
+import { demanderStockagePersistant } from '../save/stockage';
 import { formaterEuros } from './format';
 
 export type Ecran = 'titre' | 'creation' | 'jeu';
@@ -73,6 +74,8 @@ interface EtatInterface {
   partie: EtatJeu | null;
   /** Emplacement dont la suppression attend une confirmation. */
   suppressionDemandee: number | null;
+  /** La partie ouverte ici a été sauvegardée plus loin dans un autre onglet : on est revenu au titre. */
+  partieReprise: boolean;
 
   vitesse: Vitesse;
   /** Carte ouverte par-dessus le jeu ; le temps est en pause tant qu'elle est là. */
@@ -97,6 +100,8 @@ interface EtatInterface {
   demanderSuppression: (emplacement: number | null) => void;
   confirmerSuppression: () => void;
   sauvegarderPartie: () => void;
+  /** Revient au titre si un autre onglet a sauvegardé la partie ouverte ici. Vrai si c'est le cas. */
+  verifierAutreOnglet: () => boolean;
   retourTitre: () => void;
 
   choisirVitesse: (vitesse: Vitesse) => void;
@@ -135,6 +140,11 @@ type Modifier = (fn: (s: EtatInterface) => Partial<EtatInterface>) => void;
 let reserveDeTemps = 0;
 /** Temps réel passé dans la partie, pas encore reporté dans sa chronique (v1.0). */
 let tempsNonCompte = 0;
+/**
+ * Numéro d'écriture de l'emplacement actif tel que cet onglet l'a laissé. S'il a changé dans le stockage,
+ * un autre onglet a sauvegardé plus loin : celui-ci ne doit plus écraser sa partie, restée en arrière.
+ */
+let ecritureConnue = 0;
 
 /** Reporte le temps réel passé dans la chronique de la partie. */
 function compterTemps(partie: EtatJeu): EtatJeu {
@@ -233,6 +243,7 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   emplacementActif: null,
   partie: null,
   suppressionDemandee: null,
+  partieReprise: false,
   ...etatDeJeuInitial,
 
   nouvellePartie: (emplacement) => set({ ecran: 'creation', emplacementActif: emplacement, partie: null }),
@@ -246,19 +257,31 @@ export const useInterface = create<EtatInterface>((set, get) => ({
       joueur: { prenom: nettoyerNom(prenom), avatar, tenue, genre: trouverAvatar(avatar).genre },
       nomMaison: nettoyerNom(nomMaison),
     });
-    sauvegarder(emplacement, partie, Date.now());
+    ecritureConnue = sauvegarder(emplacement, partie, Date.now());
+    demanderStockagePersistant();
     reserveDeTemps = 0;
-    set({ ecran: 'jeu', partie, ...etatDeJeuInitial });
+    set({ ecran: 'jeu', partie, partieReprise: false, ...etatDeJeuInitial });
   },
 
   continuer: (emplacement) => {
     const partie = charger(emplacement);
     if (!partie) {
-      set({ emplacements: lireEmplacements() });
+      // Le résumé de l'écran titre était en cache : montrer enfin que la partie ne se charge pas.
+      const emplacements = lireEmplacements().map((e, i): Emplacement => (i === emplacement ? { statut: 'illisible' } : e));
+      set({ emplacements });
       return;
     }
+    ecritureConnue = lireEcriture(emplacement);
+    demanderStockagePersistant();
     reserveDeTemps = 0;
-    set({ ecran: 'jeu', emplacementActif: emplacement, partie, ...etatDeJeuInitial, carte: carteEnAttente(partie) });
+    set({
+      ecran: 'jeu',
+      emplacementActif: emplacement,
+      partie,
+      partieReprise: false,
+      ...etatDeJeuInitial,
+      carte: carteEnAttente(partie),
+    });
   },
 
   demanderSuppression: (emplacement) => set({ suppressionDemandee: emplacement }),
@@ -272,9 +295,18 @@ export const useInterface = create<EtatInterface>((set, get) => ({
   sauvegarderPartie: () => {
     const { emplacementActif, partie: avant } = get();
     if (emplacementActif === null || !avant) return;
+    if (get().verifierAutreOnglet()) return;
     const partie = compterTemps(avant);
     if (partie !== avant) set({ partie });
-    sauvegarder(emplacementActif, partie, Date.now());
+    ecritureConnue = sauvegarder(emplacementActif, partie, Date.now());
+  },
+
+  verifierAutreOnglet: () => {
+    const { emplacementActif, partie } = get();
+    if (emplacementActif === null || !partie || lireEcriture(emplacementActif) === ecritureConnue) return false;
+    // Un autre onglet a joué cette partie plus loin : ne pas l'écraser, rendre la main à l'écran titre.
+    set({ ecran: 'titre', emplacementActif: null, partie: null, partieReprise: true, emplacements: lireEmplacements() });
+    return true;
   },
 
   retourTitre: () => {

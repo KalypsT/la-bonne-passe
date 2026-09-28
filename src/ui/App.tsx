@@ -8,6 +8,7 @@ import { TourneTelephone } from './TourneTelephone';
 export function App() {
   const ecran = useInterface((s) => s.ecran);
   const sauvegarderPartie = useInterface((s) => s.sauvegarderPartie);
+  const verifierAutreOnglet = useInterface((s) => s.verifierAutreOnglet);
 
   // Sauvegarde automatique quand l'appli passe en arrière-plan ou se ferme.
   useEffect(() => {
@@ -21,6 +22,13 @@ export function App() {
       window.removeEventListener('pagehide', sauvegarderPartie);
     };
   }, [sauvegarderPartie]);
+
+  // Un autre onglet a écrit dans le stockage : si c'est la partie ouverte ici, la lâcher avant de l'écraser.
+  useEffect(() => {
+    const auChangement = () => void verifierAutreOnglet();
+    window.addEventListener('storage', auChangement);
+    return () => window.removeEventListener('storage', auChangement);
+  }, [verifierAutreOnglet]);
 
   return (
     <>

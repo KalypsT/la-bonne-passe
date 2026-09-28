@@ -3,7 +3,7 @@ import { RELATIONS, TAPAGE, TRESORERIE_INITIALE } from '../content/balance';
 import { trouverNouveaute } from '../content/nouveautes';
 import { creerEtatInitial, VERSION_ETAT } from '../engine/etat';
 import { tick } from '../engine/tick';
-import { charger, lireEmplacements, NOMBRE_EMPLACEMENTS, sauvegarder, supprimer } from './emplacements';
+import { charger, lireEcriture, lireEmplacements, NOMBRE_EMPLACEMENTS, sauvegarder, supprimer } from './emplacements';
 import { migrer } from './migrations';
 import { ambitionDuMarche } from '../engine/recrutement';
 import { creerStockageMemoire, type Stockage } from './stockage';
@@ -93,6 +93,68 @@ describe('emplacements de sauvegarde', () => {
     };
     expect(() => sauvegarder(0, creerEtatInitial(), MAINTENANT, casse)).not.toThrow();
     expect(lireEmplacements(casse).map((e) => e.statut)).toEqual(['vide', 'vide', 'vide']);
+  });
+});
+
+describe('solidité des sauvegardes', () => {
+  it('numérote chaque écriture, pour repérer celles d’un autre onglet', () => {
+    const stockage = creerStockageMemoire();
+    expect(lireEcriture(0, stockage)).toBe(0);
+    expect(sauvegarder(0, creerEtatInitial(), MAINTENANT, stockage)).toBe(1);
+    expect(sauvegarder(0, creerEtatInitial(), MAINTENANT, stockage)).toBe(2);
+    expect(lireEcriture(0, stockage)).toBe(2);
+    expect(lireEcriture(1, stockage)).toBe(0);
+  });
+
+  it('lit comme écriture 0 une sauvegarde d’avant le compteur', () => {
+    const stockage = creerStockageMemoire();
+    const etat = creerEtatInitial();
+    stockage.setItem('la-bonne-passe:partie:0', JSON.stringify({ version: etat.version, etat }));
+    expect(lireEcriture(0, stockage)).toBe(0);
+    expect(charger(0, stockage)).toEqual(etat);
+    expect(sauvegarder(0, etat, MAINTENANT, stockage)).toBe(1);
+  });
+
+  it('renvoie le numéro inchangé si le stockage refuse l’écriture', () => {
+    const stockage = creerStockageMemoire();
+    sauvegarder(0, creerEtatInitial(), MAINTENANT, stockage);
+    const plein: Stockage = { ...stockage, setItem: () => {} };
+    expect(sauvegarder(0, creerEtatInitial(), MAINTENANT, plein)).toBe(1);
+  });
+
+  it('garde une copie de secours et la reprend si la sauvegarde principale est abîmée', () => {
+    const stockage = creerStockageMemoire();
+    const etat = tick(creerEtatInitial()).etat;
+    sauvegarder(0, etat, MAINTENANT, stockage);
+    stockage.setItem('la-bonne-passe:partie:0', '{pas du json');
+    expect(charger(0, stockage)).toEqual(etat);
+    expect(lireEmplacements(stockage)[0]?.statut).toBe('partie');
+  });
+
+  it('n’écrase pas la copie de secours avec une partie qui ne se recharge pas', () => {
+    const stockage = creerStockageMemoire();
+    const saine = creerEtatInitial({ nomMaison: 'Saine' });
+    sauvegarder(0, saine, MAINTENANT, stockage);
+    // Un bogue produit une valeur non finie : JSON l'écrit « null » et la partie ne passe plus la validation.
+    const abimee = { ...creerEtatInitial({ nomMaison: 'Abîmée' }), tresorerie: Number.NaN };
+    sauvegarder(0, abimee, MAINTENANT, stockage);
+    expect(charger(0, stockage)?.maison.nom).toBe('Saine');
+  });
+
+  it('retrouve la partie par sa copie de secours si seule la principale a disparu', () => {
+    const stockage = creerStockageMemoire();
+    sauvegarder(0, creerEtatInitial({ nomMaison: 'Le Velours' }), MAINTENANT, stockage);
+    stockage.removeItem('la-bonne-passe:partie:0');
+    const [premier] = lireEmplacements(stockage);
+    expect(premier?.statut === 'partie' && premier.resume.nomMaison).toBe('Le Velours');
+  });
+
+  it('efface aussi la copie de secours à la suppression', () => {
+    const stockage = creerStockageMemoire();
+    sauvegarder(0, creerEtatInitial(), MAINTENANT, stockage);
+    supprimer(0, stockage);
+    expect([...stockage.donnees.keys()].filter((k) => k.startsWith('la-bonne-passe:partie'))).toEqual([]);
+    expect(lireEmplacements(stockage)[0]).toEqual({ statut: 'vide' });
   });
 });
 
