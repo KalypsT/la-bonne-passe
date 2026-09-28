@@ -17,3 +17,23 @@ export function IconePause() {
     </svg>
   );
 }
+
+/** Disquette : sauvegarder la partie. */
+export function IconeSauvegarde({ taille = 16 }: { taille?: number }) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 16 16" aria-hidden="true" className="icone">
+      <path d="M2.5 2.5h8.5l2.5 2.5v8.5h-11z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <rect x="5" y="2.5" width="5" height="3.5" fill="currentColor" />
+      <rect x="4.5" y="9" width="7" height="4.5" rx=".5" fill="none" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  );
+}
+
+/** Coche : action faite. */
+export function IconeCoche({ taille = 16 }: { taille?: number }) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 16 16" aria-hidden="true" className="icone">
+      <path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

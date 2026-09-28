@@ -30,8 +30,9 @@ Une partie commence par le choix d'un emplacement de sauvegarde, puis par la cr�
 
 - **3 emplacements** de partie, jouables en parallèle.
 - Chaque emplacement affiche l'avatar, le prénom, le nom de la maison, le chapitre en cours, la date de jeu, la trésorerie et la date de dernière partie.
-- Actions : Continuer, Nouvelle partie (sur un emplacement vide), Supprimer (avec confirmation).
-- Sauvegarde automatique dans l'emplacement actif : à chaque fermeture de nuit, à chaque bilan et quand l'appli passe en arrière-plan.
+- Actions : Continuer, Nouvelle partie et Importer un fichier (sur un emplacement vide), Options (exporter en fichier, supprimer avec confirmation).
+- Sauvegarde automatique dans l'emplacement actif : à chaque fermeture de nuit, à chaque bilan et quand l'appli passe en arrière-plan. Sauvegarde manuelle en plus, par un bouton de la barre du haut (v1.01).
+- En haut à droite : le numéro de version du jeu et un bouton « Actualiser », qui recharge la page pour prendre la dernière mise à jour (v1.01).
 
 ### Création du personnage
 
@@ -550,11 +551,12 @@ flowchart LR
 
 - 3 emplacements dans le localStorage, plus un index léger (avatar, noms, chapitre, date, trésorerie) pour afficher l'écran titre sans tout charger.
 - Chaque sauvegarde porte un numéro de version, avec des fonctions de migration quand la structure évolue.
-- Sauvegarde automatique à chaque fermeture de nuit, à chaque bilan et au passage en arrière-plan. Pas de sauvegarde manuelle en v1.
+- Sauvegarde automatique à chaque fermeture de nuit, à chaque bilan et au passage en arrière-plan, et sauvegarde manuelle par le bouton disquette de la barre du haut (v1.01).
 - Chaque écriture est relue ; si elle se recharge, elle devient aussi la **copie de secours** de l'emplacement. Une sauvegarde principale abîmée ou disparue est reprise depuis cette copie.
 - Chaque écriture porte un numéro. Un onglet dont la partie a été sauvegardée plus loin dans un autre onglet ne l'écrase pas : il revient à l'écran titre avec un avis.
 - Au lancement d'une partie, le jeu demande au navigateur un stockage persistant (`navigator.storage.persist()`), pour que Firefox et les autres n'effacent pas les données quand l'appareil manque de place.
-- Une exportation en fichier est envisagée plus tard.
+- **Export et import en fichier** (v1.01) : une partie s'exporte en fichier `.json` sur l'appareil ; il survit à un effacement des données du navigateur. L'import ne se fait que dans un emplacement vide. Une sauvegarde illisible s'exporte telle quelle, pour être réparée à la main.
+- Le numéro de version affiché vit dans `src/content/version.ts`.
 
 ### Langue
 
@@ -586,6 +588,7 @@ Le jeu se construit par versions jouables, chacune testable sur téléphone en f
 | v0.5 | Relations et une maison rivale ; palier 3 | Le quartier vit-il ? |
 | v0.6 | Aménagement, finances complètes, paliers 4 et 5 | La progression sur un mois est-elle motivante ? |
 | v1.0 | Chapitre 1 complet avec sa fin, mode libre, didacticiel final, équilibrage | Une campagne d'Amsterdam aboutie |
+| v1.01 | Sauvegardes renforcées (copie de secours, garde entre onglets, stockage persistant), sauvegarde manuelle, export et import en fichier, version et bouton « Actualiser » sur l'écran titre | Les parties ne se perdent-elles plus ? |
 
 Après la v1.0 : chapitres 2 à 4, chaleur, gérantes multi-maisons, Grand Gala et fin de campagne.
 

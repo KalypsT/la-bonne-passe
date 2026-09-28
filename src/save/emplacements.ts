@@ -161,3 +161,65 @@ export function lireEmplacements(stockage: Stockage = stockageNavigateur): Empla
   if (indexModifie) ecrireIndex(stockage, index);
   return emplacements;
 }
+
+/** Une partie prête à être enregistrée en fichier sur l'appareil. */
+export interface FichierPartie {
+  nom: string;
+  texte: string;
+}
+
+/** Nom de fichier sans accents ni caractères spéciaux : « Le Velours » → « le-velours ». */
+function enNomDeFichier(texte: string): string {
+  const nom = texte
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return nom || 'partie';
+}
+
+/**
+ * Le fichier d'export d'un emplacement : une copie de la partie, à garder hors du navigateur.
+ * Une sauvegarde illisible est exportée telle quelle, pour pouvoir être réparée à la main. Null si vide.
+ */
+export function exporterEmplacement(emplacement: number, stockage: Stockage = stockageNavigateur): FichierPartie | null {
+  const etat = charger(emplacement, stockage);
+  if (etat) {
+    return {
+      nom: `sauvegarde-${enNomDeFichier(etat.maison.nom)}-jour-${etat.jour}.json`,
+      texte: JSON.stringify({ jeu: PREFIXE, version: etat.version, etat }),
+    };
+  }
+  const brut = stockage.getItem(cleSauvegarde(emplacement)) ?? stockage.getItem(cleSecours(emplacement));
+  return brut === null ? null : { nom: `sauvegarde-emplacement-${emplacement + 1}-illisible.json`, texte: brut };
+}
+
+/** La partie contenue dans un fichier d'export (ou une sauvegarde brute), migrée. Null si illisible. */
+export function lireFichierPartie(texte: string): EtatJeu | null {
+  let brut: unknown;
+  try {
+    brut = JSON.parse(texte) as unknown;
+  } catch {
+    return null;
+  }
+  return typeof brut === 'object' && brut !== null ? migrer((brut as Enveloppe).etat) : null;
+}
+
+export type ResultatImport = 'importee' | 'illisible' | 'occupe';
+
+/** Range la partie d'un fichier dans un emplacement vide. Jamais par-dessus une partie existante. */
+export function importerPartie(
+  emplacement: number,
+  texte: string,
+  maintenant: number,
+  stockage: Stockage = stockageNavigateur,
+): ResultatImport {
+  if (stockage.getItem(cleSauvegarde(emplacement)) !== null || stockage.getItem(cleSecours(emplacement)) !== null) {
+    return 'occupe';
+  }
+  const etat = lireFichierPartie(texte);
+  if (!etat) return 'illisible';
+  sauvegarder(emplacement, etat, maintenant, stockage);
+  return 'importee';
+}

@@ -3,7 +3,17 @@ import { RELATIONS, TAPAGE, TRESORERIE_INITIALE } from '../content/balance';
 import { trouverNouveaute } from '../content/nouveautes';
 import { creerEtatInitial, VERSION_ETAT } from '../engine/etat';
 import { tick } from '../engine/tick';
-import { charger, lireEcriture, lireEmplacements, NOMBRE_EMPLACEMENTS, sauvegarder, supprimer } from './emplacements';
+import {
+  charger,
+  exporterEmplacement,
+  importerPartie,
+  lireEcriture,
+  lireEmplacements,
+  lireFichierPartie,
+  NOMBRE_EMPLACEMENTS,
+  sauvegarder,
+  supprimer,
+} from './emplacements';
 import { migrer } from './migrations';
 import { ambitionDuMarche } from '../engine/recrutement';
 import { creerStockageMemoire, type Stockage } from './stockage';
@@ -155,6 +165,58 @@ describe('solidité des sauvegardes', () => {
     supprimer(0, stockage);
     expect([...stockage.donnees.keys()].filter((k) => k.startsWith('la-bonne-passe:partie'))).toEqual([]);
     expect(lireEmplacements(stockage)[0]).toEqual({ statut: 'vide' });
+  });
+});
+
+describe('export et import en fichier', () => {
+  it('exporte une partie et la réimporte à l’identique dans un autre emplacement', () => {
+    const stockage = creerStockageMemoire();
+    const etat = tick(creerEtatInitial({ nomMaison: 'Le Velours d’Été' })).etat;
+    sauvegarder(0, etat, MAINTENANT, stockage);
+    const fichier = exporterEmplacement(0, stockage);
+    expect(fichier?.nom).toBe('sauvegarde-le-velours-d-ete-jour-1.json');
+    expect(importerPartie(2, fichier!.texte, MAINTENANT, stockage)).toBe('importee');
+    expect(charger(2, stockage)).toEqual(etat);
+    expect(lireEmplacements(stockage).map((e) => e.statut)).toEqual(['partie', 'vide', 'partie']);
+  });
+
+  it('restaure une partie exportée après un effacement complet du navigateur', () => {
+    const avant = creerStockageMemoire();
+    const etat = creerEtatInitial();
+    sauvegarder(1, etat, MAINTENANT, avant);
+    const fichier = exporterEmplacement(1, avant)!;
+    const apres = creerStockageMemoire();
+    expect(importerPartie(1, fichier.texte, MAINTENANT, apres)).toBe('importee');
+    expect(charger(1, apres)).toEqual(etat);
+  });
+
+  it('n’importe jamais par-dessus une partie existante', () => {
+    const stockage = creerStockageMemoire();
+    sauvegarder(0, creerEtatInitial({ nomMaison: 'Déjà là' }), MAINTENANT, stockage);
+    const fichier = exporterEmplacement(0, stockage)!;
+    sauvegarder(1, creerEtatInitial({ nomMaison: 'Occupée' }), MAINTENANT, stockage);
+    expect(importerPartie(1, fichier.texte, MAINTENANT, stockage)).toBe('occupe');
+    expect(charger(1, stockage)?.maison.nom).toBe('Occupée');
+  });
+
+  it('refuse un fichier qui n’est pas une partie', () => {
+    const stockage = creerStockageMemoire();
+    expect(importerPartie(0, 'bonjour', MAINTENANT, stockage)).toBe('illisible');
+    expect(importerPartie(0, '{"etat":{"version":999}}', MAINTENANT, stockage)).toBe('illisible');
+    expect(lireEmplacements(stockage)[0]).toEqual({ statut: 'vide' });
+  });
+
+  it('migre une ancienne partie importée', () => {
+    const etat = creerEtatInitial();
+    const ancienne = JSON.stringify({ version: etat.version, etat });
+    expect(lireFichierPartie(ancienne)).toEqual(etat);
+  });
+
+  it('exporte telle quelle une sauvegarde illisible, pour la réparer à la main', () => {
+    const stockage = creerStockageMemoire();
+    stockage.setItem('la-bonne-passe:partie:2', '{abîmée');
+    expect(exporterEmplacement(2, stockage)).toEqual({ nom: 'sauvegarde-emplacement-3-illisible.json', texte: '{abîmée' });
+    expect(exporterEmplacement(0, stockage)).toBeNull();
   });
 });
 
